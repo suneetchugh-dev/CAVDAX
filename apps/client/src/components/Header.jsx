@@ -6,8 +6,8 @@ export default function Header({ status, onReset, isResetting }) {
     <header className="h-16 border-b border-slate-800 bg-obsidian-800/80 backdrop-blur-md px-6 flex items-center justify-between z-20">
       {/* Brand & Tagline */}
       <div className="flex items-center gap-4">
-        <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-purple-500/20 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-          <Shield className="w-5 h-5 text-cyan-400" />
+        <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-obsidian-900 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.25)] p-1.5">
+          <img src="/cavdax-logo.svg" alt="CAVDAX Logo" className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
         </div>
         <div>
           <div className="flex items-center gap-2">

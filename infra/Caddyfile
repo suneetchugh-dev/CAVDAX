@@ -2,9 +2,11 @@
 # Automatically secures your domain with a free Let's Encrypt SSL certificate.
 
 {$DOMAIN:localhost} {
-    # 1. Route API requests to the CAVDAX Backend Server
+    # 1. Route API requests and real-time SSE streams to CAVDAX Backend Server
     handle /api/* {
-        reverse_proxy server:3000
+        reverse_proxy server:3000 {
+            flush_interval -1
+        }
     }
 
     # 2. Route all frontend Web HUD requests to the Client

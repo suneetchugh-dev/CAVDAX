@@ -1,8 +1,10 @@
-# CAVDAX: Contextual Action & Verified Decision Autonomous eXecution
-
-> **Graph-Grounded Decision Execution for Coding Agents**  
-> *Track 01: Agents That Act on Connected Data (Primary) &bull; Track 02: Knowledge Graphs & Long-Term Memory (Eligible)*  
-> Built for the **WeMakeDevs &times; FalkorDB Graph Hacks Hackathon (October 2026)**
+<div align="center">
+  <img src="assets/cavdax-logo.svg" width="100" height="100" alt="CAVDAX Logo" />
+  <h1>CAVDAX: Contextual Action &amp; Verified Decision Autonomous eXecution</h1>
+  <p><strong>Graph-Grounded Decision Execution for Coding Agents</strong></p>
+  <p><em>Track 01: Agents That Act on Connected Data (Primary) &bull; Track 02: Knowledge Graphs &amp; Long-Term Memory (Eligible)</em><br />
+  Built for the <strong>WeMakeDevs &times; FalkorDB Graph Hacks Hackathon (October 2026)</strong></p>
+</div>
 
 [![FalkorDB](https://img.shields.io/badge/FalkorDB-GraphBLAS-FF2D55?style=for-the-badge&logo=redis&logoColor=white)](https://falkordb.com/)
 [![MCP](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol%20(MCP)-06B6D4?style=for-the-badge)](https://modelcontextprotocol.io/)
