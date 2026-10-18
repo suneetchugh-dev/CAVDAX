@@ -1,0 +1,26 @@
+{
+  "name": "cavdax-monorepo",
+  "version": "1.0.0",
+  "description": "CAVDAX: Contextual Action & Verified Decision Autonomous eXecution",
+  "type": "module",
+  "scripts": {
+    "server": "node apps/server/index.js",
+    "client": "cd apps/client && npm run dev",
+    "benchmark": "node benchmark/evaluate.js",
+    "benchmark:scale": "node benchmark/scale_generator.js",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "seed": "curl -X POST http://localhost:3000/api/seed"
+  },
+  "keywords": [
+    "falkordb",
+    "graphblas",
+    "ai-agents",
+    "mcp",
+    "model-context-protocol",
+    "knowledge-graph",
+    "causal-dag"
+  ],
+  "author": "Suneet Chugh & Geetika Chugh",
+  "license": "Apache-2.0"
+}

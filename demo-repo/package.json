@@ -1,0 +1,14 @@
+{
+  "name": "payment-gateway-service",
+  "version": "1.0.0",
+  "description": "Target microservice demonstrating CAVDAX enclosed agent guardrails",
+  "main": "src/services/payment.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/services/payment.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
