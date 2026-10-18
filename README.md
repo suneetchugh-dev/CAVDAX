@@ -7,7 +7,7 @@
 [![FalkorDB](https://img.shields.io/badge/FalkorDB-GraphBLAS-FF2D55?style=for-the-badge&logo=redis&logoColor=white)](https://falkordb.com/)
 [![MCP](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol%20(MCP)-06B6D4?style=for-the-badge)](https://modelcontextprotocol.io/)
 [![Docker](https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](./docker-compose.yml)
-[![License](https://img.shields.io/badge/License-Apache%202.0-10B981?style=for-the-badge)](./LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](./LICENSE)
 [![Latency](https://img.shields.io/badge/Gate%20Latency-%3C%202.5ms-8B5CF6?style=for-the-badge)](#empirical-benchmarks)
 
 ---
@@ -27,26 +27,28 @@ Modern autonomous coding agents (Claude Code, Cursor Composer, Windsurf, GitHub 
 
 **CAVDAX** converts repository artifacts into an active, temporal causal Directed Acyclic Graph (DAG) stored inside **FalkorDB**:
 
-$$\text{Source (ADR / Commit)} \xrightarrow{\text{:EXTRACTED\_FROM}} \text{Fact (Verified Claim)} \xrightarrow{\text{:DEPENDS\_ON}} \text{Decision} \xrightarrow{\text{:GROUNDED\_IN}} \text{AgentAction}$$
+```
+[Source: ADR / Commit] ──(:EXTRACTED_FROM)──> [Fact: Verified Claim] ──(:DEPENDS_ON)──> [Decision] ──(:GROUNDED_IN)──> [AgentAction]
+```
 
 When a superseding commit or ADR arrives:
 1. **Deterministic Ingestion:** Real YAML frontmatter (`supersedes: ADR-001`) is parsed instantly without probabilistic LLM hops.
-2. **Cascading Invalidation Wave:** FalkorDB establishes a `[:SUPERSEDES]` relationship and cascades status flags across the DAG in **$< 4\text{ ms}$** via GraphBLAS sparse matrix operations.
+2. **Cascading Invalidation Wave:** FalkorDB establishes a `[:SUPERSEDES]` relationship and cascades status flags across the DAG in **< 4ms** via GraphBLAS sparse matrix operations.
 3. **Enclosed MCP Execution Gate:** The agent's file modification tool (`apply_code_change`) is enclosed inside an internal Cypher gate. If any ancestor source or fact has been superseded, the gate **hard-rejects** execution (`BLOCKED_SUPERSEDED_SOURCE`). Zero invalid bytes are written.
 4. **Act IV Revalidation Loop:** The agent is guided to create a fresh decision grounded in the active source, enabling safe, verified execution.
 
 ---
 
-## 🖼️ System Architecture & Glassmorphic Visuals
+## 📐 System Architecture & Flowchart Diagrams
 
-### 1. High-Level Architecture
-![CAVDAX System Architecture](./assets/cavdax_system_architecture_glassmorphism.jpg)
+### 1. High-Level Architecture Flowchart
+![CAVDAX System Architecture Flowchart](./assets/cavdax-architecture-glassmorphic.svg)
 
-### 2. Temporal Invalidation & Revalidation Workflow
-![CAVDAX Causal Workflow](./assets/cavdax_workflow_glassmorphism.jpg)
+### 2. Temporal Invalidation & Revalidation Causal Loop
+![CAVDAX Causal Workflow Flowchart](./assets/cavdax-workflow-glassmorphic.svg)
 
-### 3. Enclosed MCP Protocol Gate
-![CAVDAX Enclosed MCP Gate](./assets/cavdax_mcp_gate_glassmorphism.jpg)
+### 3. Enclosed MCP Protocol Execution Gate
+![CAVDAX Enclosed MCP Gate Flowchart](./assets/cavdax-mcp-gate-glassmorphic.svg)
 
 ---
 
@@ -223,7 +225,7 @@ CAVDAX/
 │   └── src/services/            # payment.js target service
 ├── docs/                        # Complete technical specifications & guides
 ├── docker-compose.yml           # Multi-container orchestration (FalkorDB, server, client)
-├── LICENSE                      # Apache 2.0 Open Source License
+├── LICENSE                      # GNU General Public License v3.0
 └── package.json                 # Monorepo root scripts
 ```
 
@@ -237,4 +239,4 @@ Built with passion for the **WeMakeDevs &times; FalkorDB Graph Hacks Hackathon**
 * **Geetika Chugh** — Domain Logic, 10-Scenario Evaluation Dataset, Documentation & Project Blog Author.
 
 ---
-*License: Apache-2.0 &bull; Powered by FalkorDB GraphBLAS & Model Context Protocol (MCP)*
+*License: GNU GPL 3.0 &bull; Powered by FalkorDB GraphBLAS & Model Context Protocol (MCP)*
