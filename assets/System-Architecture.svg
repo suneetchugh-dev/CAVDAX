@@ -1,229 +1,248 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 680" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 660" width="1060" height="660" style="background-color: #0D1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  
   <defs>
-    <!-- Dark Background Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#080A0F"/>
-      <stop offset="100%" stop-color="#0D1117"/>
-    </linearGradient>
-
-    <!-- Card Backgrounds -->
-    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#161B22"/>
-      <stop offset="100%" stop-color="#0E131A"/>
-    </linearGradient>
-    <linearGradient id="falkorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1A1528"/>
-      <stop offset="100%" stop-color="#100D1C"/>
-    </linearGradient>
-    <linearGradient id="blockGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2D1218"/>
-      <stop offset="100%" stop-color="#180A0E"/>
-    </linearGradient>
-    <linearGradient id="approveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#0F2D1F"/>
-      <stop offset="100%" stop-color="#091A12"/>
-    </linearGradient>
-
-    <!-- Arrow Markers -->
-    <marker id="arrowCyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#06B6D4"/>
+    <!-- Arrowhead markers in Mermaid style -->
+    <marker id="arrow-cyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#38BDF8" />
     </marker>
-    <marker id="arrowRose" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#F43F5E"/>
+    <marker id="arrow-emerald" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#34D399" />
     </marker>
-    <marker id="arrowEmerald" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#10B981"/>
+    <marker id="arrow-crimson" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#F87171" />
     </marker>
-    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#A855F7"/>
+    <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#A78BFA" />
     </marker>
-    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#64748B"/>
+    <marker id="arrow-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#FBBF24" />
     </marker>
+    <marker id="arrow-default" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#484F58" />
+    </marker>
+    <!-- Filter for subtle shadow -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
   </defs>
+  
 
-  <!-- Canvas Background -->
-  <rect width="960" height="680" fill="url(#bgGrad)" rx="12"/>
-  <rect width="958" height="678" x="1" y="1" fill="none" stroke="#30363D" stroke-width="1.5" rx="12"/>
+  <!-- TITLE BAR -->
+  <rect x="20" y="14" width="1020" height="38" rx="8" fill="#161B22" stroke="#30363D" stroke-width="1.5" />
+  <circle cx="42" cy="33" r="5" fill="#F87171" />
+  <circle cx="58" cy="33" r="5" fill="#FBBF24" />
+  <circle cx="74" cy="33" r="5" fill="#34D399" />
+  <text x="96" y="38" font-size="14" font-weight="700" fill="#F0F6FC" letter-spacing="0.5">CAVDAX: End-to-End System Architecture (FalkorDB Causal DAG &amp; Enclosed MCP Gate)</text>
+  <rect x="910" y="22" width="118" height="22" rx="11" fill="#0C2D48" stroke="#38BDF8" stroke-width="1" />
+  <text x="969" y="37" font-size="11" font-weight="600" fill="#38BDF8" text-anchor="middle">SUB-3ms GRAPH</text>
 
-  <!-- Title Header Bar -->
-  <rect x="24" y="20" width="912" height="48" rx="8" fill="#161B22" stroke="#30363D" stroke-width="1"/>
-  <circle cx="48" cy="44" r="10" fill="#06B6D4" opacity="0.2"/>
-  <circle cx="48" cy="44" r="5" fill="#06B6D4"/>
-  <text x="70" y="49" fill="#F1F5F9" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" letter-spacing="0.5">CAVDAX: End-to-End System Architecture</text>
-  <rect x="730" y="32" width="190" height="24" rx="12" fill="#06B6D4" fill-opacity="0.15" stroke="#06B6D4" stroke-width="1"/>
-  <text x="825" y="48" fill="#06B6D4" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" text-anchor="middle">FalkorDB GraphBLAS &lt; 2ms</text>
+  <!-- ================= SUBGRAPH 1: INGESTION (Left) ================= -->
+  <g class="subgraph">
+    <rect x="20" y="64" width="225" height="425" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
+    <rect x="20" y="64" width="225" height="34" rx="10" fill="#1A2230" />
+    <rect x="20" y="88" width="225" height="10" fill="#1A2230" />
+    <line x1="20" y1="98" x2="245" y2="98" stroke="#30363D" stroke-width="1.5" />
+    <text x="35" y="86" font-size="13" font-weight="700" fill="#38BDF8">1. Multi-Source Ingestion</text>
 
-  <!-- ==================== LAYER 1: REPOSITORY & INGESTION (TOP) ==================== -->
-  <g transform="translate(24, 84)">
-    <rect width="912" height="110" rx="8" fill="url(#cardGrad)" stroke="#30363D" stroke-width="1"/>
-    <text x="16" y="24" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="0.5">1. TARGET CODEBASE &amp; DETERMINISTIC INGESTION ENGINE</text>
+    <!-- Node: ADR-001 -->
+    <rect x="35" y="112" width="195" height="58" rx="8" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
+    <text x="47" y="132" font-size="12" font-weight="700" fill="#F0F6FC">ADR-001.md</text>
+    <text x="47" y="152" font-size="11" fill="#8B949E">TokenAuth v1 Baseline</text>
+    <rect x="155" y="118" width="68" height="18" rx="4" fill="#374151" />
+    <text x="189" y="131" font-size="9" font-weight="600" fill="#9CA3AF" text-anchor="middle">ORIGINAL</text>
 
-    <!-- Source Box 1 (ADR-001) -->
-    <rect x="16" y="38" width="170" height="56" rx="6" fill="#0C131D" stroke="#06B6D4" stroke-width="1.5"/>
-    <text x="26" y="58" fill="#38BDF8" font-family="monospace" font-size="12" font-weight="700">Source: ADR-001</text>
-    <text x="26" y="74" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="10">TokenAuth v1 Policy</text>
-    <text x="26" y="86" fill="#64748B" font-family="monospace" font-size="9">status: SUPERSEDED</text>
+    <!-- Node: ADR-002 -->
+    <rect x="35" y="184" width="195" height="66" rx="8" fill="#0C2D48" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="47" y="204" font-size="12" font-weight="700" fill="#38BDF8">ADR-002.md</text>
+    <text x="47" y="222" font-size="11" font-weight="500" fill="#C9D1D9">supersedes: ADR-001</text>
+    <text x="47" y="238" font-size="10" fill="#34D399">Enforce OAuth2 Security</text>
+    <rect x="150" y="190" width="73" height="18" rx="4" fill="#0E4429" stroke="#238636" stroke-width="0.8" />
+    <text x="186" y="203" font-size="9" font-weight="700" fill="#3FB950" text-anchor="middle">NEW COMMIT</text>
 
-    <!-- Arrow to Git -->
-    <line x1="186" y1="66" x2="228" y2="66" stroke="#06B6D4" stroke-width="1.5" marker-end="url(#arrowCyan)"/>
+    <!-- Node: Git Commit / Webhook -->
+    <rect x="35" y="264" width="195" height="54" rx="8" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
+    <text x="47" y="284" font-size="12" font-weight="600" fill="#F0F6FC">Git Commit / Webhook</text>
+    <text x="47" y="304" font-size="11" fill="#8B949E">SHA: 9f8a2b (Branch main)</text>
 
-    <!-- Git Commit Box -->
-    <rect x="230" y="38" width="160" height="56" rx="6" fill="#1E1B2E" stroke="#8B5CF6" stroke-width="1.5"/>
-    <text x="240" y="58" fill="#C084FC" font-family="monospace" font-size="12" font-weight="700">Git Commit / PR</text>
-    <text x="240" y="74" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="10">ADR-002 Added</text>
-    <text x="240" y="86" fill="#C084FC" font-family="monospace" font-size="9">supersedes: ADR-001</text>
+    <!-- Node: YAML Frontmatter Parser -->
+    <rect x="35" y="332" width="195" height="62" rx="8" fill="#2E1065" stroke="#A78BFA" stroke-width="1.2" />
+    <text x="47" y="352" font-size="12" font-weight="700" fill="#A78BFA">YAML Metadata Parser</text>
+    <text x="47" y="370" font-size="11" fill="#C9D1D9">Deterministic AST Extraction</text>
+    <text x="47" y="385" font-size="10" fill="#8B949E">Zero Probabilistic LLM Hops</text>
 
-    <!-- Arrow to Parser -->
-    <line x1="390" y1="66" x2="432" y2="66" stroke="#8B5CF6" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
-
-    <!-- Ingestion Engine Box -->
-    <rect x="434" y="38" width="220" height="56" rx="6" fill="#1C1917" stroke="#F59E0B" stroke-width="1.5"/>
-    <text x="444" y="58" fill="#FBBF24" font-family="monospace" font-size="12" font-weight="700">Deterministic Ingestion</text>
-    <text x="444" y="74" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="10">YAML Frontmatter Parser</text>
-    <text x="444" y="86" fill="#FBBF24" font-family="monospace" font-size="9">Zero LLM Hops • Instant</text>
-
-    <!-- Arrow to Source 2 -->
-    <line x1="654" y1="66" x2="696" y2="66" stroke="#F59E0B" stroke-width="1.5" marker-end="url(#arrowCyan)"/>
-
-    <!-- Source Box 2 (ADR-002) -->
-    <rect x="698" y="38" width="198" height="56" rx="6" fill="#0C1F17" stroke="#10B981" stroke-width="1.5"/>
-    <text x="708" y="58" fill="#34D399" font-family="monospace" font-size="12" font-weight="700">Source: ADR-002</text>
-    <text x="708" y="74" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="10">Mandatory OAuth2 Policy</text>
-    <text x="708" y="86" fill="#34D399" font-family="monospace" font-size="9">status: ACTIVE</text>
+    <!-- Node: Ingestion Wave Trigger -->
+    <rect x="35" y="408" width="195" height="42" rx="6" fill="#21262D" stroke="#FBBF24" stroke-width="1.2" />
+    <text x="47" y="426" font-size="11" font-weight="700" fill="#FBBF24">⚡ Ingestion Wave (&lt;3ms)</text>
+    <text x="47" y="441" font-size="10" fill="#C9D1D9">Cascades DAG Invalidation</text>
   </g>
 
-  <!-- Downward Flow to FalkorDB Engine -->
-  <line x1="544" y1="194" x2="544" y2="216" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowPurple)"/>
-  <text x="552" y="210" fill="#FBBF24" font-family="system-ui, sans-serif" font-size="10" font-weight="600">Cascades Invalidation</text>
+  <!-- ================= SUBGRAPH 2: FALKORDB CAUSAL DAG (Center) ================= -->
+  <g class="subgraph">
+    <rect x="260" y="64" width="480" height="425" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
+    <rect x="260" y="64" width="480" height="34" rx="10" fill="#1A2230" />
+    <rect x="260" y="88" width="480" height="10" fill="#1A2230" />
+    <line x1="260" y1="98" x2="740" y2="98" stroke="#30363D" stroke-width="1.5" />
+    <text x="278" y="86" font-size="13" font-weight="700" fill="#38BDF8">2. FalkorDB Temporal Causal Graph (GraphBLAS Engine)</text>
 
-  <!-- ==================== LAYER 2: FALKORDB CAUSAL DAG (MIDDLE) ==================== -->
-  <g transform="translate(24, 218)">
-    <rect width="912" height="190" rx="8" fill="url(#falkorGrad)" stroke="#8B5CF6" stroke-width="1.5"/>
-    <text x="16" y="24" fill="#DDD6FE" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="0.5">2. FALKORDB TEMPORAL CAUSAL GRAPH (GraphBLAS SPARSE MATRIX ENGINE)</text>
+    <!-- ROW 1: SOURCES -->
+    <!-- Source Old -->
+    <rect x="280" y="112" width="205" height="64" rx="8" fill="#4C1D24" stroke="#F87171" stroke-width="1.5" />
+    <text x="292" y="132" font-size="12" font-weight="700" fill="#F87171">( :Source { id: 'ADR-001' } )</text>
+    <text x="292" y="150" font-size="11" fill="#C9D1D9">title: "Auth Token v1"</text>
+    <text x="292" y="166" font-size="10" font-weight="700" fill="#F87171">status: 'SUPERSEDED'</text>
 
-    <!-- Causal Nodes Box: Left to Right DAG -->
-    <!-- Node S1 -->
-    <rect x="24" y="44" width="130" height="50" rx="6" fill="#2E1015" stroke="#F43F5E" stroke-width="1.5"/>
-    <text x="89" y="66" fill="#FDA4AF" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">:Source (ADR-001)</text>
-    <text x="89" y="82" fill="#F43F5E" font-family="monospace" font-size="10" text-anchor="middle">SUPERSEDED</text>
+    <!-- Source New -->
+    <rect x="520" y="112" width="205" height="64" rx="8" fill="#0C2D48" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="532" y="132" font-size="12" font-weight="700" fill="#38BDF8">( :Source { id: 'ADR-002' } )</text>
+    <text x="532" y="150" font-size="11" fill="#C9D1D9">title: "Enforce OAuth2"</text>
+    <text x="532" y="166" font-size="10" font-weight="700" fill="#38BDF8">status: 'ACTIVE'</text>
 
-    <!-- Edge Supersedes from S2 to S1 -->
-    <path d="M 154 69 L 200 69" stroke="#F43F5E" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arrowRose)"/>
-    <text x="177" y="62" fill="#F43F5E" font-family="monospace" font-size="9" text-anchor="middle">:SUPERSEDES</text>
+    <!-- SUPERSEDES EDGE: Source New -> Source Old -->
+    <path d="M 520 144 L 485 144" fill="none" stroke="#F87171" stroke-width="2" marker-end="url(#arrow-crimson)" />
+    <rect x="442" y="134" width="78" height="18" rx="4" fill="#161B22" stroke="#F87171" stroke-width="0.8" />
+    <text x="481" y="147" font-size="9" font-weight="700" fill="#F87171" text-anchor="middle">:SUPERSEDES</text>
 
-    <!-- Node S2 -->
-    <rect x="202" y="44" width="130" height="50" rx="6" fill="#06281E" stroke="#10B981" stroke-width="1.5"/>
-    <text x="267" y="66" fill="#A7F3D0" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">:Source (ADR-002)</text>
-    <text x="267" y="82" fill="#10B981" font-family="monospace" font-size="10" text-anchor="middle">ACTIVE (OAuth2)</text>
+    <!-- ROW 2: FACTS -->
+    <!-- Fact Old -->
+    <rect x="280" y="206" width="205" height="64" rx="8" fill="#452A07" stroke="#FBBF24" stroke-width="1.5" />
+    <text x="292" y="226" font-size="12" font-weight="700" fill="#FBBF24">( :Fact { id: 'F-Auth-v1' } )</text>
+    <text x="292" y="244" font-size="11" fill="#C9D1D9">claim: "TokenAuth Active"</text>
+    <text x="292" y="260" font-size="10" font-weight="700" fill="#FBBF24">is_stale: true (CASCADE)</text>
 
-    <!-- Edge Extracted From S1 to F1 -->
-    <line x1="89" y1="94" x2="89" y2="124" stroke="#F43F5E" stroke-width="1.5" marker-end="url(#arrowRose)"/>
-    <text x="94" y="112" fill="#FDA4AF" font-family="monospace" font-size="8">:EXTRACTED</text>
+    <!-- Fact New -->
+    <rect x="520" y="206" width="205" height="64" rx="8" fill="#064E3B" stroke="#34D399" stroke-width="1.5" />
+    <text x="532" y="226" font-size="12" font-weight="700" fill="#34D399">( :Fact { id: 'F-OAuth2-v2' } )</text>
+    <text x="532" y="244" font-size="11" fill="#C9D1D9">claim: "OAuth2 Enforced"</text>
+    <text x="532" y="260" font-size="10" font-weight="700" fill="#34D399">is_stale: false (FRESH)</text>
 
-    <!-- Node F1 (Stale Fact) -->
-    <rect x="24" y="126" width="130" height="46" rx="6" fill="#2E1015" stroke="#F43F5E" stroke-width="1.5"/>
-    <text x="89" y="146" fill="#FDA4AF" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">:Fact (F-Auth-v1)</text>
-    <text x="89" y="161" fill="#F43F5E" font-family="monospace" font-size="9" text-anchor="middle">is_stale: true</text>
+    <!-- EXTRACTED_FROM EDGES -->
+    <path d="M 382 206 L 382 176" fill="none" stroke="#484F58" stroke-width="1.5" marker-end="url(#arrow-default)" />
+    <rect x="340" y="185" width="84" height="16" rx="3" fill="#161B22" stroke="#30363D" stroke-width="0.6" />
+    <text x="382" y="196" font-size="8.5" fill="#8B949E" text-anchor="middle">:EXTRACTED_FROM</text>
 
-    <!-- Edge Extracted From S2 to F2 -->
-    <line x1="267" y1="94" x2="267" y2="124" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
-    <text x="272" y="112" fill="#A7F3D0" font-family="monospace" font-size="8">:EXTRACTED</text>
+    <path d="M 622 206 L 622 176" fill="none" stroke="#38BDF8" stroke-width="1.5" marker-end="url(#arrow-cyan)" />
+    <rect x="580" y="185" width="84" height="16" rx="3" fill="#161B22" stroke="#38BDF8" stroke-width="0.6" />
+    <text x="622" y="196" font-size="8.5" fill="#38BDF8" text-anchor="middle">:EXTRACTED_FROM</text>
 
-    <!-- Node F2 (Active Fact) -->
-    <rect x="202" y="126" width="130" height="46" rx="6" fill="#06281E" stroke="#10B981" stroke-width="1.5"/>
-    <text x="267" y="146" fill="#A7F3D0" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">:Fact (F-OAuth2)</text>
-    <text x="267" y="161" fill="#10B981" font-family="monospace" font-size="9" text-anchor="middle">verified: true</text>
+    <!-- ROW 3: DECISIONS -->
+    <!-- Decision Old -->
+    <rect x="280" y="300" width="205" height="64" rx="8" fill="#4C1D24" stroke="#F87171" stroke-width="1.8" />
+    <text x="292" y="320" font-size="12" font-weight="700" fill="#F87171">( :Decision { id: 'DEC-102' } )</text>
+    <text x="292" y="338" font-size="11" fill="#C9D1D9">title: "Implement TokenAuth"</text>
+    <text x="292" y="354" font-size="9.5" font-weight="700" fill="#F87171">status: 'INVALIDATED'</text>
 
-    <!-- Query Engine Highlights on Right Half of Middle Layer -->
-    <rect x="360" y="38" width="536" height="136" rx="6" fill="#120E22" stroke="#6D28D9" stroke-width="1"/>
-    <text x="374" y="58" fill="#C4B5FD" font-family="system-ui, sans-serif" font-size="11" font-weight="700">SUB-3MS CYPHER ENGINE (FalkorDB GraphBLAS Matrix Ops)</text>
+    <!-- Decision New -->
+    <rect x="520" y="300" width="205" height="64" rx="8" fill="#064E3B" stroke="#34D399" stroke-width="1.8" />
+    <text x="532" y="320" font-size="12" font-weight="700" fill="#34D399">( :Decision { id: 'DEC-103' } )</text>
+    <text x="532" y="338" font-size="11" fill="#C9D1D9">title: "Implement OAuth2"</text>
+    <text x="532" y="354" font-size="9.5" font-weight="700" fill="#34D399">status: 'VALID' (Act IV)</text>
 
-    <!-- Query 1 Card -->
-    <rect x="374" y="68" width="160" height="96" rx="4" fill="#1E1933" stroke="#8B5CF6" stroke-width="1"/>
-    <text x="382" y="86" fill="#A78BFA" font-family="monospace" font-size="10" font-weight="700">Query 1: Action Gate</text>
-    <text x="382" y="102" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">ANY(...) Aggregation</text>
-    <text x="382" y="118" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">Inspects full ancestry</text>
-    <rect x="382" y="128" width="144" height="26" rx="3" fill="#0C0A17"/>
-    <text x="454" y="145" fill="#38BDF8" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">Latency: 1.84ms</text>
+    <!-- DEPENDS_ON EDGES -->
+    <path d="M 382 300 L 382 270" fill="none" stroke="#F87171" stroke-width="1.5" marker-end="url(#arrow-crimson)" />
+    <rect x="345" y="279" width="74" height="16" rx="3" fill="#161B22" stroke="#F87171" stroke-width="0.6" />
+    <text x="382" y="290" font-size="8.5" fill="#F87171" text-anchor="middle">:DEPENDS_ON</text>
 
-    <!-- Query 2 Card -->
-    <rect x="548" y="68" width="160" height="96" rx="4" fill="#1E1933" stroke="#8B5CF6" stroke-width="1"/>
-    <text x="556" y="86" fill="#A78BFA" font-family="monospace" font-size="10" font-weight="700">Query 2: Invalidation</text>
-    <text x="556" y="102" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">[:SUPERSEDES] cascade</text>
-    <text x="556" y="118" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">Invalidates stale facts</text>
-    <rect x="556" y="128" width="144" height="26" rx="3" fill="#0C0A17"/>
-    <text x="628" y="145" fill="#F43F5E" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">Cascade: 2.14ms</text>
+    <path d="M 622 300 L 622 270" fill="none" stroke="#34D399" stroke-width="1.5" marker-end="url(#arrow-emerald)" />
+    <rect x="585" y="279" width="74" height="16" rx="3" fill="#161B22" stroke="#34D399" stroke-width="0.6" />
+    <text x="622" y="290" font-size="8.5" fill="#34D399" text-anchor="middle">:DEPENDS_ON</text>
 
-    <!-- Query 3 Card -->
-    <rect x="722" y="68" width="160" height="96" rx="4" fill="#1E1933" stroke="#8B5CF6" stroke-width="1"/>
-    <text x="730" y="86" fill="#A78BFA" font-family="monospace" font-size="10" font-weight="700">Query 3: Revalidation</text>
-    <text x="730" y="102" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">Act IV closed loop</text>
-    <text x="730" y="118" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">DEC-103 synthesized</text>
-    <rect x="730" y="128" width="144" height="26" rx="3" fill="#0C0A17"/>
-    <text x="802" y="145" fill="#10B981" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">Revalidate: 1.62ms</text>
+    <!-- REPLACES EDGE (DEC-103 -> DEC-102) -->
+    <path d="M 520 332 L 485 332" fill="none" stroke="#34D399" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow-emerald)" />
+    <rect x="444" y="322" width="74" height="18" rx="4" fill="#161B22" stroke="#34D399" stroke-width="0.8" />
+    <text x="481" y="335" font-size="9" font-weight="700" fill="#34D399" text-anchor="middle">:REPLACES</text>
+
+    <!-- FalkorDB GraphBLAS Engine Status Footer -->
+    <rect x="280" y="380" width="445" height="42" rx="6" fill="#132338" stroke="#38BDF8" stroke-width="1.2" />
+    <text x="295" y="398" font-size="11" font-weight="700" fill="#38BDF8">⚡ Linear Algebraic GraphBLAS Sparse Matrices</text>
+    <text x="295" y="413" font-size="10" fill="#C9D1D9">Multi-Hop Bounded Cypher Traversal executes in &lt; 2.5ms on Redis Protocol</text>
   </g>
 
-  <!-- ==================== LAYER 3: ENCLOSED MCP GATE & AGENT EXECUTION (BOTTOM) ==================== -->
-  <g transform="translate(24, 426)">
-    <!-- Left Box: Agent & MCP Gate -->
-    <rect width="570" height="230" rx="8" fill="url(#cardGrad)" stroke="#30363D" stroke-width="1"/>
-    <text x="16" y="24" fill="#38BDF8" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="0.5">3. ENCLOSED MCP EXECUTION GATE (apply_code_change)</text>
+  <!-- ================= SUBGRAPH 3: ENCLOSED MCP GATE (Right) ================= -->
+  <g class="subgraph">
+    <rect x="755" y="64" width="285" height="425" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
+    <rect x="755" y="64" width="285" height="34" rx="10" fill="#1A2230" />
+    <rect x="755" y="88" width="285" height="10" fill="#1A2230" />
+    <line x1="755" y1="98" x2="1040" y2="98" stroke="#30363D" stroke-width="1.5" />
+    <text x="770" y="86" font-size="13" font-weight="700" fill="#A78BFA">3. Enclosed MCP Gate</text>
 
-    <!-- Agent Box -->
-    <rect x="16" y="42" width="150" height="60" rx="6" fill="#0D1926" stroke="#0284C7" stroke-width="1.5"/>
-    <text x="91" y="64" fill="#E0F2FE" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Coding Agent</text>
-    <text x="91" y="80" fill="#38BDF8" font-family="monospace" font-size="10" text-anchor="middle">Claude Code / Cursor</text>
-    <text x="91" y="93" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9" text-anchor="middle">Invokes tool</text>
+    <!-- Node: Agent -->
+    <rect x="770" y="112" width="255" height="54" rx="8" fill="#2E1065" stroke="#A78BFA" stroke-width="1.5" />
+    <text x="782" y="132" font-size="12" font-weight="700" fill="#A78BFA">Autonomous Coding Agent</text>
+    <text x="782" y="152" font-size="11" fill="#C9D1D9">Claude Code / Cursor Composer / Devin</text>
 
-    <!-- Arrow to Enclosed Gate -->
-    <line x1="166" y1="72" x2="206" y2="72" stroke="#0284C7" stroke-width="1.5" marker-end="url(#arrowCyan)"/>
+    <!-- Node: MCP Tool Call -->
+    <rect x="770" y="184" width="255" height="56" rx="8" fill="#1E3A8A" stroke="#60A5FA" stroke-width="1.3" />
+    <text x="782" y="204" font-size="11" font-weight="700" fill="#60A5FA">tools/call: apply_code_change()</text>
+    <text x="782" y="222" font-size="10.5" fill="#C9D1D9">decision_id: "DEC-102" | file: "payment.js"</text>
 
-    <!-- Enclosed Gate Barrier -->
-    <rect x="208" y="42" width="150" height="60" rx="6" fill="#181329" stroke="#A855F7" stroke-width="1.5"/>
-    <text x="283" y="64" fill="#F3E8FF" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Enclosed Gate</text>
-    <text x="283" y="80" fill="#C084FC" font-family="monospace" font-size="10" text-anchor="middle">verifyActionGate()</text>
-    <text x="283" y="93" fill="#DDD6FE" font-family="system-ui, sans-serif" font-size="9" text-anchor="middle">Internal Cypher check</text>
+    <!-- Node: verifyActionGate Interceptor -->
+    <rect x="770" y="258" width="255" height="50" rx="8" fill="#21262D" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="782" y="278" font-size="11" font-weight="700" fill="#38BDF8">🛡️ Pre-Execution Cypher Gate</text>
+    <text x="782" y="295" font-size="10" fill="#8B949E">ANY(ancestors.is_stale == true)?</text>
 
-    <!-- Split Flow: Branch A (Blocked) vs Branch B (Approved) -->
-    <!-- Branch A: Blocked -->
-    <path d="M 358 60 L 388 60 L 388 40 L 406 40" fill="none" stroke="#F43F5E" stroke-width="1.5" marker-end="url(#arrowRose)"/>
-    <rect x="408" y="24" width="148" height="46" rx="4" fill="url(#blockGrad)" stroke="#F43F5E" stroke-width="1.5"/>
-    <text x="482" y="42" fill="#FDA4AF" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">⛔ HARD REJECT</text>
-    <text x="482" y="58" fill="#F43F5E" font-family="monospace" font-size="8" text-anchor="middle">BLOCKED_SUPERSEDED_SOURCE</text>
+    <!-- Verdict Split: Hard Block -->
+    <rect x="770" y="326" width="255" height="66" rx="8" fill="#4C1D24" stroke="#F87171" stroke-width="1.8" />
+    <text x="782" y="346" font-size="11" font-weight="700" fill="#F87171">⛔ HARD REJECT: Execution Blocked</text>
+    <text x="782" y="364" font-size="10" fill="#F0F6FC">• Zero Disk I/O: 0 bytes modified</text>
+    <text x="782" y="379" font-size="9.5" fill="#C9D1D9">• Returns exact causal violation trace to agent</text>
 
-    <!-- Branch B: Approved -->
-    <path d="M 358 84 L 388 84 L 388 95 L 406 95" fill="none" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrowEmerald)"/>
-    <rect x="408" y="76" width="148" height="46" rx="4" fill="url(#approveGrad)" stroke="#10B981" stroke-width="1.5"/>
-    <text x="482" y="94" fill="#A7F3D0" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">✅ APPROVED WRITE</text>
-    <text x="482" y="110" fill="#10B981" font-family="monospace" font-size="8" text-anchor="middle">payment.js updated</text>
-
-    <!-- Terminal Output Panel Inside Gate -->
-    <rect x="16" y="130" width="540" height="88" rx="6" fill="#05070A" stroke="#1E293B" stroke-width="1"/>
-    <text x="28" y="148" fill="#38BDF8" font-family="monospace" font-size="10" font-weight="700">[TERMINAL INTERCEPTION AUDIT LOG]</text>
-    <text x="28" y="166" fill="#F43F5E" font-family="monospace" font-size="10">↳ [ACT III BLOCKED]: Decision 'DEC-102' is grounded in superseded 'ADR-001'. Zero bytes written.</text>
-    <text x="28" y="184" fill="#34D399" font-family="monospace" font-size="10">↳ [ACT IV APPROVED]: Decision 'DEC-103' grounded in 'ADR-002' verified. OAuth2 code written.</text>
-    <text x="28" y="202" fill="#64748B" font-family="monospace" font-size="9">Audit node AgentAction(:EXECUTED) persisted in FalkorDB with timestamp signature.</text>
+    <!-- Verdict Split: Approved -->
+    <rect x="770" y="408" width="255" height="66" rx="8" fill="#064E3B" stroke="#34D399" stroke-width="1.8" />
+    <text x="782" y="428" font-size="11" font-weight="700" fill="#34D399">✅ APPROVED: Atomic Execution</text>
+    <text x="782" y="446" font-size="10" fill="#F0F6FC">• Verified code committed to disk</text>
+    <text x="782" y="461" font-size="9.5" fill="#C9D1D9">• (:AgentAction)-[:GROUNDED_IN]->(:Decision)</text>
   </g>
 
-  <!-- Right Box: Porcelain Dark Web HUD -->
-  <g transform="translate(610, 426)">
-    <rect width="326" height="230" rx="8" fill="url(#cardGrad)" stroke="#30363D" stroke-width="1"/>
-    <text x="16" y="24" fill="#F1F5F9" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="0.5">4. PORCELAIN DARK WEB HUD</text>
+  <!-- ================= CROSS-SUBGRAPH CONNECTORS ================= -->
+  <!-- Ingestion to FalkorDB Invalidation Wave -->
+  <path d="M 230 429 C 255 429, 255 144, 280 144" fill="none" stroke="#FBBF24" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow-amber)" />
+  <rect x="235" y="275" width="40" height="18" rx="4" fill="#161B22" stroke="#FBBF24" stroke-width="0.8" />
+  <text x="255" y="287" font-size="9" font-weight="700" fill="#FBBF24" text-anchor="middle">&lt;3ms</text>
 
-    <rect x="16" y="42" width="294" height="34" rx="4" fill="#161B22" stroke="#30363D" stroke-width="1"/>
-    <text x="26" y="63" fill="#38BDF8" font-family="monospace" font-size="11" font-weight="700">4-Act Storyline Stepper</text>
-    <text x="235" y="63" fill="#10B981" font-family="monospace" font-size="10">Interactive</text>
+  <!-- Agent to MCP Tool -->
+  <path d="M 897 166 L 897 184" fill="none" stroke="#A78BFA" stroke-width="2" marker-end="url(#arrow-purple)" />
 
-    <rect x="16" y="84" width="294" height="42" rx="4" fill="#161B22" stroke="#30363D" stroke-width="1"/>
-    <text x="26" y="102" fill="#E2E8F0" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Dynamic SVG Graph Canvas</text>
-    <text x="26" y="117" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">Color-coded glowing nodes &amp; edge pulse</text>
+  <!-- MCP Tool to Cypher Gate -->
+  <path d="M 897 240 L 897 258" fill="none" stroke="#60A5FA" stroke-width="2" marker-end="url(#arrow-default)" />
 
-    <rect x="16" y="134" width="294" height="42" rx="4" fill="#161B22" stroke="#30363D" stroke-width="1"/>
-    <text x="26" y="152" fill="#E2E8F0" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Cybernetic Agent Console</text>
-    <text x="26" y="167" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="9">Live SSE event stream from backend</text>
+  <!-- Cypher Gate into FalkorDB Query 1 -->
+  <path d="M 770 283 C 740 283, 735 332, 725 332" fill="none" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <rect x="715" y="295" width="45" height="18" rx="4" fill="#161B22" stroke="#38BDF8" stroke-width="0.8" />
+  <text x="737" y="307" font-size="9" font-weight="700" fill="#38BDF8" text-anchor="middle">1.84ms</text>
 
-    <rect x="16" y="184" width="294" height="34" rx="4" fill="#0C1F17" stroke="#10B981" stroke-width="1"/>
-    <text x="163" y="205" fill="#34D399" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">http://localhost:5173</text>
+  <!-- Rejected feedback back to Agent (Loop) -->
+  <path d="M 1025 359 C 1050 359, 1050 139, 1025 139" fill="none" stroke="#F87171" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arrow-crimson)" />
+  <rect x="1010" y="240" width="46" height="18" rx="4" fill="#161B22" stroke="#F87171" stroke-width="0.8" />
+  <text x="1033" y="252" font-size="8.5" font-weight="700" fill="#F87171" text-anchor="middle">RETRY</text>
+
+  <!-- ================= SUBGRAPH 4: WEB HUD & OBSERVABILITY (Bottom) ================= -->
+  <g class="subgraph">
+    <rect x="20" y="504" width="1020" height="142" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
+    <rect x="20" y="504" width="1020" height="30" rx="10" fill="#1A2230" />
+    <rect x="20" y="524" width="1020" height="10" fill="#1A2230" />
+    <line x1="20" y1="534" x2="1040" y2="534" stroke="#30363D" stroke-width="1.5" />
+    <text x="35" y="524" font-size="13" font-weight="700" fill="#F0F6FC">4. Executive Porcelain Web HUD (React 18 + SSE Live Telemetry Stream)</text>
+
+    <!-- Card 1: 4-Act Orchestrator -->
+    <rect x="35" y="546" width="305" height="86" rx="8" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
+    <text x="47" y="566" font-size="12" font-weight="700" fill="#38BDF8">4-Act Interactive Orchestrator</text>
+    <text x="47" y="584" font-size="11" fill="#C9D1D9">Act I: Baseline Stable Graph</text>
+    <text x="47" y="600" font-size="11" fill="#FBBF24">Act II: Real Ingestion &amp; Cascading Invalidation</text>
+    <text x="47" y="616" font-size="11" fill="#F87171">Act III: MCP Gate Hard Interception</text>
+
+    <!-- Card 2: Force-Graph Canvas -->
+    <rect x="360" y="546" width="335" height="86" rx="8" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
+    <text x="372" y="566" font-size="12" font-weight="700" fill="#34D399">Force-Graph 2D Canvas Engine</text>
+    <text x="372" y="584" font-size="11" fill="#C9D1D9">• Real-time particle simulation &amp; pulsing nodes</text>
+    <text x="372" y="600" font-size="11" fill="#C9D1D9">• Direct color-mapped provenance states</text>
+    <text x="372" y="616" font-size="11" fill="#38BDF8">• Highlights exact violated path in crimson</text>
+
+    <!-- Card 3: Cybernetic Terminal -->
+    <rect x="715" y="546" width="310" height="86" rx="8" fill="#0A0E14" stroke="#38BDF8" stroke-width="1.2" />
+    <text x="727" y="566" font-size="12" font-weight="700" fill="#38BDF8">Cybernetic Verification Terminal</text>
+    <text x="727" y="584" font-size="10.5" font-family="monospace" fill="#F87171">[GATE] BLOCKED_SUPERSEDED_SOURCE (1.84ms)</text>
+    <text x="727" y="600" font-size="10.5" font-family="monospace" fill="#34D399">[ACT-IV] Created DEC-103 grounded in ADR-002</text>
+    <text x="727" y="616" font-size="10.5" font-family="monospace" fill="#38BDF8">[MCP] Tool call approved. File updated.</text>
   </g>
+
 </svg>
