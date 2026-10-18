@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 920" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#040508"/>
+      <stop offset="50%" stop-color="#090E17"/>
+      <stop offset="100%" stop-color="#020305"/>
+    </linearGradient>
+
+    <linearGradient id="glass-card3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.80"/>
+    </linearGradient>
+
+    <filter id="glow-cyan3" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-red3" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-green3" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ambient3" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="130" result="blur"/>
+    </filter>
+
+    <marker id="m3-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#00F0FF"/>
+    </marker>
+    <marker id="m3-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#EF4444"/>
+    </marker>
+    <marker id="m3-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#10B981"/>
+    </marker>
+  </defs>
+
+  <style>
+    .title { font-family: system-ui, -apple-system, sans-serif; font-weight: 800; font-size: 26px; fill: #F8FAFC; letter-spacing: -0.5px; }
+    .subtitle { font-family: system-ui, -apple-system, sans-serif; font-weight: 400; font-size: 14px; fill: #94A3B8; }
+    .card-title { font-family: system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 16px; fill: #F1F5F9; }
+    .card-sub { font-family: system-ui, -apple-system, sans-serif; font-weight: 400; font-size: 12px; fill: #94A3B8; }
+    .code { font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; fill: #00F0FF; }
+    .badge { font-family: system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; }
+  </style>
+
+  <rect width="100%" height="100%" fill="url(#bg-grad3)"/>
+
+  <!-- Ambient Glows -->
+  <circle cx="200" cy="300" r="220" fill="#0284C7" opacity="0.16" filter="url(#ambient3)"/>
+  <circle cx="700" cy="400" r="240" fill="#8B5CF6" opacity="0.15" filter="url(#ambient3)"/>
+  <circle cx="1250" cy="250" r="220" fill="#EF4444" opacity="0.18" filter="url(#ambient3)"/>
+  <circle cx="1250" cy="650" r="220" fill="#10B981" opacity="0.18" filter="url(#ambient3)"/>
+
+  <!-- Header -->
+  <g transform="translate(60, 45)">
+    <rect x="0" y="0" width="115" height="24" rx="12" fill="#0284C7" fill-opacity="0.2" stroke="#38BDF8" stroke-width="1"/>
+    <text x="57" y="16" class="badge" fill="#38BDF8" text-anchor="middle">MCP PROTOCOL</text>
+    <text x="130" y="20" class="title">CAVDAX: Enclosed MCP Execution Gate</text>
+    <text x="0" y="46" class="subtitle">Why the Gate Cannot Be Skipped: The apply_code_change() Proxy with Internal FalkorDB GraphBLAS Verification</text>
+  </g>
+
+  <!-- STEP 1: AGENT INVOCATION -->
+  <g transform="translate(60, 130)">
+    <rect width="360" height="420" rx="18" fill="url(#glass-card3)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"/>
+    <rect x="20" y="20" width="160" height="22" rx="6" fill="#6366F1" fill-opacity="0.25" stroke="#818CF8" stroke-width="1"/>
+    <text x="100" y="35" class="badge" fill="#A5B4FC" text-anchor="middle">1. AGENT TOOL CALL</text>
+    <text x="20" y="68" class="card-title">Autonomous Coding Agent</text>
+    <text x="20" y="88" class="card-sub">Cursor / Claude Code MCP Invocation</text>
+
+    <rect x="20" y="110" width="320" height="280" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+    <text x="35" y="135" class="code" fill="#A5B4FC">// Model Context Protocol</text>
+    <text x="35" y="155" class="code" fill="#00F0FF">POST /tools/call</text>
+    <text x="35" y="180" class="code" fill="#F8FAFC">{</text>
+    <text x="50" y="200" class="code" fill="#38BDF8">"name": "apply_code_change",</text>
+    <text x="50" y="220" class="code" fill="#F1F5F9">"arguments": {</text>
+    <text x="65" y="240" class="code" fill="#F43F5E">  "decision_id": "DEC-102",</text>
+    <text x="65" y="260" class="code" fill="#94A3B8">  "file": "payment.js",</text>
+    <text x="65" y="280" class="code" fill="#94A3B8">  "patch": "function auth() {</text>
+    <text x="80" y="300" class="code" fill="#F43F5E">    return TokenAuth.v1();</text>
+    <text x="65" y="320" class="code" fill="#94A3B8">  }"</text>
+    <text x="50" y="340" class="code" fill="#F1F5F9">}</text>
+    <text x="35" y="360" class="code" fill="#F8FAFC">}</text>
+  </g>
+
+  <!-- Connection: Step 1 -> Step 2 -->
+  <path d="M 420 340 L 490 340" stroke="#00F0FF" stroke-width="2.5" marker-end="url(#m3-cyan)"/>
+
+  <!-- STEP 2: ENCLOSED MCP GATE INTERCEPTION -->
+  <g transform="translate(500, 130)">
+    <rect width="420" height="420" rx="18" fill="url(#glass-card3)" stroke="#818CF8" stroke-width="1.8" filter="url(#glow-purple3)"/>
+    <rect x="20" y="20" width="180" height="22" rx="6" fill="#8B5CF6" fill-opacity="0.3" stroke="#A855F7" stroke-width="1"/>
+    <text x="110" y="35" class="badge" fill="#C084FC" text-anchor="middle">2. ENCLOSED GATEWAY</text>
+    <text x="20" y="68" class="card-title">Pre-Execution Cypher Check</text>
+    <text x="20" y="88" class="card-sub">ZERO files touched before FalkorDB verification</text>
+
+    <!-- Internal Execution Box -->
+    <rect x="20" y="110" width="380" height="150" rx="10" fill="#082F49" fill-opacity="0.8" stroke="#0284C7" stroke-width="1.2"/>
+    <text x="35" y="135" class="code" fill="#38BDF8">RUN QUERY 1 INTERNALLY:</text>
+    <text x="35" y="155" class="code" fill="#E2E8F0">MATCH (d:Decision {id: 'DEC-102'})</text>
+    <text x="35" y="175" class="code" fill="#E2E8F0">MATCH path = (d)-[:DEPENDS_ON*1..4]-&gt;(f)-&gt;(s)</text>
+    <text x="35" y="195" class="code" fill="#E2E8F0">EVAL: ANY(dep IN deps WHERE</text>
+    <text x="35" y="215" class="code" fill="#F43F5E">      dep.fact_stale == true)</text>
+    <text x="35" y="240" class="code" fill="#00F0FF">&gt; Query Duration: 3.4 milliseconds</text>
+
+    <!-- Branch Decision Diamond -->
+    <rect x="20" y="280" width="380" height="110" rx="10" fill="#18181B" stroke="#F59E0B" stroke-width="1.2"/>
+    <text x="35" y="305" class="code" fill="#FCD34D">GATE POLICY EVALUATION:</text>
+    <text x="35" y="325" class="card-sub" fill="#F1F5F9">Is ANY dependency node stale or superseded?</text>
+    <text x="35" y="350" class="code-red">• If YES -&gt; Route to HARD REJECT</text>
+    <text x="35" y="370" class="code-green">• If NO  -&gt; Route to APPROVED WRITE</text>
+  </g>
+
+  <!-- Connection: Step 2 -> Step 3 Branches -->
+  <path d="M 920 280 L 980 230" stroke="#EF4444" stroke-width="2.5" marker-end="url(#m3-red)"/>
+  <path d="M 920 400 L 980 470" stroke="#10B981" stroke-width="2.5" marker-end="url(#m3-green)"/>
+
+  <!-- STEP 3A: HARD REJECT -->
+  <g transform="translate(990, 110)">
+    <rect width="390" height="240" rx="18" fill="#1C0A0A" fill-opacity="0.9" stroke="#EF4444" stroke-width="2" filter="url(#glow-red3)"/>
+    <rect x="20" y="18" width="170" height="22" rx="6" fill="#7F1D1D" fill-opacity="0.6" stroke="#EF4444" stroke-width="1"/>
+    <text x="105" y="33" class="badge" fill="#FCA5A5" text-anchor="middle">⛔ HARD REJECT</text>
+    
+    <text x="20" y="65" class="card-title" fill="#F87171">Execution Blocked: Stale Fact</text>
+    <text x="20" y="85" class="card-sub" fill="#FECACA">Zero bytes written to disk. File untouched.</text>
+
+    <rect x="20" y="100" width="350" height="115" rx="8" fill="#0B0606" stroke="rgba(239,68,68,0.3)"/>
+    <text x="30" y="125" class="code" fill="#FCA5A5">RETURN MCP ERROR PAYLOAD:</text>
+    <text x="30" y="145" class="code-red">isError: true</text>
+    <text x="30" y="165" class="code-red">"Decision DEC-102 relies on stale Fact</text>
+    <text x="30" y="183" class="code-red"> F-Auth-v1, invalidated by Commit 9f8a2b."</text>
+    <text x="30" y="202" class="code-red">&gt; Feeds audit path to Agent for Act IV</text>
+  </g>
+
+  <!-- STEP 3B: APPROVED EXECUTION -->
+  <g transform="translate(990, 380)">
+    <rect width="390" height="240" rx="18" fill="#022C22" fill-opacity="0.9" stroke="#10B981" stroke-width="2" filter="url(#glow-green3)"/>
+    <rect x="20" y="18" width="160" height="22" rx="6" fill="#065F46" fill-opacity="0.6" stroke="#10B981" stroke-width="1"/>
+    <text x="100" y="33" class="badge" fill="#A7F3D0" text-anchor="middle">✅ APPROVED WRITE</text>
+    
+    <text x="20" y="65" class="card-title" fill="#34D399">Full Provenance Sound</text>
+    <text x="20" y="85" class="card-sub" fill="#D1FAE5">Code safely written to host filesystem.</text>
+
+    <rect x="20" y="100" width="350" height="115" rx="8" fill="#021C16" stroke="rgba(16,185,129,0.3)"/>
+    <text x="30" y="125" class="code" fill="#6EE7B7">DISK WRITE EXECUTED:</text>
+    <text x="30" y="145" class="code-green">fs.writeFileSync("src/payment.js", code)</text>
+    <text x="30" y="165" class="code-green">CREATE (:AgentAction)-[:GROUNDED_IN]-&gt;(d)</text>
+    <text x="30" y="183" class="code-green">isError: false</text>
+    <text x="30" y="202" class="code-green">"File payment.js updated with OAuth2."</text>
+  </g>
+
+  <!-- BOTTOM PANEL: ACT IV REVALIDATION LOOP FEEDBACK -->
+  <g transform="translate(60, 650)">
+    <rect width="1320" height="220" rx="18" fill="url(#glass-card3)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+    <rect x="25" y="18" width="220" height="24" rx="6" fill="#059669" fill-opacity="0.3" stroke="#10B981" stroke-width="1"/>
+    <text x="135" y="34" class="badge" fill="#6EE7B7" text-anchor="middle">ACT IV REVALIDATION HANDSHAKE</text>
+    <text x="25" y="65" class="card-title">How the Error Payload Powers Self-Healing Autonomous Agents</text>
+    <text x="25" y="85" class="card-sub">The structured violation trace from the MCP error guides the agent directly to the superseding source without human intervention.</text>
+
+    <!-- Stage Box 1 -->
+    <rect x="25" y="105" width="400" height="90" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+    <text x="40" y="130" class="badge" fill="#F43F5E">1. AGENT INGESTS ERROR</text>
+    <text x="40" y="150" class="card-sub" fill="#F8FAFC">Agent extracts offending fact: F-Auth-v1</text>
+    <text x="40" y="170" class="code" fill="#FCA5A5">Learns commit 9f8a2b introduced OAuth2</text>
+
+    <!-- Stage Box 2 -->
+    <rect x="460" y="105" width="400" height="90" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+    <text x="475" y="130" class="badge" fill="#F59E0B">2. CALL CREATE_DECISION()</text>
+    <text x="475" y="150" class="card-sub" fill="#F8FAFC">Agent synthesizes DEC-103:</text>
+    <text x="475" y="170" class="code" fill="#FCD34D">Creates (DEC-103)-[:REPLACES]-&gt;(DEC-102)</text>
+
+    <!-- Stage Box 3 -->
+    <rect x="895" y="105" width="400" height="90" rx="10" fill="#022C22" stroke="#10B981" stroke-width="1.5"/>
+    <text x="910" y="130" class="badge" fill="#34D399">3. RE-CALL APPLY_CODE_CHANGE()</text>
+    <text x="910" y="150" class="card-sub" fill="#F8FAFC">Agent re-calls with decision_id: DEC-103</text>
+    <text x="910" y="170" class="code-green">Gate runs Query 1 -&gt; APPROVED -&gt; Written!</text>
+  </g>
+</svg>

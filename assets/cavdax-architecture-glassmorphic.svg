@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 980" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#04060A"/>
+      <stop offset="50%" stop-color="#090D16"/>
+      <stop offset="100%" stop-color="#020306"/>
+    </linearGradient>
+
+    <linearGradient id="glass-card2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.80"/>
+    </linearGradient>
+
+    <filter id="glow-cyan2" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-purple2" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ambient2" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="130" result="blur"/>
+    </filter>
+
+    <marker id="arr-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#00F0FF"/>
+    </marker>
+    <marker id="arr-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#A855F7"/>
+    </marker>
+  </defs>
+
+  <style>
+    .title { font-family: system-ui, -apple-system, sans-serif; font-weight: 800; font-size: 26px; fill: #F8FAFC; letter-spacing: -0.5px; }
+    .subtitle { font-family: system-ui, -apple-system, sans-serif; font-weight: 400; font-size: 14px; fill: #94A3B8; }
+    .card-title { font-family: system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 16px; fill: #F1F5F9; }
+    .card-sub { font-family: system-ui, -apple-system, sans-serif; font-weight: 400; font-size: 12px; fill: #94A3B8; }
+    .code { font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; fill: #00F0FF; }
+    .badge { font-family: system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; }
+  </style>
+
+  <rect width="100%" height="100%" fill="url(#bg-grad2)"/>
+
+  <!-- Ambient Light Orbs -->
+  <circle cx="250" cy="250" r="220" fill="#0284C7" opacity="0.18" filter="url(#ambient2)"/>
+  <circle cx="1150" cy="350" r="260" fill="#8B5CF6" opacity="0.16" filter="url(#ambient2)"/>
+  <circle cx="700" cy="750" r="240" fill="#06B6D4" opacity="0.15" filter="url(#ambient2)"/>
+
+  <!-- Header -->
+  <g transform="translate(60, 45)">
+    <rect x="0" y="0" width="105" height="24" rx="12" fill="#8B5CF6" fill-opacity="0.2" stroke="#A855F7" stroke-opacity="0.5"/>
+    <text x="52" y="16" class="badge" fill="#C084FC" text-anchor="middle">ARCHITECTURE</text>
+    <text x="120" y="20" class="title">CAVDAX: 5-Tier System Architecture</text>
+    <text x="0" y="46" class="subtitle">Component Topology, Network Protocols, and Storage Boundaries across Agent, Gateway, and FalkorDB</text>
+  </g>
+
+  <!-- ================= TIER 1: CLIENT WEB HUD ================= -->
+  <g transform="translate(60, 120)">
+    <rect width="630" height="180" rx="16" fill="url(#glass-card2)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+    <rect x="20" y="18" width="180" height="22" rx="6" fill="#0284C7" fill-opacity="0.25" stroke="#38BDF8" stroke-width="1"/>
+    <text x="110" y="33" class="badge" fill="#38BDF8" text-anchor="middle">1. CLIENT &amp; INTERFACE</text>
+    <text x="20" y="65" class="card-title">Porcelain Dark Web HUD (React 18 + Vite + Tailwind)</text>
+    <text x="20" y="85" class="card-sub">Cybernetic Executive Console for Real-Time Human Oversight</text>
+
+    <!-- Sub-Box A: Force Graph -->
+    <rect x="20" y="100" width="285" height="60" rx="8" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+    <text x="32" y="122" class="code" fill="#38BDF8">Force-Graph 2D Canvas</text>
+    <text x="32" y="142" class="card-sub">Pulsing WebGL traversal paths in &lt;4ms</text>
+
+    <!-- Sub-Box B: Terminal -->
+    <rect x="320" y="100" width="290" height="60" rx="8" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+    <text x="332" y="122" class="code" fill="#F43F5E">Agent Action Terminal</text>
+    <text x="332" y="142" class="card-sub">Live APPROVED / BLOCKED badges &amp; audit trails</text>
+  </g>
+
+  <!-- ================= TIER 2: AUTONOMOUS AGENT ================= -->
+  <g transform="translate(750, 120)">
+    <rect width="630" height="180" rx="16" fill="url(#glass-card2)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+    <rect x="20" y="18" width="190" height="22" rx="6" fill="#6366F1" fill-opacity="0.25" stroke="#818CF8" stroke-width="1"/>
+    <text x="115" y="33" class="badge" fill="#A5B4FC" text-anchor="middle">2. AUTONOMOUS AGENT</text>
+    <text x="20" y="65" class="card-title">Developer Coding Agents (Cursor / Claude Code)</text>
+    <text x="20" y="85" class="card-sub">Autonomous Tool Execution constrained by the Model Context Protocol</text>
+
+    <!-- Sub-Box A: Claude Code / Cursor -->
+    <rect x="20" y="100" width="285" height="60" rx="8" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+    <text x="32" y="122" class="code" fill="#A5B4FC">Agent Core Reasoning</text>
+    <text x="32" y="142" class="card-sub">Proposes actions based on DEC IDs</text>
+
+    <!-- Sub-Box B: MCP Client -->
+    <rect x="320" y="100" width="290" height="60" rx="8" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+    <text x="332" y="122" class="code" fill="#00F0FF">MCP Client (stdio / JSON-RPC)</text>
+    <text x="332" y="142" class="card-sub">Encapsulates tool calls via JSON-RPC 2.0</text>
+  </g>
+
+  <!-- Protocol Connector: Agent -> Gateway -->
+  <path d="M 1065 300 L 1065 350" stroke="#00F0FF" stroke-width="2.5" marker-end="url(#arr-cyan)"/>
+  <rect x="1000" y="315" width="130" height="20" rx="4" fill="#082F49" stroke="#00F0FF" stroke-width="1"/>
+  <text x="1065" y="329" class="badge" fill="#00F0FF" text-anchor="middle">MCP JSON-RPC 2.0</text>
+
+  <!-- Protocol Connector: WebHUD -> Gateway -->
+  <path d="M 375 300 L 375 350" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arr-cyan)"/>
+  <rect x="315" y="315" width="120" height="20" rx="4" fill="#082F49" stroke="#38BDF8" stroke-width="1"/>
+  <text x="375" y="329" class="badge" fill="#38BDF8" text-anchor="middle">REST / SSE STREAM</text>
+
+  <!-- ================= TIER 3: CAVDAX BACKEND GATEWAY ================= -->
+  <g transform="translate(60, 360)">
+    <rect width="1320" height="230" rx="18" fill="url(#glass-card2)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+    <rect x="25" y="18" width="240" height="22" rx="6" fill="#0D9488" fill-opacity="0.3" stroke="#2DD4BF" stroke-width="1"/>
+    <text x="145" y="33" class="badge" fill="#2DD4BF" text-anchor="middle">3. CAVDAX BACKEND GATEWAY</text>
+    <text x="25" y="65" class="card-title">Node.js Express Engine &amp; Enclosed MCP Server Proxy</text>
+    <text x="25" y="85" class="card-sub">The Non-Bypassable Security Enforcement Boundary between AI Agents and the Host Codebase</text>
+
+    <!-- Sub-Component 1: Ingestion Engine -->
+    <rect x="25" y="105" width="300" height="100" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.1)"/>
+    <text x="40" y="130" class="card-title" fill="#38BDF8">ADR Ingestion Engine</text>
+    <text x="40" y="150" class="code" fill="#94A3B8">• 40-line YAML parser</text>
+    <text x="40" y="168" class="code" fill="#94A3B8">• Reads "supersedes: ADR-xxx"</text>
+    <text x="40" y="186" class="code" fill="#34D399">• Triggers Query 2 in &lt;4ms</text>
+
+    <!-- Sub-Component 2: Enclosed MCP Proxy -->
+    <rect x="345" y="105" width="340" height="100" rx="10" fill="#1E1B4B" stroke="#818CF8" stroke-width="1.5" filter="url(#glow-purple2)"/>
+    <text x="360" y="130" class="card-title" fill="#A5B4FC">Enclosed MCP Gate Proxy</text>
+    <text x="360" y="150" class="code" fill="#E0E7FF">• Tool: apply_code_change()</text>
+    <text x="360" y="168" class="code" fill="#F43F5E">• Internal Query 1 Check</text>
+    <text x="360" y="186" class="code" fill="#F43F5E">• Hard-Blocks on stale facts</text>
+
+    <!-- Sub-Component 3: Evaluation Suite -->
+    <rect x="705" y="105" width="300" height="100" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.1)"/>
+    <text x="720" y="130" class="card-title" fill="#F59E0B">Benchmark &amp; Eval Runner</text>
+    <text x="720" y="150" class="code" fill="#94A3B8">• 10-Scenario Test Harness</text>
+    <text x="720" y="168" class="code" fill="#94A3B8">• 50k-Node Graph Generator</text>
+    <text x="720" y="186" class="code" fill="#FBBF24">• Proves scale vs SQL CTEs</text>
+
+    <!-- Sub-Component 4: Falkor Driver -->
+    <rect x="1025" y="105" width="270" height="100" rx="10" fill="#082F49" stroke="#0284C7" stroke-width="1.5" filter="url(#glow-cyan2)"/>
+    <text x="1040" y="130" class="card-title" fill="#38BDF8">FalkorDB Client Pool</text>
+    <text x="1040" y="150" class="code" fill="#38BDF8">• Multiplexed TCP Sockets</text>
+    <text x="1040" y="168" class="code" fill="#38BDF8">• Redis Binary Protocol</text>
+    <text x="1040" y="186" class="code" fill="#00F0FF">• Sub-2ms round-trip latency</text>
+  </g>
+
+  <!-- Protocol Connector: Gateway -> Database -->
+  <path d="M 720 590 L 720 640" stroke="#00F0FF" stroke-width="2.5" marker-end="url(#arr-cyan)"/>
+  <rect x="635" y="605" width="170" height="20" rx="4" fill="#082F49" stroke="#00F0FF" stroke-width="1"/>
+  <text x="720" y="619" class="badge" fill="#00F0FF" text-anchor="middle">CYPHER / REDIS (6379)</text>
+
+  <!-- ================= TIER 4 & 5: DATABASE & HOST SYSTEM ================= -->
+  <!-- Tier 4: FalkorDB Engine -->
+  <g transform="translate(60, 650)">
+    <rect width="780" height="270" rx="18" fill="url(#glass-card2)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+    <rect x="25" y="18" width="210" height="22" rx="6" fill="#1E1B4B" fill-opacity="0.4" stroke="#818CF8" stroke-width="1"/>
+    <text x="130" y="33" class="badge" fill="#A5B4FC" text-anchor="middle">4. FALKORDB GRAPH ENGINE</text>
+    <text x="25" y="65" class="card-title">C-Based GraphBLAS Matrix Engine</text>
+    <text x="25" y="85" class="card-sub">Sparse Linear Algebra Subsystem delivering sub-millisecond multi-hop path traversal</text>
+
+    <!-- Schema Elements -->
+    <rect x="25" y="105" width="230" height="140" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.1)"/>
+    <text x="40" y="130" class="code" fill="#38BDF8">:Source Nodes</text>
+    <text x="40" y="148" class="card-sub">Commits, PRs, ADR Markdown</text>
+    <text x="40" y="175" class="code" fill="#A7F3D0">:Fact Nodes</text>
+    <text x="40" y="193" class="card-sub">Atomic claims with is_stale flags</text>
+    <text x="40" y="220" class="code" fill="#FCA5A5">[:EXTRACTED_FROM] Edges</text>
+
+    <rect x="275" y="105" width="230" height="140" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.1)"/>
+    <text x="290" y="130" class="code" fill="#FBBF24">:Decision Nodes</text>
+    <text x="290" y="148" class="card-sub">Architectural &amp; Policy Directives</text>
+    <text x="290" y="175" class="code" fill="#F43F5E">[:DEPENDS_ON*1..4]</text>
+    <text x="290" y="193" class="card-sub">Multi-Hop Traversal Chains</text>
+    <text x="290" y="220" class="code" fill="#6EE7B7">[:REPLACES] Edges (Act IV)</text>
+
+    <rect x="525" y="105" width="230" height="140" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.1)"/>
+    <text x="540" y="130" class="code" fill="#00F0FF">:AgentAction Nodes</text>
+    <text x="540" y="148" class="card-sub">Audit trail of verified changes</text>
+    <text x="540" y="175" class="code" fill="#A855F7">B-Tree Indices</text>
+    <text x="540" y="193" class="card-sub">Index on :Decision(id)</text>
+    <text x="540" y="220" class="card-sub">Index on :Fact(is_stale)</text>
+  </g>
+
+  <!-- Tier 5: Host & Target Codebase -->
+  <g transform="translate(870, 650)">
+    <rect width="510" height="270" rx="18" fill="url(#glass-card2)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+    <rect x="25" y="18" width="190" height="22" rx="6" fill="#374151" fill-opacity="0.4" stroke="#9CA3AF" stroke-width="1"/>
+    <text x="120" y="33" class="badge" fill="#E2E8F0" text-anchor="middle">5. TARGET CODEBASE</text>
+    <text x="25" y="65" class="card-title">Protected Host Environment</text>
+    <text x="25" y="85" class="card-sub">Real Codebase Files Modified Only When Approved</text>
+
+    <rect x="25" y="105" width="460" height="65" rx="10" fill="#0F172A" stroke="rgba(255,255,255,0.1)"/>
+    <text x="40" y="130" class="code" fill="#38BDF8">docs/adrs/*.md</text>
+    <text x="40" y="150" class="card-sub">Input: Markdown files with YAML frontmatter</text>
+
+    <rect x="25" y="180" width="460" height="65" rx="10" fill="#064E3B" stroke="#10B981" stroke-width="1.5"/>
+    <text x="40" y="205" class="code" fill="#6EE7B7">src/services/payment.js</text>
+    <text x="40" y="225" class="card-sub">Protected: Written ONLY when Gate returns APPROVED</text>
+  </g>
+</svg>
