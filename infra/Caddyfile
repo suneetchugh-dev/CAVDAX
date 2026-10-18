@@ -1,7 +1,8 @@
 # Caddy Reverse Proxy Configuration
 # Automatically secures your domain with a free Let's Encrypt SSL certificate.
 
-{$DOMAIN:localhost} {
+cavdax.sahnirmaan.live, cadax.sahnirmaan.live, {$DOMAIN:localhost} {
+    tls internal
     # 1. Route API requests and real-time SSE streams to CAVDAX Backend Server
     handle /api/* {
         reverse_proxy server:3000 {
