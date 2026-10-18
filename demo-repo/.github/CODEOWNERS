@@ -1,0 +1,8 @@
+# Global Codeowners for Payment Microservices
+# CAVDAX tracks mutations to this file to invalidate PR reviewer assignments.
+
+* @security-architecture-board
+
+# Payment gateway routing (Updated: Bob takes ownership from Alice)
+/src/services/payment.js @bob
+/src/services/auth/      @security-lead

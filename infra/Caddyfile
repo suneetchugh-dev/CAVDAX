@@ -1,0 +1,24 @@
+# Caddy Reverse Proxy Configuration
+# Automatically secures your domain with a free Let's Encrypt SSL certificate.
+
+{$DOMAIN:localhost} {
+    # 1. Route API requests to the CAVDAX Backend Server
+    handle /api/* {
+        reverse_proxy server:3000
+    }
+
+    # 2. Route all frontend Web HUD requests to the Client
+    handle {
+        reverse_proxy client:5173
+    }
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    encode gzip zstd
+}

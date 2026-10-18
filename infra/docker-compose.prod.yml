@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # 1. FalkorDB Graph Engine
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: cavdax-falkordb
+    restart: unless-stopped
+    volumes:
+      - falkordb-prod-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 2. CAVDAX Backend Server & Enclosed MCP Gate
+  server:
+    build:
+      context: ..
+      dockerfile: apps/server/Dockerfile
+    container_name: cavdax-server
+    environment:
+      - PORT=3000
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - NODE_ENV=production
+    depends_on:
+      falkordb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # 3. CAVDAX Porcelain Dark Web HUD
+  client:
+    build:
+      context: ..
+      dockerfile: apps/client/Dockerfile
+    container_name: cavdax-client
+    restart: unless-stopped
+
+  # 4. Caddy Automatic HTTPS Reverse Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: cavdax-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - server
+      - client
+
+volumes:
+  falkordb-prod-data:
+    driver: local
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local

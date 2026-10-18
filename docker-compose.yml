@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # 1. FalkorDB Graph Engine (GraphBLAS Sparse Matrix Database)
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: cavdax-falkordb
+    ports:
+      - "6379:6379"
+    volumes:
+      - falkordb-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 2. CAVDAX Backend Gateway & Enclosed MCP Gate
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    container_name: cavdax-server
+    environment:
+      - PORT=3000
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - NODE_ENV=production
+    ports:
+      - "3001:3000"
+    depends_on:
+      falkordb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # 3. CAVDAX Porcelain Dark Web HUD
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+    container_name: cavdax-client
+    environment:
+      - VITE_API_URL=http://server:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  falkordb-data:
+    driver: local
