@@ -18,18 +18,20 @@ export async function verifyActionGate(graph, decisionId) {
          collect({
            path_nodes: [n IN nodes(path) | labels(n)[0] + ':' + coalesce(n.id, n.ref)],
            fact_stale: coalesce(f.is_stale, false),
-           source_status: coalesce(s.status, 'ACTIVE')
+           source_status: coalesce(s.status, 'ACTIVE'),
+           has_invalid_decision: ANY(n IN nodes(path) WHERE (n:Decision) AND n.status <> 'VALID')
          }) AS dependencies
     RETURN d.id AS decision_id,
            decision_status,
-           CASE 
+           CASE
              WHEN decision_status = 'INVALIDATED_NEEDS_REVALIDATION' THEN 'BLOCKED_DECISION_INVALIDATED'
              WHEN size(dependencies) = 0 THEN 'BLOCKED_NO_GROUNDING'
+             WHEN ANY(dep IN dependencies WHERE dep.has_invalid_decision = true) THEN 'BLOCKED_INTERMEDIATE_DECISION_INVALIDATED'
              WHEN ANY(dep IN dependencies WHERE dep.fact_stale = true) THEN 'BLOCKED_STALE_FACT'
              WHEN ANY(dep IN dependencies WHERE dep.source_status = 'SUPERSEDED') THEN 'BLOCKED_SUPERSEDED_SOURCE'
              ELSE 'APPROVED'
            END AS gate_verdict,
-           [dep IN dependencies WHERE dep.fact_stale = true OR dep.source_status = 'SUPERSEDED' | dep.path_nodes] AS violation_paths
+           [dep IN dependencies WHERE dep.has_invalid_decision = true OR dep.fact_stale = true OR dep.source_status = 'SUPERSEDED' | dep.path_nodes] AS violation_paths
   `;
 
   const result = await graph.query(cypher, { params: { decisionId } });

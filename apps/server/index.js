@@ -207,6 +207,54 @@ app.post('/api/ingest', async (req, res) => {
 app.post('/api/mcp/call', async (req, res) => {
   const { toolName, args } = req.body || {};
 
+  // --- Input validation: fail fast with a clean 400 before touching the DB ---
+  // Without this, undefined args crash mcpServer.handleToolCall with a TypeError
+  // and undefined decision_id causes FalkorDB parameter serialisation exceptions,
+  // both returning an opaque 500 to the caller.
+  if (!toolName || typeof toolName !== 'string') {
+    return res.status(400).json({
+      isError: true,
+      error: "Missing or invalid 'toolName'. Must be 'apply_code_change' or 'revalidate_decision'."
+    });
+  }
+
+  if (!args || typeof args !== 'object') {
+    return res.status(400).json({
+      isError: true,
+      error: "Missing or invalid 'args' object payload."
+    });
+  }
+
+  if (toolName === 'apply_code_change') {
+    if (!args.decision_id || typeof args.decision_id !== 'string') {
+      return res.status(400).json({
+        isError: true,
+        error: "Missing required parameter 'args.decision_id' for tool 'apply_code_change'."
+      });
+    }
+    if (!args.file_path || !args.code_payload) {
+      return res.status(400).json({
+        isError: true,
+        error: "Missing required parameters 'args.file_path' and/or 'args.code_payload'."
+      });
+    }
+  } else if (toolName === 'revalidate_decision') {
+    const required = ['new_source_id', 'old_decision_id', 'new_decision_id', 'new_fact_id', 'title'];
+    const missing = required.filter(field => !args[field]);
+    if (missing.length > 0) {
+      return res.status(400).json({
+        isError: true,
+        error: `Missing required parameter(s) for 'revalidate_decision': ${missing.join(', ')}`
+      });
+    }
+  } else {
+    return res.status(400).json({
+      isError: true,
+      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision'.`
+    });
+  }
+  // --- End validation ---
+
   try {
     if (!isFalkorConnected) await initDb();
 
@@ -228,11 +276,14 @@ app.post('/api/mcp/call', async (req, res) => {
         if (isInvalidated || isDec102) {
           const rejectResponse = {
             isError: true,
+            simulated: true, // FalkorDB offline — in-memory simulation
+            simulated_warning: 'FalkorDB offline — returned from in-memory simulation',
             gate_verdict: 'BLOCKED_SUPERSEDED_SOURCE',
             decision_id: args.decision_id,
-            latency_ms: 1.84,
+            latency_ms: 0,             // Real query latency is 0 (no DB was queried)
+            simulated_latency_ms: 1.84, // Reference value from prior live benchmarks
             violation_paths: [['Source:ADR-001 (SUPERSEDED)', 'Fact:F-Auth-v1 (STALE)', `Decision:${args.decision_id}`]],
-            message: `⛔ CAVDAX GATE BLOCKED: Execution rejected. Decision '${args.decision_id}' is grounded in superseded source 'ADR-001'. No files were written.`,
+            message: `⛔ CAVDAX GATE BLOCKED (SIMULATION): Execution rejected. Decision '${args.decision_id}' is grounded in superseded source 'ADR-001'. No files were written.`,
             instructions_for_agent: `To resolve this, inspect superseding source 'ADR-002', call 'revalidate_decision', and re-submit with the active decision ID.`
           };
           broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: rejectResponse });
@@ -243,25 +294,29 @@ app.post('/api/mcp/call', async (req, res) => {
           fs.mkdirSync(path.dirname(targetPath), { recursive: true });
           fs.writeFileSync(targetPath, args.code_payload, 'utf-8');
 
+          const actionId = `act-${Date.now()}`;
           fallbackGraphState.nodes.push({
-            id: `act-${Date.now()}`,
+            id: actionId,
             label: 'AgentAction',
             target_file: args.file_path,
             status: 'EXECUTED'
           });
           fallbackGraphState.edges.push({
-            source: `act-${Date.now()}`,
+            source: actionId,
             target: args.decision_id,
             type: 'GROUNDED_IN'
           });
 
           const approveResponse = {
             isError: false,
+            simulated: true, // FalkorDB offline — in-memory simulation
+            simulated_warning: 'FalkorDB offline — returned from in-memory simulation',
             gate_verdict: 'APPROVED',
             decision_id: args.decision_id,
-            latency_ms: 1.62,
+            latency_ms: 0,             // Real query latency is 0 (no DB was queried)
+            simulated_latency_ms: 1.62, // Reference value from prior live benchmarks
             file_path: targetPath,
-            message: `✅ CAVDAX GATE APPROVED: Provenance verified in 1.62ms. Target file written to disk.`
+            message: `✅ CAVDAX GATE APPROVED (SIMULATION): Target file written to disk.`
           };
           broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: approveResponse });
           broadcastEvent('GRAPH_UPDATED', fallbackGraphState);
@@ -291,9 +346,12 @@ app.post('/api/mcp/call', async (req, res) => {
 
         const revalResponse = {
           isError: false,
-          message: `✅ REVALIDATION COMPLETE: Decision '${args.new_decision_id}' is active and grounded in '${args.new_fact_id}'.`,
+          simulated: true, // FalkorDB offline — in-memory simulation
+          simulated_warning: 'FalkorDB offline — returned from in-memory simulation',
+          message: `✅ REVALIDATION COMPLETE (SIMULATION): Decision '${args.new_decision_id}' is active and grounded in '${args.new_fact_id}'.`,
           active_decision_id: args.new_decision_id,
-          latency_ms: 2.3
+          latency_ms: 0,            // Real query latency is 0 (no DB was queried)
+          simulated_latency_ms: 2.3 // Reference value from prior live benchmarks
         };
         broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: revalResponse });
         broadcastEvent('GRAPH_UPDATED', fallbackGraphState);

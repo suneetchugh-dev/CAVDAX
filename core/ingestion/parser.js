@@ -58,9 +58,43 @@ export async function ingestAdrFile(graph, filePath) {
 
   const adrId = frontmatter.id || path.basename(filePath, path.extname(filePath));
   const supersedesId = frontmatter.supersedes;
+  const title = frontmatter.title || adrId;
+  const relativePath = path.relative(process.cwd(), absolutePath).replace(/\\/g, '/');
 
   console.log(`[Ingestion] Ingested ADR ID: '${adrId}', Supersedes: '${supersedesId || 'None'}'`);
 
+  // 1. ATOMIC GRAPH INGESTION: MERGE Source node so any ADR (not just pre-seeded
+  //    ones) exists in the graph before cascadeInvalidation tries to MATCH it.
+  //    Without this, MATCH (newSource:Source {id: $adrId}) returns 0 rows and
+  //    the entire cascade silently does nothing for novel ADRs like ADR-003.
+  const mergeSourceCypher = `
+    MERGE (s:Source {id: $adrId})
+    ON CREATE SET
+      s.ref = $ref,
+      s.type = 'ADR',
+      s.status = 'ACTIVE',
+      s.title = $title,
+      s.created_at = timestamp()
+    ON MATCH SET
+      s.ref = $ref,
+      s.title = $title
+  `;
+  await graph.query(mergeSourceCypher, { params: { adrId, ref: relativePath, title } });
+
+  // 2. OPTIONAL: If frontmatter declares a fact, MERGE Fact + EXTRACTED_FROM edge.
+  if (frontmatter.fact_id && frontmatter.fact_claim) {
+    const mergeFactCypher = `
+      MATCH (s:Source {id: $adrId})
+      MERGE (f:Fact {id: $factId})
+      ON CREATE SET f.claim = $claim, f.is_stale = false, f.verified = true
+      MERGE (f)-[:EXTRACTED_FROM]->(s)
+    `;
+    await graph.query(mergeFactCypher, {
+      params: { adrId, factId: frontmatter.fact_id, claim: frontmatter.fact_claim }
+    });
+  }
+
+  // 3. TRIGGER CASCADING INVALIDATION (Source node is now guaranteed to exist)
   let invalidationResult = null;
 
   if (supersedesId) {

@@ -21,13 +21,26 @@ export default function GraphCanvas({ graphData, onSelectNode, selectedNodeId })
     'DEC-103': { x: 530, y: 310 }
   };
 
-  const nodes = (graphData?.nodes || []).map((node, index) => {
+  // Per-column counters so multiple dynamic nodes of the same type stack
+  // vertically instead of landing on top of each other.
+  let actionCounter = 0;
+  const columnCounters = {};
+
+  const nodes = (graphData?.nodes || []).map((node) => {
     let pos = layoutPositions[node.id];
     if (!pos) {
       if (node.label === 'AgentAction' || node.id?.startsWith('act-')) {
-        pos = { x: 730, y: 220 };
+        // Spread AgentAction nodes downward with 90px gaps in the Actions column
+        pos = { x: 730, y: 180 + actionCounter * 90 };
+        actionCounter++;
       } else {
-        pos = { x: 400 + (index * 40) % 300, y: 200 + (index * 60) % 200 };
+        // Place any other unknown node in the correct architectural column
+        // (Source → x:90, Fact → x:310, Decision → x:530) so it never
+        // overlaps the fixed known nodes. Falls back to x:530 for unknowns.
+        const layerX = { Source: 90, Fact: 310, Decision: 530 }[node.label] ?? 530;
+        const layerIdx = columnCounters[node.label] ?? 0;
+        columnCounters[node.label] = layerIdx + 1;
+        pos = { x: layerX, y: 100 + layerIdx * 100 };
       }
     }
     return { ...node, ...pos };
