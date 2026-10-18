@@ -6,6 +6,7 @@
   Built for the <strong>WeMakeDevs &times; FalkorDB Graph Hacks Hackathon (October 2026)</strong></p>
 </div>
 
+[![CI](https://github.com/suneetchugh-dev/CAVDAX/actions/workflows/ci.yml/badge.svg)](https://github.com/suneetchugh-dev/CAVDAX/actions)
 [![FalkorDB](https://img.shields.io/badge/FalkorDB-GraphBLAS-FF2D55?style=for-the-badge&logo=redis&logoColor=white)](https://falkordb.com/)
 [![MCP](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol%20(MCP)-06B6D4?style=for-the-badge)](https://modelcontextprotocol.io/)
 [![Docker](https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](./docker-compose.yml)
