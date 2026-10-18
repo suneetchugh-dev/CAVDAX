@@ -39,6 +39,63 @@ When a superseding commit or ADR arrives:
 
 ---
 
+## 🧬 Graph Data Model & Causal Ontology
+
+CAVDAX models engineering knowledge and agent actions using a formal 4-tier Causal Directed Acyclic Graph (DAG) optimized for sub-millisecond GraphBLAS traversal in FalkorDB:
+
+```
+(ADR-002:Source {status: 'ACTIVE'})
+       │
+[:EXTRACTED_FROM]
+       ▼
+(F-OAuth2-v2:Fact {claim: 'OAuth2 Enforced', is_stale: false})
+       ▲
+  [:DEPENDS_ON]
+       │
+(DEC-103:Decision {status: 'VALID'}) ──[:REPLACES]──> (DEC-102:Decision {status: 'INVALIDATED'})
+       ▲                                                           │
+ [:GROUNDED_IN]                                              [:DEPENDS_ON]
+       │                                                           ▼
+(:AgentAction {tool: 'apply_code_change', verdict: 'APPROVED'})  (F-Auth-v1:Fact {is_stale: true})
+                                                                   │
+                                                            [:EXTRACTED_FROM]
+                                                                   ▼
+(ADR-002:Source) ───────────────[:SUPERSEDES]───────────────> (ADR-001:Source {status: 'SUPERSEDED'})
+```
+
+### 1. Node Schemas & Labels
+* **`(:Source)` — Authoritative Engineering Artifacts:**
+  * `id` *(String, Primary Key)*: Unique identifier (e.g., `'ADR-001'`, `'commit-9f8a2b'`).
+  * `title` *(String)*: Human-readable title of the document or change.
+  * `type` *(String)*: Polymorphic artifact type (`'ADR'`, `'COMMIT'`, `'CODEOWNERS'`, `'PACKAGE_JSON'`).
+  * `status` *(String)*: `'ACTIVE'` or `'SUPERSEDED'`.
+  * `superseded_at` *(Integer, Optional)*: Unix millisecond epoch timestamp when superseded.
+* **`(:Fact)` — Atomic Invariant Claims:**
+  * `id` *(String, Primary Key)*: Unique claim ID (e.g., `'F-Auth-v1'`, `'F-OAuth2-v2'`).
+  * `claim` *(String)*: Normalized atomic statement (e.g., `'TokenAuth v1 active'`, `'OAuth2 enforced'`).
+  * `is_stale` *(Boolean)*: `false` when active; flipped to `true` when parent source is superseded.
+  * `invalidated_at` *(Integer, Optional)*: Unix timestamp when marked stale.
+* **`(:Decision)` — Architecture & Implementation Directives:**
+  * `id` *(String, Primary Key)*: Directive identifier (e.g., `'DEC-102'`, `'DEC-103'`).
+  * `title` *(String)*: Directive summary (e.g., `'Implement TokenAuth v1 for checkout'`).
+  * `status` *(String)*: `'VALID'`, `'INVALIDATED_NEEDS_REVALIDATION'`, or `'REPLACED_ARCHIVED'`.
+  * `created_at` *(Integer)*: Creation epoch timestamp.
+* **`(:AgentAction)` — Verified Tool Execution Audit Log:**
+  * `id` *(String, Primary Key)*: Unique audit event hash.
+  * `tool` *(String)*: Invoked MCP tool name (`'apply_code_change'`).
+  * `target_file` *(String)*: Protected file path (`'src/services/payment.js'`).
+  * `verdict` *(String)*: `'APPROVED'` or `'BLOCKED'`.
+  * `timestamp` *(Integer)*: Execution epoch timestamp.
+
+### 2. Relationship Types & Causal Semantics
+* **`(:Source)-[:SUPERSEDES]->(:Source)`**: Directed temporal invalidation edge between a newer artifact and an obsolete artifact.
+* **`(:Fact)-[:EXTRACTED_FROM]->(:Source)`**: Provenance grounding attributing an atomic proposition to its authoritative origin.
+* **`(:Decision)-[:DEPENDS_ON]->(:Fact)`**: Directional dependency indicating that a decision's validity is conditional on the fact remaining fresh (`*1..4` hops).
+* **`(:Decision)-[:REPLACES]->(:Decision)`**: Evolutionary replacement edge linking a newly synthesized Act IV decision to an archived predecessor.
+* **`(:AgentAction)-[:GROUNDED_IN]->(:Decision)`**: Mandatory audit link created only upon verified gate approval.
+
+---
+
 ## 📐 System Architecture & Flowchart Diagrams
 
 ### 1. End-to-End System Architecture Flowchart
@@ -177,7 +234,7 @@ docker-compose up --build
 ```
 
 - **Porcelain Dark Web HUD:** `http://localhost:5173`
-- **CAVDAX Backend Gateway & MCP:** `http://localhost:3000`
+- **CAVDAX Backend Gateway & MCP:** `http://localhost:3001` (internal container port 3000)
 - **FalkorDB Redis Endpoint:** `localhost:6379`
 
 ### Option 2: Local Development
@@ -209,7 +266,7 @@ CAVDAX/
 │   └── server/                  # Node.js + Express Backend Gateway
 │       ├── index.js             # REST API, SSE live event broadcaster, MCP endpoint
 │       └── Dockerfile           # Server containerization
-├── assets/                      # Glassmorphism 3D architecture renders (.jpg & .svg)
+├── assets/                      # Monochromatic Mermaid-style architecture flowcharts (.svg)
 ├── benchmark/                   # Evaluation harness & empirical scale tests
 │   ├── evaluate.js              # 10-Scenario Vector RAG vs CAVDAX benchmark
 │   ├── scale_generator.js       # 50,000-node GraphBLAS stress test
