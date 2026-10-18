@@ -39,11 +39,17 @@ export default function Header({ status, onReset, isResetting }) {
           </span>
         </div>
 
-        {/* Latency Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-950/30 border border-cyan-800/40 text-xs text-cyan-300 font-mono">
-          <Zap className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Gate Latency:</span>
-          <span className="font-semibold text-white">{status.latestLatency || '1.84'}ms</span>
+        {/* Latency Badge — amber when FalkorDB offline to signal simulation mode */}
+        <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono ${
+          status.falkorLive
+            ? 'bg-cyan-950/30 border-cyan-800/40 text-cyan-300'
+            : 'bg-amber-950/40 border-amber-800/50 text-amber-300'
+        }`}>
+          <Zap className={`w-3.5 h-3.5 ${status.falkorLive ? 'text-cyan-400' : 'text-amber-400'}`} />
+          <span>{status.falkorLive ? 'Gate Latency:' : 'Simulated Latency:'}</span>
+          <span className="font-semibold text-white">
+            {status.falkorLive ? `${status.latestLatency || '—'}ms` : 'SIMULATED'}
+          </span>
         </div>
 
         {/* Reset Demo Button */}
