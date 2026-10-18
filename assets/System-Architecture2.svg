@@ -1,179 +1,152 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 660" width="1060" height="660" style="background-color: #0D1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 660" width="1060" height="660" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--surface:#181818;--border:#CCCCCC;background:#1F1F1F;font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   
   <defs>
-    <!-- Arrowhead markers in Mermaid style -->
-    <marker id="arrow-cyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#38BDF8" />
+    <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 8 2.5, 0 5" fill="#CCCCCC" stroke="#CCCCCC" stroke-width="0.75" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-emerald" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#34D399" />
+    <marker id="arrowhead-accent" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 8 2.5, 0 5" fill="#0078D4" stroke="#0078D4" stroke-width="0.75" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-crimson" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#F87171" />
+    <marker id="arrowhead-muted" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 8 2.5, 0 5" fill="#777777" stroke="#777777" stroke-width="0.75" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#A78BFA" />
-    </marker>
-    <marker id="arrow-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#FBBF24" />
-    </marker>
-    <marker id="arrow-default" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#484F58" />
-    </marker>
-    <!-- Filter for subtle shadow -->
-    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
-      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
-    </filter>
   </defs>
   
 
   <!-- TITLE BAR -->
-  <rect x="20" y="14" width="1020" height="38" rx="8" fill="#161B22" stroke="#30363D" stroke-width="1.5" />
-  <circle cx="42" cy="33" r="5" fill="#F87171" />
-  <circle cx="58" cy="33" r="5" fill="#FBBF24" />
-  <circle cx="74" cy="33" r="5" fill="#34D399" />
-  <text x="96" y="38" font-size="14" font-weight="700" fill="#F0F6FC">CAVDAX: Multi-Tier Layer Architecture &amp; FalkorDB GraphBLAS Engine</text>
-  <rect x="890" y="22" width="138" height="22" rx="11" fill="#2E1065" stroke="#A78BFA" stroke-width="1" />
-  <text x="959" y="37" font-size="11" font-weight="600" fill="#A78BFA" text-anchor="middle">5-LAYER TOPOLOGY</text>
+  <rect x="20" y="14" width="1020" height="38" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" />
+  <text x="36" y="38" font-size="13" font-weight="700" fill="#FFFFFF">CAVDAX: Multi-Tier Layer Architecture &amp; FalkorDB GraphBLAS Engine</text>
+  <rect x="890" y="22" width="138" height="22" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+  <text x="959" y="37" font-size="10.5" font-weight="600" fill="#CCCCCC" text-anchor="middle">5-TIER TOPOLOGY</text>
 
   <!-- ================= LAYER 1: CLIENT & VISUAL (Top) ================= -->
   <g class="subgraph">
-    <rect x="20" y="64" width="1020" height="95" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="64" width="1020" height="26" rx="10" fill="#1A2230" />
-    <rect x="20" y="80" width="1020" height="10" fill="#1A2230" />
-    <line x1="20" y1="90" x2="1040" y2="90" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="81" font-size="12" font-weight="700" fill="#38BDF8">Layer 1: Client &amp; Visual Interface Layer (Executive Web HUD)</text>
+    <rect x="20" y="64" width="1020" height="95" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="64" width="1020" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="82" font-size="12" font-weight="600" fill="#FFFFFF">1. Client &amp; Visual Interface Layer (Executive Web HUD)</text>
 
     <!-- Node 1: Web HUD -->
-    <rect x="35" y="100" width="310" height="48" rx="6" fill="#21262D" stroke="#38BDF8" stroke-width="1.2" />
-    <text x="47" y="120" font-size="12" font-weight="700" fill="#F0F6FC">Porcelain Dark Web HUD</text>
-    <text x="47" y="136" font-size="10.5" fill="#8B949E">React 18 + Vite + Tailwind CSS</text>
+    <rect x="35" y="100" width="310" height="48" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" />
+    <text x="47" y="120" font-size="12" font-weight="600" fill="#FFFFFF">Porcelain Dark Web HUD</text>
+    <text x="47" y="136" font-size="10.5" fill="#A0A0A0">React 18 + Vite + Tailwind CSS</text>
 
     <!-- Node 2: Canvas -->
-    <rect x="375" y="100" width="310" height="48" rx="6" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="387" y="120" font-size="12" font-weight="700" fill="#34D399">Force-Graph 2D Canvas</text>
-    <text x="387" y="136" font-size="10.5" fill="#8B949E">WebGL Real-Time DAG Rendering</text>
+    <rect x="375" y="100" width="310" height="48" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="387" y="120" font-size="12" font-weight="600" fill="#CCCCCC">Force-Graph 2D Canvas</text>
+    <text x="387" y="136" font-size="10.5" fill="#A0A0A0">WebGL / Canvas Real-Time DAG Rendering</text>
 
     <!-- Node 3: Terminal -->
-    <rect x="715" y="100" width="310" height="48" rx="6" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="727" y="120" font-size="12" font-weight="700" fill="#A78BFA">Agent Execution Terminal</text>
-    <text x="727" y="136" font-size="10.5" fill="#8B949E">Live SSE Gate Verdicts &amp; Cypher Logs</text>
+    <rect x="715" y="100" width="310" height="48" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="727" y="120" font-size="12" font-weight="600" fill="#CCCCCC">Agent Execution Terminal</text>
+    <text x="727" y="136" font-size="10.5" fill="#A0A0A0">Live SSE Gate Verdicts &amp; Cypher Logs</text>
   </g>
 
   <!-- Connector L1 -> L2 -->
-  <path d="M 530 159 L 530 178" fill="none" stroke="#484F58" stroke-width="1.5" marker-end="url(#arrow-default)" />
-  <rect x="475" y="161" width="110" height="16" rx="3" fill="#161B22" stroke="#30363D" stroke-width="0.8" />
-  <text x="530" y="172" font-size="9" fill="#C9D1D9" text-anchor="middle">REST / SSE Protocol</text>
+  <line x1="530" y1="159" x2="530" y2="176" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
+  <rect x="472" y="161" width="116" height="16" rx="0" fill="#1F1F1F" stroke="#3D3D3D" stroke-width="0.75" />
+  <text x="530" y="173" font-size="9" fill="#A0A0A0" text-anchor="middle">REST / SSE Protocol</text>
 
   <!-- ================= LAYER 2: AUTONOMOUS AGENT LAYER ================= -->
   <g class="subgraph">
-    <rect x="20" y="180" width="1020" height="85" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="180" width="1020" height="26" rx="10" fill="#1A2230" />
-    <rect x="20" y="196" width="1020" height="10" fill="#1A2230" />
-    <line x1="20" y1="206" x2="1040" y2="206" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="197" font-size="12" font-weight="700" fill="#A78BFA">Layer 2: Autonomous Agent Layer</text>
+    <rect x="20" y="180" width="1020" height="85" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="180" width="1020" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="198" font-size="12" font-weight="600" fill="#FFFFFF">2. Autonomous Agent Layer</text>
 
     <!-- Node: Agent -->
-    <rect x="35" y="215" width="475" height="42" rx="6" fill="#2E1065" stroke="#A78BFA" stroke-width="1.2" />
-    <text x="47" y="234" font-size="12" font-weight="700" fill="#A78BFA">Autonomous Coding Agents</text>
-    <text x="47" y="249" font-size="10.5" fill="#C9D1D9">Claude Code, Cursor Composer, Devin, GitHub Copilot</text>
+    <rect x="35" y="215" width="475" height="42" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" />
+    <text x="47" y="234" font-size="12" font-weight="600" fill="#FFFFFF">Autonomous Coding Agents</text>
+    <text x="47" y="249" font-size="10.5" fill="#A0A0A0">Claude Code, Cursor Composer, Devin, GitHub Copilot</text>
 
     <!-- Node: MCP Client Transport -->
-    <rect x="530" y="215" width="495" height="42" rx="6" fill="#1E3A8A" stroke="#60A5FA" stroke-width="1.2" />
-    <text x="542" y="234" font-size="12" font-weight="700" fill="#60A5FA">Model Context Protocol (MCP) Client Transport</text>
-    <text x="542" y="249" font-size="10.5" fill="#C9D1D9">JSON-RPC 2.0 stdio &amp; HTTP Server-Sent Events</text>
+    <rect x="530" y="215" width="495" height="42" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="542" y="234" font-size="12" font-weight="600" fill="#CCCCCC">Model Context Protocol (MCP) Client Transport</text>
+    <text x="542" y="249" font-size="10.5" fill="#A0A0A0">JSON-RPC 2.0 stdio &amp; HTTP Server-Sent Events</text>
   </g>
 
   <!-- Connector L2 -> L3 -->
-  <path d="M 530 265 L 530 286" fill="none" stroke="#A78BFA" stroke-width="1.5" marker-end="url(#arrow-purple)" />
-  <rect x="445" y="268" width="170" height="16" rx="3" fill="#161B22" stroke="#A78BFA" stroke-width="0.8" />
-  <text x="530" y="279" font-size="9" font-weight="600" fill="#A78BFA" text-anchor="middle">Tool Call: apply_code_change()</text>
+  <line x1="530" y1="265" x2="530" y2="284" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
+  <rect x="445" y="268" width="170" height="16" rx="0" fill="#1F1F1F" stroke="#3D3D3D" stroke-width="0.75" />
+  <text x="530" y="280" font-size="9" fill="#CCCCCC" text-anchor="middle">Tool Call: apply_code_change()</text>
 
   <!-- ================= LAYER 3: BACKEND GATEWAY ================= -->
   <g class="subgraph">
-    <rect x="20" y="288" width="1020" height="105" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="288" width="1020" height="26" rx="10" fill="#1A2230" />
-    <rect x="20" y="304" width="1020" height="10" fill="#1A2230" />
-    <line x1="20" y1="314" x2="1040" y2="314" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="305" font-size="12" font-weight="700" fill="#38BDF8">Layer 3: CAVDAX Backend Gateway (Node.js 20 / Express / MCP Server)</text>
+    <rect x="20" y="288" width="1020" height="105" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="288" width="1020" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="306" font-size="12" font-weight="600" fill="#FFFFFF">3. CAVDAX Backend Gateway (Node.js 20 / Express / MCP Server)</text>
 
     <!-- Node 1: Ingestion Engine -->
-    <rect x="35" y="324" width="235" height="58" rx="6" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="47" y="344" font-size="11.5" font-weight="700" fill="#38BDF8">ADR Ingestion Engine</text>
-    <text x="47" y="360" font-size="10" fill="#C9D1D9">• YAML Frontmatter Parser</text>
-    <text x="47" y="373" font-size="10" fill="#8B949E">• Git Commit &amp; Webhook Handler</text>
+    <rect x="35" y="324" width="235" height="58" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="47" y="344" font-size="11.5" font-weight="600" fill="#CCCCCC">ADR Ingestion Engine</text>
+    <text x="47" y="360" font-size="10" fill="#A0A0A0">• YAML Frontmatter Parser</text>
+    <text x="47" y="373" font-size="10" fill="#737373">• Git Commit &amp; Webhook Listener</text>
 
     <!-- Node 2: Enclosed MCP Server -->
-    <rect x="285" y="324" width="245" height="58" rx="6" fill="#1E3A8A" stroke="#60A5FA" stroke-width="1.2" />
-    <text x="297" y="344" font-size="11.5" font-weight="700" fill="#60A5FA">Enclosed MCP Execution Gate</text>
-    <text x="297" y="360" font-size="10" fill="#C9D1D9">• Pre-execution Cypher Interceptor</text>
-    <text x="297" y="373" font-size="10" fill="#8B949E">• Hard-blocks disk I/O on violations</text>
+    <rect x="285" y="324" width="245" height="58" rx="0" fill="#242424" stroke="#CCCCCC" stroke-width="1" />
+    <text x="297" y="344" font-size="11.5" font-weight="600" fill="#FFFFFF">Enclosed MCP Execution Gate</text>
+    <text x="297" y="360" font-size="10" fill="#CCCCCC">• Pre-execution Cypher Interceptor</text>
+    <text x="297" y="373" font-size="10" fill="#A0A0A0">• Hard-blocks disk I/O on violations</text>
 
     <!-- Node 3: Benchmark Engine -->
-    <rect x="545" y="324" width="235" height="58" rx="6" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="557" y="344" font-size="11.5" font-weight="700" fill="#FBBF24">Evaluation &amp; Benchmark Suite</text>
-    <text x="557" y="360" font-size="10" fill="#C9D1D9">• 10 Automated Failure Scenarios</text>
-    <text x="557" y="373" font-size="10" fill="#8B949E">• 50k-Node Scale Generator</text>
+    <rect x="545" y="324" width="235" height="58" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="557" y="344" font-size="11.5" font-weight="600" fill="#CCCCCC">Evaluation &amp; Benchmark Suite</text>
+    <text x="557" y="360" font-size="10" fill="#A0A0A0">• 10 Automated Failure Scenarios</text>
+    <text x="557" y="373" font-size="10" fill="#737373">• 50k-Node Scale Generator</text>
 
     <!-- Node 4: FalkorDB Driver -->
-    <rect x="795" y="324" width="230" height="58" rx="6" fill="#132338" stroke="#38BDF8" stroke-width="1.5" />
-    <text x="807" y="344" font-size="11.5" font-weight="700" fill="#38BDF8">FalkorDB Client Driver</text>
-    <text x="807" y="360" font-size="10" fill="#C9D1D9">• Redis Binary Protocol (falkordb v6.8)</text>
-    <text x="807" y="373" font-size="10" fill="#8B949E">• Connection Pool on Port 6379</text>
+    <rect x="795" y="324" width="230" height="58" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" />
+    <text x="807" y="344" font-size="11.5" font-weight="600" fill="#FFFFFF">FalkorDB Client Driver</text>
+    <text x="807" y="360" font-size="10" fill="#A0A0A0">• Redis Binary Protocol (falkordb v6.8)</text>
+    <text x="807" y="373" font-size="10" fill="#737373">• Connection Pool on Port 6379</text>
   </g>
 
   <!-- Connector L3 -> L4 -->
-  <path d="M 530 393 L 530 414" fill="none" stroke="#38BDF8" stroke-width="1.8" marker-end="url(#arrow-cyan)" />
-  <rect x="420" y="396" width="220" height="16" rx="3" fill="#161B22" stroke="#38BDF8" stroke-width="0.8" />
-  <text x="530" y="407" font-size="9" font-weight="700" fill="#38BDF8" text-anchor="middle">High-Speed Cypher Queries (&lt; 2.5ms)</text>
+  <line x1="530" y1="393" x2="530" y2="412" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
+  <rect x="420" y="396" width="220" height="16" rx="0" fill="#1F1F1F" stroke="#3D3D3D" stroke-width="0.75" />
+  <text x="530" y="408" font-size="9" fill="#CCCCCC" text-anchor="middle">High-Speed Cypher Queries (&lt; 2.5ms)</text>
 
   <!-- ================= LAYER 4: DATABASE LAYER (FalkorDB) ================= -->
   <g class="subgraph">
-    <rect x="20" y="416" width="1020" height="115" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="416" width="1020" height="26" rx="10" fill="#1A2230" />
-    <rect x="20" y="432" width="1020" height="10" fill="#1A2230" />
-    <line x1="20" y1="442" x2="1040" y2="442" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="433" font-size="12" font-weight="700" fill="#34D399">Layer 4: Graph Storage Layer (FalkorDB GraphBLAS Core)</text>
+    <rect x="20" y="416" width="1020" height="115" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="416" width="1020" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="434" font-size="12" font-weight="600" fill="#FFFFFF">4. Graph Storage Layer (FalkorDB GraphBLAS Core)</text>
 
     <!-- Node 1: GraphBLAS -->
-    <rect x="35" y="452" width="310" height="66" rx="6" fill="#0C2438" stroke="#38BDF8" stroke-width="1.5" />
-    <text x="47" y="472" font-size="12" font-weight="700" fill="#38BDF8">GraphBLAS Matrix Engine</text>
-    <text x="47" y="490" font-size="10.5" fill="#C9D1D9">• Linear Algebra Sparse Matrices</text>
-    <text x="47" y="506" font-size="10.5" fill="#8B949E">• Multi-Hop BFS / DFS in Sub-Millisecond</text>
+    <rect x="35" y="452" width="310" height="66" rx="0" fill="#242424" stroke="#CCCCCC" stroke-width="1" />
+    <text x="47" y="472" font-size="12" font-weight="600" fill="#FFFFFF">GraphBLAS Matrix Engine</text>
+    <text x="47" y="490" font-size="10.5" fill="#A0A0A0">• Linear Algebra Sparse Matrices</text>
+    <text x="47" y="506" font-size="10.5" fill="#737373">• Multi-Hop BFS / DFS in Sub-Millisecond</text>
 
     <!-- Node 2: Schema Nodes -->
-    <rect x="365" y="452" width="330" height="66" rx="6" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="377" y="472" font-size="12" font-weight="700" fill="#F0F6FC">CAVDAX Causal Schema</text>
-    <text x="377" y="490" font-size="10" fill="#38BDF8">:Source (id, status, superseded_at)</text>
-    <text x="377" y="504" font-size="10" fill="#FBBF24">:Fact (claim, is_stale) • :Decision (id, status)</text>
+    <rect x="365" y="452" width="330" height="66" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="377" y="472" font-size="12" font-weight="600" fill="#CCCCCC">CAVDAX Causal Schema</text>
+    <text x="377" y="490" font-size="10" fill="#A0A0A0">:Source (id, status, superseded_at)</text>
+    <text x="377" y="504" font-size="10" fill="#737373">:Fact (claim, is_stale) • :Decision (id, status)</text>
 
     <!-- Node 3: Indices -->
-    <rect x="715" y="452" width="310" height="66" rx="6" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="727" y="472" font-size="12" font-weight="700" fill="#34D399">Fast Constraints &amp; B-Tree Indices</text>
-    <text x="727" y="490" font-size="10.5" fill="#C9D1D9">• Index on :Decision(id)</text>
-    <text x="727" y="506" font-size="10.5" fill="#8B949E">• Index on :Fact(is_stale) &amp; :Source(id)</text>
+    <rect x="715" y="452" width="310" height="66" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="727" y="472" font-size="12" font-weight="600" fill="#CCCCCC">Fast Constraints &amp; B-Tree Indices</text>
+    <text x="727" y="490" font-size="10.5" fill="#A0A0A0">• Index on :Decision(id)</text>
+    <text x="727" y="506" font-size="10.5" fill="#737373">• Index on :Fact(is_stale) &amp; :Source(id)</text>
   </g>
 
   <!-- Connector L4 -> L5 -->
-  <path d="M 530 531 L 530 550" fill="none" stroke="#34D399" stroke-width="1.5" marker-end="url(#arrow-emerald)" />
+  <line x1="530" y1="531" x2="530" y2="548" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
 
   <!-- ================= LAYER 5: HOST & TARGET CODEBASE ================= -->
   <g class="subgraph">
-    <rect x="20" y="552" width="1020" height="94" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="552" width="1020" height="26" rx="10" fill="#1A2230" />
-    <rect x="20" y="568" width="1020" height="10" fill="#1A2230" />
-    <line x1="20" y1="578" x2="1040" y2="578" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="569" font-size="12" font-weight="700" fill="#FBBF24">Layer 5: Host Environment &amp; Target Codebase</text>
+    <rect x="20" y="552" width="1020" height="94" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="552" width="1020" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="570" font-size="12" font-weight="600" fill="#FFFFFF">5. Host Environment &amp; Target Codebase</text>
 
     <!-- Node 1: Target Files -->
-    <rect x="35" y="588" width="475" height="46" rx="6" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="47" y="608" font-size="11.5" font-weight="700" fill="#F0F6FC">Protected Production Filesystem</text>
-    <text x="47" y="623" font-size="10.5" fill="#8B949E">docs/adrs/ADR-001.md, ADR-002.md | src/services/payment.js</text>
+    <rect x="35" y="588" width="475" height="46" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="47" y="608" font-size="11.5" font-weight="600" fill="#CCCCCC">Protected Production Filesystem</text>
+    <text x="47" y="623" font-size="10.5" fill="#A0A0A0">docs/adrs/ADR-001.md, ADR-002.md | src/services/payment.js</text>
 
     <!-- Node 2: Docker Mesh -->
-    <rect x="530" y="588" width="495" height="46" rx="6" fill="#21262D" stroke="#34D399" stroke-width="1.2" />
-    <text x="542" y="608" font-size="11.5" font-weight="700" fill="#34D399">Docker Compose Mesh Runtime</text>
-    <text x="542" y="623" font-size="10.5" fill="#C9D1D9">falkordb:6379 (GraphBLAS) • server:3001 (Express) • client:5173 (Vite HUD)</text>
+    <rect x="530" y="588" width="495" height="46" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" />
+    <text x="542" y="608" font-size="11.5" font-weight="600" fill="#FFFFFF">Docker Compose Mesh Runtime</text>
+    <text x="542" y="623" font-size="10.5" fill="#A0A0A0">falkordb:6379 (GraphBLAS) • server:3001 (Express) • client:5173 (Vite HUD)</text>
   </g>
 
 </svg>

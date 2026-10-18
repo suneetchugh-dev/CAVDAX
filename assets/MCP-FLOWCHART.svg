@@ -1,180 +1,155 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 660" width="1060" height="660" style="background-color: #0D1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 660" width="1060" height="660" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--surface:#181818;--border:#CCCCCC;background:#1F1F1F;font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   
   <defs>
-    <!-- Arrowhead markers in Mermaid style -->
-    <marker id="arrow-cyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#38BDF8" />
+    <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 8 2.5, 0 5" fill="#CCCCCC" stroke="#CCCCCC" stroke-width="0.75" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-emerald" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#34D399" />
+    <marker id="arrowhead-accent" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 8 2.5, 0 5" fill="#0078D4" stroke="#0078D4" stroke-width="0.75" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-crimson" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#F87171" />
+    <marker id="arrowhead-muted" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 8 2.5, 0 5" fill="#777777" stroke="#777777" stroke-width="0.75" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#A78BFA" />
-    </marker>
-    <marker id="arrow-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#FBBF24" />
-    </marker>
-    <marker id="arrow-default" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#484F58" />
-    </marker>
-    <!-- Filter for subtle shadow -->
-    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
-      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
-    </filter>
   </defs>
   
 
   <!-- TITLE BAR -->
-  <rect x="20" y="14" width="1020" height="38" rx="8" fill="#161B22" stroke="#30363D" stroke-width="1.5" />
-  <circle cx="42" cy="33" r="5" fill="#F87171" />
-  <circle cx="58" cy="33" r="5" fill="#FBBF24" />
-  <circle cx="74" cy="33" r="5" fill="#34D399" />
-  <text x="96" y="38" font-size="14" font-weight="700" fill="#F0F6FC">CAVDAX: Enclosed MCP Protocol Execution Gate Flowchart</text>
-  <rect x="870" y="22" width="158" height="22" rx="11" fill="#4C1D24" stroke="#F87171" stroke-width="1" />
-  <text x="949" y="37" font-size="11" font-weight="600" fill="#F87171" text-anchor="middle">PRE-EXECUTION INTERCEPT</text>
+  <rect x="20" y="14" width="1020" height="38" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" />
+  <text x="36" y="38" font-size="13" font-weight="700" fill="#FFFFFF">CAVDAX: Enclosed MCP Protocol Execution Gate Flowchart</text>
+  <rect x="870" y="22" width="158" height="22" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+  <text x="949" y="37" font-size="10.5" font-weight="600" fill="#CCCCCC" text-anchor="middle">PRE-EXECUTION INTERCEPT</text>
 
   <!-- ================= SUBGRAPH 1: AGENT RUNTIME (Top Left) ================= -->
   <g class="subgraph">
-    <rect x="20" y="64" width="460" height="150" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="64" width="460" height="28" rx="10" fill="#1A2230" />
-    <rect x="20" y="82" width="460" height="10" fill="#1A2230" />
-    <line x1="20" y1="92" x2="480" y2="92" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="83" font-size="12" font-weight="700" fill="#A78BFA">1. Autonomous Agent Runtime (Cursor / Claude Code)</text>
+    <rect x="20" y="64" width="460" height="150" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="64" width="460" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="82" font-size="12" font-weight="600" fill="#FFFFFF">1. Autonomous Agent Runtime (Cursor / Claude Code)</text>
 
     <!-- Node: Agent Core -->
-    <rect x="35" y="104" width="200" height="96" rx="8" fill="#2E1065" stroke="#A78BFA" stroke-width="1.5" />
-    <text x="47" y="126" font-size="12" font-weight="700" fill="#A78BFA">AI Agent Core (LLM)</text>
-    <text x="47" y="146" font-size="10.5" fill="#C9D1D9">Plans file change based</text>
-    <text x="47" y="162" font-size="10.5" fill="#C9D1D9">on retrieved context:</text>
-    <text x="47" y="180" font-size="10" font-family="monospace" fill="#FBBF24">decision_id: 'DEC-102'</text>
+    <rect x="35" y="104" width="200" height="96" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" />
+    <text x="47" y="126" font-size="12" font-weight="600" fill="#FFFFFF">AI Agent Core (LLM)</text>
+    <text x="47" y="146" font-size="10.5" fill="#A0A0A0">Plans code change based</text>
+    <text x="47" y="162" font-size="10.5" fill="#A0A0A0">on retrieved context:</text>
+    <text x="47" y="180" font-size="10" font-family="monospace" fill="#CCCCCC">decision_id: 'DEC-102'</text>
 
     <!-- Node: MCP Client Transport -->
-    <rect x="255" y="104" width="210" height="96" rx="8" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="267" y="126" font-size="12" font-weight="700" fill="#60A5FA">MCP Client Transport</text>
-    <text x="267" y="146" font-size="10.5" fill="#8B949E">Standard JSON-RPC 2.0</text>
-    <text x="267" y="162" font-size="10.5" fill="#C9D1D9">tools/call over stdio</text>
-    <text x="267" y="180" font-size="10" font-family="monospace" fill="#38BDF8">apply_code_change</text>
+    <rect x="255" y="104" width="210" height="96" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="267" y="126" font-size="12" font-weight="600" fill="#CCCCCC">MCP Client Transport</text>
+    <text x="267" y="146" font-size="10.5" fill="#A0A0A0">Standard JSON-RPC 2.0</text>
+    <text x="267" y="162" font-size="10.5" fill="#A0A0A0">tools/call over stdio</text>
+    <text x="267" y="180" font-size="10" font-family="monospace" fill="#FFFFFF">apply_code_change</text>
   </g>
 
   <!-- Connect Agent to MCP Client -->
-  <path d="M 235 152 L 255 152" fill="none" stroke="#A78BFA" stroke-width="1.8" marker-end="url(#arrow-purple)" />
+  <line x1="235" y1="152" x2="251" y2="152" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
 
   <!-- ================= SUBGRAPH 2: ENCLOSED MCP GATE (Top Right) ================= -->
   <g class="subgraph">
-    <rect x="500" y="64" width="540" height="150" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="500" y="64" width="540" height="28" rx="10" fill="#1A2230" />
-    <rect x="500" y="82" width="540" height="10" fill="#1A2230" />
-    <line x1="500" y1="92" x2="1040" y2="92" stroke="#30363D" stroke-width="1.5" />
-    <text x="515" y="83" font-size="12" font-weight="700" fill="#60A5FA">2. CAVDAX Enclosed MCP Server (Node.js Gateway)</text>
+    <rect x="500" y="64" width="540" height="150" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="500" y="64" width="540" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="512" y="82" font-size="12" font-weight="600" fill="#FFFFFF">2. CAVDAX Enclosed MCP Server (Node.js Gateway)</text>
 
     <!-- Node: Tool Exposed -->
-    <rect x="515" y="104" width="245" height="96" rx="8" fill="#1E3A8A" stroke="#60A5FA" stroke-width="1.5" />
-    <text x="527" y="126" font-size="12" font-weight="700" fill="#60A5FA">Tool: apply_code_change</text>
-    <text x="527" y="144" font-size="10" font-family="monospace" fill="#C9D1D9">decision_id: 'DEC-102'</text>
-    <text x="527" y="160" font-size="10" font-family="monospace" fill="#C9D1D9">target_file: 'payment.js'</text>
-    <text x="527" y="176" font-size="10" font-family="monospace" fill="#8B949E">patch: 'function auth()...'</text>
+    <rect x="515" y="104" width="245" height="96" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="527" y="126" font-size="12" font-weight="600" fill="#CCCCCC">Tool: apply_code_change()</text>
+    <text x="527" y="144" font-size="10" font-family="monospace" fill="#A0A0A0">decision_id: 'DEC-102'</text>
+    <text x="527" y="160" font-size="10" font-family="monospace" fill="#A0A0A0">target_file: 'payment.js'</text>
+    <text x="527" y="176" font-size="10" font-family="monospace" fill="#737373">patch: 'function auth()...'</text>
 
     <!-- Node: PreCheck Interceptor -->
-    <rect x="780" y="104" width="245" height="96" rx="8" fill="#132338" stroke="#38BDF8" stroke-width="1.5" />
-    <text x="792" y="126" font-size="12" font-weight="700" fill="#38BDF8">🛡️ Pre-Execution Interceptor</text>
-    <text x="792" y="146" font-size="10.5" fill="#F0F6FC">Mandatory Cypher Check</text>
-    <text x="792" y="162" font-size="10.5" fill="#C9D1D9">Runs BEFORE any disk</text>
-    <text x="792" y="178" font-size="10" font-weight="700" fill="#FBBF24">Zero Disk I/O Allowed</text>
+    <rect x="780" y="104" width="245" height="96" rx="0" fill="#242424" stroke="#CCCCCC" stroke-width="1" />
+    <text x="792" y="126" font-size="12" font-weight="600" fill="#FFFFFF">Pre-Execution Interceptor</text>
+    <text x="792" y="146" font-size="10.5" fill="#A0A0A0">Mandatory Cypher Check</text>
+    <text x="792" y="162" font-size="10.5" fill="#A0A0A0">Runs BEFORE any disk</text>
+    <text x="792" y="178" font-size="10" font-weight="700" fill="#FFFFFF">Zero Disk I/O Allowed</text>
   </g>
 
   <!-- Connect MCP Client to Tool Exposed -->
-  <path d="M 465 152 L 515 152" fill="none" stroke="#60A5FA" stroke-width="2" marker-end="url(#arrow-default)" />
+  <line x1="465" y1="152" x2="511" y2="152" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
   <!-- Connect Tool Exposed to PreCheck -->
-  <path d="M 760 152 L 780 152" fill="none" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-cyan)" />
+  <line x1="760" y1="152" x2="776" y2="152" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
 
   <!-- ================= SUBGRAPH 3: FALKORDB VERIFICATION (Middle) ================= -->
   <g class="subgraph">
-    <rect x="20" y="230" width="1020" height="150" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="230" width="1020" height="28" rx="10" fill="#1A2230" />
-    <rect x="20" y="248" width="1020" height="10" fill="#1A2230" />
-    <line x1="20" y1="258" x2="1040" y2="258" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="249" font-size="12" font-weight="700" fill="#38BDF8">3. FalkorDB Internal Cypher Verification Engine (GraphBLAS Port 6379)</text>
+    <rect x="20" y="230" width="1020" height="150" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="230" width="1020" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="248" font-size="12" font-weight="600" fill="#FFFFFF">3. FalkorDB Internal Cypher Verification Engine (GraphBLAS Port 6379)</text>
 
     <!-- Node: Falkor Driver -->
-    <rect x="35" y="270" width="220" height="96" rx="8" fill="#21262D" stroke="#484F58" stroke-width="1.2" />
-    <text x="47" y="292" font-size="12" font-weight="700" fill="#F0F6FC">FalkorDB Client Driver</text>
-    <text x="47" y="312" font-size="10.5" fill="#C9D1D9">• Redis Connection Pool</text>
-    <text x="47" y="328" font-size="10.5" fill="#C9D1D9">• Parameterized Cypher</text>
-    <text x="47" y="344" font-size="10" fill="#38BDF8">Latency: &lt; 2.5ms</text>
+    <rect x="35" y="270" width="220" height="96" rx="0" fill="#181818" stroke="#666666" stroke-width="0.75" />
+    <text x="47" y="292" font-size="12" font-weight="600" fill="#CCCCCC">FalkorDB Client Driver</text>
+    <text x="47" y="312" font-size="10.5" fill="#A0A0A0">• Redis Connection Pool</text>
+    <text x="47" y="328" font-size="10.5" fill="#A0A0A0">• Parameterized Cypher</text>
+    <text x="47" y="344" font-size="10" fill="#737373">Latency: &lt; 2.5ms</text>
 
     <!-- Node: Query 1 Execution -->
-    <rect x="280" y="270" width="370" height="96" rx="8" fill="#0C2438" stroke="#38BDF8" stroke-width="1.5" />
-    <text x="292" y="290" font-size="11.5" font-weight="700" fill="#38BDF8">Execute Query 1: verifyActionGate</text>
-    <text x="292" y="308" font-size="10" font-family="monospace" fill="#C9D1D9">MATCH (d:Decision {id: $decisionId})</text>
-    <text x="292" y="324" font-size="10" font-family="monospace" fill="#C9D1D9">OPTIONAL MATCH (d)-[:DEPENDS_ON*1..4]-&gt;(f)-&gt;(s)</text>
-    <text x="292" y="340" font-size="10" font-family="monospace" fill="#FBBF24">collect({fact_stale, source_status})</text>
+    <rect x="280" y="270" width="370" height="96" rx="0" fill="#242424" stroke="#CCCCCC" stroke-width="1" />
+    <text x="292" y="290" font-size="11.5" font-weight="600" fill="#FFFFFF">Execute Query 1: verifyActionGate</text>
+    <text x="292" y="308" font-size="10" font-family="monospace" fill="#CCCCCC">MATCH (d:Decision {id: $decisionId})</text>
+    <text x="292" y="324" font-size="10" font-family="monospace" fill="#A0A0A0">OPTIONAL MATCH (d)-[:DEPENDS_ON*1..4]->(f)->(s)</text>
+    <text x="292" y="340" font-size="10" font-family="monospace" fill="#CCCCCC">collect({fact_stale, source_status})</text>
 
-    <!-- Node: Decision Rhombus / Aggregator -->
-    <polygon points="760,318 840,270 920,318 840,366" fill="#1C2128" stroke="#FBBF24" stroke-width="2" />
-    <text x="840" y="312" font-size="10.5" font-weight="700" fill="#FBBF24" text-anchor="middle">ANY Ancestor</text>
-    <text x="840" y="328" font-size="10" font-weight="700" fill="#FBBF24" text-anchor="middle">Stale or Superseded?</text>
+    <!-- Node: Decision Diamond -->
+    <polygon points="760,318 840,270 920,318 840,366" fill="#181818" stroke="#CCCCCC" stroke-width="1.5" />
+    <text x="840" y="312" font-size="10.5" font-weight="600" fill="#FFFFFF" text-anchor="middle">ANY Ancestor</text>
+    <text x="840" y="328" font-size="10" font-weight="600" fill="#FFFFFF" text-anchor="middle">Stale or Superseded?</text>
   </g>
 
   <!-- Connect PreCheck to Driver -->
-  <path d="M 902 200 L 902 215 L 145 215 L 145 270" fill="none" stroke="#38BDF8" stroke-width="1.8" marker-end="url(#arrow-cyan)" />
+  <path d="M 902 200 L 902 215 L 145 215 L 145 266" fill="none" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
   <!-- Connect Driver to Query 1 -->
-  <path d="M 255 318 L 280 318" fill="none" stroke="#38BDF8" stroke-width="1.8" marker-end="url(#arrow-cyan)" />
+  <line x1="255" y1="318" x2="276" y2="318" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
   <!-- Connect Query 1 to Diamond -->
-  <path d="M 650 318 L 760 318" fill="none" stroke="#38BDF8" stroke-width="1.8" marker-end="url(#arrow-amber)" />
+  <line x1="650" y1="318" x2="756" y2="318" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
 
   <!-- ================= SUBGRAPH 4: ENFORCEMENT & EXECUTION (Bottom) ================= -->
   <g class="subgraph">
-    <rect x="20" y="400" width="1020" height="240" rx="10" fill="#161B22" stroke="#30363D" stroke-width="1.5" filter="url(#shadow)" />
-    <rect x="20" y="400" width="1020" height="28" rx="10" fill="#1A2230" />
-    <rect x="20" y="418" width="1020" height="10" fill="#1A2230" />
-    <line x1="20" y1="428" x2="1040" y2="428" stroke="#30363D" stroke-width="1.5" />
-    <text x="35" y="419" font-size="12" font-weight="700" fill="#34D399">4. Enforcement &amp; Physical Execution Branches</text>
+    <rect x="20" y="400" width="1020" height="240" rx="0" fill="#1F1F1F" stroke="#666666" stroke-width="1" />
+    <rect x="20" y="400" width="1020" height="26" rx="0" fill="#282828" stroke="#666666" stroke-width="1" />
+    <text x="32" y="418" font-size="12" font-weight="600" fill="#FFFFFF">4. Enforcement &amp; Physical Execution Branches</text>
 
     <!-- ================= BRANCH A: REJECT (Left) ================= -->
-    <rect x="35" y="440" width="460" height="88" rx="8" fill="#4C1D24" stroke="#F87171" stroke-width="1.8" />
-    <text x="47" y="462" font-size="12" font-weight="700" fill="#F87171">⛔ HARD REJECT: Stale Provenance Intercepted</text>
-    <text x="47" y="480" font-size="11" fill="#F0F6FC">• Zero Disk I/O: 0 bytes written to target codebase</text>
-    <text x="47" y="496" font-size="10.5" fill="#C9D1D9">• Interception Latency: 1.84ms (FalkorDB GraphBLAS)</text>
-    <text x="47" y="512" font-size="10" font-weight="600" fill="#F87171">• Broadcasts violation alert to Web HUD via SSE</text>
+    <rect x="35" y="438" width="460" height="88" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1" stroke-dasharray="3 3" />
+    <text x="47" y="460" font-size="12" font-weight="700" fill="#FFFFFF">[HARD REJECT] Stale Provenance Intercepted</text>
+    <text x="47" y="478" font-size="11" fill="#CCCCCC">• Zero Disk I/O: 0 bytes written to target codebase</text>
+    <text x="47" y="494" font-size="10.5" fill="#A0A0A0">• Interception Latency: 1.84ms (FalkorDB GraphBLAS)</text>
+    <text x="47" y="510" font-size="10" font-weight="600" fill="#CCCCCC">• Broadcasts violation alert to Web HUD via SSE</text>
 
     <!-- Rejection MCP Response -->
-    <rect x="35" y="538" width="460" height="88" rx="8" fill="#161B22" stroke="#F87171" stroke-width="1.2" />
-    <text x="47" y="558" font-size="11" font-weight="700" fill="#F87171">Return MCP Error Payload to Agent Context:</text>
-    <text x="47" y="576" font-size="10" font-family="monospace" fill="#F0F6FC">isError: true</text>
-    <text x="47" y="592" font-size="10" font-family="monospace" fill="#8B949E">error: "GATE BLOCKED: Decision DEC-102 depends on"</text>
-    <text x="47" y="608" font-size="10" font-family="monospace" fill="#FBBF24">       "stale Fact invalidated by Commit 9f8a2b (ADR-002)"</text>
+    <rect x="35" y="536" width="460" height="88" rx="0" fill="#242424" stroke="#666666" stroke-width="0.75" />
+    <text x="47" y="556" font-size="11" font-weight="600" fill="#FFFFFF">Return MCP Error Payload to Agent Context:</text>
+    <text x="47" y="574" font-size="10" font-family="monospace" fill="#CCCCCC">isError: true</text>
+    <text x="47" y="590" font-size="10" font-family="monospace" fill="#A0A0A0">error: "GATE BLOCKED: Decision DEC-102 depends on"</text>
+    <text x="47" y="606" font-size="10" font-family="monospace" fill="#CCCCCC">       "stale Fact invalidated by Commit 9f8a2b (ADR-002)"</text>
 
     <!-- ================= BRANCH B: APPROVE (Right) ================= -->
-    <rect x="545" y="440" width="480" height="88" rx="8" fill="#064E3B" stroke="#34D399" stroke-width="1.8" />
-    <text x="557" y="462" font-size="12" font-weight="700" fill="#34D399">✅ APPROVED: Provenance Chain Verified</text>
-    <text x="557" y="480" font-size="11" fill="#F0F6FC">• Verified Code Written: Atomically updates src/payment.js</text>
-    <text x="557" y="496" font-size="10.5" fill="#C9D1D9">• FalkorDB Audit: (:AgentAction)-[:GROUNDED_IN]-&gt;(:Decision)</text>
-    <text x="557" y="512" font-size="10" font-weight="600" fill="#34D399">• Execution Latency: 1.10ms (Full safety clearance)</text>
+    <rect x="545" y="438" width="480" height="88" rx="0" fill="#181818" stroke="#CCCCCC" stroke-width="1.2" />
+    <text x="557" y="460" font-size="12" font-weight="700" fill="#FFFFFF">[APPROVED] Provenance Chain Verified</text>
+    <text x="557" y="478" font-size="11" fill="#CCCCCC">• Verified Code Written: Atomically updates src/payment.js</text>
+    <text x="557" y="494" font-size="10.5" fill="#A0A0A0">• FalkorDB Audit: (:AgentAction)-[:GROUNDED_IN]->(:Decision)</text>
+    <text x="557" y="510" font-size="10" font-weight="600" fill="#CCCCCC">• Execution Latency: 1.10ms (Full safety clearance)</text>
 
     <!-- Approval MCP Response -->
-    <rect x="545" y="538" width="480" height="88" rx="8" fill="#161B22" stroke="#34D399" stroke-width="1.2" />
-    <text x="557" y="558" font-size="11" font-weight="700" fill="#34D399">Return MCP Success Payload to Agent Context:</text>
-    <text x="557" y="576" font-size="10" font-family="monospace" fill="#F0F6FC">isError: false</text>
-    <text x="557" y="592" font-size="10" font-family="monospace" fill="#C9D1D9">content: "GATE APPROVED: Verified against active ADR-002."</text>
-    <text x="557" y="608" font-size="10" font-family="monospace" fill="#34D399">         "File src/services/payment.js successfully updated."</text>
+    <rect x="545" y="536" width="480" height="88" rx="0" fill="#242424" stroke="#666666" stroke-width="0.75" />
+    <text x="557" y="556" font-size="11" font-weight="600" fill="#FFFFFF">Return MCP Success Payload to Agent Context:</text>
+    <text x="557" y="574" font-size="10" font-family="monospace" fill="#CCCCCC">isError: false</text>
+    <text x="557" y="590" font-size="10" font-family="monospace" fill="#A0A0A0">content: "GATE APPROVED: Verified against active ADR-002."</text>
+    <text x="557" y="606" font-size="10" font-family="monospace" fill="#CCCCCC">         "File src/services/payment.js successfully updated."</text>
   </g>
 
   <!-- Diamond to Branch A (YES / Stale detected) -->
-  <path d="M 800 342 C 770 380, 265 380, 265 440" fill="none" stroke="#F87171" stroke-width="2" marker-end="url(#arrow-crimson)" />
-  <rect x="440" y="380" width="165" height="18" rx="4" fill="#161B22" stroke="#F87171" stroke-width="0.8" />
-  <text x="522" y="392" font-size="9" font-weight="700" fill="#F87171" text-anchor="middle">YES: Stale Node in Path (DEC-102)</text>
+  <path d="M 800 342 L 770 380 L 265 380 L 265 434" fill="none" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
+  <rect x="440" y="371" width="165" height="18" rx="0" fill="#1F1F1F" stroke="#3D3D3D" stroke-width="0.75" />
+  <text x="522" y="383" font-size="9" font-weight="600" fill="#CCCCCC" text-anchor="middle">YES: Stale Node in Path (DEC-102)</text>
 
   <!-- Diamond to Branch B (NO / Sound path) -->
-  <path d="M 880 342 C 910 380, 785 380, 785 440" fill="none" stroke="#34D399" stroke-width="2" marker-end="url(#arrow-emerald)" />
-  <rect x="710" y="380" width="160" height="18" rx="4" fill="#161B22" stroke="#34D399" stroke-width="0.8" />
-  <text x="790" y="392" font-size="9" font-weight="700" fill="#34D399" text-anchor="middle">NO: All Ancestors Active (DEC-103)</text>
+  <path d="M 880 342 L 910 380 L 785 380 L 785 434" fill="none" stroke="#CCCCCC" stroke-width="1" marker-end="url(#arrowhead)" />
+  <rect x="710" y="371" width="160" height="18" rx="0" fill="#1F1F1F" stroke="#3D3D3D" stroke-width="0.75" />
+  <text x="790" y="383" font-size="9" font-weight="600" fill="#CCCCCC" text-anchor="middle">NO: All Ancestors Active (DEC-103)</text>
 
   <!-- Feedback Arrow from MCP Error back to Agent Core (Self-Correction Loop) -->
-  <path d="M 35 582 C 10 582, 10 152, 35 152" fill="none" stroke="#F87171" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arrow-crimson)" />
-  <rect x="0" y="360" width="70" height="18" rx="4" fill="#161B22" stroke="#F87171" stroke-width="0.8" />
-  <text x="35" y="372" font-size="8.5" font-weight="700" fill="#F87171" text-anchor="middle">ACT IV LOOP</text>
+  <path d="M 35 580 L 12 580 L 12 152 L 31 152" fill="none" stroke="#CCCCCC" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrowhead)" />
+  <rect x="0" y="358" width="70" height="18" rx="0" fill="#1F1F1F" stroke="#3D3D3D" stroke-width="0.75" />
+  <text x="35" y="370" font-size="8.5" font-weight="600" fill="#CCCCCC" text-anchor="middle">ACT IV LOOP</text>
 
 </svg>
