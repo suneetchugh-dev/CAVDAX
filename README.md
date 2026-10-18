@@ -41,14 +41,14 @@ When a superseding commit or ADR arrives:
 
 ## 📐 System Architecture & Flowchart Diagrams
 
-### 1. High-Level Architecture Flowchart
-![CAVDAX System Architecture Flowchart](./assets/cavdax-architecture-glassmorphic.svg)
+### 1. End-to-End System Architecture Flowchart
+![CAVDAX System Architecture Flowchart](./assets/System-Architecture.svg)
 
-### 2. Temporal Invalidation & Revalidation Causal Loop
-![CAVDAX Causal Workflow Flowchart](./assets/cavdax-workflow-glassmorphic.svg)
+### 2. Multi-Layer Architecture & FalkorDB GraphBLAS Engine Flowchart
+![CAVDAX Layer Architecture Flowchart](./assets/System-Architecture2.svg)
 
-### 3. Enclosed MCP Protocol Execution Gate
-![CAVDAX Enclosed MCP Gate Flowchart](./assets/cavdax-mcp-gate-glassmorphic.svg)
+### 3. Enclosed MCP Protocol Execution Gate Flowchart
+![CAVDAX Enclosed MCP Gate Flowchart](./assets/MCP-FLOWCHART.svg)
 
 ---
 

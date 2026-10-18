@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1804.0726666666665 1233.8500000000001" width="1804.0726666666665" height="1233.8500000000001" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="Client_Layer" data-label="1. Client &amp; Visual Interface Layer">
+  <rect x="40" y="40" width="619.615" height="206.60000000000002" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="40" width="619.615" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="52" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">1. Client &amp; Visual Interface Layer</text>
+</g>
+<g class="subgraph" data-id="Agent_Layer" data-label="2. Autonomous Agent Layer">
+  <rect x="694.6275" y="132.8" width="604.0539999999999" height="113.80000000000001" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="694.6275" y="132.8" width="604.0539999999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="706.6275" y="146.8" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">2. Autonomous Agent Layer</text>
+</g>
+<g class="subgraph" data-id="Gateway_Layer" data-label="3. CAVDAX Backend Gateway (Node.js / Express)">
+  <rect x="669.615" y="362.90000000000003" width="794.794" height="249.4" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="669.615" y="362.90000000000003" width="794.794" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="681.615" y="376.90000000000003" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">3. CAVDAX Backend Gateway (Node.js / Express)</text>
+</g>
+<g class="subgraph" data-id="Database_Layer" data-label="4. Graph Storage Layer (FalkorDB)">
+  <rect x="892.2109999999999" y="728.5999999999999" width="328.854" height="401.90000000000003" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="892.2109999999999" y="728.5999999999999" width="328.854" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="904.2109999999999" y="742.5999999999999" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">4. Graph Storage Layer (FalkorDB)</text>
+</g>
+<g class="subgraph" data-id="Host_Layer" data-label="5. Host Environment &amp; Target Codebase">
+  <rect x="1375.2656666666667" y="972.4500000000003" width="313.29299999999995" height="221.4" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1375.2656666666667" y="972.4500000000003" width="313.29299999999995" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1387.2656666666667" y="986.4500000000003" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">5. Host Environment &amp; Target Codebase</text>
+</g>
+<polyline class="edge" data-from="MCPClient" data-to="MCPGateway" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="1. Tool Call: apply_code_change(decision_id, code)" points="1282.6815,203.70000000000002 1298.6815,203.70000000000002 1323.694,203.70000000000002 1323.694,362.90000000000003 1323.694,406.90000000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="LocalRepo" data-to="IngestionEngine" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="2. File Commit / Push Event" points="1665.1486666666665,1057.025 1688.5586666666666,1057.025 1698.5586666666663,1051.8 1698.5586666666663,350.90000000000003 1056.638,350.90000000000003 1056.638,362.90000000000003 1056.638,406.90000000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="WebHUD" data-to="Gateway_Layer" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="3. REST API / SSE Live Stream" points="275.78999999999996,206.15 287.78999999999996,206.15 287.78999999999996,229.60000000000002 659.615,229.60000000000002 669.615,229.60000000000002 669.615,362.90000000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="FalkorDriver" data-to="Database_Layer" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="4. High-speed Cypher Queries (Port 6379)" points="1056.638,596.3000000000001 1056.638,612.3000000000001 1056.638,728.5999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="MCPGateway" data-to="LocalRepo" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="5. If APPROVED: Writes Verified Code to Disk" points="1365.2656666666667,477.6 1365.2656666666667,612.3000000000001 1365.2656666666667,1051.8 1375.2656666666667,1057.025 1391.2656666666667,1057.025" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Database_Layer" data-to="DockerHost" data-style="solid" data-arrow-start="false" data-arrow-end="false" points="1056.638,1130.5 1056.638,1142.5 1375.2656666666667,1142.5000000000002 1391.2656666666667,1142.5000000000002" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="edge" data-from="WebHUD" data-to="CanvasView" data-style="solid" data-arrow-start="false" data-arrow-end="false" points="275.78999999999996,198.20000000000002 323.78999999999996,198.20000000000002" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="edge" data-from="WebHUD" data-to="TerminalView" data-style="solid" data-arrow-start="false" data-arrow-end="false" points="275.78999999999996,179.25 287.78999999999996,179.25 287.78999999999996,110.9 323.78999999999996,110.9" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="edge" data-from="CodingAgent" data-to="MCPClient" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="945.2375,198.20000000000002 993.2375,198.20000000000002" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="MCPGateway" data-to="FalkorDriver" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1323.694,477.6 1323.694,501.6 1056.638,501.6 1056.638,525.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="IngestionEngine" data-to="FalkorDriver" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1056.638,477.6 1056.638,501.6 1056.638,501.6 1056.638,525.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EvalEngine" data-to="FalkorDriver" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="799.956,477.6 799.956,501.6 1056.638,501.6 1056.638,525.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="GraphBLAS" data-to="CausalStore" data-style="solid" data-arrow-start="false" data-arrow-end="false" points="1056.638,826.3999999999999 1056.638,874.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="edge" data-from="CausalStore" data-to="Indices" data-style="solid" data-arrow-start="false" data-arrow-end="false" points="1056.638,978.8999999999999 1056.638,1021.6750000000001" fill="none" stroke="var(--_line)" stroke-width="1" />
+<g class="edge-label" data-from="MCPClient" data-to="MCPGateway" data-label="1. Tool Call: apply_code_change(decision_id, code)">
+  <rect x="1195.694" y="289.6" width="255.25" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1323.319" y="304.75" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">1. Tool Call: apply_code_change(decision_id, code)</text>
+</g>
+<g class="edge-label" data-from="LocalRepo" data-to="IngestionEngine" data-label="2. File Commit / Push Event">
+  <rect x="1628.0586666666663" y="899.1500000000003" width="140.014" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1698.0656666666664" y="914.3000000000003" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">2. File Commit / Push Event</text>
+</g>
+<g class="edge-label" data-from="WebHUD" data-to="Gateway_Layer" data-label="3. REST API / SSE Live Stream">
+  <rect x="589.115" y="289.6" width="160.804" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="669.517" y="304.75" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">3. REST API / SSE Live Stream</text>
+</g>
+<g class="edge-label" data-from="FalkorDriver" data-to="Database_Layer" data-label="4. High-speed Cypher Queries (Port 6379)">
+  <rect x="950.1379999999999" y="655.3" width="212.482" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1056.379" y="670.4499999999999" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">4. High-speed Cypher Queries (Port 6379)</text>
+</g>
+<g class="edge-label" data-from="MCPGateway" data-to="LocalRepo" data-label="5. If APPROVED: Writes Verified Code to Disk">
+  <rect x="1252.7656666666667" y="899.1500000000003" width="224.362" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1364.9466666666667" y="914.3000000000003" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">5. If APPROVED: Writes Verified Code to Disk</text>
+</g>
+<g class="node" data-id="WebHUD" data-label="Porcelain Dark Web HUD
+(React 18 + Vite + Tailwind CSS)" data-shape="rectangle">
+  <rect x="56" y="165.8" width="219.78999999999996" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="165.89499999999998" y="192.70000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="165.89499999999998" dy="-3.9000000000000012">Porcelain Dark Web HUD</tspan><tspan x="165.89499999999998" dy="16.900000000000002">(React 18 + Vite + Tailwind CSS)</tspan></text>
+</g>
+<g class="node" data-id="CanvasView" data-label="Force-Graph 2D Canvas
+(WebGL / Canvas Real-Time Rendering)" data-shape="rectangle">
+  <rect x="323.78999999999996" y="171.3" width="272.40099999999995" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="459.99049999999994" y="198.20000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="459.99049999999994" dy="-3.9000000000000012">Force-Graph 2D Canvas</tspan><tspan x="459.99049999999994" dy="16.900000000000002">(WebGL / Canvas Real-Time Rendering)</tspan></text>
+</g>
+<g class="node" data-id="TerminalView" data-label="Agent Execution Terminal
+(Live Gate Verdicts, Audit Trails &amp; Cypher Logs)" data-shape="rectangle">
+  <rect x="323.78999999999996" y="84" width="319.825" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="483.7025" y="110.9" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="483.7025" dy="-3.9000000000000012">Agent Execution Terminal</tspan><tspan x="483.7025" dy="16.900000000000002">(Live Gate Verdicts, Audit Trails &amp; Cypher Logs)</tspan></text>
+</g>
+<g class="node" data-id="CodingAgent" data-label="Autonomous Coding Agent
+(Claude Code, Cursor IDE, Devin)" data-shape="rectangle">
+  <rect x="710.6275" y="171.3" width="234.60999999999993" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="827.9325" y="198.20000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="827.9325" dy="-3.9000000000000012">Autonomous Coding Agent</tspan><tspan x="827.9325" dy="16.900000000000002">(Claude Code, Cursor IDE, Devin)</tspan></text>
+</g>
+<g class="node" data-id="MCPClient" data-label="MCP Client Protocol Layer
+(Model Context Protocol over stdio / HTTP)" data-shape="rectangle">
+  <rect x="993.2375" y="176.8" width="289.44399999999996" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1137.9595" y="203.70000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1137.9595" dy="-3.9000000000000012">MCP Client Protocol Layer</tspan><tspan x="1137.9595" dy="16.900000000000002">(Model Context Protocol over stdio / HTTP)</tspan></text>
+</g>
+<g class="node" data-id="IngestionEngine" data-label="ADR Ingestion Engine
+• YAML Frontmatter Parser
+• Git Commit &amp; Webhook Listener" data-shape="rectangle">
+  <rect x="942.297" y="406.90000000000003" width="228.68199999999996" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1056.638" y="442.25000000000006" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1056.638" dy="-12.350000000000001">ADR Ingestion Engine</tspan><tspan x="1056.638" dy="16.900000000000002">• YAML Frontmatter Parser</tspan><tspan x="1056.638" dy="16.900000000000002">• Git Commit &amp; Webhook Listener</tspan></text>
+</g>
+<g class="node" data-id="MCPGateway" data-label="Enclosed MCP Tool Server
+• Tool: apply_code_change()
+• Pre-execution Cypher Interceptor" data-shape="rectangle">
+  <rect x="1198.979" y="406.90000000000003" width="249.42999999999998" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1323.694" y="442.25000000000006" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1323.694" dy="-12.350000000000001">Enclosed MCP Tool Server</tspan><tspan x="1323.694" dy="16.900000000000002">• Tool: apply_code_change()</tspan><tspan x="1323.694" dy="16.900000000000002">• Pre-execution Cypher Interceptor</tspan></text>
+</g>
+<g class="node" data-id="EvalEngine" data-label="Evaluation &amp; Benchmark Engine
+• 10-Scenario Test Harness
+• 50k-Node Synthetic Generator" data-shape="rectangle">
+  <rect x="685.615" y="406.90000000000003" width="228.682" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="799.956" y="442.25000000000006" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="799.956" dy="-12.350000000000001">Evaluation &amp; Benchmark Engine</tspan><tspan x="799.956" dy="16.900000000000002">• 10-Scenario Test Harness</tspan><tspan x="799.956" dy="16.900000000000002">• 50k-Node Synthetic Generator</tspan></text>
+</g>
+<g class="node" data-id="FalkorDriver" data-label="FalkorDB Client Driver
+• Redis Protocol Connection Pool
+• Parameterized Cypher Builder" data-shape="rectangle">
+  <rect x="938.592" y="525.6" width="236.09199999999996" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1056.638" y="560.95" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1056.638" dy="-12.350000000000001">FalkorDB Client Driver</tspan><tspan x="1056.638" dy="16.900000000000002">• Redis Protocol Connection Pool</tspan><tspan x="1056.638" dy="16.900000000000002">• Parameterized Cypher Builder</tspan></text>
+</g>
+<g class="node" data-id="GraphBLAS" data-label="GraphBLAS Sparse Matrix Engine
+(Sub-millisecond Linear Algebra Traversal)" data-shape="rectangle">
+  <rect x="908.2109999999999" y="772.5999999999999" width="296.854" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1056.638" y="799.4999999999999" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1056.638" dy="-3.9000000000000012">GraphBLAS Sparse Matrix Engine</tspan><tspan x="1056.638" dy="16.900000000000002">(Sub-millisecond Linear Algebra Traversal)</tspan></text>
+</g>
+<g class="node" data-id="CausalStore" data-label="CAVDAX Causal Graph
+• :Source (Commits, ADRs)
+• :Fact (Atomic Claims)
+• :Decision (Directives)
+• :AgentAction (Execution Logs)" data-shape="rectangle">
+  <rect x="942.6674999999999" y="874.3999999999999" width="227.94099999999995" height="104.50000000000001" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1056.638" y="926.6499999999999" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1056.638" dy="-29.250000000000004">CAVDAX Causal Graph</tspan><tspan x="1056.638" dy="16.900000000000002">• :Source (Commits, ADRs)</tspan><tspan x="1056.638" dy="16.900000000000002">• :Fact (Atomic Claims)</tspan><tspan x="1056.638" dy="16.900000000000002">• :Decision (Directives)</tspan><tspan x="1056.638" dy="16.900000000000002">• :AgentAction (Execution Logs)</tspan></text>
+</g>
+<g class="node" data-id="Indices" data-label="Fast Indexing &amp; Constraints
+• B-Tree Index on :Decision(id)
+• Index on :Source(id)
+• Index on :Fact(is_stale)" data-shape="rectangle">
+  <rect x="946.3725" y="1021.6750000000001" width="220.53099999999995" height="87.60000000000001" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1056.638" y="1065.4750000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1056.638" dy="-20.8">Fast Indexing &amp; Constraints</tspan><tspan x="1056.638" dy="16.900000000000002">• B-Tree Index on :Decision(id)</tspan><tspan x="1056.638" dy="16.900000000000002">• Index on :Source(id)</tspan><tspan x="1056.638" dy="16.900000000000002">• Index on :Fact(is_stale)</tspan></text>
+</g>
+<g class="node" data-id="LocalRepo" data-label="Target Git Codebase
+• docs/adrs/&lt;i&gt;.md (Architecture Records)
+• src/&lt;/i&gt; (Protected Production Files)" data-shape="rectangle">
+  <rect x="1391.2656666666667" y="1021.6750000000001" width="273.8829999999999" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1528.2071666666666" y="1057.025" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1528.2071666666666" dy="-12.350000000000001">Target Git Codebase</tspan><tspan x="1528.2071666666666" dy="16.900000000000002">• docs/adrs/<tspan font-style="italic">.md (Architecture Records)</tspan></tspan><tspan x="1528.2071666666666" dy="16.900000000000002">• src/ (Protected Production Files)</tspan></text>
+</g>
+<g class="node" data-id="DockerHost" data-label="Runtime Infrastructure
+• FalkorDB Container (Docker port 6379)
+• Fallback: FalkorDB Cloud Endpoint" data-shape="rectangle">
+  <rect x="1391.2656666666667" y="1107.1500000000003" width="281.29299999999995" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1531.9121666666667" y="1142.5000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1531.9121666666667" dy="-12.350000000000001">Runtime Infrastructure</tspan><tspan x="1531.9121666666667" dy="16.900000000000002">• FalkorDB Container (Docker port 6379)</tspan><tspan x="1531.9121666666667" dy="16.900000000000002">• Fallback: FalkorDB Cloud Endpoint</tspan></text>
+</g>
+</svg>
