@@ -1,15 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
-  <!-- Left: C-Arc (Causal Conscience) -->
-  <path d="M 45 22 A 28 28 0 0 0 45 78" 
+  <!-- CAVDAX Core Vector Geometry (Monochromatic Dark Theme) -->
+  <!-- 1. Outer Letterform C (Swiss 90° Flat Orthogonal Cuts) -->
+  <path d="M 46 27 A 23 23 0 0 0 46 73" 
         stroke="#FFFFFF" 
-        stroke-width="9" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"/>
+        stroke-width="4.8" 
+        stroke-linecap="butt" 
+        stroke-linejoin="miter" />
 
-  <!-- Right: V-Chevron / Forward Vector (Verified Decision & Execution) -->
-  <path d="M 52 34 L 79 50 L 52 66" 
+  <!-- 2. Outer Forward Chevron > / Vector V (Mitered Razor Apex) -->
+  <path d="M 52 28 L 74 50 L 52 72" 
         stroke="#FFFFFF" 
-        stroke-width="9" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"/>
+        stroke-width="4.8" 
+        stroke-linecap="butt" 
+        stroke-linejoin="miter" />
+
+  <!-- 3. Staggered Causal DAG Connector Edges (Hairline Grounding) -->
+  <g stroke="#94A3B8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Vertical Spine -->
+    <path d="M 46 34 L 46 66" />
+    <!-- Symmetrical Wings & Center Line to Junction (58, 50) -->
+    <path d="M 46 34 L 58 50" />
+    <path d="M 46 66 L 58 50" />
+    <path d="M 46 50 L 58 50" />
+    <!-- Forward Bridge to Chevron Apex -->
+    <path d="M 58 50 L 74 50" />
+  </g>
+
+  <!-- 4. Causal Graph Vertices (Source, Fact, Decision) -->
+  <g fill="#FFFFFF">
+    <circle cx="46" cy="34" r="2.5" />
+    <circle cx="46" cy="50" r="2.5" />
+    <circle cx="46" cy="66" r="2.5" />
+  </g>
+
+  <!-- 5. Apex Specular Lock Vertex (Verified Decision Circuit) -->
+  <circle cx="74" cy="50" r="2.5" fill="#FFFFFF" />
 </svg>

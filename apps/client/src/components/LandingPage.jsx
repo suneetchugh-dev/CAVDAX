@@ -140,12 +140,12 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          2. CORE PROBLEM SECTION WITH THANOS TYPEWRITER DISSOLVE
-          (Strict Requirement: NO TEXT / SUBTEXT BELOW THIS 2ND HEADING)
+          2. CORE PROBLEM SPACE: WHY VECTOR RAG FAILS CODING AGENTS
+          (Zero Eyebrow Pills, Zero Tag Noise, Strictly Pure Typography)
           ══════════════════════════════════════════════════════════════════════ */}
       <section className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
         <div className="text-center mb-12">
-          {/* 2nd Heading with Integrated Thanos Typewriter Dissolve — strictly NO text below */}
+          {/* Heading with Integrated Thanos Typewriter Dissolve — strictly NO text below */}
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 pb-2">
             <span className="whitespace-nowrap shrink-0">Why Vector RAG Fails</span>
             <ThanosTypewriterHeadline 
@@ -159,30 +159,171 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
           </h2>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            3. ASYMMETRIC MINIMALIST BENTO GRID (Monochromatic, Zero Cyan)
-            ══════════════════════════════════════════════════════════════════════ */}
+        {/* ASYMMETRIC PROBLEM SPACE BENTO GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          
+          {/* Problem Card 1 (2-Column): Semantic Cosine Blindness */}
+          <div className="md:col-span-2 neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                  <GitBranch className="w-4 h-4 text-slate-950 dark:text-white" />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Semantic Cosine Blindness
+                </h3>
+              </div>
+              
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                Active and superseded decisions share identical semantic vectors. Cosine distance cannot determine temporal succession, causing agents to retrieve obsolete architectural rules.
+              </p>
+
+              {/* Visual Vector Collision Simulator */}
+              <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-800 dark:text-slate-300">
+                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                  <span>ADR-001 (Deprecated v1)</span>
+                </div>
+                <span className="text-slate-400 font-bold">≈ 0.89 Cosine Match ≈</span>
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                  <span>ADR-002 (Active OAuth2)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <span>Failure: Directional Blindness</span>
+              <span>RAG Probability: 50% Stale Pick</span>
+            </div>
+          </div>
+
+          {/* Problem Card 2 (1-Column): Silent Cache Rot */}
+          <div className="neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-slate-950 dark:text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Silent Cache Rot
+                </h3>
+              </div>
+              
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                Git commits mutate repositories constantly, but vector indices remain static. Coding agents operate on silent, outdated cache without invalidation awareness.
+              </p>
+
+              <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300">
+                <div className="text-slate-500 dark:text-slate-400"># Git State vs Vector DB:</div>
+                <div className="text-rose-700 dark:text-rose-400 font-bold">DESYNC: 42 Commits Behind</div>
+                <div className="text-slate-500 text-[10px]">Stale Invariant Ingested</div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <span>Cache Integrity: 0% Guarantee</span>
+              <span>Invalidation: None</span>
+            </div>
+          </div>
+
+          {/* Problem Card 3 (1-Column): Unenclosed Disk Mutation */}
+          <div className="neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                  <FileCode2 className="w-4 h-4 text-slate-950 dark:text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Unenclosed Disk IO
+                </h3>
+              </div>
+              
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                Coding agents execute direct filesystem writes without checking if the justifying decision is still fresh, introducing unverified code into production.
+              </p>
+
+              <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300">
+                <div className="text-slate-500 dark:text-slate-400"># Direct Execution Vulnerability:</div>
+                <div className="text-rose-700 dark:text-rose-400 font-bold">DIRECT DISK WRITE</div>
+                <div className="text-slate-500 text-[10px]">Bypasses Architecture Checks</div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <span>Gate Protection: 0% (Raw Access)</span>
+              <span>Risk: Silent Regression</span>
+            </div>
+          </div>
+
+          {/* Problem Card 4 (2-Column): Multi-Hop Cascade Failures */}
+          <div className="md:col-span-2 neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                  <Layers className="w-4 h-4 text-slate-950 dark:text-white" />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Broken Dependency Cascades
+                </h3>
+              </div>
+              
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                Contract changes cascade across services. Isolated vector search cannot compute multi-hop graph reachability or downstream dependency breakage.
+              </p>
+
+              <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-800 dark:text-slate-300">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-900 dark:bg-white" />
+                  <span>ADR-001 Invalidation</span>
+                </div>
+                <span className="text-slate-400 font-bold">-- 3 Hops Lost in RAG --</span>
+                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                  <span>Silent Service Regression</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
+              <span>Reachability: Not Computed</span>
+              <span>Vector Depth: 1 Hop Max</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          3. SOLUTION SPACE: GRAPH-GROUNDED DECISION EXECUTION
+          (Zero Eyebrow Pills, Zero Tag Noise, Strictly Pure Typography)
+          ══════════════════════════════════════════════════════════════════════ */}
+      <section className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
+            <span className="text-[#d9a353]">Graph-Grounded</span>
+            <span className="text-slate-400 dark:text-slate-600 font-light mx-2 sm:mx-4 select-none">→</span>
+            <span>Decision Execution</span>
+          </h2>
+        </div>
+
+        {/* ASYMMETRIC SOLUTION SPACE BENTO GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           
           {/* Bento Card 1 (2-Column): The Invalidation Wave Engine */}
           <div className="md:col-span-2 neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-950 dark:text-white tracking-wider uppercase">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
                   <Workflow className="w-4 h-4 text-slate-950 dark:text-white" />
-                  <span>Causal Invalidation Engine</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold uppercase">
-                  GraphBLAS Sparse BFS
-                </span>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Causal Invalidation Engine
+                </h3>
               </div>
-
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white mb-3 tracking-tight">
-                Deterministic DAG Traversal vs Cosine Blindness
-              </h3>
               
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                When a commit introduces an ADR that supersedes a library, semantic vector search still returns the deprecated v1 doc due to high cosine keyword overlap. CAVDAX establishes explicit <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-white/10 font-mono text-xs">[:SUPERSEDES]</code> edges and cascades invalidation across the causal graph in sub-millisecond matrix ops.
+                New commits establish explicit <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-white/10 font-mono text-xs">[:SUPERSEDES]</code> edges, cascading invalidation flags across the graph in &lt; 2ms via FalkorDB GraphBLAS.
               </p>
 
               {/* Visual Graph Pipeline Path */}
@@ -213,22 +354,17 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
           {/* Bento Card 2 (1-Column): The Enclosed MCP Action Gate */}
           <div className="neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-950 dark:text-white tracking-wider uppercase">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
                   <Lock className="w-4 h-4 text-slate-950 dark:text-white" />
-                  <span>MCP Execution Gate</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold uppercase">
-                  Enclosed stdio
-                </span>
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Enclosed MCP Execution Gate
+                </h3>
               </div>
-
-              <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-3 tracking-tight">
-                Zero Ungrounded Code Changes
-              </h3>
               
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                Instead of granting autonomous agents direct disk write access, tool calls like <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-white/10 font-mono text-xs">apply_code_change</code> are enclosed behind CAVDAX.
+                Agent file modifications are enclosed behind an MCP Cypher gate. Stale dependencies are blocked in-flight with a deterministic 403 Hard Rejection.
               </p>
 
               <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300">
@@ -247,22 +383,17 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
           {/* Bento Card 3 (1-Column): FalkorDB GraphBLAS Matrix Invalidation */}
           <div className="neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-950 dark:text-white tracking-wider uppercase">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
                   <Database className="w-4 h-4 text-slate-950 dark:text-white" />
-                  <span>Matrix Computation</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold uppercase">
-                  Sub-ms BFS
-                </span>
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Linear Algebraic Matrix Operations
+                </h3>
               </div>
-
-              <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-3 tracking-tight">
-                Linear Algebraic Graph Operations
-              </h3>
               
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                FalkorDB leverages RedisGraph GraphBLAS sparse matrix multiplications (<code className="font-mono text-xs">A ⊕.⊗ B</code>) to evaluate multi-hop dependency trees at hardware memory speeds.
+                Sparse matrix multiplications (<code className="font-mono text-xs">A ⊕.⊗ B</code>) evaluate deep multi-hop dependency paths in-memory at hardware speeds.
               </p>
             </div>
 
@@ -275,22 +406,17 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
           {/* Bento Card 4 (2-Column): The Act IV Revalidation Loop */}
           <div className="md:col-span-2 neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-950 dark:text-white tracking-wider uppercase">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-4 h-4 text-slate-950 dark:text-white" />
-                  <span>Continuous Revalidation</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold uppercase">
-                  Closed Loop
-                </span>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  Self-Healing Continuous Revalidation
+                </h3>
               </div>
-
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white mb-3 tracking-tight">
-                Self-Healing Agent Causal Conscience
-              </h3>
               
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                When an action is blocked, the rejection error provides the exact path of superseded facts. The agent pivots, grounds its new action in the superseding ADR, and generates a valid replacement decision. The cycle completes with verified provenance.
+                Rejections pinpoint the exact stale path. Agents automatically pivot, grounding fresh decisions in active sources with verified provenance.
               </p>
 
               <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-800 dark:text-slate-300">

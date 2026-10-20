@@ -282,7 +282,7 @@ export default function CavdaxBrandLoader({
         </g>
 
         {/* Specular White Lock Flare */}
-        <circle className="cavdax-lock-ping fill-white pointer-events-none" cx="74" cy="50" r="2.5" style={{ transformOrigin: '74px 50px' }} />
+        <circle className="cavdax-lock-ping fill-current pointer-events-none" cx="74" cy="50" r="2.5" style={{ transformOrigin: '74px 50px' }} />
       </svg>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { CAVDAX_WORDMARK_LETTERS_PATH } from './CavdaxWordmark';
 
 /**
  * FooterParticles Component
@@ -58,15 +59,40 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
       offscreen.width = width;
       offscreen.height = height;
 
-      let fontSize = Math.floor(width / (text.length * 0.62));
-      fontSize = Math.max(36, Math.min(fontSize, 120));
+      const isCavdax = typeof text === 'string' && text.trim().toUpperCase() === 'CAVDAX';
 
-      offCtx.font = `900 ${fontSize}px "Inter", "Space Grotesk", system-ui, sans-serif`;
-      offCtx.textAlign = 'center';
-      offCtx.textBaseline = 'middle';
-      offCtx.fillStyle = '#ffffff';
+      if (isCavdax && typeof Path2D !== 'undefined') {
+        // EXACT WORDMARK VECTOR RASTERIZATION (1:1 Architectural Typography Fidelity)
+        // CAVDAX bespoke letterforms bounding box: width: 954.4, height: 168.4, center: (499.1, 104.4)
+        const path = new Path2D(CAVDAX_WORDMARK_LETTERS_PATH);
+        const maxScaleW = (width * 0.88) / 954.4;
+        const maxScaleH = (height * 0.72) / 168.4;
+        const scale = Math.min(maxScaleW, maxScaleH);
 
-      offCtx.fillText(text, width / 2, height / 2);
+        const drawX = width / 2 - 499.1 * scale;
+        const drawY = height / 2 - 104.4 * scale;
+
+        offCtx.save();
+        offCtx.translate(drawX, drawY);
+        offCtx.scale(scale, scale);
+        offCtx.fillStyle = '#ffffff';
+        offCtx.fill(path, 'evenodd');
+        offCtx.restore();
+      } else {
+        // Fallback / Generic Text: Enforce Swiss Architectural Grotesk Typography
+        // Space Grotesk 900 Ultra-Black weight, uppercase, wide tracking (matching Wordmark DNA)
+        let fontSize = Math.floor(width / (text.length * 0.62));
+        fontSize = Math.max(36, Math.min(fontSize, 120));
+
+        offCtx.font = `900 ${fontSize}px "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        offCtx.textAlign = 'center';
+        offCtx.textBaseline = 'middle';
+        offCtx.fillStyle = '#ffffff';
+        if ('letterSpacing' in offCtx) {
+          offCtx.letterSpacing = '0.04em';
+        }
+        offCtx.fillText(text, width / 2, height / 2);
+      }
 
       const imgData = offCtx.getImageData(0, 0, width, height);
       const data = imgData.data;
