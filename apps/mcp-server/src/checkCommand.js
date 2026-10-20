@@ -9,9 +9,42 @@
  * Designed for use in:
  *   - git pre-commit hooks: `npx cavdax check --staged`
  *   - GitHub Actions CI:    `npx cavdax check --pr ${{ github.event.pull_request.number }}`
+ *
+ * Only text-based source files are scanned for CAVDAX decision ID references.
+ * Binary files, lock files, and generated assets are skipped to prevent false
+ * positives and crashes from calling readFileSync on non-UTF-8 content.
  */
 
 import { execSync } from 'child_process';
+import path from 'path';
+
+// File extensions that are safe to read as UTF-8 text and may contain
+// CAVDAX decision ID references (e.g. DEC-102 in a comment or config).
+// Binary files, images, lock files, and generated bundles are excluded.
+const SCANNABLE_EXTENSIONS = new Set([
+  '.js', '.mjs', '.cjs',
+  '.ts', '.tsx', '.jsx',
+  '.py', '.go', '.rs', '.rb', '.java', '.kt', '.cs', '.cpp', '.c', '.h',
+  '.md', '.mdx', '.txt',
+  '.yaml', '.yml', '.toml', '.ini', '.env',
+  '.json',   // package.json, tsconfig etc — but NOT *.lock.json
+  '.sh', '.bash', '.zsh',
+  '.sql', '.graphql', '.proto'
+]);
+
+/**
+ * Returns true if the file path should be scanned for decision ID references.
+ * Excludes lock files explicitly regardless of extension.
+ */
+function isScannableFile(filePath) {
+  const basename = path.basename(filePath);
+  // Exclude lock files by name pattern regardless of extension
+  if (basename.endsWith('.lock') || basename === 'package-lock.json' || basename === 'yarn.lock' || basename === 'pnpm-lock.yaml') {
+    return false;
+  }
+  const ext = path.extname(filePath).toLowerCase();
+  return SCANNABLE_EXTENSIONS.has(ext);
+}
 
 /**
  * Returns a list of staged file paths via `git diff --cached --name-only`.
@@ -58,7 +91,14 @@ async function verifyFiles(files, options) {
   let allPassed = true;
 
   for (const filePath of files) {
-    // Heuristically scan files for decision ID patterns (e.g. DEC-102)
+    // Skip non-text files before attempting readFileSync to prevent crashes
+    // on binary content (images, compiled bundles, lock files, etc.)
+    if (!isScannableFile(filePath)) {
+      console.log(`   ⏭️  ${filePath} — skipped (binary/lock/generated file)`);
+      continue;
+    }
+
+    // Scan for decision ID patterns (e.g. DEC-102)
     let decisionIds = [];
     try {
       const { readFileSync } = await import('fs');
@@ -66,7 +106,9 @@ async function verifyFiles(files, options) {
       const matches = content.match(/\bDEC-\d+\b/g) || [];
       decisionIds = [...new Set(matches)];
     } catch {
-      // File may be binary or deleted — skip
+      // File deleted between git diff and now — skip gracefully
+      console.log(`   ⏭️  ${filePath} — skipped (file unreadable or deleted)`);
+      continue;
     }
 
     if (decisionIds.length === 0) {

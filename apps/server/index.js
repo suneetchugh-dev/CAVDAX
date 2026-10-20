@@ -12,11 +12,12 @@ import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 
 import { getFalkorClient } from '../../core/graph/client.js';
-import { 
-  seedDemoGraph, 
-  fetchGraphState, 
-  verifyActionGate, 
-  revalidateDecision 
+import {
+  seedDemoGraph,
+  fetchGraphState,
+  verifyActionGate,
+  revalidateDecision,
+  fetchAuditLog
 } from '../../core/graph/queries.js';
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
@@ -33,11 +34,67 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// ---------------------------------------------------------------------------
+// AUTH MIDDLEWARE
+// ---------------------------------------------------------------------------
+// Reads MCP_API_TOKEN from environment. If the variable is not set (e.g. local
+// dev without a .env), auth is skipped and a warning is printed once on boot.
+// When set, every protected write endpoint requires:
+//   Authorization: Bearer <token>
+const API_TOKEN = process.env.MCP_API_TOKEN || null;
+
+if (!API_TOKEN) {
+  console.warn(
+    '[CAVDAX Auth] ⚠️  MCP_API_TOKEN is not set — write endpoints are unprotected. ' +
+    'Set MCP_API_TOKEN in your .env file before deploying to production.'
+  );
+}
+
+/**
+ * Express middleware that enforces Bearer token auth on write endpoints.
+ * Skipped transparently when MCP_API_TOKEN env var is absent (local dev mode).
+ */
+function requireAuth(req, res, next) {
+  if (!API_TOKEN) return next(); // dev mode — no token configured, skip
+
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token || token !== API_TOKEN) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'A valid Bearer token is required. Set Authorization: Bearer <MCP_API_TOKEN>.'
+    });
+  }
+
+  next();
+}
+
+// ---------------------------------------------------------------------------
+// SSE CLIENT REGISTRIES
+// ---------------------------------------------------------------------------
+
 // In-memory SSE client registry for real-time Web HUD push notifications
 const sseClients = new Set();
 
 // In-memory registry of active remote MCP SSE agent sessions (MCP 2024-11-05)
+// Each entry: { id, res, createdAt }
 const mcpSessions = new Map();
+
+// TTL for idle MCP SSE sessions — clean up sessions whose HTTP connection was
+// dropped without a 'close' event (e.g. network failures, proxy crashes).
+const MCP_SESSION_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [sessionId, session] of mcpSessions) {
+    if (now - session.createdAt > MCP_SESSION_TTL_MS) {
+      try { session.res.end(); } catch { /* already closed */ }
+      mcpSessions.delete(sessionId);
+      console.log(`[CAVDAX SSE] Evicted stale MCP session ${sessionId} (TTL exceeded)`);
+    }
+  }
+}, 60 * 1000).unref(); // .unref() so the interval doesn't keep the process alive during tests
 
 function broadcastEvent(eventType, payload) {
   const data = JSON.stringify({ type: eventType, data: payload, timestamp: Date.now() });
@@ -118,7 +175,7 @@ app.get('/api/events', (req, res) => {
 });
 
 // 3. Seed Demo Graph
-app.post('/api/seed', async (req, res) => {
+app.post('/api/seed', requireAuth, async (req, res) => {
   try {
     if (!isFalkorConnected) await initDb();
 
@@ -156,7 +213,7 @@ app.get('/api/graph', async (req, res) => {
 });
 
 // 5. Ingest ADR / Commit Mutation (Act II)
-app.post('/api/ingest', async (req, res) => {
+app.post('/api/ingest', requireAuth, async (req, res) => {
   try {
     if (!isFalkorConnected) await initDb();
     const filePath = req.body?.filePath || path.join(REPO_ROOT, 'demo-repo/docs/adrs/ADR-002.md');
@@ -208,7 +265,7 @@ app.post('/api/ingest', async (req, res) => {
 });
 
 // 6. Enclosed MCP Gate Execution (Act III & Safe Execution)
-app.post('/api/mcp/call', async (req, res) => {
+app.post('/api/mcp/call', requireAuth, async (req, res) => {
   const { toolName, args } = req.body || {};
 
   // --- Input validation: fail fast with a clean 400 before touching the DB ---
@@ -369,7 +426,7 @@ app.post('/api/mcp/call', async (req, res) => {
 });
 
 // 7. Act IV Direct Revalidation Helper
-app.post('/api/act-iv-revalidate', async (req, res) => {
+app.post('/api/act-iv-revalidate', requireAuth, async (req, res) => {
   try {
     if (!isFalkorConnected) await initDb();
 
@@ -421,7 +478,7 @@ app.post('/api/act-iv-revalidate', async (req, res) => {
 });
 
 // 8. Reset Demo Repository & Graph
-app.post('/api/reset', async (req, res) => {
+app.post('/api/reset', requireAuth, async (req, res) => {
   try {
     const paymentServicePath = path.join(REPO_ROOT, 'demo-repo/src/services/payment.js');
     const initialStub = `/**
@@ -469,6 +526,64 @@ export default app;
     }
   } catch (err) {
     console.error('Reset Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 9. Audit Log — Agent Action History for Security & Compliance Teams
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/audit[?limit=<n>]
+ *
+ * Returns a time-ordered list of all AgentAction nodes written to FalkorDB by
+ * the MCP gate, enriched with the grounding decision and its status.
+ * This endpoint is read-only and does NOT require auth — compliance dashboards
+ * and monitoring tools can poll it without a token.
+ *
+ * Falls back to the in-memory fallbackGraphState when FalkorDB is offline.
+ *
+ * Query params:
+ *   limit  — max entries to return (default: 100, max: 500)
+ */
+app.get('/api/audit', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit || '100', 10), 500);
+
+  try {
+    if (!isFalkorConnected) await initDb();
+
+    if (graph) {
+      const auditData = await fetchAuditLog(graph, limit);
+      return res.json({
+        success: true,
+        ...auditData
+      });
+    }
+
+    // Fallback: derive audit entries from in-memory fallbackGraphState
+    const fallbackEntries = fallbackGraphState.nodes
+      .filter(n => n.label === 'AgentAction')
+      .map(n => ({
+        action_id:       n.id,
+        target_file:     n.target_file || null,
+        status:          n.status,
+        executed_at:     null,
+        decision_id:     fallbackGraphState.edges.find(e => e.source === n.id && e.type === 'GROUNDED_IN')?.target || null,
+        decision_status: null,
+        decision_title:  null
+      }))
+      .slice(0, limit);
+
+    return res.json({
+      success: true,
+      simulated: true,
+      entries: fallbackEntries,
+      total: fallbackEntries.length,
+      latency_ms: 0
+    });
+  } catch (err) {
+    console.error('Audit Error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -573,7 +688,7 @@ app.get('/api/mcp/sse', (req, res) => {
  * Client POSTs a JSON-RPC 2.0 request here. Server acknowledges with 202,
  * then streams the JSON-RPC response back on the established SSE connection.
  */
-app.post('/api/mcp/messages', async (req, res) => {
+app.post('/api/mcp/messages', requireAuth, async (req, res) => {
   const { sessionId } = req.query;
 
   if (!sessionId || !mcpSessions.has(sessionId)) {

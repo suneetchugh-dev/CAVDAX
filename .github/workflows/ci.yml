@@ -4,11 +4,81 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, feature/enterprise-mcp ]
 
 jobs:
-  verify-build:
-    name: Build & Benchmark Verification
+  # ---------------------------------------------------------------------------
+  # Job 1: Server & Core syntax + dependency validation
+  # Previously missing — server code was never checked in CI, allowing syntax
+  # errors and missing imports to go undetected until runtime.
+  # ---------------------------------------------------------------------------
+  verify-server:
+    name: Server & Core Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'apps/server/package-lock.json'
+
+      - name: Install Server Dependencies
+        run: |
+          cd apps/server
+          npm ci
+
+      - name: Syntax-check Server Entry Point
+        # --check parses and validates JS without executing — catches syntax errors,
+        # bad imports, and top-level await issues without needing a live FalkorDB.
+        run: |
+          node --check apps/server/index.js
+
+      - name: Syntax-check Core Graph Module
+        run: |
+          node --check core/graph/queries.js
+          node --check core/ingestion/parser.js
+          node --check core/mcp/server.js
+          node --check core/mcp/stdio.js
+
+  # ---------------------------------------------------------------------------
+  # Job 2: MCP Server package syntax + dependency validation
+  # ---------------------------------------------------------------------------
+  verify-mcp-server:
+    name: MCP Server Package Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install MCP Server Dependencies
+        run: |
+          cd apps/mcp-server
+          npm install
+
+      - name: Syntax-check MCP Server Sources
+        run: |
+          node --check apps/mcp-server/bin/cavdax.js
+          node --check apps/mcp-server/src/stdioServer.js
+          node --check apps/mcp-server/src/ingestCommand.js
+          node --check apps/mcp-server/src/checkCommand.js
+          node --check apps/mcp-server/src/doctorCommand.js
+
+  # ---------------------------------------------------------------------------
+  # Job 3: Client build + benchmark (original job, now named clearly)
+  # ---------------------------------------------------------------------------
+  verify-client:
+    name: Client Build & Benchmark Verification
     runs-on: ubuntu-latest
 
     steps:

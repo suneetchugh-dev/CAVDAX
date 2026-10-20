@@ -9,6 +9,15 @@ import { cascadeInvalidation } from '../graph/queries.js';
 
 /**
  * Lightweight deterministic YAML frontmatter extractor (Zero-dependency fallback)
+ *
+ * Supports:
+ *   - Scalar values:   key: value
+ *   - Quoted strings:  key: "value" or key: 'value'
+ *   - Inline arrays:   key: [a, b, c]
+ *   - Block sequences: key:\n  - a\n  - b   (indented list items)
+ *
+ * The 'supersedes' key specifically may be a scalar string OR a list.
+ * Both forms are normalised to an array by ingestAdrFile before use.
  */
 export function parseFrontmatter(fileContent) {
   const match = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -21,21 +30,48 @@ export function parseFrontmatter(fileContent) {
   const frontmatter = {};
 
   const lines = rawYaml.split(/\r?\n/);
+  let currentKey = null; // tracks the key whose block-sequence we are collecting
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
 
+    // Block-sequence item (  - value) belonging to the previous key
+    if (trimmed.startsWith('- ') && currentKey) {
+      const item = trimmed.slice(2).trim().replace(/^['"]|['"]$/g, '');
+      if (!Array.isArray(frontmatter[currentKey])) {
+        // Convert existing scalar to array on first list item
+        frontmatter[currentKey] = frontmatter[currentKey] ? [frontmatter[currentKey]] : [];
+      }
+      frontmatter[currentKey].push(item);
+      continue;
+    }
+
     const colonIdx = trimmed.indexOf(':');
     if (colonIdx > 0) {
-      const key = trimmed.slice(0, colonIdx).trim();
+      currentKey = trimmed.slice(0, colonIdx).trim();
       let value = trimmed.slice(colonIdx + 1).trim();
 
-      // Clean quotes
+      // Inline array: key: [a, b, c]
+      if (value.startsWith('[') && value.endsWith(']')) {
+        frontmatter[currentKey] = value
+          .slice(1, -1)
+          .split(',')
+          .map(v => v.trim().replace(/^['"]|['"]$/g, ''))
+          .filter(Boolean);
+        continue;
+      }
+
+      // Clean surrounding quotes from scalar values
       if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
 
-      frontmatter[key] = value;
+      // Empty value after colon means a block-sequence follows on next lines
+      frontmatter[currentKey] = value || null;
+    } else {
+      // Line has no colon — not a key-value pair, reset currentKey
+      currentKey = null;
     }
   }
 
@@ -57,11 +93,20 @@ export async function ingestAdrFile(graph, filePath) {
   const { frontmatter, body } = parseFrontmatter(fileContent);
 
   const adrId = frontmatter.id || path.basename(filePath, path.extname(filePath));
-  const supersedesId = frontmatter.supersedes;
+
+  // Normalise 'supersedes' to an array so downstream code handles both:
+  //   supersedes: ADR-001          (scalar string  → ['ADR-001'])
+  //   supersedes: [ADR-001, ADR-003] (inline array → ['ADR-001', 'ADR-003'])
+  //   supersedes:\n  - ADR-001\n  - ADR-003  (block sequence → ['ADR-001', 'ADR-003'])
+  const rawSupersedes = frontmatter.supersedes;
+  const supersedesIds = rawSupersedes
+    ? (Array.isArray(rawSupersedes) ? rawSupersedes : [rawSupersedes]).filter(Boolean)
+    : [];
+
   const title = frontmatter.title || adrId;
   const relativePath = path.relative(process.cwd(), absolutePath).replace(/\\/g, '/');
 
-  console.log(`[Ingestion] Ingested ADR ID: '${adrId}', Supersedes: '${supersedesId || 'None'}'`);
+  console.log(`[Ingestion] ADR ID: '${adrId}', Supersedes: ${supersedesIds.length ? supersedesIds.join(', ') : 'None'}`);
 
   // 1. ATOMIC GRAPH INGESTION: MERGE Source node so any ADR (not just pre-seeded
   //    ones) exists in the graph before cascadeInvalidation tries to MATCH it.
@@ -94,19 +139,24 @@ export async function ingestAdrFile(graph, filePath) {
     });
   }
 
-  // 3. TRIGGER CASCADING INVALIDATION (Source node is now guaranteed to exist)
-  let invalidationResult = null;
+  // 3. TRIGGER CASCADING INVALIDATION for every superseded ADR
+  //    Previously only a single supersedesId was handled — now supports
+  //    multi-supersedes (e.g. one ADR replacing two legacy ADRs at once).
+  const invalidationResults = [];
 
-  if (supersedesId) {
-    console.log(`[Ingestion] ⚡ Mutation detected! '${adrId}' supersedes '${supersedesId}'. Triggering Query 2 cascade...`);
-    invalidationResult = await cascadeInvalidation(graph, adrId, supersedesId);
-    console.log(`[Ingestion] Cascade complete in ${invalidationResult.latency_ms}ms. Affected decisions: ${invalidationResult.affected_decisions}`);
+  for (const oldSourceId of supersedesIds) {
+    console.log(`[Ingestion] ⚡ Mutation: '${adrId}' supersedes '${oldSourceId}'. Triggering cascade...`);
+    const result = await cascadeInvalidation(graph, adrId, oldSourceId);
+    console.log(`[Ingestion] Cascade on '${oldSourceId}' complete in ${result.latency_ms}ms. Affected: ${result.affected_decisions} decision(s)`);
+    invalidationResults.push({ supersedes: oldSourceId, ...result });
   }
 
   return {
     adr_id: adrId,
-    supersedes: supersedesId || null,
+    supersedes: supersedesIds.length === 1 ? supersedesIds[0] : (supersedesIds.length > 1 ? supersedesIds : null),
     frontmatter,
-    invalidation: invalidationResult
+    invalidation: invalidationResults.length === 1
+      ? invalidationResults[0]
+      : (invalidationResults.length > 1 ? invalidationResults : null)
   };
 }
