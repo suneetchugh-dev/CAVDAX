@@ -1,0 +1,38 @@
+name: 'CAVDAX Causal Invalidation Gate'
+description: 'Blocks pull requests containing code grounded in stale or superseded architecture decisions.'
+author: 'CAVDAX Team'
+
+inputs:
+  falkordb_host:
+    description: 'FalkorDB host address'
+    required: false
+    default: 'localhost'
+  falkordb_port:
+    description: 'FalkorDB port'
+    required: false
+    default: '6379'
+  github_token:
+    description: 'GitHub token for posting PR comments'
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Ingest ADRs & Validate Commits
+      shell: bash
+      run: |
+        echo "🔍 Scanning repository ADRs..."
+        npx --yes @cavdax/mcp-server ingest
+
+        echo "🛡️ Verifying commit causal provenance..."
+        npx --yes @cavdax/mcp-server check --pr ${{ github.event.pull_request.number }}
+      env:
+        FALKORDB_HOST: ${{ inputs.falkordb_host }}
+        FALKORDB_PORT: ${{ inputs.falkordb_port }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}

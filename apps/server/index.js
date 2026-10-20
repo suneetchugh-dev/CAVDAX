@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { randomUUID } from 'crypto';
 
 import { getFalkorClient } from '../../core/graph/client.js';
 import { 
@@ -34,6 +35,9 @@ app.use(express.json());
 
 // In-memory SSE client registry for real-time Web HUD push notifications
 const sseClients = new Set();
+
+// In-memory registry of active remote MCP SSE agent sessions (MCP 2024-11-05)
+const mcpSessions = new Map();
 
 function broadcastEvent(eventType, payload) {
   const data = JSON.stringify({ type: eventType, data: payload, timestamp: Date.now() });
@@ -469,6 +473,138 @@ export default app;
   }
 });
 
+// ---------------------------------------------------------------------------
+// OFFICIAL MCP SSE TRANSPORT (MCP spec 2024-11-05)
+// ---------------------------------------------------------------------------
+
+/**
+ * Handles a JSON-RPC 2.0 MCP request against the mcpServer (or fallback simulation).
+ * Supports: initialize, notifications/initialized, tools/list, tools/call
+ */
+async function handleMcpJsonRpc(request) {
+  const { id, method, params } = request;
+
+  if (method === 'initialize') {
+    return {
+      jsonrpc: '2.0',
+      id,
+      result: {
+        protocolVersion: '2024-11-05',
+        capabilities: { tools: {} },
+        serverInfo: { name: 'cavdax-causal-mcp-gate', version: '1.0.0' }
+      }
+    };
+  }
+
+  if (method === 'notifications/initialized') {
+    return null; // notifications require no response
+  }
+
+  if (method === 'tools/list') {
+    const tools = mcpServer ? mcpServer.getTools() : [];
+    return { jsonrpc: '2.0', id, result: { tools } };
+  }
+
+  if (method === 'tools/call') {
+    const { name, arguments: args } = params;
+    if (!isFalkorConnected) await initDb();
+
+    if (mcpServer) {
+      const result = await mcpServer.handleToolCall(name, args);
+      const updatedGraph = await fetchGraphState(graph);
+      broadcastEvent('MCP_TOOL_EXECUTED', { toolName: name, args, result });
+      broadcastEvent('GRAPH_UPDATED', updatedGraph);
+      return { jsonrpc: '2.0', id, result };
+    }
+
+    // Fallback simulation (mirrors /api/mcp/call logic)
+    const isStale = args?.decision_id === 'DEC-102';
+    if (name === 'apply_code_change') {
+      const verdict = isStale ? 'BLOCKED_SUPERSEDED_SOURCE' : 'VERIFIED_CAUSAL_PROVENANCE';
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: {
+          isError: isStale,
+          content: [{
+            type: 'text',
+            text: isStale
+              ? `HARD REJECT (simulation): Decision ${args.decision_id} is stale/superseded.`
+              : `GATE APPROVED (simulation): Decision ${args.decision_id} verified. Verdict: ${verdict}`
+          }]
+        }
+      };
+    }
+
+    throw new Error(`Tool not found in simulation mode: ${name}`);
+  }
+
+  throw new Error(`Method not supported: ${method}`);
+}
+
+/**
+ * 10. MCP SSE Discovery & Stream Initiator
+ * GET /api/mcp/sse
+ *
+ * Client connects here first. Server responds with an 'endpoint' event
+ * containing the sessionId-scoped URL for subsequent JSON-RPC messages.
+ */
+app.get('/api/mcp/sse', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx proxy buffering
+
+  const sessionId = randomUUID();
+  mcpSessions.set(sessionId, { id: sessionId, res, createdAt: Date.now() });
+
+  // Mandatory MCP 'endpoint' event — tells the client where to POST messages
+  res.write(`event: endpoint\ndata: /api/mcp/messages?sessionId=${sessionId}\n\n`);
+
+  req.on('close', () => {
+    mcpSessions.delete(sessionId);
+  });
+});
+
+/**
+ * 11. MCP JSON-RPC Message Receiver
+ * POST /api/mcp/messages?sessionId=<sessionId>
+ *
+ * Client POSTs a JSON-RPC 2.0 request here. Server acknowledges with 202,
+ * then streams the JSON-RPC response back on the established SSE connection.
+ */
+app.post('/api/mcp/messages', async (req, res) => {
+  const { sessionId } = req.query;
+
+  if (!sessionId || !mcpSessions.has(sessionId)) {
+    return res.status(404).json({
+      jsonrpc: '2.0',
+      id: req.body?.id || null,
+      error: { code: -32001, message: 'Session not found or expired' }
+    });
+  }
+
+  const session = mcpSessions.get(sessionId);
+  const request = req.body;
+
+  // Acknowledge receipt immediately per MCP spec
+  res.status(202).json({ success: true });
+
+  try {
+    const response = await handleMcpJsonRpc(request);
+    if (response) {
+      session.res.write(`event: message\ndata: ${JSON.stringify(response)}\n\n`);
+    }
+  } catch (err) {
+    session.res.write(`event: message\ndata: ${JSON.stringify({
+      jsonrpc: '2.0',
+      id: request?.id || null,
+      error: { code: -32603, message: err.message }
+    })}\n\n`);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 9. Static Web HUD Serving & SPA Path Routing Fallback (/overview, /console, /mcp, /project, /team)
 const clientDistPath = path.resolve(__dirname, '../client/dist');
 if (fs.existsSync(clientDistPath)) {

@@ -1,0 +1,25 @@
+name: CAVDAX PR Invalidation Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  causal-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Start FalkorDB
+        run: |
+          docker run -d --name falkordb -p 6379:6379 falkordb/falkordb:latest
+          sleep 3
+
+      - name: Run CAVDAX Gate
+        uses: ./
+        with:
+          falkordb_host: localhost
+          falkordb_port: 6379
