@@ -7,31 +7,26 @@ on:
 jobs:
   causal-verification:
     runs-on: ubuntu-latest
+
+    # GitHub Actions native service container — starts FalkorDB, waits for
+    # it to pass the healthcheck, then makes it available at localhost:6379
+    # before any steps run. No manual sleep or polling needed.
+    services:
+      falkordb:
+        image: falkordb/falkordb:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Start FalkorDB
-        run: |
-          docker run -d --name falkordb -p 6379:6379 \
-            --health-cmd "redis-cli ping" \
-            --health-interval 2s \
-            --health-timeout 2s \
-            --health-retries 10 \
-            falkordb/falkordb:latest
-
-          echo "Waiting for FalkorDB to be healthy..."
-          for i in $(seq 1 20); do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' falkordb 2>/dev/null || echo "starting")
-            echo "  attempt $i: $STATUS"
-            if [ "$STATUS" = "healthy" ]; then
-              echo "FalkorDB is healthy ✅"
-              break
-            fi
-            sleep 2
-          done
 
       - name: Run CAVDAX Gate
         uses: ./
