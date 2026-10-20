@@ -14,10 +14,15 @@ const FULL_FORM_WORDS = [
   { prefix: 'e', acro: 'X', suffix: 'ecution', delay: '2.1s' },
 ];
 
-export default function SplashLoader() {
+export default function SplashLoader({ isDarkTheme }) {
   const [isVisible, setIsVisible] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Determine active theme with zero-latency fallback to localStorage
+  const isDark = isDarkTheme !== undefined
+    ? isDarkTheme
+    : (typeof window !== 'undefined' ? localStorage.getItem('cavdax_theme') !== 'light' : true);
 
   useEffect(() => {
     // Total animation cycle + full form text reveal hold (4.8s)
@@ -67,7 +72,9 @@ export default function SplashLoader() {
         isInitialSplashFinished = true;
         playLoadingSound();
       }}
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#050608] select-none transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center ${
+        isDark ? 'bg-[#050608]' : 'bg-[#F8FAFC]'
+      } select-none transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isFadingOut ? 'opacity-0 scale-[1.03] pointer-events-none' : 'opacity-100 scale-100'
       }`}
     >
@@ -88,11 +95,11 @@ export default function SplashLoader() {
         @keyframes splashFullFormBreathe {
           0%, 100% {
             opacity: 0.85;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+            text-shadow: ${isDark ? '0 0 10px rgba(255, 255, 255, 0.15)' : '0 0 8px rgba(0, 0, 0, 0.05)'};
           }
           50% {
             opacity: 1;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            text-shadow: ${isDark ? '0 0 20px rgba(255, 255, 255, 0.4)' : '0 0 16px rgba(0, 0, 0, 0.12)'};
           }
         }
 
@@ -121,26 +128,30 @@ export default function SplashLoader() {
         {/* Monochromatic Specular Radial Aura behind larger logo */}
         <div
           aria-hidden="true"
-          className="absolute -top-12 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-white/[0.04] blur-3xl pointer-events-none animate-[splashBrandGlow_4.2s_ease-in-out_infinite]"
+          className={`absolute -top-12 w-72 h-72 sm:w-96 sm:h-96 rounded-full ${
+            isDark ? 'bg-white/[0.04]' : 'bg-slate-950/[0.03]'
+          } blur-3xl pointer-events-none animate-[splashBrandGlow_4.2s_ease-in-out_infinite]`}
         />
 
-        {/* 1. Large Brand Logo (size 260, container h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80) */}
+        {/* 1. Large Brand Logo */}
         <div className="relative h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 flex items-center justify-center">
           <CavdaxBrandLoader 
             size={260} 
             strokeWidth={7.4} 
-            colorClassName="text-white"
+            colorClassName={isDark ? "text-white" : "text-slate-950"}
           />
         </div>
 
-        {/* 2. Acronym Title (Clean unbracketed, without v1.0 per Rule) */}
+        {/* 2. Acronym Title */}
         <div className="mt-3 flex items-center justify-center">
-          <span className="text-xl sm:text-2xl font-mono font-extrabold tracking-[0.35em] text-white">
+          <span className={`text-xl sm:text-2xl font-mono font-extrabold tracking-[0.35em] ${
+            isDark ? 'text-white' : 'text-slate-950'
+          }`}>
             CAVDAX
           </span>
         </div>
 
-        {/* 3. Full Form with Fading Text & Staggered Reveal — Balanced Clauses, Guaranteed Zero Lonely Child */}
+        {/* 3. Full Form with Fading Text & Staggered Reveal */}
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-x-2.5 gap-y-1.5 text-center font-mono text-xs sm:text-sm tracking-wider splash-full-form-fading max-w-3xl px-4">
           {/* Clause 1: Contextual Action & Verified Decision */}
           <div className="flex items-baseline justify-center gap-x-2 whitespace-nowrap">
@@ -151,19 +162,19 @@ export default function SplashLoader() {
                 style={{ animationDelay: part.delay }}
               >
                 {part.prefix && (
-                  <span className="text-slate-400 text-xs">{part.prefix}</span>
+                  <span className={`${isDark ? 'text-slate-400' : 'text-slate-500'} text-xs`}>{part.prefix}</span>
                 )}
                 <span
                   className={
                     part.isSymbol
-                      ? 'text-slate-400 font-semibold px-0.5'
-                      : 'text-white font-bold text-sm sm:text-base'
+                      ? `${isDark ? 'text-slate-400' : 'text-slate-500'} font-semibold px-0.5`
+                      : `${isDark ? 'text-white' : 'text-slate-950'} font-bold text-sm sm:text-base`
                   }
                 >
                   {part.acro}
                 </span>
                 {part.suffix && (
-                  <span className="text-slate-300 font-medium">
+                  <span className={`${isDark ? 'text-slate-300' : 'text-slate-600'} font-medium`}>
                     {part.suffix}
                   </span>
                 )}
@@ -171,7 +182,7 @@ export default function SplashLoader() {
             ))}
           </div>
 
-          {/* Clause 2: Autonomous eXecution — Always paired together, NEVER eXecution as a lonely child */}
+          {/* Clause 2: Autonomous eXecution */}
           <div className="flex items-baseline justify-center gap-x-2 whitespace-nowrap">
             {FULL_FORM_WORDS.slice(5).map((part, idx) => (
               <span
@@ -180,19 +191,19 @@ export default function SplashLoader() {
                 style={{ animationDelay: part.delay }}
               >
                 {part.prefix && (
-                  <span className="text-slate-400 text-xs">{part.prefix}</span>
+                  <span className={`${isDark ? 'text-slate-400' : 'text-slate-500'} text-xs`}>{part.prefix}</span>
                 )}
                 <span
                   className={
                     part.isSymbol
-                      ? 'text-slate-400 font-semibold px-0.5'
-                      : 'text-white font-bold text-sm sm:text-base'
+                      ? `${isDark ? 'text-slate-400' : 'text-slate-500'} font-semibold px-0.5`
+                      : `${isDark ? 'text-white' : 'text-slate-950'} font-bold text-sm sm:text-base`
                   }
                 >
                   {part.acro}
                 </span>
                 {part.suffix && (
-                  <span className="text-slate-300 font-medium">
+                  <span className={`${isDark ? 'text-slate-300' : 'text-slate-600'} font-medium`}>
                     {part.suffix}
                   </span>
                 )}
@@ -201,21 +212,27 @@ export default function SplashLoader() {
           </div>
         </div>
 
-        {/* 4. Telemetry Progress & Initialization Bar (No pulsing dots per Rule 3) */}
+        {/* 4. Telemetry Progress & Initialization Bar */}
         <div className="mt-7 w-52 sm:w-72 flex flex-col items-center gap-2">
-          <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
+          <div className={`w-full h-[2px] ${isDark ? 'bg-white/10' : 'bg-slate-200'} rounded-full overflow-hidden`}>
             <div
-              className="h-full bg-gradient-to-r from-slate-500 via-slate-300 to-white transition-all duration-75 ease-out shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+              className={`h-full ${
+                isDark 
+                  ? 'bg-gradient-to-r from-slate-500 via-slate-300 to-white shadow-[0_0_8px_rgba(255,255,255,0.4)]'
+                  : 'bg-gradient-to-r from-slate-400 via-slate-700 to-slate-950 shadow-[0_0_8px_rgba(0,0,0,0.15)]'
+              } transition-all duration-75 ease-out`}
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="text-[10px] font-mono text-slate-400 tracking-widest uppercase">
+          <div className={`text-[10px] font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'} tracking-widest uppercase`}>
             SYNCHRONIZING GRAPH KERNEL • {progress}%
           </div>
         </div>
 
-        {/* 5. Minimalist Dismiss Hint (Unbracketed per Rule 4) */}
-        <div className="mt-5 text-[9px] font-mono text-slate-500/80 tracking-widest uppercase cursor-pointer hover:text-slate-300 transition-colors">
+        {/* 5. Minimalist Dismiss Hint */}
+        <div className={`mt-5 text-[9px] font-mono ${
+          isDark ? 'text-slate-500/80 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'
+        } tracking-widest uppercase cursor-pointer transition-colors`}>
           Press any key or tap to continue
         </div>
       </div>

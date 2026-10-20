@@ -493,7 +493,7 @@ export default function App() {
       activeTab === 'console' ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
       {/* 0. Silky Smooth Kinetic Splash Loader */}
-      <SplashLoader />
+      <SplashLoader isDarkTheme={isDarkTheme} />
 
       {/* 1. Monochromatic Portfolio Header (Icon mark only - NO WORDMARK) */}
       <Header

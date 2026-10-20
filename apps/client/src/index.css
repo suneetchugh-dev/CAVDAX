@@ -365,13 +365,13 @@ select, label, [onclick], .cursor-pointer {
 }
 
 .kinetic-phrase-gradient {
-  background: linear-gradient(180deg, #F0E7D6 0%, #DFCA9E 50%, #B89968 100%);
+  background: linear-gradient(180deg, #FDE68A 0%, #D9A353 50%, #B45309 100%);
   background-clip: text !important;
   -webkit-background-clip: text !important;
   color: transparent !important;
   display: inline-block;
   font-weight: 800;
-  filter: drop-shadow(0 0 16px rgba(240, 231, 214, 0.15));
+  filter: none;
 }
 
 :root:not(.dark) .kinetic-phrase-gradient {

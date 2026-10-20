@@ -16,16 +16,9 @@ import React, { useState } from 'react';
  * @param {boolean} animated - Whether to play the initial C-to-X reveal animation (default: true)
  * @param {boolean} pulse - Whether to enable the continuous subtle photon pulse loop (default: true)
  */
-export default function CavdaxWordmark({
-  width = 460,
-  className = "",
-  animated = true,
-  pulse = true,
-}) {
-  const [key] = useState(0);
-
-  // Exact vector paths for CAVDAX architectural letterforms (Topology: 9 closed contour loops)
-  const lettersPath = 
+// Exact vector paths for CAVDAX architectural letterforms (Topology: 9 closed contour loops)
+export const CAVDAX_WORDMARK_LETTERS_PATH =
+  
     "M 21.9 21.1 L 163.2 21.1 L 163.2 59.6 L 68.4 59.6 L 68.4 150.0 L 163.2 150.0 L 163.2 188.6 L 21.9 188.6 Z " +
     "M 181.6 188.6 L 244.7 20.2 L 276.3 20.2 L 339.5 188.6 L 293.9 188.6 L 280.7 151.8 L 240.4 151.8 L 227.2 188.6 Z " +
     "M 230.7 123.7 L 289.5 123.7 L 260.5 47.4 Z " +
@@ -35,6 +28,16 @@ export default function CavdaxWordmark({
     "M 661.4 188.6 L 724.6 20.2 L 756.1 20.2 L 819.3 188.6 L 773.7 188.6 L 760.5 151.8 L 720.2 151.8 L 707.0 188.6 Z " +
     "M 712.3 124.6 L 769.3 124.6 L 740.8 46.5 Z " +
     "M 830.7 20.2 L 878.1 20.2 L 903.5 86.8 L 929.0 20.2 L 976.3 20.2 L 928.1 104.4 L 976.3 188.6 L 929.0 188.6 L 903.5 122.0 L 878.1 188.6 L 830.7 188.6 L 878.9 104.4 Z";
+
+export default function CavdaxWordmark({
+  width = 460,
+  className = "",
+  animated = true,
+  pulse = true,
+}) {
+  const [key] = useState(0);
+
+  const lettersPath = CAVDAX_WORDMARK_LETTERS_PATH;
 
   return (
     <div className={`inline-flex flex-col items-center select-none ${className}`}>

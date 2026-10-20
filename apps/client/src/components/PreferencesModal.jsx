@@ -13,7 +13,6 @@ import {
   Waves, 
   Sparkles,
   Layers,
-  Compass,
   RotateCcw,
   ShieldCheck,
   Terminal
@@ -179,12 +178,6 @@ export default function PreferencesModal({
     setTimeout(() => setResetConfirm(false), 2400);
   };
 
-  const handleLaunchTour = () => {
-    playClick();
-    onClose();
-    if (onStartTour) onStartTour();
-  };
-
   const getAccordionStyle = (isExpanded, openHeight) => ({
     maxHeight: isExpanded ? openHeight : '0px',
     opacity: isExpanded ? 1 : 0,
@@ -232,7 +225,7 @@ export default function PreferencesModal({
             </h2>
           </div>
           <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 ml-7 leading-snug">
-            Configure telemetry channels, sensory audio feedback, visual kinetics, and guided tour.
+            Configure telemetry channels, sensory audio feedback, visual kinetics, and platform state.
           </p>
         </div>
 
@@ -259,24 +252,17 @@ export default function PreferencesModal({
               </div>
 
               <div className="flex items-center space-x-2 flex-shrink-0">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {isDarkTheme ? 'Dark' : 'Light'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
+                <ToggleSwitch 
+                  checked={isDarkTheme} 
+                  onChange={() => {
                     playClick();
                     spinGear();
                     if (onToggleTheme) onToggleTheme();
                   }}
-                  className="w-11 h-6 rounded-full p-0.5 flex items-center bg-slate-200 dark:bg-white/20 transition-colors cursor-pointer"
-                  aria-label="Toggle display theme"
-                >
-                  <span
-                    className="w-5 h-5 rounded-full bg-slate-950 dark:bg-white shadow-xs transition-transform duration-300"
-                    style={{ transform: isDarkTheme ? 'translateX(20px)' : 'translateX(0px)' }}
-                  />
-                </button>
+                  ariaLabel="Toggle display theme"
+                />
+                {/* 23px spacer to align with accordion chevron button */}
+                <div className="w-[23px] h-[23px]" aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -452,31 +438,6 @@ export default function PreferencesModal({
                   ariaLabel="Toggle particle effect"
                 />
               </div>
-            </div>
-          </div>
-
-          {/* 4. Interactive Guided Walkthrough Card (Ported from SAHNIRMAAN) */}
-          <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">
-                <Compass size={16} className="text-slate-900 dark:text-white flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug">
-                    Interactive Verification Tour
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                    Launch step-by-step walkthrough across causal graph &amp; MCP gate
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleLaunchTour}
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:opacity-90 transition shadow-xs flex-shrink-0"
-              >
-                Start Tour
-              </button>
             </div>
           </div>
 
