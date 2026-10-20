@@ -23,6 +23,10 @@
   - `FooterParticles.jsx` now directly rasterizes `new Path2D(CAVDAX_WORDMARK_LETTERS_PATH)` onto an offscreen buffer before sampling coordinate pixels.
   - Eliminated generic browser font fallbacks for brand marks, preserving 90° orthogonal shear cuts and razor-sharp mitered apexes in the particle pointillism canvas.
 
+- **Kinetic Headline Harmony & Smooth Physics (`KineticRollingHeadline.jsx` & `index.css`)**:
+  - Harmonized hero rolling phrases from khaki-champagne (`#DFCA9E`) to the canonical golden-amber gradient (`#FDE68A` ➔ `#D9A353` ➔ `#B45309`).
+  - Eliminated the CSS keyframe `filter` collision where idle `drop-shadow` caused a jerky shadow pop when the roll completed; converted to pure vector rendering (`filter: none`) for silky 60fps interpolation.
+
 - **Palette Drift Elimination (Unified Amber Token `#d9a353`)**:
   - Standardized all warm accents across the landing page (Thanos typewriter headline, `Graph-Grounded` accent, and footer particle center gradient) to the exact canonical hex token `#d9a353`.
 
