@@ -1,0 +1,36 @@
+{
+  "name": "@cavdax/mcp-server",
+  "version": "1.0.0",
+  "description": "CAVDAX Enclosed Model Context Protocol (MCP) Server backed by FalkorDB GraphBLAS",
+  "main": "src/stdioServer.js",
+  "type": "module",
+  "bin": {
+    "cavdax": "./bin/cavdax.js",
+    "cavdax-mcp": "./bin/cavdax.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "falkordb",
+    "ai-coding-agent",
+    "cursor",
+    "claude-code",
+    "causal-graph"
+  ],
+  "author": "CAVDAX Team",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "falkordb": "^6.9.1",
+    "glob": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

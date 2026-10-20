@@ -4,11 +4,39 @@
  */
 
 /**
+ * Extracts the actual DB-measured execution time from a FalkorDB query result.
+ *
+ * FalkorDB returns query statistics in result.metadata as an array of strings,
+ * e.g. ["Query internal execution time: 1.23 milliseconds"].
+ * We parse that first. If unavailable, we fall back to the high-resolution
+ * wall-clock time measured with process.hrtime.bigint() (nanosecond precision),
+ * which is more accurate than Date.now() because it excludes event-loop skew
+ * from the startup overhead but still includes network RTT.
+ *
+ * @param {object} result - FalkorDB query result object
+ * @param {bigint} hrtStart - Value from process.hrtime.bigint() before the query
+ * @returns {number} Latency in milliseconds (2 decimal places)
+ */
+function extractLatencyMs(result, hrtStart) {
+  // Try FalkorDB internal execution time first (most accurate — pure DB time)
+  if (result?.metadata) {
+    const meta = Array.isArray(result.metadata) ? result.metadata : [];
+    for (const entry of meta) {
+      const match = String(entry).match(/Query internal execution time:\s*([\d.]+)\s*milliseconds/i);
+      if (match) return parseFloat(parseFloat(match[1]).toFixed(2));
+    }
+  }
+  // Fallback: high-resolution wall-clock RTT (includes network, excludes Date.now skew)
+  const elapsedNs = process.hrtime.bigint() - hrtStart;
+  return parseFloat((Number(elapsedNs) / 1_000_000).toFixed(2));
+}
+
+/**
  * Query 1: Enclosed Action Gate Verification
  * Inspects all dependency paths and uses ANY(...) aggregation to ensure zero stale links.
  */
 export async function verifyActionGate(graph, decisionId) {
-  const startTime = Date.now();
+  const hrtStart = process.hrtime.bigint();
 
   const cypher = `
     MATCH (d:Decision {id: $decisionId})
@@ -35,7 +63,7 @@ export async function verifyActionGate(graph, decisionId) {
   `;
 
   const result = await graph.query(cypher, { params: { decisionId } });
-  const latencyMs = Date.now() - startTime;
+  const latencyMs = extractLatencyMs(result, hrtStart);
 
   if (!result.data || result.data.length === 0) {
     return {
@@ -63,7 +91,7 @@ export async function verifyActionGate(graph, decisionId) {
  * Establishes the SUPERSEDES edge and cascades status flags across the DAG in < 4ms.
  */
 export async function cascadeInvalidation(graph, newSourceId, oldSourceId) {
-  const startTime = Date.now();
+  const hrtStart = process.hrtime.bigint();
 
   const cypher = `
     MATCH (newSource:Source {id: $newSourceId})
@@ -84,7 +112,7 @@ export async function cascadeInvalidation(graph, newSourceId, oldSourceId) {
   `;
 
   const result = await graph.query(cypher, { params: { newSourceId, oldSourceId } });
-  const latencyMs = Date.now() - startTime;
+  const latencyMs = extractLatencyMs(result, hrtStart);
 
   const row = result.data && result.data[0] ? result.data[0] : {};
   return {
@@ -99,7 +127,7 @@ export async function cascadeInvalidation(graph, newSourceId, oldSourceId) {
  * Archives the old decision, creates the fresh decision, and links it to the active fact.
  */
 export async function revalidateDecision(graph, { newSourceId, oldDecisionId, newDecisionId, newFactId, title }) {
-  const startTime = Date.now();
+  const hrtStart = process.hrtime.bigint();
 
   const cypher = `
     MATCH (newSource:Source {id: $newSourceId})<-[:EXTRACTED_FROM]-(newFact:Fact {id: $newFactId})
@@ -119,7 +147,7 @@ export async function revalidateDecision(graph, { newSourceId, oldDecisionId, ne
   const result = await graph.query(cypher, {
     params: { newSourceId, oldDecisionId, newDecisionId, newFactId, title }
   });
-  const latencyMs = Date.now() - startTime;
+  const latencyMs = extractLatencyMs(result, hrtStart);
 
   const row = result.data && result.data[0] ? result.data[0] : {};
   return {
@@ -223,4 +251,52 @@ export async function seedDemoGraph(graph) {
   const result = await graph.query(cypher);
   console.log('[FalkorDB] Seed complete:', result.data);
   return result.data;
+}
+
+/**
+ * Query 6: Audit Log — Fetch all AgentAction nodes with their grounding decision
+ *
+ * Returns a time-ordered list of every code write the MCP gate has approved or
+ * blocked, enriched with the decision ID and gate verdict. This powers the
+ * GET /api/audit endpoint for enterprise security and compliance teams.
+ *
+ * @param {object} graph - FalkorDB graph instance
+ * @param {number} [limit=100] - Maximum number of entries to return
+ * @returns {Promise<{entries: object[], total: number}>}
+ */
+export async function fetchAuditLog(graph, limit = 100) {
+  const hrtStart = process.hrtime.bigint();
+
+  const cypher = `
+    MATCH (a:AgentAction)
+    OPTIONAL MATCH (a)-[:GROUNDED_IN]->(d:Decision)
+    RETURN
+      a.id           AS action_id,
+      a.target_file  AS target_file,
+      a.status       AS status,
+      a.timestamp    AS executed_at,
+      d.id           AS decision_id,
+      d.status       AS decision_status,
+      d.title        AS decision_title
+    ORDER BY a.timestamp DESC
+    LIMIT $limit
+  `;
+
+  const countResult = await graph.query(`MATCH (a:AgentAction) RETURN count(a) AS total`);
+  const total = countResult.data?.[0]?.total ?? 0;
+
+  const result = await graph.query(cypher, { params: { limit } });
+  const latencyMs = extractLatencyMs(result, hrtStart);
+
+  const entries = (result.data || []).map(row => ({
+    action_id:       row.action_id,
+    target_file:     row.target_file,
+    status:          row.status,
+    executed_at:     row.executed_at,
+    decision_id:     row.decision_id,
+    decision_status: row.decision_status,
+    decision_title:  row.decision_title
+  }));
+
+  return { entries, total, latency_ms: latencyMs };
 }

@@ -1,0 +1,35 @@
+name: CAVDAX PR Invalidation Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  causal-verification:
+    runs-on: ubuntu-latest
+
+    # GitHub Actions native service container — starts FalkorDB, waits for
+    # it to pass the healthcheck, then makes it available at localhost:6379
+    # before any steps run. No manual sleep or polling needed.
+    services:
+      falkordb:
+        image: falkordb/falkordb:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run CAVDAX Gate
+        uses: ./
+        with:
+          falkordb_host: localhost
+          falkordb_port: 6379
