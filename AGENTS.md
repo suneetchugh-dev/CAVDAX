@@ -131,17 +131,24 @@ Whenever your current task touches, modifies, refactors, or creates ANY user int
 ## 3. Git Branch Hygiene & Commit Governance
 
 - **Never work directly on `main`**: `main` is the integration and production-truth branch.
-- **Dedicated Branch Structure**:
-  - `frontend`: Exclusively for client UI/UX code (`apps/client/`).
+- **Dedicated Branch Structure (Domain Separation)**:
+  - `frontend`: Exclusively for client UI/UX code (`apps/client/`, `assets/`, styles, components).
   - `backend`: Exclusively for API, database, and MCP services (`core/`, `apps/server/`, `infra/`).
   - `docs`: Exclusively for documentation files (`docs/`, `AGENTS.md`, `README.md`).
-- **Developer Approval Required for `main` Merge**:
-  - Always commit and push on feature branches first.
-  - Never merge to `main` without explicit developer verification.
+- **Inviolable Commit Policy: Developer Permission is MANDATORY**:
+  - Never commit or push code without explicit developer permission.
+  - Do NOT run `git commit` or `git push` automatically during a session.
+  - Only when the developer explicitly commands (e.g., *"commit and push"*, *"we are done with this session"*), execute the formal **End-of-Session Domain-Partitioned Git Governance Protocol**.
+- **End-of-Session Domain-Partitioned Protocol**:
+  1. **Pre-flight Audit**: Check `git diff` for secrets/credentials, and run local verification build (`npm run build`).
+  2. **Atomic Domain Segregation**: For each active domain with changes (`docs`, `backend`, `frontend`), checkout that branch (create from `main` if it doesn't exist), stage **ONLY** that domain's files (`git add docs/`, `git add apps/client/`), commit cleanly, and push (`git push origin <domain>`).
+  3. **Sequential Pull Requests to `main`**:
+     - Raise a formal GitHub PR from each feature branch to `main`: `gh pr create --base main --head <domain> --title "..." --body "..."`.
+     - Merge via `gh pr merge <number> --merge --delete-branch=false` sequentially, running a build check between each merge.
+     - Return to the active feature branch (`git checkout frontend`).
 - **Conventional Commit Standard**:
   - Use conventional prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, `perf:`, `test:`, `chore:`.
-  - Add `[skip ci]` to documentation/backend commits that do not trigger frontend builds.
-
+  - Add `[skip ci]` to documentation/backend commits that do not trigger frontend builds to preserve daily Vercel deployment quotas.
 ---
 
 ## 4. Multi-Language Parity Rules (When Applicable)
