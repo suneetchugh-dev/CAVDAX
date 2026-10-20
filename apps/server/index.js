@@ -615,6 +615,182 @@ app.get('/api/audit', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// SOURCE INGESTION ENDPOINT (Extended source types via HTTP)
+// ---------------------------------------------------------------------------
+
+/**
+ * POST /api/ingest-source
+ *
+ * Ingest any of the 4 extended source types into FalkorDB over HTTP.
+ * Useful for GitHub webhooks, CI pipelines, and external automation.
+ *
+ * Auth: Bearer token required (requireAuth).
+ *
+ * Request body:
+ *   { type: 'commit'|'package'|'codeowners'|'issue', ...typeSpecificFields }
+ *
+ * Supported types and their required fields:
+ *   commit:     { sha, message, author? }
+ *   package:    { packageName, newVersion, oldVersion? }
+ *   codeowners: { ownedPath, newOwner, oldOwner?, filePath? }
+ *   issue:      { issueNumber, title, htmlUrl, body?, supersedesIds?, state? }
+ */
+app.post('/api/ingest-source', requireAuth, async (req, res) => {
+  const { type, ...fields } = req.body || {};
+
+  if (!type) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required field: type',
+      valid_types: ['commit', 'package', 'codeowners', 'issue']
+    });
+  }
+
+  const validTypes = ['commit', 'package', 'codeowners', 'issue'];
+  if (!validTypes.includes(type)) {
+    return res.status(400).json({
+      success: false,
+      error: `Unknown type "${type}"`,
+      valid_types: validTypes
+    });
+  }
+
+  try {
+    if (!isFalkorConnected) await initDb();
+
+    // Dynamically import sources.js (same relative path used by ingestCommand.js)
+    const sources = await import('../../core/ingestion/sources.js');
+
+    if (!graph) {
+      // FalkorDB offline — return a dry-run acknowledgement
+      return res.json({
+        success: true,
+        dry_run: true,
+        type,
+        message: 'FalkorDB is offline — no data written. Fields received:',
+        fields
+      });
+    }
+
+    let result;
+
+    switch (type) {
+      case 'commit': {
+        const { sha, message, author } = fields;
+        if (!sha || !message) {
+          return res.status(400).json({ success: false, error: 'commit requires sha and message' });
+        }
+        result = await sources.ingestGitCommit(graph, { sha, message, author });
+        break;
+      }
+      case 'package': {
+        const { packageName, newVersion, oldVersion } = fields;
+        if (!packageName || !newVersion) {
+          return res.status(400).json({ success: false, error: 'package requires packageName and newVersion' });
+        }
+        result = await sources.ingestPackageJsonChange(graph, { packageName, newVersion, oldVersion });
+        break;
+      }
+      case 'codeowners': {
+        const { ownedPath, newOwner, oldOwner, filePath } = fields;
+        if (!ownedPath || !newOwner) {
+          return res.status(400).json({ success: false, error: 'codeowners requires ownedPath and newOwner' });
+        }
+        result = await sources.ingestCodeownersChange(graph, { ownedPath, newOwner, oldOwner, filePath });
+        break;
+      }
+      case 'issue': {
+        const { issueNumber, title, htmlUrl, body, supersedesIds, state } = fields;
+        if (!issueNumber || !title || !htmlUrl) {
+          return res.status(400).json({ success: false, error: 'issue requires issueNumber, title, and htmlUrl' });
+        }
+        result = await sources.ingestGitHubIssue(graph, {
+          issueNumber,
+          title,
+          htmlUrl,
+          body: body || '',
+          supersedesIds: supersedesIds || [],
+          state: state || 'closed'
+        });
+        break;
+      }
+    }
+
+    broadcastEvent('SOURCE_INGESTED', { type, source_id: result.source_id });
+    res.json({ success: true, type, result });
+
+  } catch (err) {
+    console.error('[CAVDAX] /api/ingest-source error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// DEV TIER CHECK (Internal diagnostic endpoint — URL-only, no nav tab)
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/dev/tier-check
+ *
+ * Returns server tier, FalkorDB connection state, rate-limit config,
+ * active session counts, and process uptime. Used by DevConsolePage.
+ *
+ * No auth required — read-only diagnostic. Restrict at Caddy level in prod
+ * (e.g. only allow internal IPs or VPN).
+ */
+app.get('/api/dev/tier-check', (req, res) => {
+  const tier = process.env.CAVDAX_TIER || 'free';
+
+  const tierMeta = {
+    free: {
+      label: 'Free',
+      description: 'Local FalkorDB only. Rate limit: 100 req/min. MCP stdio transport.',
+      features: ['stdio MCP', 'ADR ingestion', 'local FalkorDB'],
+      rate_limit_per_min: 100,
+      mcp_rate_limit_per_min: 30
+    },
+    pro: {
+      label: 'Pro',
+      description: 'Cloud FalkorDB + SSE remote MCP. Webhook ingestion enabled.',
+      features: ['SSE MCP', 'all source types', 'webhook ingestion', 'audit log'],
+      rate_limit_per_min: 300,
+      mcp_rate_limit_per_min: 100
+    },
+    enterprise: {
+      label: 'Enterprise',
+      description: 'Multi-tenant FalkorDB. Custom rate limits. SLA guarantees.',
+      features: ['multi-tenant', 'custom rate limits', 'SLA', 'RBAC'],
+      rate_limit_per_min: -1,
+      mcp_rate_limit_per_min: -1
+    }
+  };
+
+  res.json({
+    success: true,
+    tier,
+    tier_meta: tierMeta[tier] || tierMeta.free,
+    falkordb: {
+      connected: isFalkorConnected,
+      host: process.env.FALKORDB_HOST || 'localhost',
+      port: parseInt(process.env.FALKORDB_PORT || '6379', 10),
+      graph_name: process.env.FALKORDB_GRAPH_NAME || 'cavdax_core_graph',
+      mode: isFalkorConnected ? 'live' : 'simulation'
+    },
+    sessions: {
+      mcp_active: mcpSessions.size,
+      sse_clients: sseClients.size,
+      mcp_ttl_ms: MCP_SESSION_TTL_MS
+    },
+    server: {
+      uptime_seconds: Math.floor(process.uptime()),
+      node_version: process.version,
+      port: PORT,
+      auth_enabled: !!API_TOKEN
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // OFFICIAL MCP SSE TRANSPORT (MCP spec 2024-11-05)
 // ---------------------------------------------------------------------------
 

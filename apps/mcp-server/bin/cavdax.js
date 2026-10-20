@@ -31,10 +31,19 @@ program
 
 program
   .command('ingest')
-  .description('Scan and ingest local Architecture Decision Records (.adr/ or docs/adr/) into FalkorDB')
+  .description('Ingest sources into FalkorDB (ADR, commit, package.json, CODEOWNERS, GitHub Issue)')
   .option('-r, --repo <path>', 'Repository root path', process.cwd())
   .option('-h, --host <host>', 'FalkorDB host', process.env.FALKORDB_HOST || 'localhost')
   .option('-p, --port <port>', 'FalkorDB port', process.env.FALKORDB_PORT || '6379')
+  .option('-t, --type <type>', 'Source type: adr | commit | package | codeowners | issue | all', 'adr')
+  .option('--sha <sha>', 'Git commit SHA (required for --type commit)')
+  .option('--message <msg>', 'Commit message override (optional for --type commit)')
+  .option('--author <author>', 'Commit author (optional for --type commit)')
+  .option('--issue <number>', 'GitHub Issue number (required for --type issue)')
+  .option('--url <url>', 'GitHub Issue HTML URL (required for --type issue)')
+  .option('--title <title>', 'GitHub Issue title (optional for --type issue)')
+  .option('--body <body>', 'GitHub Issue body (optional, scanned for supersedes refs)')
+  .option('--supersedes <ids>', 'Comma-separated source IDs this supersedes (e.g. ADR-001,ADR-002)')
   .action(async (options) => {
     await runIngest(options);
   });
