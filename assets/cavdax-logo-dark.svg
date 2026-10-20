@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+  <!-- Left: C-Arc (Causal Conscience) -->
+  <path d="M 45 22 A 28 28 0 0 0 45 78" 
+        stroke="#FFFFFF" 
+        stroke-width="9" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Right: V-Chevron / Forward Vector (Verified Decision & Execution) -->
+  <path d="M 52 34 L 79 50 L 52 66" 
+        stroke="#FFFFFF" 
+        stroke-width="9" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+</svg>
