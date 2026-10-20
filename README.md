@@ -305,7 +305,7 @@ CAVDAX implements the Anthropic Model Context Protocol (MCP) specification `2024
 📖 **Comprehensive Technical Guide**: [docs/MCP_SPECIFICATION.md](docs/MCP_SPECIFICATION.md)
 
 ### Supported Transports & Connectors
-- **Local Stdio (`stdio`):** `claude mcp add cavdax -- node /opt/cavdax/core/mcp/stdio.js` (for zero-latency local code execution).
+- **Local Stdio (`stdio`):** `npx -y @cavdax/mcp-server` (zero-latency, runs the MCP gate locally against your own FalkorDB instance).
 - **Remote Cloud SSE (`SSE`):** Connect to `https://cavdax.sahnirmaan.live/api/mcp/sse` (for centralized team graphs and remote CI/CD pipelines).
 
 ### Client Configuration Snippets
@@ -342,8 +342,8 @@ claude mcp add cavdax https://cavdax.sahnirmaan.live/api/mcp/sse
 {
   "mcpServers": {
     "cavdax": {
-      "command": "node",
-      "args": ["core/mcp/stdio.js"]
+      "command": "npx",
+      "args": ["-y", "@cavdax/mcp-server"]
     }
   }
 }
@@ -362,11 +362,14 @@ claude mcp add cavdax https://cavdax.sahnirmaan.live/api/mcp/sse
 CAVDAX/
 ├── apps/
 │   ├── client/                  # React 18 + Vite + Tailwind Porcelain Dark Web HUD
-│   │   ├── src/components/      # CavdaxBrandLoader, McpActionPlayground, GraphCanvas, TourGuide, TerminalView, etc.
+│   │   ├── src/components/      # AuditPage, DevConsolePage, McpActionPlayground, GraphCanvas, etc.
 │   │   └── Dockerfile           # Client containerization
-│   └── server/                  # Node.js + Express Backend Gateway
-│       ├── index.js             # REST API, SSE live event broadcaster, MCP endpoint
-│       └── Dockerfile           # Server containerization
+│   ├── server/                  # Node.js + Express Backend Gateway
+│   │   ├── index.js             # REST API, SSE broadcaster, MCP SSE transport, ingest-source, dev/tier-check
+│   │   └── Dockerfile           # Server containerization
+│   └── mcp-server/              # Standalone NPM package (@cavdax/mcp-server — published)
+│       ├── bin/cavdax.js        # Universal CLI: npx cavdax mcp|ingest|check|doctor
+│       └── src/                 # stdioServer, ingestCommand, checkCommand, doctorCommand
 ├── assets/                      # Monochromatic Mermaid-style architecture flowcharts (.svg)
 ├── benchmark/                   # Evaluation harness & empirical scale tests
 │   ├── evaluate.js              # 10-Scenario Vector RAG vs CAVDAX benchmark
@@ -375,13 +378,17 @@ CAVDAX/
 │   └── EVALUATION_REPORT.md     # Detailed evaluation markdown report
 ├── core/                        # Core Engine Modules
 │   ├── graph/                   # FalkorDB client manager & optimized Cypher queries
-│   ├── ingestion/               # Deterministic YAML frontmatter parser
+│   ├── ingestion/               # parser.js (ADR YAML) + sources.js (commit/package/codeowners/issue)
 │   └── mcp/                     # Enclosed MCP server & apply_code_change tool
 ├── demo-repo/                   # Target repository subject to agent mutations
-│   ├── docs/adrs/               # ADR-001 (stale) and ADR-002 (superseding)
+│   ├── docs/adrs/               # ADR-001 (stale), ADR-002 (superseding), ADR-003 (multi-supersedes), TEMPLATE.md
 │   ├── .github/CODEOWNERS       # Governance source generalization
 │   └── src/services/            # payment.js target service
 ├── docs/                        # Complete technical specifications & guides
+│   └── FUTURE_ROADMAP.md        # Tiered distribution plan & long-term source ingestion roadmap
+├── .env.example                 # Environment variable reference (copy to .env — never commit .env)
+├── action.yml                   # Reusable composite GitHub Action (CAVDAX causal invalidation gate)
+├── .github/workflows/           # CI pipeline + cavdax-gate.yml (PR blocking workflow)
 ├── docker-compose.yml           # Multi-container orchestration (FalkorDB, server, client)
 ├── LICENSE                      # GNU General Public License v3.0
 └── package.json                 # Monorepo root scripts
