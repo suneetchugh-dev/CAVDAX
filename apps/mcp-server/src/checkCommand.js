@@ -122,14 +122,26 @@ async function verifyFiles(files, options) {
       if (graph && verifyActionGate) {
         result = await verifyActionGate(graph, decId);
       } else {
-        // Simulation: flag DEC-102 as stale, everything else passes
-        const isStale = decId === 'DEC-102';
+        // FalkorDB is not reachable — skip causal check, do not block.
+        //
+        // Why: blocking without a live graph causes false positives because
+        // the check command has no way to know whether DEC-102 is actually
+        // stale in THIS repo's graph — it only knows it's stale in the CAVDAX
+        // demo graph. Any repo that mentions "DEC-102" in a comment or doc
+        // would be incorrectly blocked.
+        //
+        // The hardcoded DEC-102 simulation below this point is intentionally
+        // removed. It existed only for the interactive Web HUD demo and must
+        // never run in CI where FalkorDB is absent (syntax-check jobs, PRs
+        // from forks, cavdax-gate.yml before FalkorDB is healthy, etc.).
+        //
+        // Operators who want strict enforcement must ensure FalkorDB is
+        // reachable (set FALKORDB_HOST + FALKORDB_PORT, or run via docker).
+        console.warn(`   ⚠️  FalkorDB unreachable — skipping causal check for ${decId} in ${filePath}`);
         result = {
-          is_approved: !isStale,
-          gate_verdict: isStale ? 'BLOCKED_SUPERSEDED_SOURCE' : 'VERIFIED_CAUSAL_PROVENANCE',
-          violation_paths: isStale
-            ? [['Decision:DEC-102', 'Fact:F-Auth-v1', 'Source:ADR-001']]
-            : []
+          is_approved: true,
+          gate_verdict: 'SKIPPED_NO_FALKORDB',
+          violation_paths: []
         };
       }
 
