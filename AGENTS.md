@@ -35,17 +35,17 @@ Operational constitution, architecture standards, and safety governance for AI c
 
 ## 2. The Mandatory UI/UX Pre-Flight Interceptor Loop
 
-Whenever your current task touches, modifies, refactors, or creates ANY user interface component, style, page, or layout, **YOU MUST EXECUTE THIS MANDATORY INTERCEPTOR LOOP BEFORE WRITING ANY CODE**:
+Whenever your current task touches, modifies, refactors, creates, adds, or **REMOVES/DELETES** ANY user interface component, style, page, section, or layout, **YOU MUST FIRST READ & RECONCILE with `docs/UI_DESIGN_SYSTEM.md` BEFORE WRITING, EDITING, OR DELETING ANY CODE**:
 
 ```
-[UI/UX Task Triggered]
-          │
-          ▼
+[UI/UX Task Triggered: Add / Modify / Touch / Delete]
+                          │
+                          ▼
 ┌────────────────────────────────────────────────────────┐
 │  STEP 1: Read & Reconcile with UI_DESIGN_SYSTEM.md     │
 │  • Check tokens, typography, radii, spacing, physics   │
+│  • Verify no bans are violated before adding/deleting  │
 └─────────────────────────┬──────────────────────────────┘
-                          │
                           ▼
 ┌────────────────────────────────────────────────────────┐
 │  STEP 2: The Inviolable Ban Audit                      │
@@ -91,7 +91,7 @@ Whenever your current task touches, modifies, refactors, or creates ANY user int
 ```
 
 ### Pre-Flight Verification Checklist:
-1. **Did I read `docs/UI_DESIGN_SYSTEM.md`?** Reconcile all class names, spacing tokens, and color palettes against the design system.
+1. **Did I read `docs/UI_DESIGN_SYSTEM.md` (or `UI_DESIGN_SYSTEM.md`)?** Every single UI action — whether adding a new element, modifying existing styles, refactoring layout structure, or removing/deleting a component — must be reconciled against the design system rules, spacing tokens, color palettes, motion physics, and top-priority bans before touching code.
 2. **Are there any emojis or sparkles?** Replace them immediately with clean Lucide line icons.
 3. **Are there bracketed status tags?** Remove brackets (e.g., convert `[VERIFIED]` to `VERIFIED` with unbracketed monospace styling).
 4. **Are there generic shield SVGs or cliché icons?**
