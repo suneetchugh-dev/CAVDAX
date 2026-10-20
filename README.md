@@ -1,5 +1,9 @@
 <div align="center">
-  <img src="assets/cavdax-logo.svg" width="100" height="100" alt="CAVDAX Logo" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/cavdax-logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/cavdax-logo-light.svg">
+    <img src="assets/cavdax-logo-dark.svg" width="100" height="100" alt="CAVDAX Logo" />
+  </picture>
   <h1>CAVDAX: Contextual Action &amp; Verified Decision Autonomous eXecution</h1>
   <p><strong>Graph-Grounded Decision Execution for Coding Agents</strong></p>
   <p><em>Track 01: Agents That Act on Connected Data (Primary) &bull; Track 02: Knowledge Graphs &amp; Long-Term Memory (Eligible)</em><br />
@@ -255,6 +259,23 @@ npm run benchmark:scale
 npm run server
 npm run client
 ```
+
+---
+
+## 🔌 Model Context Protocol (MCP) Integration & Client Setup
+
+CAVDAX implements the Anthropic Model Context Protocol (MCP) specification `2024-11-05` to enclose autonomous coding agents (Claude Code, Cursor IDE, Claude Desktop, Windsurf/Roo Code) behind a FalkorDB GraphBLAS causal barrier.
+
+📖 **Comprehensive Technical Guide**: [docs/MCP_SPECIFICATION.md](docs/MCP_SPECIFICATION.md)
+
+### Supported Transports & Connectors
+- **Local Stdio (`stdio`)**: `claude mcp add cavdax -- node /opt/cavdax/mcp/stdio.js` (for zero-latency local code execution).
+- **Remote Cloud SSE (`SSE`)**: Connect to `https://cavdax.sahnirmaan.live/api/mcp/sse` (for centralized team graphs and remote CI/CD pipelines).
+
+### Enclosed MCP Tools Registered:
+1. `apply_code_change`: Intercepts in-flight code changes and validates decision provenance against FalkorDB.
+2. `query_causal_graph`: Sub-millisecond GraphBLAS BFS Cypher query for active ADRs and invalidation trails.
+3. `verify_decision`: Pre-flight dry-run check before code synthesis.
 
 ---
 
