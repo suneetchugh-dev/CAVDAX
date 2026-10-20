@@ -5,8 +5,8 @@
   "main": "src/stdioServer.js",
   "type": "module",
   "bin": {
-    "cavdax": "./bin/cavdax.js",
-    "cavdax-mcp": "./bin/cavdax.js"
+    "cavdax": "bin/cavdax.js",
+    "cavdax-mcp": "bin/cavdax.js"
   },
   "files": [
     "bin",
