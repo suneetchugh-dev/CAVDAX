@@ -15,8 +15,23 @@ jobs:
 
       - name: Start FalkorDB
         run: |
-          docker run -d --name falkordb -p 6379:6379 falkordb/falkordb:latest
-          sleep 3
+          docker run -d --name falkordb -p 6379:6379 \
+            --health-cmd "redis-cli ping" \
+            --health-interval 2s \
+            --health-timeout 2s \
+            --health-retries 10 \
+            falkordb/falkordb:latest
+
+          echo "Waiting for FalkorDB to be healthy..."
+          for i in $(seq 1 20); do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' falkordb 2>/dev/null || echo "starting")
+            echo "  attempt $i: $STATUS"
+            if [ "$STATUS" = "healthy" ]; then
+              echo "FalkorDB is healthy ✅"
+              break
+            fi
+            sleep 2
+          done
 
       - name: Run CAVDAX Gate
         uses: ./
