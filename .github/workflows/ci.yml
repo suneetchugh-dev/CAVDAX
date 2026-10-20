@@ -24,13 +24,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: 'apps/server/package-lock.json'
 
       - name: Install Server Dependencies
         run: |
           cd apps/server
-          npm ci
+          npm install
 
       - name: Syntax-check Server Entry Point
         # --check parses and validates JS without executing — catches syntax errors,
@@ -89,13 +87,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: 'apps/client/package-lock.json'
 
       - name: Install Client Dependencies
         run: |
           cd apps/client
-          npm ci
+          npm install
 
       - name: Build Web HUD (Vite)
         run: |
