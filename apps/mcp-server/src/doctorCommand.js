@@ -30,19 +30,19 @@ function checkNodeVersion() {
 
 async function checkFalkorConnection(host, port) {
   try {
-    const { createClient } = await import('falkordb');
-    const client = createClient({ socket: { host, port } });
-    await client.connect();
+    // FalkorDB v6.x exports the FalkorDB class (not createClient)
+    const { FalkorDB } = await import('falkordb');
+    const client = await FalkorDB.connect({ socket: { host, port } });
 
     // GraphBLAS health: simple Cypher query
-    const graph = client.graph('CAVDAX');
+    const graph = client.selectGraph('CAVDAX');
     const result = await graph.query('MATCH (n) RETURN count(n) AS count LIMIT 1');
     const count = result.data?.[0]?.count ?? 0;
 
     console.log(`${PASS} FalkorDB connected at ${host}:${port}`);
     console.log(`${PASS} GraphBLAS matrix health: ${count} node(s) in CAVDAX graph`);
 
-    await client.quit();
+    await client.close();
     return true;
   } catch (err) {
     console.error(`${FAIL} FalkorDB unreachable at ${host}:${port} — ${err.message}`);
@@ -52,11 +52,14 @@ async function checkFalkorConnection(host, port) {
 }
 
 async function checkMcpReadiness() {
-  // Self-test: simulate an MCP tools/list request without actually launching stdio
+  // Self-test: import stdioServer and verify it loads without errors.
+  // startStdioServer is the only export — we just check the module resolves cleanly.
   try {
-    const { TOOLS } = await import('./stdioServer.js').catch(() => null) || {};
-    // If TOOLS isn't exported, just verify the file can be imported
-    console.log(`${PASS} MCP stdio server module loads cleanly`);
+    const mod = await import('./stdioServer.js');
+    if (typeof mod.startStdioServer !== 'function') {
+      throw new Error('startStdioServer export not found');
+    }
+    console.log(`${PASS} MCP stdio server module loads cleanly (startStdioServer exported)`);
     return true;
   } catch (err) {
     console.error(`${FAIL} MCP stdio server failed to load: ${err.message}`);

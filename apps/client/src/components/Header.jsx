@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   Sun, Moon,
-  Layers, SlidersHorizontal, Cable, Play, Users, Settings
+  Layers, SlidersHorizontal, Cable, Play, Users, Settings, ClipboardList
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CavdaxBrandLoader from './CavdaxBrandLoader';
@@ -168,6 +168,7 @@ export default function Header({
             { id: "mcp", label: "MCP", icon: Cable },
             { id: "project", label: "Demo", icon: Play },
             { id: "team", label: "Team", icon: Users },
+            { id: "audit", label: "Audit", icon: ClipboardList },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

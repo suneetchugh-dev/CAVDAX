@@ -10,6 +10,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
+import { rateLimit } from 'express-rate-limit';
 
 import { getFalkorClient } from '../../core/graph/client.js';
 import {
@@ -33,6 +34,31 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// ---------------------------------------------------------------------------
+// RATE LIMITING
+// ---------------------------------------------------------------------------
+// Standard limiter — all API endpoints (100 requests per minute per IP)
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Rate limit exceeded. Please retry in 60 seconds.' }
+});
+
+// Strict limiter — MCP tool execution endpoints (30 requests per minute per IP)
+// Prevents runaway agent loops from hammering FalkorDB with tool calls.
+const mcpLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many MCP requests', message: 'MCP rate limit exceeded (30 req/min). Check for agent loops.' }
+});
+
+app.use('/api/', apiLimiter);          // applies to all /api/* routes
+app.use('/api/mcp/', mcpLimiter);      // tighter limit on MCP routes (overrides above)
 
 // ---------------------------------------------------------------------------
 // AUTH MIDDLEWARE
