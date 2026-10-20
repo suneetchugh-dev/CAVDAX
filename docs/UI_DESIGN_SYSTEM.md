@@ -93,8 +93,18 @@ You must strictly incorporate and enforce every single one of the following 34 a
 
 - **Primary Sans Hierarchy**: `Inter` or `Geist Sans` with `tracking-tight` on headings (`text-2xl font-bold tracking-tight`) and `text-sm leading-relaxed` on body.
 - **Dense Technical Monospace**: `JetBrains Mono` or `Geist Mono` for telemetry, coordinates, metadata, timestamps, and status badges (`text-[10px] sm:text-xs font-mono font-semibold uppercase tracking-wider tabular-nums`).
-- **Large Display Typography**: `Space Grotesk` or `Inter` (900 black weight) for hero watermarks and particle typography engines.
+- **Large Display Typography**: `Space Grotesk` (900 black weight) for hero watermarks and particle typography engines.
 - Preconnect contract for Google Fonts in `index.html` and Tailwind CSS `@theme` mapping in `src/index.css`.
+
+### 3.1 Inviolable Brand Wordmark & Particle Typography Parity Standard
+- **The Wordmark as the Single Source of Truth**: The brand acronym (`CAVDAX`) across all surfaces — including animated canvas pointillism engines (`FooterParticles.jsx`), hero typographic watermarks, and brand loaders — must strictly adhere to the exact typography style, font family, weight, and vector anatomy established in `CavdaxWordmark.jsx`.
+- **Anatomy & Terminal Rules**:
+  - **90° Orthogonal Vertical Cuts**: Curved letterforms ('C' and 'D') must terminate with flat, crisp 90-degree orthogonal vertical shear cuts. Rounded sausage pill-caps or generic neo-grotesque curved terminations (such as standard `Inter`) are strictly banned for brand marks.
+  - **Mitered Vertices**: Diagonal letterforms ('A', 'V', 'X') must have surgical, razor-sharp mitered apexes and chiseled vertices.
+  - **Uniform Monoline Weight**: Monoline stroke weight must be uniformly maintained across all letterforms.
+- **Canvas Pointillism Implementation Contract**:
+  - `FooterParticles.jsx` must import and rasterize `CAVDAX_WORDMARK_LETTERS_PATH` via `Path2D` on its offscreen buffer before sampling coordinate pixels.
+  - Text fallbacks must strictly enforce `Space Grotesk` (900 Ultra-Black weight, uppercase, `letterSpacing: 0.04em`) rather than standard `Inter`.
 
 ---
 
@@ -367,7 +377,7 @@ You must strictly incorporate and enforce every single one of the following 34 a
 ## 18. Interactive Footer Canvas & Particle Typography Engine (`FooterParticles.tsx`)
 
 - **Canvas Rasterization & Pointillism**:
-  - Offscreen text rasterization: Renders project acronym (e.g. `DOAB`, `SAHNIRMAAN`, `SWATVA`) onto an offscreen canvas using heavy architectural typography (`font-weight: 900`, `Space Grotesk` or `Inter`).
+  - Offscreen text rasterization: NEVER use generic Inter or system-ui fonts for brand typography. The particle engine rasterizes the exact bespoke CAVDAX Wordmark vector path (`CAVDAX_WORDMARK_LETTERS_PATH`) via `Path2D`, guaranteeing 100% geometric parity with the official brand identity (orthogonal 90° terminal cuts, mitered apexes, monoline stroke weight). Non-brand or headless fallbacks strictly enforce `Space Grotesk` 900 Ultra-Black weight.
   - Pixel brightness sampling: Extracts pixel coordinates via `getImageData` to spawn coordinate particles with origin memory (`originX`, `originY`).
   - Quadratic Repulsion Physics:
     ```ts
@@ -1052,3 +1062,113 @@ When interactive visualization canvases (such as node graphs, topological maps, 
 ---
 
 Produce the complete, unabridged `docs/UI_DESIGN_SYSTEM.md` file adhering strictly to these specifications.
+
+---
+
+## 38. System Provenance & Open Source Attribution Bento Architecture
+
+### 38.1 Architectural Rationale & UX Philosophy
+In top-tier engineering software, civic platforms, and developer tooling (e.g. Linear, Supabase, Cloudflare, DOAB, CAVDAX), communicating system provenance, technical stack dependencies, open-source attributions, and hardware benchmarks is essential for credibility and transparency.
+
+However, displaying technical attributions often suffers from two common UI anti-patterns:
+1. **The Crowded 4-Column Squish**: Cramming 4 narrow columns side-by-side causes technical descriptions (e.g. "Redis-based graph engine powered by GraphBLAS sparse linear algebra") to wrap awkwardly into 3–4 broken lines with orphaned words.
+2. **The Boring Bullet List**: Plain text bullet lists fail to highlight version telemetry or create a sense of tactile craft.
+
+**The Solution: The 2-Column Attribution Bento Grid**. By strictly constraining the grid to a spacious 2-column architecture (`grid-cols-1 md:grid-cols-2`), each card receives **>500px of horizontal breathing room** on desktop viewports. This enables technical narratives to render cleanly on a single line with zero awkward line breaks, while providing clear optical separation between metadata categories and active version numbers.
+
+---
+
+### 38.2 Structural Anatomy & Metrics
+1. **Outer Parent Card (`neo-glass-card`)**:
+   - Container padding: `p-6 sm:p-8`
+   - Category header bar: `<Cpu size={16} />` icon paired with crisp uppercase monospace typography (`text-xs font-mono font-bold uppercase tracking-wider text-slate-950 dark:text-white`).
+   - Clean 1px separator line: `border-b border-slate-200 dark:border-white/10 mb-5 pb-3.5`.
+2. **Spacious 2-Column Responsive Layout**:
+   - `grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5`
+   - Guarantees comfortable responsive adaptation (stacked on mobile < 768px, expansive 2-column on desktop ≥ 768px).
+3. **Double-Layer Sub-Card Anatomy**:
+   - Container: `p-4 sm:p-5 rounded-xl bg-slate-100/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10`.
+   - Tactile hover transition: `hover:border-slate-900/30 dark:hover:border-amber-400/30 transition-all duration-300`.
+   - **Row 1 (Metadata & Version Telemetry)**:
+     - Left: Category Tag (`text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold`).
+     - Right: Technical Value / Version (`text-xs sm:text-sm font-bold font-mono text-slate-950 dark:text-white whitespace-nowrap`).
+   - **Row 2 (Narrative Specification)**:
+     - Clear description in readable sans-serif (`text-xs text-slate-600 dark:text-slate-300 font-sans leading-normal whitespace-normal sm:whitespace-nowrap overflow-hidden text-ellipsis`).
+
+---
+
+### 38.3 Production-Grade Implementation Blueprint
+
+```jsx
+import React from 'react';
+import { Cpu } from 'lucide-react';
+
+export const SYSTEM_CREDITS = [
+  {
+    label: "GRAPH DATABASE CORE",
+    value: "FalkorDB v0.4.0",
+    detail: "Low-latency graph engine with GraphBLAS sparse linear algebra"
+  },
+  {
+    label: "PROTOCOL GATEWAY",
+    value: "Model Context Protocol",
+    detail: "Standardized tool discovery, telemetry streaming & isolated stdio execution"
+  },
+  {
+    label: "CLIENT ARCHITECTURE",
+    value: "React 18 + Vite 5",
+    detail: "Tailwind CSS, Canvas Pointillism Engine & Framer Motion physics"
+  },
+  {
+    label: "LICENSE & GOVERNANCE",
+    value: "GNU GPL 3.0",
+    detail: "Verifiable open-source societal innovation collaboration portal"
+  }
+];
+
+export default function SystemProvenanceCard({ credits = SYSTEM_CREDITS, title = "System Provenance & Open Source Attribution" }) {
+  return (
+    <div className="w-full neo-glass-card p-6 sm:p-8">
+      {/* Category Header Bar */}
+      <div className="flex items-center gap-2 mb-5 pb-3.5 border-b border-slate-200 dark:border-white/10">
+        <Cpu size={16} className="text-slate-700 dark:text-slate-300" />
+        <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-950 dark:text-white">
+          {title}
+        </h3>
+      </div>
+
+      {/* Spacious 2-Column Bento Grid: Provides each card >500px width so details fit cleanly */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+        {credits.map((item, idx) => (
+          <div 
+            key={idx} 
+            className="p-4 sm:p-5 rounded-xl bg-slate-100/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 hover:border-slate-900/30 dark:hover:border-amber-400/30 transition-all duration-300 flex flex-col justify-between"
+          >
+            {/* Top Row: Monospace Category & Version Value */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
+                {item.label}
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-950 dark:text-white font-mono whitespace-nowrap">
+                {item.value}
+              </span>
+            </div>
+
+            {/* Bottom Row: Narrative Specification Detail */}
+            <div className="text-xs text-slate-600 dark:text-slate-300 font-sans leading-normal whitespace-normal sm:whitespace-nowrap overflow-hidden text-ellipsis">
+              {item.detail}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+### 38.4 Universal Applications Across Project Types
+- **Hackathon & Prototype Submissions**: Highlight core partner technology (e.g. FalkorDB, Redis, Groq, Typesense, MongoDB) with precision.
+- **Production Benchmarks & VM Specs**: Display infrastructure specs (e.g. AWS EC2 t3.xlarge, 16GB RAM, Ubuntu 24.04, Docker Engine 26.1).
+- **Security & Regulatory Auditing**: Outline cryptographic audit trails, data residency contracts, and compliance frameworks.

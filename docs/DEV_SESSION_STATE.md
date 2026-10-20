@@ -9,6 +9,39 @@
 
 ## 1. Executive Summary of Complete Theme Makeover
 
+## 1.1 Latest Session Achievements (October 20, 2026)
+
+- **Two-Section Asymmetric Bento Architecture (`LandingPage.jsx`)**:
+  - Structured the landing page into a clean Problem-to-Solution sequence:
+    - **Section 1: The Problem Space**: "Why Vector RAG Fails" with dynamic Thanos typewriter headline, 4 asymmetric diagnostic cards highlighting *Semantic Cosine Blindness*, *Silent Cache Rot*, *Unprotected Tool Writes*, and *Broken Dependency Cascades*.
+    - **Section 2: The Solution Space**: "<span class="text-[#d9a353]">Graph-Grounded</span> → Decision Execution" featuring 4 asymmetric solution cards showcasing FalkorDB GraphBLAS, Enclosed MCP Gate, Causal Matrix Invalidation, and Closed-Loop Revalidation.
+  - Stripped all category tag noise and eyebrow pills; reduced paragraph text to 1–2 punchy lines.
+  - Connected the solution title using an elegant typographic directed arrow (`→`).
+
+- **Brand Typographic Parity in Particle Canvas (`FooterParticles.jsx`)**:
+  - Exported `CAVDAX_WORDMARK_LETTERS_PATH` from `CavdaxWordmark.jsx` as the Single Source of Truth for the 9-loop closed contour Swiss architectural letterforms.
+  - `FooterParticles.jsx` now directly rasterizes `new Path2D(CAVDAX_WORDMARK_LETTERS_PATH)` onto an offscreen buffer before sampling coordinate pixels.
+  - Eliminated generic browser font fallbacks for brand marks, preserving 90° orthogonal shear cuts and razor-sharp mitered apexes in the particle pointillism canvas.
+
+- **Kinetic Headline Harmony & Smooth Physics (`KineticRollingHeadline.jsx` & `index.css`)**:
+  - Harmonized hero rolling phrases from khaki-champagne (`#DFCA9E`) to the canonical golden-amber gradient (`#FDE68A` ➔ `#D9A353` ➔ `#B45309`).
+  - Eliminated the CSS keyframe `filter` collision where idle `drop-shadow` caused a jerky shadow pop when the roll completed; converted to pure vector rendering (`filter: none`) for silky 60fps interpolation.
+
+- **Palette Drift Elimination (Unified Amber Token `#d9a353`)**:
+  - Standardized all warm accents across the landing page (Thanos typewriter headline, `Graph-Grounded` accent, and footer particle center gradient) to the exact canonical hex token `#d9a353`.
+
+- **Dedicated Theme-Aware Splash Loader (`SplashLoader.jsx` & `CavdaxBrandLoader.jsx`)**:
+  - Banned CSS `filter: invert(1)` hacks.
+  - Implemented calibrated dual-theme splash screens: Deep Obsidian Void (`#050608`) and Porcelain White (`#F8FAFC`) with zero-latency pre-mount `localStorage` theme resolution.
+
+- **System Provenance & Open Source Attribution Bento Pattern Codified**:
+  - Added Section 38 to `docs/UI_DESIGN_SYSTEM.md` and master generator prompts, establishing the spacious 2-column bento card pattern (`md:grid-cols-2`) for technical stacks and hardware benchmarks.
+
+- **CI/CD Automated Deployment (`.github/workflows/deploy.yml`)**:
+  - Created automated GitHub Actions workflow targeting AWS EC2 (`cavdax.sahnirmaan.live`) using GitHub Secrets (`VM_HOST`, `VM_USER`, `VM_SSH_KEY`, `VM_APP_DIR`) with dual-engine fallback (`docker compose` / `docker-compose`).
+
+---
+
 A complete visual and architectural transformation has been executed across the frontend and documentation, strictly reconciling all specifications from `#Prompt For UI_DESIGN_SYSTEM.md file.md`, `##The 6 Context Files`, and `TOUR_GUIDE_PROMPT.txt`:
 
 ### A. Total Visual & Theme Transformation

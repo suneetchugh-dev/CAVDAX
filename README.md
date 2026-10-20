@@ -11,6 +11,7 @@
 </div>
 
 [![CI](https://github.com/suneetchugh-dev/CAVDAX/actions/workflows/ci.yml/badge.svg)](https://github.com/suneetchugh-dev/CAVDAX/actions)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-cavdax.sahnirmaan.live-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://cavdax.sahnirmaan.live/)
 [![FalkorDB](https://img.shields.io/badge/FalkorDB-GraphBLAS-FF2D55?style=for-the-badge&logo=redis&logoColor=white)](https://falkordb.com/)
 [![MCP](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol%20(MCP)-06B6D4?style=for-the-badge)](https://modelcontextprotocol.io/)
 [![Docker](https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](./docker-compose.yml)
@@ -231,6 +232,41 @@ The Web HUD features an interactive 4-Act stepper designed for video demonstrati
 
 ---
 
+## 🌐 Live Production Deployment
+
+CAVDAX is deployed and running live in production:
+👉 **[https://cavdax.sahnirmaan.live/](https://cavdax.sahnirmaan.live/)**
+
+### Production Architecture & Cloud Infrastructure:
+* **Edge Reverse Proxy & Automated SSL:** Caddy 2 reverse proxy with dynamic TLS/SSL certificates terminates production traffic over port 443 with HSTS and security headers.
+* **Low-Latency Streaming:** Dedicated `/api/events` Server-Sent Events (SSE) pipeline with reverse-proxy buffering disabled (`proxy_buffering off`) for instant UI graph invalidation pulses.
+* **Remote Model Context Protocol (MCP) Endpoint:** Accessible at `https://cavdax.sahnirmaan.live/api/mcp/sse` for remote coding agents, IDEs, and CI/CD pipelines.
+* **GraphBLAS Backend Mesh:** Low-overhead Docker Compose mesh linking the Node.js Express gateway and FalkorDB GraphBLAS on an isolated internal network.
+
+---
+
+## 🖥️ Interactive Web HUD & Verification Suite
+
+The CAVDAX Web HUD provides a world-class, industrial-brutalist / porcelain-dark operational interface:
+
+1. **Interactive Causal Verification Console (`McpActionPlayground`):**
+   * Pre-flight causal verification simulator for engineers and evaluators.
+   * Dynamic sliders for adjusting graph traversal depth (`1..4` hops) and threshold constraints.
+   * Real-time Cypher query generator and execution engine displaying sub-millisecond execution times.
+   * Multi-scenario testing: evaluate ADR migrations, CVE deprecations, and CODEOWNERS governance shifts on the fly.
+2. **Interactive Guided Tour Engine (`TourGuide`):**
+   * Multi-step contextual onboarding walkthrough.
+   * Features dynamic viewport collision avoidance ensuring tour cards never obstruct active graph vertices or terminal logs.
+3. **FalkorDB Temporal Causal Graph Canvas (`GraphCanvas`):**
+   * Cytoscape.js-powered Directed Acyclic Graph (DAG) with real-time status pulses (`ACTIVE`, `SUPERSEDED`, `INVALIDATED_NEEDS_REVALIDATION`, `REPLACED_ARCHIVED`).
+   * **Fullscreen Mode:** Full-viewport interactive graph inspection with responsive pan/zoom, live node type filters (Sources, Facts, Decisions), and dual-boundary scroll isolation.
+4. **Accessible System Preferences & Keyboard Hotkeys (`PreferencesModal`):**
+   * Comprehensive shortcut engine (press `?` anywhere to reveal).
+   * Contextual, theme-aware custom tooltips with keyboard badge accessibility.
+   * High-contrast mode, reduced motion compliance, and cybernetic audio feedback toggles.
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Option 1: Docker Compose (Recommended)
@@ -269,8 +305,49 @@ CAVDAX implements the Anthropic Model Context Protocol (MCP) specification `2024
 📖 **Comprehensive Technical Guide**: [docs/MCP_SPECIFICATION.md](docs/MCP_SPECIFICATION.md)
 
 ### Supported Transports & Connectors
-- **Local Stdio (`stdio`)**: `claude mcp add cavdax -- node /opt/cavdax/mcp/stdio.js` (for zero-latency local code execution).
-- **Remote Cloud SSE (`SSE`)**: Connect to `https://cavdax.sahnirmaan.live/api/mcp/sse` (for centralized team graphs and remote CI/CD pipelines).
+- **Local Stdio (`stdio`):** `claude mcp add cavdax -- node /opt/cavdax/core/mcp/stdio.js` (for zero-latency local code execution).
+- **Remote Cloud SSE (`SSE`):** Connect to `https://cavdax.sahnirmaan.live/api/mcp/sse` (for centralized team graphs and remote CI/CD pipelines).
+
+### Client Configuration Snippets
+
+#### 1. Cursor IDE (`.cursor/mcp.json`)
+```json
+{
+  "mcpServers": {
+    "cavdax": {
+      "url": "https://cavdax.sahnirmaan.live/api/mcp/sse"
+    }
+  }
+}
+```
+
+#### 2. Claude Desktop (`claude_desktop_config.json`)
+```json
+{
+  "mcpServers": {
+    "cavdax": {
+      "url": "https://cavdax.sahnirmaan.live/api/mcp/sse"
+    }
+  }
+}
+```
+
+#### 3. Claude Code CLI
+```bash
+claude mcp add cavdax https://cavdax.sahnirmaan.live/api/mcp/sse
+```
+
+#### 4. Windsurf / Roo Code (`mcp_config.json`)
+```json
+{
+  "mcpServers": {
+    "cavdax": {
+      "command": "node",
+      "args": ["core/mcp/stdio.js"]
+    }
+  }
+}
+```
 
 ### Enclosed MCP Tools Registered:
 1. `apply_code_change`: Intercepts in-flight code changes and validates decision provenance against FalkorDB.
@@ -285,7 +362,7 @@ CAVDAX implements the Anthropic Model Context Protocol (MCP) specification `2024
 CAVDAX/
 ├── apps/
 │   ├── client/                  # React 18 + Vite + Tailwind Porcelain Dark Web HUD
-│   │   ├── src/components/      # Header, StoryStepper, TerminalView, GraphCanvas, NodeInspector
+│   │   ├── src/components/      # CavdaxBrandLoader, McpActionPlayground, GraphCanvas, TourGuide, TerminalView, etc.
 │   │   └── Dockerfile           # Client containerization
 │   └── server/                  # Node.js + Express Backend Gateway
 │       ├── index.js             # REST API, SSE live event broadcaster, MCP endpoint
