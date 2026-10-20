@@ -53,10 +53,10 @@ export default function CurvyArrow({
   return (
     <span 
       ref={arrowRef}
-      className={`absolute inline-flex flex-col items-center select-none pointer-events-none text-slate-900 dark:text-white transition-all duration-1200 ease-[cubic-bezier(0.22,1,0.36,1)] z-20 ${
-        hoverOnly 
-          ? 'opacity-0 group-hover:opacity-100' 
-          : (isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none')
+      className={`absolute inline-flex flex-col items-center select-none pointer-events-none text-slate-900 dark:text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-20 ${
+        isVisible
+          ? 'opacity-100 translate-y-0 scale-100'
+          : (hoverOnly ? 'opacity-0 -translate-y-2 scale-95 group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none')
       } ${className}`}
       aria-hidden="true"
     >

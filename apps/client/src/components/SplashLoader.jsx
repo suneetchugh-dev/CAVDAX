@@ -51,7 +51,6 @@ export default function SplashLoader({ isDarkTheme }) {
     const handleKeyDown = () => {
       setIsFadingOut(true);
       isInitialSplashFinished = true;
-      playLoadingSound();
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -70,7 +69,6 @@ export default function SplashLoader({ isDarkTheme }) {
       onClick={() => {
         setIsFadingOut(true);
         isInitialSplashFinished = true;
-        playLoadingSound();
       }}
       className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center ${
         isDark ? 'bg-[#050608]' : 'bg-[#F8FAFC]'
@@ -134,7 +132,7 @@ export default function SplashLoader({ isDarkTheme }) {
         />
 
         {/* 1. Large Brand Logo */}
-        <div className="relative h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 flex items-center justify-center">
+        <div className="relative h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 flex items-center justify-center pointer-events-none select-none">
           <CavdaxBrandLoader 
             size={260} 
             strokeWidth={7.4} 

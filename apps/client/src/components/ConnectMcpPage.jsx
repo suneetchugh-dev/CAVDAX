@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Cable, 
@@ -11,7 +11,9 @@ import {
   Cpu, 
   Workflow, 
   FileCode2, 
-  Compass
+  Compass,
+  GitBranch,
+  ShieldCheck
 } from 'lucide-react';
 import TourGuide from './TourGuide';
 import { playClick } from '../utils/soundFx';
@@ -20,6 +22,14 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
   const [activeClient, setActiveClient] = useState('claudecode');
   const [copiedKey, setCopiedKey] = useState(null);
   const [isTourOpen, setIsTourOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setIsTourOpen(prev => !prev);
+    window.addEventListener('cavdax:toggle-mcp-tour', handleToggle);
+    return () => {
+      window.removeEventListener('cavdax:toggle-mcp-tour', handleToggle);
+    };
+  }, []);
 
   const configs = {
     claudecode: {
@@ -150,7 +160,7 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
   return (
     <div className="w-full flex flex-col bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-200 select-none pb-24">
       {/* 1. Header Section */}
-      <section className="pt-28 pb-10 px-6 max-w-5xl mx-auto w-full text-center">
+      <section id="mcp-header" className="pt-28 pb-10 px-6 max-w-5xl mx-auto w-full text-center">
         {/* Isolated Tour Target to prevent spotlight from cutting into the floating navbar */}
         <div data-tour="mcp-overview" className="max-w-3xl mx-auto p-2">
           {/* Heading 100% Mathematically and Optically Centered */}
@@ -168,7 +178,7 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
             <button
               onClick={() => {
                 playClick();
-                setIsTourOpen(true);
+                setIsTourOpen(prev => !prev);
               }}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-300 dark:border-white/10 hover:border-slate-900/30 dark:hover:border-white/20 text-xs font-mono font-medium text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white transition-all cursor-pointer shadow-xs group"
               title="Launch Interactive Tour Guide for MCP Gateway"
@@ -181,7 +191,7 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
       </section>
 
       {/* 2. Configuration & Snippets (Primary User Action) */}
-      <section data-tour="mcp-clients" className="px-6 max-w-5xl mx-auto w-full mb-12">
+      <section id="mcp-config" data-tour="mcp-clients" className="px-6 max-w-5xl mx-auto w-full mb-12">
         <div className="neo-glass-card p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-white/10">
             <div>
@@ -273,62 +283,148 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
         </div>
       </section>
 
-      {/* 3. Architecture & How It Operates */}
-      <section data-tour="mcp-workflow" className="px-6 max-w-5xl mx-auto w-full mb-8">
-        <div className="neo-glass-card p-6 sm:p-8">
-          <h2 className="text-lg font-bold text-slate-950 dark:text-white mb-2 flex items-center gap-2">
-            <Workflow className="w-5 h-5 text-slate-900 dark:text-white" />
-            <span>How The Enclosed Interception Loop Operates</span>
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+            {/* 3. Architecture & How It Operates */}
+      <section id="mcp-architecture" data-tour="mcp-workflow" className="px-6 max-w-5xl mx-auto w-full mb-12">
+        <div className="mb-6">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
+              <Workflow className="w-4 h-4 text-slate-950 dark:text-white" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+              How The Enclosed Interception Loop Operates
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-sans">
             Standard agents operate unconstrained: they read vector embeddings and directly write code to disk. Under CAVDAX, the agent is configured to call tools through our enclosed stdio proxy.
           </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:border-slate-900/40 dark:hover:border-amber-400/40 transition-all duration-300 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Step 01: Intercept</span>
-                <h3 className="font-bold text-slate-900 dark:text-white mb-2">Tool Call Capture</h3>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed">
-                  When Claude or Cursor initiates <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-slate-200 font-mono text-[10px]">apply_code_change</code>, the payload is captured over stdin before any disk modification occurs.
-                </p>
+        {/* 3 Symmetrical Bento Glass Cards (Matching Team Page & Bento Grid Polish) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Step 1: Intercept */}
+          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+            {/* Corner Fan Accent from SAHNIRMAAN */}
+            <div 
+              aria-hidden="true" 
+              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
+            />
+
+            <div>
+              {/* Header: Icon + Step Badge */}
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 text-slate-950 dark:text-white group-hover:border-slate-900/30 dark:group-hover:border-white/30 transition-colors shadow-xs">
+                  <Terminal className="w-4.5 h-4.5" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-[10px] font-bold tracking-wider text-slate-600 dark:text-slate-400 uppercase">
+                  01 · Intercept
+                </span>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-500">
-                Action: Intercept In-Flight
+
+              <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white tracking-tight mb-2">
+                Tool Call Capture
+              </h3>
+
+              <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed mb-4">
+                When Claude Code or Cursor initiates <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-slate-200 font-mono text-[11px]">apply_code_change</code>, the payload is captured over stdio stdin before any disk modification occurs.
+              </p>
+
+              {/* Monospace Sub-Card Metric */}
+              <div className="p-2.5 rounded-lg bg-slate-100/70 dark:bg-black/30 border border-slate-200 dark:border-white/5 font-mono text-[11px] text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span className="text-slate-400">Target</span>
+                <span className="font-semibold text-slate-900 dark:text-white">stdio proxy stream</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:border-slate-900/40 dark:hover:border-amber-400/40 transition-all duration-300 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Step 02: GraphBLAS BFS</span>
-                <h3 className="font-bold text-slate-900 dark:text-white mb-2">Causal Provenance Check</h3>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed">
-                  FalkorDB traces the code change back to its underlying design decisions and facts. If any fact links to a superseded ADR via <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-slate-200 font-mono text-[10px]">[:SUPERSEDES]</code>, the dependency is marked STALE.
-                </p>
+            <div className="mt-5 pt-3.5 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              <span>Action: In-Flight</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">Zero Delay</span>
+            </div>
+          </div>
+
+          {/* Step 2: Causal Provenance Check */}
+          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+            {/* Corner Fan Accent from SAHNIRMAAN */}
+            <div 
+              aria-hidden="true" 
+              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
+            />
+
+            <div>
+              {/* Header: Icon + Step Badge */}
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 text-slate-950 dark:text-white group-hover:border-slate-900/30 dark:group-hover:border-white/30 transition-colors shadow-xs">
+                  <GitBranch className="w-4.5 h-4.5" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-[10px] font-bold tracking-wider text-slate-600 dark:text-slate-400 uppercase">
+                  02 · GraphBLAS BFS
+                </span>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-500">
-                Latency: &lt; 15 milliseconds
+
+              <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white tracking-tight mb-2">
+                Causal Provenance Check
+              </h3>
+
+              <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed mb-4">
+                FalkorDB traces the change back to underlying ADRs and facts. If any fact links to a superseded ADR via <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-slate-200 font-mono text-[11px]">[:SUPERSEDES]</code>, the dependency is marked STALE.
+              </p>
+
+              {/* Monospace Sub-Card Metric */}
+              <div className="p-2.5 rounded-lg bg-slate-100/70 dark:bg-black/30 border border-slate-200 dark:border-white/5 font-mono text-[11px] text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span className="text-slate-400">Traversal</span>
+                <span className="font-semibold text-slate-900 dark:text-white">[:SUPERSEDES] BFS</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:border-slate-900/40 dark:hover:border-amber-400/40 transition-all duration-300 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Step 03: Deterministic Gate</span>
-                <h3 className="font-bold text-slate-900 dark:text-white mb-2">Commit or Hard Reject</h3>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed">
-                  Intact dependencies return 200 OK and commit the file. Stale dependencies trigger 403 Forbidden with exact graph invalidation path, forcing the agent to re-read the latest ADR.
-                </p>
+            <div className="mt-5 pt-3.5 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              <span>Engine: FalkorDB RAM</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">&lt; 15ms</span>
+            </div>
+          </div>
+
+          {/* Step 3: Deterministic Gate */}
+          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+            {/* Corner Fan Accent from SAHNIRMAAN */}
+            <div 
+              aria-hidden="true" 
+              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
+            />
+
+            <div>
+              {/* Header: Icon + Step Badge */}
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 text-slate-950 dark:text-white group-hover:border-slate-900/30 dark:group-hover:border-white/30 transition-colors shadow-xs">
+                  <ShieldCheck className="w-4.5 h-4.5" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-[10px] font-bold tracking-wider text-slate-600 dark:text-slate-400 uppercase">
+                  03 · Execution Gate
+                </span>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-500">
-                Guarantee: Zero Silent Rot
+
+              <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white tracking-tight mb-2">
+                Commit or Hard Reject
+              </h3>
+
+              <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed mb-4">
+                Intact dependencies return 200 OK and commit to disk. Stale dependencies trigger an immediate 403 Forbidden with the exact invalidation path, forcing the agent to re-read the latest ADR.
+              </p>
+
+              {/* Monospace Sub-Card Metric */}
+              <div className="p-2.5 rounded-lg bg-slate-100/70 dark:bg-black/30 border border-slate-200 dark:border-white/5 font-mono text-[11px] text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span className="text-slate-400">Verdict</span>
+                <span className="font-semibold text-slate-900 dark:text-white">200 OK / 403 Reject</span>
               </div>
+            </div>
+
+            <div className="mt-5 pt-3.5 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              <span>Guarantee: Strict</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">Zero Silent Rot</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* 4. Telemetry Row (Relocated Below How The Interception Loop Operates) */}
-      <section className="px-6 max-w-5xl mx-auto w-full mb-14">
+      <section id="mcp-telemetry" className="px-6 max-w-5xl mx-auto w-full mb-14">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-5xl mx-auto text-left font-mono">
           <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-slate-900/40 dark:hover:border-amber-400/40 transition-all duration-300">
             <span className="text-[10px] text-slate-500 uppercase block mb-0.5">Transport</span>

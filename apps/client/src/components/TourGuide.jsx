@@ -326,7 +326,7 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handlePrev();
-      } else if (e.key === 'Escape') {
+      } else if (e.key === 'Escape' || e.key === 't' || e.key === 'T') {
         e.preventDefault();
         handleComplete();
       }

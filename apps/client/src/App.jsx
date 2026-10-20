@@ -8,6 +8,7 @@ import ConnectMcpPage from './components/ConnectMcpPage.jsx';
 import ProjectVideoPage from './components/ProjectVideoPage.jsx';
 import TeamPage from './components/TeamPage.jsx';
 import PreferencesModal from './components/PreferencesModal.jsx';
+import KeyboardShortcutsModal from './components/KeyboardShortcutsModal.jsx';
 import McpConnectModal from './components/McpConnectModal.jsx';
 import McpCableConnectionSvg from './components/McpCableConnectionSvg.jsx';
 import NotFoundPage from './components/NotFoundPage.jsx';
@@ -15,6 +16,7 @@ import StoryStepper from './components/StoryStepper.jsx';
 import TerminalView from './components/TerminalView.jsx';
 import GraphCanvas from './components/GraphCanvas.jsx';
 import TourGuide from './components/TourGuide.jsx';
+import ArchitecturalRailScrubber from './components/ArchitecturalRailScrubber.jsx';
 import Tooltip from './components/Tooltip.jsx';
 import { playClick, playRejectBuzz, playApprovalChime, initGlobalClickSound } from './utils/soundFx.js';
 
@@ -57,8 +59,10 @@ const TAB_TO_PATH = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(() => resolveTabFromUrl());
+  const [landingTarget, setLandingTarget] = useState(() => (typeof window !== 'undefined' && window.location.pathname === '/' ? 'wordmark' : 'overview'));
   const [isMcpModalOpen, setIsMcpModalOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [currentAct, setCurrentAct] = useState(1);
   const [loadingAct, setLoadingAct] = useState(null);
   const [isResetting, setIsResetting] = useState(false);
@@ -89,21 +93,83 @@ export default function App() {
     }
   }, [isDarkTheme]);
 
-  // Tab switch handler — uses HTML5 history.pushState for clean paths (/overview, /console, /mcp, etc.)
-  const handleSelectTab = (tab) => {
-    setActiveTab(tab);
-    if (typeof window !== 'undefined') {
-      if (window.__lenis) {
-        try { window.__lenis.scrollTo(0, { immediate: true }); } catch {}
+    // Tab switch handler — uses HTML5 history.pushState for clean paths (/overview, /console, /mcp, etc.)
+  const handleSelectTab = (tab, options = {}) => {
+    const prevTab = activeTab;
+    if (tab === 'landing') {
+      const target = options.target || (window.location.pathname === '/' ? 'wordmark' : 'overview');
+      setLandingTarget(target);
+      if (target === 'overview' && prevTab !== 'landing' && typeof window !== 'undefined') {
+        const estimatedHeroY = Math.round(window.innerHeight * 1.05);
+        window.scrollTo({ top: estimatedHeroY, left: 0, behavior: 'instant' });
       }
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
     }
+    setActiveTab(tab);
+
+    const scrollToDestination = () => {
+      if (typeof window === 'undefined') return;
+
+      if (tab === 'landing') {
+        if (options.target === 'wordmark') {
+          // Bring user directly to Wordmark Page (absolute top)
+          if (prevTab !== 'landing') {
+            if (window.__lenis) {
+              window.__lenis.scrollTo(0, { immediate: true });
+            }
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+          } else {
+            if (window.__lenis) {
+              window.__lenis.scrollTo(0, { duration: 0.82, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+            } else {
+              window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+            }
+          }
+        } else {
+          // Bring user directly to Overview Page (#hero-section)
+          const isSameTab = prevTab === "landing";
+          const alignOverview = () => {
+            const hero = document.getElementById("hero-section");
+            if (!hero) return false;
+            if (window.__lenis) {
+              window.__lenis.resize();
+              window.__lenis.scrollTo(hero.offsetTop, { immediate: !isSameTab, duration: isSameTab ? 0.82 : undefined, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+            } else {
+              hero.scrollIntoView({ behavior: isSameTab ? "smooth" : "instant" });
+            }
+            return true;
+          };
+
+          if (!alignOverview()) {
+            setTimeout(alignOverview, 50);
+            setTimeout(alignOverview, 150);
+          }
+        }
+      } else {
+        // Any other tab (/console, /mcp, /project, /team): scroll to top
+        if (window.__lenis) {
+          try {
+            window.__lenis.resize();
+            window.__lenis.scrollTo(0, { immediate: true });
+          } catch {}
+        }
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+    };
+
+    if (prevTab === tab) {
+      scrollToDestination();
+    } else {
+      setTimeout(scrollToDestination, 40);
+    }
+
     try {
       localStorage.setItem('cavdax_tab', tab);
       if (typeof window !== 'undefined') {
-        const targetPath = TAB_TO_PATH[tab] || '/overview';
+        const targetPath = tab === 'landing'
+          ? (options.target === 'wordmark' ? '/' : '/overview')
+          : (TAB_TO_PATH[tab] || '/overview');
         if (window.location.pathname !== targetPath) {
           window.history.pushState({ tab }, '', targetPath);
         }
@@ -122,6 +188,9 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const tab = resolveTabFromUrl();
+      if (tab === 'landing') {
+        setLandingTarget(window.location.pathname === '/' ? 'wordmark' : 'overview');
+      }
       setActiveTab(tab);
     };
 
@@ -178,23 +247,105 @@ export default function App() {
     };
   }, []);
 
-  // Keyboard shortcuts for console buttons: T = Tour Guide, R = Reset Demo
+  // Universal HUD Keyboard Shortcuts
   useEffect(() => {
     const handleKey = (e) => {
       // Guard: skip if focus is in any input/textarea/contenteditable
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
-      if (activeTab !== 'console') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      if (e.key === 't' || e.key === 'T') {
-        e.preventDefault();
-        setIsTourOpen(true);
-      }
-      if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) {
+      // 1. Shortcuts Help Modal: '?' or 'Shift + /'
+      if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
         e.preventDefault();
         playClick();
-        // handleReset is defined below; using a ref to avoid stale closure
+        setIsShortcutsOpen(prev => !prev);
+        return;
+      }
+
+      // 2. Escape: close any active modal
+      if (e.key === 'Escape') {
+        setIsShortcutsOpen(false);
+        setIsPreferencesOpen(false);
+        setIsMcpModalOpen(false);
+        setIsTourOpen(false);
+        return;
+      }
+
+      // 3. Navigation shortcuts: 1..5, W
+      if (e.key === '1') {
+        e.preventDefault();
+        playClick();
+        handleSelectTab('landing', { target: 'overview' });
+        return;
+      }
+      if (e.key === '2') {
+        e.preventDefault();
+        playClick();
+        handleSelectTab('console');
+        return;
+      }
+      if (e.key === '3') {
+        e.preventDefault();
+        playClick();
+        handleSelectTab('mcp');
+        return;
+      }
+      if (e.key === '4') {
+        e.preventDefault();
+        playClick();
+        handleSelectTab('project');
+        return;
+      }
+      if (e.key === '5') {
+        e.preventDefault();
+        playClick();
+        handleSelectTab('team');
+        return;
+      }
+      if (e.key === 'w' || e.key === 'W') {
+        e.preventDefault();
+        playClick();
+        handleSelectTab('landing', { target: 'wordmark' });
+        return;
+      }
+
+      // 4. Quick Actions: D (Theme), , (Preferences)
+      if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        playClick();
+        setIsDarkTheme(prev => !prev);
+        return;
+      }
+      if (e.key === ',') {
+        e.preventDefault();
+        playClick();
+        setIsPreferencesOpen(prev => !prev);
+        return;
+      }
+
+      // 5. Universal Tour Guide shortcut: T (Available for all views)
+      if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        playClick();
+        if (activeTab === 'console') {
+          setIsTourOpen(prev => !prev);
+        } else if (activeTab === 'mcp') {
+          window.dispatchEvent(new CustomEvent('cavdax:toggle-mcp-tour'));
+        } else {
+          // If on Overview, Demo or Team: navigate to Console and launch the Tour
+          handleSelectTab('console');
+          setTimeout(() => setIsTourOpen(true), 150);
+        }
+        return;
+      }
+
+      // 6. Console Reset shortcut: R
+      if (activeTab === 'console' && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        playClick();
         if (window.__cavdaxResetFn) window.__cavdaxResetFn();
+        return;
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -499,6 +650,7 @@ export default function App() {
       <Header
         status={{ falkorLive, latestLatency }}
         activeTab={activeTab}
+        landingTarget={landingTarget}
         onSelectTab={handleSelectTab}
         onOpenPreferences={() => setIsPreferencesOpen(true)}
         isDarkTheme={isDarkTheme}
@@ -509,10 +661,13 @@ export default function App() {
       {activeTab === 'landing' ? (
         /* Full Product Landing Page (footer particles live here, not in console §1.6) */
         <LandingPage
+          landingTarget={landingTarget}
           onLaunchConsole={() => handleSelectTab('console')}
           onOpenMcpPage={() => handleSelectTab('mcp')}
           onOpenMcpModal={() => setIsMcpModalOpen(true)}
           onStartTour={() => handleSelectTab('console')}
+          isDarkTheme={isDarkTheme}
+          onToggleTheme={() => setIsDarkTheme((d) => !d)}
         />
       ) : activeTab === 'mcp' ? (
         /* Dedicated Full-Page MCP Architecture & Agent Connection Guide */
@@ -561,7 +716,7 @@ export default function App() {
                 <button
                   onClick={() => {
                     playClick();
-                    setIsTourOpen(true);
+                    setIsTourOpen(prev => !prev);
                   }}
                   className="group px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-[11px] font-mono text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white transition-all flex items-center gap-1.5 tactile-btn"
                 >
@@ -651,11 +806,29 @@ export default function App() {
         isDarkTheme={isDarkTheme}
         onToggleTheme={() => setIsDarkTheme((d) => !d)}
         onStartTour={() => {
-          setActiveTab('console');
-          setIsTourOpen(true);
+          setIsPreferencesOpen(false);
+          if (activeTab === 'mcp') {
+            window.dispatchEvent(new CustomEvent('cavdax:toggle-mcp-tour'));
+          } else {
+            setActiveTab('console');
+            setIsTourOpen(true);
+          }
         }}
         onResetDemo={handleReset}
+        onOpenShortcuts={() => {
+          setIsPreferencesOpen(false);
+          setIsShortcutsOpen(true);
+        }}
       />
+
+      {/* Universal Keyboard Shortcuts Guide Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* Universal Scroll Cue & Architectural Rail Scrubber — present wherever there is vertical scroll */}
+      <ArchitecturalRailScrubber activeTab={activeTab} />
 
       {/* 4. MCP Agent Connection Configuration Modal */}
       <McpConnectModal

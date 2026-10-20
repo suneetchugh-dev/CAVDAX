@@ -1,0 +1,510 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { playClick } from '../utils/soundFx';
+
+/**
+ * PullCordLampToggle — Physics-based stretchy pull-string lamp button.
+ *
+ * Designed specifically for the CAVDAX Wordmark Intro viewport.
+ * Features:
+ * - Dynamic spring & pendulum physics (Hooke's elasticity, gravity, damping, ambient breeze).
+ * - Multi-segment elastic chain simulation that bends and stretches realistically.
+ * - Completely unrestricted free-form drag & rotation across all directions.
+ * - Knowledge Graph Node Orb Anchor with gold aura in Dark Mode (no inner dot).
+ * - Bold filled-up architectural Sun icon inside the acorn bob.
+ * - Bidirectional Dark <-> Light theme toggle with haptic sound and lamp pulse glow.
+ * - Drifts and fades smoothly as the user scrolls into the Overview page.
+ */
+export default function PullCordLampToggle({
+  isDarkTheme = true,
+  onToggleTheme,
+  opacity = 1,
+  className = ''
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
+  const [lampFlash, setLampFlash] = useState(false);
+
+  const svgRef = useRef(null);
+  const animFrameRef = useRef(null);
+
+  // Physics simulation constants
+  const ANCHOR_X = 180;
+  const ANCHOR_Y = 24; // Attached to center of the Graph Node Orb
+  const REST_LENGTH = 140;
+  const NUM_SEGMENTS = 8;
+  const TRIGGER_STRETCH = 26; // pixels of stretch required to switch
+
+  // State refs for 60-120fps physics loop without React re-render lag
+  const physicsRef = useRef({
+    // Bob position and velocity
+    x: ANCHOR_X,
+    y: REST_LENGTH,
+    vx: 0,
+    vy: 0,
+    // Intermediate rope nodes for spline curve
+    nodes: Array.from({ length: NUM_SEGMENTS }, (_, i) => ({
+      x: ANCHOR_X,
+      y: ANCHOR_Y + ((REST_LENGTH - ANCHOR_Y) / (NUM_SEGMENTS - 1)) * i,
+      vx: 0,
+      vy: 0
+    })),
+    // Drag tracking
+    isDragging: false,
+    dragStartY: 0,
+    dragStartX: 0,
+    initialBobX: ANCHOR_X,
+    initialBobY: REST_LENGTH,
+    hasFlippedThemeInPull: false,
+    // Spring physics parameters
+    stiffness: 0.12,
+    damping: 0.88,
+    gravity: 0.45,
+    breezeTime: 0,
+    // Click impulse animation
+    isAutoPulling: false,
+    autoPullProgress: 0
+  });
+
+  const [renderPos, setRenderPos] = useState({
+    bobX: ANCHOR_X,
+    bobY: REST_LENGTH,
+    pathD: `M ${ANCHOR_X} ${ANCHOR_Y} L ${ANCHOR_X} ${REST_LENGTH}`,
+    angle: 0
+  });
+
+  // Sound and theme trigger
+  const triggerToggle = useCallback(() => {
+    playClick();
+    setLampFlash(true);
+    setTimeout(() => setLampFlash(false), 350);
+    if (onToggleTheme) {
+      onToggleTheme();
+    }
+  }, [onToggleTheme]);
+
+  // Main physics loop
+  useEffect(() => {
+    let lastTime = performance.now();
+
+    const loop = (currentTime) => {
+      const dt = Math.min((currentTime - lastTime) / 16.666, 2.0); // normalized delta time
+      lastTime = currentTime;
+
+      const p = physicsRef.current;
+      p.breezeTime += 0.03 * dt;
+
+      // 1. Calculate ambient micro-breeze (sways gently when idle)
+      const breeze = !p.isDragging && !p.isAutoPulling 
+        ? Math.sin(p.breezeTime) * 1.5 + Math.sin(p.breezeTime * 2.3) * 0.7 
+        : 0;
+
+      // 2. Target anchor and position calculation
+      let targetX = ANCHOR_X + breeze;
+      let targetY = REST_LENGTH;
+
+      if (p.isAutoPulling) {
+        // Scripted click snap bounce animation
+        p.autoPullProgress += 0.07 * dt;
+        if (p.autoPullProgress < 1) {
+          const easeDown = Math.sin(p.autoPullProgress * Math.PI * 0.5);
+          targetY = REST_LENGTH + easeDown * 50;
+        } else {
+          if (!p.hasFlippedThemeInPull) {
+            triggerToggle();
+            p.hasFlippedThemeInPull = true;
+          }
+          if (p.autoPullProgress >= 1.22) {
+            p.isAutoPulling = false;
+            p.autoPullProgress = 0;
+            p.hasFlippedThemeInPull = false;
+            p.vy = -22; // sharp upward recoil impulse
+          } else {
+            targetY = REST_LENGTH + 50;
+          }
+        }
+      }
+
+      if (!p.isDragging && !p.isAutoPulling) {
+        // True spring pendulum physics towards rest position
+        const dx = targetX - p.x;
+        const dy = targetY - p.y;
+
+        const fx = dx * p.stiffness;
+        const fy = dy * p.stiffness + p.gravity;
+
+        p.vx = (p.vx + fx * dt) * Math.pow(p.damping, dt);
+        p.vy = (p.vy + fy * dt) * Math.pow(p.damping, dt);
+
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      }
+
+      // 3. Relax intermediate rope nodes along dynamic catenary / bezier spine
+      const nodes = p.nodes;
+      nodes[0].x = ANCHOR_X;
+      nodes[0].y = ANCHOR_Y;
+      nodes[NUM_SEGMENTS - 1].x = p.x;
+      nodes[NUM_SEGMENTS - 1].y = p.y;
+
+      const currentDist = Math.hypot(p.x - ANCHOR_X, p.y - ANCHOR_Y);
+      const restChord = REST_LENGTH - ANCHOR_Y;
+      const slack = Math.max(0, restChord - currentDist);
+
+      for (let i = 1; i < NUM_SEGMENTS - 1; i++) {
+        const ratio = i / (NUM_SEGMENTS - 1);
+        const idealX = ANCHOR_X + (p.x - ANCHOR_X) * ratio;
+        // String sag: if distance is less than rest length, give natural catenary curve
+        const sag = Math.sin(ratio * Math.PI) * slack * 0.45;
+        const idealY = ANCHOR_Y + (p.y - ANCHOR_Y) * ratio + sag;
+
+        const nx = nodes[i];
+        const ndx = idealX - nx.x;
+        const ndy = idealY - nx.y;
+
+        nx.vx = (nx.vx + ndx * 0.35 * dt) * Math.pow(0.80, dt);
+        nx.vy = (nx.vy + ndy * 0.35 * dt) * Math.pow(0.80, dt);
+
+        nx.x += nx.vx * dt;
+        nx.y += nx.vy * dt;
+      }
+
+      // 4. Construct smooth SVG cubic Bézier path through nodes
+      let d = `M ${nodes[0].x.toFixed(1)} ${nodes[0].y.toFixed(1)}`;
+      for (let i = 1; i < NUM_SEGMENTS; i++) {
+        const prev = nodes[i - 1];
+        const curr = nodes[i];
+        const midX = ((prev.x + curr.x) / 2).toFixed(1);
+        const midY = ((prev.y + curr.y) / 2).toFixed(1);
+        d += ` Q ${prev.x.toFixed(1)} ${prev.y.toFixed(1)}, ${midX} ${midY}`;
+      }
+      d += ` L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+
+      // 5. Unrestricted natural rotation aligned with tangent of the cord
+      const lastNode = nodes[NUM_SEGMENTS - 2];
+      const segDx = p.x - lastNode.x;
+      const segDy = p.y - lastNode.y;
+      const rawAngle = Math.atan2(segDx, segDy) * (180 / Math.PI);
+
+      setRenderPos({
+        bobX: p.x,
+        bobY: p.y,
+        pathD: d,
+        angle: rawAngle // Completely unconstrained natural rotation
+      });
+
+      animFrameRef.current = requestAnimationFrame(loop);
+    };
+
+    animFrameRef.current = requestAnimationFrame(loop);
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [triggerToggle]);
+
+  // Pointer drag interactions (Free-form 360 drag with natural pendulum swing)
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const p = physicsRef.current;
+    p.isDragging = true;
+    setIsPulling(true);
+    p.isAutoPulling = false;
+    p.hasFlippedThemeInPull = false;
+    p.dragStartY = e.clientY;
+    p.dragStartX = e.clientX;
+    p.initialBobX = p.x;
+    p.initialBobY = p.y;
+
+    const onPointerMove = (moveEv) => {
+      if (!p.isDragging) return;
+      const dx = moveEv.clientX - p.dragStartX;
+      const dy = moveEv.clientY - p.dragStartY;
+
+      // Free-form unconstrained drag in all directions
+      const rawTargetX = p.initialBobX + dx;
+      const rawTargetY = p.initialBobY + dy;
+
+      // Calculate distance & angle from anchor
+      const distFromAnchor = Math.hypot(rawTargetX - ANCHOR_X, rawTargetY - ANCHOR_Y);
+      const angleFromAnchor = Math.atan2(rawTargetY - ANCHOR_Y, rawTargetX - ANCHOR_X);
+
+      // Max elasticity stretch distance (240px) and min distance from anchor orb (32px)
+      const maxDist = 240;
+      const minDist = 32;
+      const clampedDist = Math.max(minDist, Math.min(maxDist, distFromAnchor));
+
+      p.x = ANCHOR_X + Math.cos(angleFromAnchor) * clampedDist;
+      p.y = ANCHOR_Y + Math.sin(angleFromAnchor) * clampedDist;
+
+      // Check if pull stretch threshold crossed (works in any pull direction)
+      const stretchAmount = clampedDist - (REST_LENGTH - ANCHOR_Y);
+      if (stretchAmount >= TRIGGER_STRETCH && !p.hasFlippedThemeInPull) {
+        triggerToggle();
+        p.hasFlippedThemeInPull = true;
+      }
+    };
+
+    const onPointerUp = () => {
+      p.isDragging = false;
+      setIsPulling(false);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+
+      // Natural pendulum release recoil in both X and Y
+      const stretchX = p.x - ANCHOR_X;
+      const stretchY = p.y - REST_LENGTH;
+      p.vx = -stretchX * 0.38;
+      p.vy = -stretchY * 0.42;
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
+
+  // Click on bob triggers instant theme flip + physical spring snap bounce
+  const handleClick = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const p = physicsRef.current;
+    if (p.isDragging) return;
+
+    triggerToggle();
+    p.isAutoPulling = false;
+    p.vy = 26; // strong downward impulse that stretches the string and springs back
+  };
+
+  return (
+    <div
+      style={{
+        opacity,
+        visibility: opacity <= 0.01 ? 'hidden' : 'visible',
+        display: opacity <= 0.01 ? 'none' : 'flex',
+        pointerEvents: opacity <= 0.01 ? 'none' : 'auto',
+        transition: 'opacity 0.25s ease, visibility 0.25s ease'
+      }}
+      className={`fixed top-0 right-4 sm:right-10 z-40 select-none pointer-events-auto flex flex-col items-center ${className}`}
+    >
+      {/* Ceiling Connection Stem */}
+      <div className="w-[1.5px] h-3 bg-slate-400/80 dark:bg-amber-400/30" />
+
+      {/* 2. Interactive SVG Stretchy Chain + Pull Bob Canvas */}
+      <div className="relative w-[360px] h-[360px] -mt-1 cursor-default select-none">
+        <svg
+          ref={svgRef}
+          width="360"
+          height="360"
+          viewBox="0 0 360 360"
+          className="overflow-visible"
+        >
+          <defs>
+            {/* Lamp Bulb Radial Glow in Dark Theme (Warm Gold) */}
+            <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity={isDarkTheme ? "0.45" : "0.55"} />
+              <stop offset="60%" stopColor={isDarkTheme ? "#F59E0B" : "#F59E0B"} stopOpacity={isDarkTheme ? "0.3" : "0.15"} />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Electric Flash Pulse Gradient (Warm Gold in Dark Theme) */}
+            <radialGradient id="flashPulse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+              <stop offset="50%" stopColor={isDarkTheme ? "#F59E0B" : "#38BDF8"} stopOpacity="0.5" />
+              <stop offset="100%" stopColor={isDarkTheme ? "#F59E0B" : "#38BDF8"} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Chain drop shadow */}
+            <filter id="cordShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.25" />
+            </filter>
+          </defs>
+
+          {/* Electric pulse flash aura on theme change */}
+          {lampFlash && (
+            <circle
+              cx={renderPos.bobX}
+              cy={renderPos.bobY}
+              r="48"
+              fill="url(#flashPulse)"
+              className="animate-ping pointer-events-none"
+            />
+          )}
+
+          {/* Ambient subtle light aura around bob */}
+          <circle
+            cx={renderPos.bobX}
+            cy={renderPos.bobY}
+            r="26"
+            fill="url(#lampGlow)"
+            className="pointer-events-none opacity-80"
+          />
+
+          {/* The Elastic Cord / Beaded Pull String */}
+          <path
+            d={renderPos.pathD}
+            fill="none"
+            stroke={isDarkTheme ? '#E2E8F0' : '#334155'}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeDasharray="1 3.5" // Beaded chain texture
+            filter="url(#cordShadow)"
+            className="transition-colors duration-200"
+          />
+
+          {/* Secondary solid inner core line for tensile depth */}
+          <path
+            d={renderPos.pathD}
+            fill="none"
+            stroke={isDarkTheme ? '#94A3B8' : '#64748B'}
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            opacity="0.6"
+          />
+
+          {/* ══════════════════════════════════════════════════════════
+              KNOWLEDGE GRAPH VERTEX ORB ANCHOR (FalkorDB Graph Node)
+              ══════════════════════════════════════════════════════════ */}
+          <g transform={`translate(${ANCHOR_X}, ${ANCHOR_Y})`} className="pointer-events-none">
+            {/* Outer Graph Halo Orbit (Gold shadow in Dark theme) */}
+            <circle
+              cx="0"
+              cy="0"
+              r={17 + (isPulling ? 2.5 : 0)}
+              fill="none"
+              stroke={isDarkTheme ? "rgba(245, 158, 11, 0.55)" : "rgba(15, 23, 42, 0.3)"}
+              strokeWidth="1.3"
+              strokeDasharray="3 3"
+              className="transition-all duration-300"
+            />
+
+            {/* Ambient Radial Aura around Node (Warm Gold Shadow in Dark) */}
+            <circle
+              cx="0"
+              cy="0"
+              r="24"
+              fill={isDarkTheme ? "rgba(245, 158, 11, 0.22)" : "rgba(15, 23, 42, 0.05)"}
+              className="transition-all duration-300"
+            />
+
+            {/* Solid Graph Vertex Body (Pure Luminous Sphere - NO INNER DOT) */}
+            <circle
+              cx="0"
+              cy="0"
+              r="11"
+              fill={isDarkTheme ? "#141720" : "#FFFFFF"}
+              stroke={isDarkTheme ? (isPulling ? "#F59E0B" : "#D97706") : (isPulling ? "#0F172A" : "#94A3B8")}
+              strokeWidth="2"
+              filter="url(#cordShadow)"
+              className="transition-colors duration-200"
+            />
+
+            {/* Bottom Cord Socket / Hinge Joint */}
+            <circle
+              cx="0"
+              cy="11"
+              r="2.2"
+              fill={isDarkTheme ? "#F59E0B" : "#475569"}
+            />
+          </g>
+
+          {/* The Tactile Pull Bob / Acorn Lamp Switch */}
+          <g
+            role="button"
+            tabIndex={0}
+            aria-label="Toggle theme pull cord"
+            transform={`translate(${renderPos.bobX}, ${renderPos.bobY}) rotate(${renderPos.angle})`}
+            onPointerDown={handlePointerDown}
+            onClick={handleClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick(e);
+              }
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="cursor-default select-none focus:outline-none"
+          >
+            {/* Extended invisible touch target for easy grabbing */}
+            <circle cx="0" cy="8" r="26" fill="transparent" />
+
+            {/* Top Collar Ring */}
+            <ellipse
+              cx="0"
+              cy="-2"
+              rx="4"
+              ry="2"
+              fill={isDarkTheme ? '#94A3B8' : '#475569'}
+            />
+
+            {/* Main Acorn / Cylinder Bob Body */}
+            <path
+              d="M -6 0 L 6 0 C 7 10, 5 18, 0 22 C -5 18, -7 10, -6 0 Z"
+              fill={isDarkTheme ? '#FFFFFF' : '#0F172A'}
+              stroke={isDarkTheme ? '#CBD5E1' : '#1E293B'}
+              strokeWidth="1"
+              filter="url(#cordShadow)"
+              className="transition-colors duration-200"
+            />
+
+            {/* Decorative knurled grip bands on the bob */}
+            <line x1="-5" y1="5" x2="5" y2="5" stroke={isDarkTheme ? '#94A3B8' : '#64748B'} strokeWidth="0.8" opacity="0.6" />
+            <line x1="-5" y1="9" x2="5" y2="9" stroke={isDarkTheme ? '#94A3B8' : '#64748B'} strokeWidth="0.8" opacity="0.6" />
+            <line x1="-4" y1="13" x2="4" y2="13" stroke={isDarkTheme ? '#94A3B8' : '#64748B'} strokeWidth="0.8" opacity="0.6" />
+
+            {/* Bottom Accent Ring / Terminal Bead */}
+            <circle
+              cx="0"
+              cy="23"
+              r="2"
+              fill={isDarkTheme ? '#F59E0B' : '#F59E0B'}
+              className="transition-colors duration-200"
+            />
+
+            {/* Glowing Lamp Filament / Sun-Moon Icon inside the Bob */}
+            <g transform="translate(0, 9)">
+              {isDarkTheme ? (
+                // Bold Filled-up Architectural Sun Icon (Warm Radiant Gold Filament)
+                <g fill="#F59E0B" style={{ filter: 'drop-shadow(0 0 2.5px rgba(245, 158, 11, 0.75))' }}>
+                  {/* Solid Center Disc */}
+                  <circle cx="0" cy="0" r="3.6" />
+                  {/* 8 Crisp Chiseled Solid Triangular Rays */}
+                  <polygon points="-1,-4.8 1,-4.8 0,-7.5" />
+                  <polygon points="-1,4.8 1,4.8 0,7.5" />
+                  <polygon points="4.8,-1 4.8,1 7.5,0" />
+                  <polygon points="-4.8,-1 -4.8,1 -7.5,0" />
+                  <polygon points="2.8,-3.8 3.8,-2.8 5.6,-5.6" />
+                  <polygon points="2.8,3.8 3.8,2.8 5.6,5.6" />
+                  <polygon points="-2.8,3.8 -3.8,2.8 -5.6,5.6" />
+                  <polygon points="-2.8,-3.8 -3.8,-2.8 -5.6,-5.6" />
+                </g>
+              ) : (
+                // Moon Icon (Inviting dark mode)
+                <path
+                  d="M 2.2 -4 A 4.2 4.2 0 1 0 2.2 4 A 3 3 0 0 1 2.2 -4 Z"
+                  fill="#FFFFFF"
+                />
+              )}
+            </g>
+          </g>
+        </svg>
+
+        {/* 3. Floating Tooltip / Interactive Prompt on Hover */}
+        <div
+          style={{
+            transform: `translate3d(calc(${renderPos.bobX}px - 50%), calc(${renderPos.bobY}px + 28px), 0)`,
+            opacity: isHovered || isPulling ? 1 : 0,
+            pointerEvents: 'none'
+          }}
+          className="absolute top-0 left-0 transition-opacity duration-200 whitespace-nowrap z-50 flex flex-col items-center"
+        >
+          <div className="px-2.5 py-1 rounded-full text-[9px] font-mono font-medium tracking-tight bg-slate-900/90 dark:bg-white/95 text-white dark:text-slate-950 shadow-md backdrop-blur-md border border-white/10 dark:border-slate-800/10 flex items-center gap-1.5">
+            <span>{isPulling ? 'Release to toggle' : isDarkTheme ? 'Pull for Light' : 'Pull for Dark'}</span>
+            <span className="text-[8px] opacity-60">↓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
