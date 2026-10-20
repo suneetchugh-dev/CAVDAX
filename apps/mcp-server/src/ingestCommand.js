@@ -1,21 +1,39 @@
 /**
  * CAVDAX Ingest Command
  *
- * npx cavdax ingest [--repo <path>] [--host <host>] [--port <port>]
+ * npx cavdax ingest [--type <type>] [--repo <path>] [--host <host>] [--port <port>]
  *
- * Scans a repository for Architecture Decision Records (ADRs) in standard
- * locations (.adr/, docs/adr/, docs/adrs/) and ingests them into FalkorDB.
+ * Supported source types:
+ *   adr         (default) Scan docs/adr/, docs/adrs/, .adr/ for Markdown ADR files
+ *   commit      Ingest a specific git commit (requires --sha)
+ *   package     Scan package.json for dependency changes
+ *   codeowners  Scan .github/CODEOWNERS for ownership changes
+ *   issue       Ingest a GitHub Issue closure (requires --issue and --url)
+ *   all         Run adr + package + codeowners sequentially
  */
 
 import fs from 'fs';
 import path from 'path';
 import { glob } from 'glob';
 
-/**
- * Discovers all .md files in common ADR directories within the given repo root.
- * @param {string} repoRoot - Absolute path to the repository root.
- * @returns {string[]} List of absolute ADR file paths.
- */
+// ─── FalkorDB connection helper ───────────────────────────────────────────────
+// Uses the same FalkorDB.connect() pattern as core/graph/client.js (v6.x API)
+
+async function connectFalkorDB(host, port) {
+  try {
+    const { FalkorDB } = await import('falkordb');
+    const client = await FalkorDB.connect({ socket: { host, port } });
+    const graph = client.selectGraph(process.env.FALKORDB_GRAPH_NAME || 'cavdax_core_graph');
+    console.log(`   Connected to FalkorDB at ${host}:${port}`);
+    return { client, graph };
+  } catch (err) {
+    console.warn(`   FalkorDB unavailable (${err.message}) — running in dry-run mode`);
+    return { client: null, graph: null };
+  }
+}
+
+// ─── ADR file discovery ───────────────────────────────────────────────────────
+
 async function discoverAdrFiles(repoRoot) {
   const patterns = [
     '.adr/**/*.md',
@@ -23,87 +41,262 @@ async function discoverAdrFiles(repoRoot) {
     'docs/adrs/**/*.md',
     'architecture/**/*.md'
   ];
-
   const found = [];
   for (const pattern of patterns) {
     const matches = await glob(pattern, { cwd: repoRoot, absolute: true });
     found.push(...matches);
   }
-
-  return [...new Set(found)]; // deduplicate
+  return [...new Set(found)];
 }
 
-/**
- * Attempts to connect to FalkorDB and run the ingest pipeline.
- * Falls back to a dry-run summary if FalkorDB is unavailable.
- */
-export async function runIngest(options) {
-  const repoRoot = path.resolve(options.repo);
-  const host = options.host;
-  const port = parseInt(options.port, 10);
+// ─── Source ingestor loader ───────────────────────────────────────────────────
+// Dynamic import so the package works standalone (sources.js may not be present
+// when installed as npx @cavdax/mcp-server outside the monorepo)
 
-  console.log(`\n🔍 CAVDAX Ingest — scanning: ${repoRoot}`);
-  console.log(`   FalkorDB: ${host}:${port}\n`);
-
-  if (!fs.existsSync(repoRoot)) {
-    console.error(`❌ Repository path does not exist: ${repoRoot}`);
-    process.exit(1);
+async function loadSources() {
+  try {
+    return await import(new URL('../../../core/ingestion/sources.js', import.meta.url).href);
+  } catch {
+    return null;
   }
+}
 
+async function loadParser() {
+  try {
+    const mod = await import(new URL('../../../core/ingestion/parser.js', import.meta.url).href);
+    return mod.ingestAdrFile || null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Type handlers ────────────────────────────────────────────────────────────
+
+async function ingestAdr(repoRoot, graph, dryRun) {
   const adrFiles = await discoverAdrFiles(repoRoot);
 
   if (adrFiles.length === 0) {
-    console.warn('⚠️  No ADR files found in .adr/, docs/adr/, or docs/adrs/');
-    console.warn('   Create Markdown files in one of those directories and re-run.');
-    return;
+    console.log('   No ADR files found in .adr/, docs/adr/, or docs/adrs/');
+    console.log('   Create Markdown files in one of those directories and re-run.');
+    return { processed: 0, total: 0 };
   }
 
-  console.log(`📄 Found ${adrFiles.length} ADR file(s):`);
-  for (const f of adrFiles) {
-    console.log(`   • ${path.relative(repoRoot, f)}`);
+  console.log(`   Found ${adrFiles.length} ADR file(s):`);
+  adrFiles.forEach(f => console.log(`     • ${path.relative(repoRoot, f)}`));
+
+  if (dryRun) {
+    console.log('\n   Dry-run: FalkorDB unavailable, no data written.');
+    return { processed: 0, total: adrFiles.length };
   }
 
-  // Attempt live FalkorDB ingestion
-  let graph = null;
-  try {
-    const { createClient } = await import('falkordb');
-    const client = createClient({ socket: { host, port } });
-    await client.connect();
-    graph = client.graph('CAVDAX');
-    console.log('\n✅ Connected to FalkorDB');
-  } catch {
-    console.warn('\n⚠️  FalkorDB unavailable — running in dry-run mode (no data written)');
-  }
+  const ingestAdrFile = await loadParser();
+  let processed = 0;
 
-  let ingested = 0;
   for (const filePath of adrFiles) {
     try {
-      if (graph) {
-        // Attempt to use the core ingest parser if available in a monorepo context
-        const { ingestAdrFile } = await import(
-          new URL('../../../core/ingestion/parser.js', import.meta.url).href
-        ).catch(() => ({ ingestAdrFile: null }));
-
-        if (ingestAdrFile) {
-          await ingestAdrFile(graph, filePath);
-        } else {
-          // Minimal inline ingestion: create a Source node from the file name
-          const adrId = path.basename(filePath, '.md').toUpperCase();
-          const title = adrId;
-          await graph.query(
-            `MERGE (s:Source {id: $id}) SET s.title = $title, s.status = 'ACTIVE', s.type = 'ADR'`,
-            { params: { id: adrId, title } }
-          );
-        }
-        console.log(`   ✅ Ingested: ${path.relative(repoRoot, filePath)}`);
+      if (ingestAdrFile) {
+        await ingestAdrFile(graph, filePath);
       } else {
-        console.log(`   📋 Dry-run: ${path.relative(repoRoot, filePath)}`);
+        // Minimal fallback when running outside monorepo
+        const adrId = path.basename(filePath, '.md').toUpperCase();
+        await graph.query(
+          `MERGE (s:Source {id: $id}) ON CREATE SET s.title = $id, s.status = 'ACTIVE', s.type = 'ADR'`,
+          { params: { id: adrId } }
+        );
       }
-      ingested++;
+      console.log(`   + Ingested: ${path.relative(repoRoot, filePath)}`);
+      processed++;
     } catch (err) {
-      console.error(`   ❌ Failed to ingest ${path.relative(repoRoot, filePath)}: ${err.message}`);
+      console.error(`   x Failed: ${path.relative(repoRoot, filePath)} — ${err.message}`);
     }
   }
 
-  console.log(`\n🏁 Ingest complete: ${ingested}/${adrFiles.length} file(s) processed.`);
+  return { processed, total: adrFiles.length };
+}
+
+async function ingestCommit(options, graph, dryRun) {
+  if (!options.sha) {
+    console.error('   --sha <commit-sha> is required for --type commit');
+    process.exit(1);
+  }
+
+  const sources = await loadSources();
+  if (!sources) {
+    console.error('   sources.js not found — run inside the CAVDAX monorepo');
+    process.exit(1);
+  }
+
+  // Resolve message from SHA if not provided
+  let message = options.message;
+  if (!message) {
+    try {
+      const { execSync } = await import('child_process');
+      message = execSync(`git log --format=%B -n 1 ${options.sha}`, {
+        cwd: path.resolve(options.repo),
+        encoding: 'utf-8'
+      }).trim();
+    } catch {
+      message = `Commit ${options.sha}`;
+    }
+  }
+
+  if (dryRun) {
+    console.log(`   Dry-run: would ingest commit ${options.sha} — "${message.split('\n')[0]}"`);
+    return;
+  }
+
+  const result = await sources.ingestGitCommit(graph, {
+    sha: options.sha,
+    message,
+    author: options.author,
+    repoRoot: path.resolve(options.repo)
+  });
+  console.log(`   + Ingested commit ${result.source_id}${result.supersedes ? ` (supersedes: ${[].concat(result.supersedes).join(', ')})` : ''}`);
+  return result;
+}
+
+async function ingestPackage(repoRoot, graph, dryRun) {
+  const pkgPath = path.join(repoRoot, 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    console.log(`   No package.json found at ${pkgPath}`);
+    return { processed: 0 };
+  }
+
+  const sources = await loadSources();
+  if (!sources) {
+    console.error('   sources.js not found — run inside the CAVDAX monorepo');
+    process.exit(1);
+  }
+
+  if (dryRun) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    const count = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).length;
+    console.log(`   Dry-run: would scan ${count} dependencies from ${pkgPath}`);
+    return { processed: 0 };
+  }
+
+  const results = await sources.scanAndIngestPackageJson(graph, pkgPath);
+  const changed = results.filter(r => r.supersedes);
+  console.log(`   + Scanned ${results.length} packages — ${changed.length} with breaking changes ingested`);
+  return { processed: results.length };
+}
+
+async function ingestCodeowners(repoRoot, graph, dryRun) {
+  const coPath = path.join(repoRoot, '.github', 'CODEOWNERS');
+  const coPathAlt = path.join(repoRoot, 'CODEOWNERS');
+  const filePath = fs.existsSync(coPath) ? coPath : fs.existsSync(coPathAlt) ? coPathAlt : null;
+
+  if (!filePath) {
+    console.log('   No CODEOWNERS file found at .github/CODEOWNERS or CODEOWNERS');
+    return { processed: 0 };
+  }
+
+  const sources = await loadSources();
+  if (!sources) {
+    console.error('   sources.js not found — run inside the CAVDAX monorepo');
+    process.exit(1);
+  }
+
+  if (dryRun) {
+    const lines = fs.readFileSync(filePath, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('#'));
+    console.log(`   Dry-run: would scan ${lines.length} ownership rules from ${path.relative(repoRoot, filePath)}`);
+    return { processed: 0 };
+  }
+
+  const results = await sources.scanAndIngestCodeowners(graph, filePath);
+  console.log(`   + Scanned CODEOWNERS — ${results.length} ownership change(s) ingested`);
+  return { processed: results.length };
+}
+
+async function ingestIssue(options, graph, dryRun) {
+  if (!options.issue || !options.url) {
+    console.error('   --issue <number> and --url <html_url> are required for --type issue');
+    process.exit(1);
+  }
+
+  const sources = await loadSources();
+  if (!sources) {
+    console.error('   sources.js not found — run inside the CAVDAX monorepo');
+    process.exit(1);
+  }
+
+  if (dryRun) {
+    console.log(`   Dry-run: would ingest Issue #${options.issue} from ${options.url}`);
+    return;
+  }
+
+  const result = await sources.ingestGitHubIssue(graph, {
+    issueNumber: options.issue,
+    title: options.title || `Issue #${options.issue}`,
+    htmlUrl: options.url,
+    body: options.body || '',
+    supersedesIds: options.supersedes ? options.supersedes.split(',').map(s => s.trim()) : [],
+    state: 'closed'
+  });
+
+  if (result.skipped) {
+    console.log(`   Skipped Issue #${options.issue}: ${result.reason}`);
+  } else {
+    console.log(`   + Ingested Issue #${result.issue_number}${result.supersedes ? ` (supersedes: ${[].concat(result.supersedes).join(', ')})` : ''}`);
+  }
+  return result;
+}
+
+// ─── Main entry point ─────────────────────────────────────────────────────────
+
+export async function runIngest(options) {
+  const repoRoot = path.resolve(options.repo || process.cwd());
+  const host = options.host || process.env.FALKORDB_HOST || 'localhost';
+  const port = parseInt(options.port || process.env.FALKORDB_PORT || '6379', 10);
+  const type = (options.type || 'adr').toLowerCase();
+
+  console.log(`\nCAVDAX Ingest — type: ${type.toUpperCase()} — repo: ${repoRoot}`);
+  console.log(`FalkorDB: ${host}:${port}\n`);
+
+  if (!fs.existsSync(repoRoot)) {
+    console.error(`Repository path does not exist: ${repoRoot}`);
+    process.exit(1);
+  }
+
+  const { client, graph } = await connectFalkorDB(host, port);
+  const dryRun = !graph;
+
+  let result;
+
+  switch (type) {
+    case 'adr':
+      result = await ingestAdr(repoRoot, graph, dryRun);
+      break;
+    case 'commit':
+      result = await ingestCommit(options, graph, dryRun);
+      break;
+    case 'package':
+    case 'package.json':
+      result = await ingestPackage(repoRoot, graph, dryRun);
+      break;
+    case 'codeowners':
+      result = await ingestCodeowners(repoRoot, graph, dryRun);
+      break;
+    case 'issue':
+      result = await ingestIssue(options, graph, dryRun);
+      break;
+    case 'all':
+      console.log('--- ADR ---');
+      await ingestAdr(repoRoot, graph, dryRun);
+      console.log('\n--- package.json ---');
+      await ingestPackage(repoRoot, graph, dryRun);
+      console.log('\n--- CODEOWNERS ---');
+      await ingestCodeowners(repoRoot, graph, dryRun);
+      break;
+    default:
+      console.error(`Unknown --type "${type}". Valid: adr | commit | package | codeowners | issue | all`);
+      process.exit(1);
+  }
+
+  if (client) {
+    try { await client.close(); } catch { /* ignore */ }
+  }
+
+  console.log(`\nIngest complete.`);
+  return result;
 }

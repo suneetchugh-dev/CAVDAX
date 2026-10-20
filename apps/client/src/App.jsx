@@ -18,6 +18,8 @@ import GraphCanvas from './components/GraphCanvas.jsx';
 import TourGuide from './components/TourGuide.jsx';
 import ArchitecturalRailScrubber from './components/ArchitecturalRailScrubber.jsx';
 import Tooltip from './components/Tooltip.jsx';
+import AuditPage from './components/AuditPage.jsx';
+import DevConsolePage from './components/DevConsolePage.jsx';
 import { playClick, playRejectBuzz, playApprovalChime, initGlobalClickSound } from './utils/soundFx.js';
 
 // Helper function to resolve tab from clean URL path with fallback to hash
@@ -31,6 +33,8 @@ function resolveTabFromUrl() {
   if (rawPath === '/mcp') return 'mcp';
   if (rawPath === '/project' || rawPath === '/demo') return 'project';
   if (rawPath === '/team') return 'team';
+  if (rawPath === '/audit') return 'audit';
+  if (rawPath === '/dev') return 'dev';
   if (rawPath === '/404') return '404';
 
   // 2. Hash routing fallback ONLY if on root '/'
@@ -54,6 +58,8 @@ const TAB_TO_PATH = {
   mcp: '/mcp',
   project: '/project',
   team: '/team',
+  audit: '/audit',
+  dev: '/dev',
   '404': '/404',
 };
 
@@ -685,6 +691,16 @@ export default function App() {
         <TeamPage
           onLaunchConsole={() => handleSelectTab('console')}
         />
+      ) : activeTab === 'audit' ? (
+        /* Agent Action Audit Log — Enterprise Security & Compliance */
+        <div className="flex-1 min-h-0 flex flex-col pt-20 sm:pt-22 px-3 sm:px-6 max-w-[1600px] mx-auto w-full pb-3 overflow-hidden">
+          <AuditPage />
+        </div>
+      ) : activeTab === 'dev' ? (
+        /* Internal Developer Diagnostic Console — URL-only (/dev), no nav tab */
+        <div className="flex-1 min-h-0 flex flex-col pt-20 sm:pt-22 px-3 sm:px-6 max-w-[1600px] mx-auto w-full pb-3 overflow-hidden">
+          <DevConsolePage />
+        </div>
       ) : activeTab === '404' ? (
         /* Bespoke Error 404 Causal Node Not Found Page */
         <NotFoundPage
