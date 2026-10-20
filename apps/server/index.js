@@ -467,6 +467,8 @@ export default app;
     console.error('Reset Error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
 // 9. Static Web HUD Serving & SPA Path Routing Fallback (/overview, /console, /mcp, /project, /team)
 const clientDistPath = path.resolve(__dirname, '../client/dist');
 if (fs.existsSync(clientDistPath)) {
