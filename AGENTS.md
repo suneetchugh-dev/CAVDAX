@@ -142,14 +142,17 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 - **End-of-Session Domain-Partitioned Protocol**:
   1. **Pre-flight Audit**: Check `git diff` for secrets/credentials, and run local verification build (`npm run build`).
   2. **Atomic Domain Segregation**: For each active domain with changes (`docs`, `backend`, `frontend`), checkout that branch (create from `main` if it doesn't exist), stage **ONLY** that domain's files (`git add docs/`, `git add apps/client/`), commit cleanly, and push (`git push origin <domain>`).
-  3. **Sequential Pull Requests to `main`**:
+  3. **Sequential Pull Requests & Descriptive Merges to `main`**:
      - Raise a formal GitHub PR from each feature branch to `main`: `gh pr create --base main --head <domain> --title "..." --body "..."`.
-     - Merge via `gh pr merge <number> --merge --delete-branch=false` sequentially, running a build check between each merge.
+     - **Descriptive Merge Commit Requirement**: Every PR merge commit to `main` must NEVER be generic (banned: `merge: integrate <domain> into main`). It must explicitly specify:
+       - **WHAT** was merged (components, services, documentation updated).
+       - **WHY** it was merged (architectural intent, design system adherence).
+       - **WHAT PROBLEM IT SOLVED** (concrete bug, layout shift, visual defect, or omission resolved).
+     - Merge via `gh pr merge <number> --merge --delete-branch=false --subject "..." --body "..."` sequentially, running a local build verification check (`npm run build`) between each merge.
      - Return to the active feature branch (`git checkout frontend`).
 - **Conventional Commit Standard**:
   - Use conventional prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, `perf:`, `test:`, `chore:`.
   - Add `[skip ci]` to documentation/backend commits that do not trigger frontend builds to preserve daily Vercel deployment quotas.
----
 
 ## 4. Multi-Language Parity Rules (When Applicable)
 
