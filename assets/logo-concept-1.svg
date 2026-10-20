@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200" fill="none">
+  <!-- CAVDAX Monogram Concept 1: The Clean C-Arc + V-Chevron Confluence (Pure Negative Space) -->
+  <rect width="100" height="100" fill="#0A0D12" rx="22"/>
+
+  <!-- Path 1: Causal "C" Arc (Left half) -->
+  <path d="M 48 22 A 28 28 0 0 0 48 78" 
+        stroke="#FFFFFF" 
+        stroke-width="9" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Path 2: Verified "V" Chevron (Right half / Forward Vector) -->
+  <path d="M 53 34 L 80 50 L 53 66" 
+        stroke="#FFFFFF" 
+        stroke-width="9" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+</svg>
