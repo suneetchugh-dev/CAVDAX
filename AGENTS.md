@@ -125,6 +125,10 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 16. **Are mobile category tabs/controls consolidated?** Apply the portfolio bottom-dock pattern with the `<head>` anti-FOUC script.
 17. **Is the mobile bottom navigation bar adhering to standards?** Max 5 destinations with symmetrical 2+1+2 layout, prominent centered raised FAB, safe area inset padding, unmounted on auth/landing/team pages.
 18. **Are sibling action buttons symmetrical?** Sibling action buttons must share identical heights, border radii, and font metrics.
+19. **Brand Wordmark & Particle Canvas Typographic Parity Rule**: The brand acronym (`CAVDAX`) rendered across hero watermarks, canvas stippling engines, or footer particle pointillism canvases (`FooterParticles.jsx`) must STRICTLY match the bespoke typography style, font family, weight, and geometric anatomy of the official **CAVDAX Wordmark** (`CavdaxWordmark.jsx`).
+    - **Never use generic system/fallback fonts** (e.g. `Inter` bold or standard sans) that corrupt brand geometry with rounded terminal curves.
+    - **Canvas Vector Fidelity**: For canvas rasterization of the brand acronym, directly rasterize the exact vector geometry contours (`CAVDAX_WORDMARK_LETTERS_PATH` via `Path2D`) featuring Swiss 90-degree orthogonal terminal cuts on 'C' and 'D', razor-sharp mitered apexes on 'A', 'V', 'X', and calibrated monoline stroke weight.
+    - **Typography Fallback**: If standard text rendering is invoked, strictly enforce the Swiss Architectural Grotesk specification (`Space Grotesk` 900 Ultra-Black weight, uppercase, wide tracking) matching the Wordmark DNA.
 
 ---
 
