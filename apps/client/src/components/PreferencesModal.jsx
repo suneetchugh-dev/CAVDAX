@@ -15,7 +15,9 @@ import {
   Layers,
   RotateCcw,
   ShieldCheck,
-  Terminal
+  Terminal,
+  Compass,
+  Keyboard as KeyboardIcon
 } from 'lucide-react';
 import { playClick, playLoadingSound, isSoundEnabled, toggleSound } from '../utils/soundFx';
 
@@ -80,7 +82,8 @@ export default function PreferencesModal({
   isDarkTheme, 
   onToggleTheme,
   onStartTour,
-  onResetDemo
+  onResetDemo,
+  onOpenShortcuts
 }) {
   const [soundsActive, setSoundsActive] = useState(() => isSoundEnabled());
   const [clickSoundActive, setClickSoundActive] = useState(() => localStorage.getItem('cavdax_sound_click') !== 'off');
@@ -441,7 +444,65 @@ export default function PreferencesModal({
             </div>
           </div>
 
-          {/* 5. Platform State Diagnostics & Reset */}
+                    {/* 5. Interactive Guided Walkthrough */}
+          <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">
+                <Compass size={16} className="text-slate-900 dark:text-white flex-shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug">
+                    Interactive Guided Walkthrough
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                    Launch step-by-step spotlight tour of system architecture &amp; controls
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onStartTour) onStartTour();
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition shadow-xs flex-shrink-0 bg-slate-200/80 dark:bg-white/10 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-white/20 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Launch</span>
+                <kbd className="px-1 py-0.2 rounded bg-black/10 dark:bg-white/20 text-[10px]">T</kbd>
+              </button>
+            </div>
+          </div>
+
+          {/* 6. Keyboard Shortcuts HUD */}
+          <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">
+                <KeyboardIcon size={16} className="text-slate-900 dark:text-white flex-shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug">
+                    Keyboard Shortcuts Guide
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                    Universal keybindings for navigation, HUD controls &amp; workflow
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onOpenShortcuts) onOpenShortcuts();
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition shadow-xs flex-shrink-0 bg-slate-200/80 dark:bg-white/10 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-white/20 flex items-center gap-1.5"
+              >
+                <span>View</span>
+                <kbd className="px-1 py-0.2 rounded bg-black/10 dark:bg-white/20 text-[10px]">?</kbd>
+              </button>
+            </div>
+          </div>
+
+          {/* 7. Platform State Diagnostics & Reset */}
           <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import CurvyArrow from './CurvyArrow';
 import { 
   ArrowRight, 
   Database, 
@@ -23,6 +24,7 @@ import DragScrollController from './DragScrollController';
 import KineticRollingHeadline from './KineticRollingHeadline';
 import ThanosTypewriterHeadline from './ThanosTypewriterHeadline';
 import McpCableConnectionSvg from './McpCableConnectionSvg';
+import PullCordLampToggle from './PullCordLampToggle';
 import { playClick } from '../utils/soundFx';
 
 const FAQS = [
@@ -48,8 +50,259 @@ const FAQS = [
   }
 ];
 
-export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpModal, onStartTour }) {
+export default function LandingPage({ 
+  landingTarget = 'overview',
+  onLaunchConsole, 
+  onOpenMcpPage, 
+  onOpenMcpModal, 
+  onStartTour,
+  isDarkTheme = true,
+  onToggleTheme
+}) {
   const [expandedFaq, setExpandedFaq] = useState(null);
+  const [scrollY, setScrollY] = useState(() => {
+    if (typeof window !== 'undefined') {
+      if (landingTarget === 'overview') {
+        const hero = document.getElementById('hero-section');
+        if (hero) return hero.offsetTop;
+        return (window.innerHeight || 800) * 1.06;
+      }
+      return window.scrollY;
+    }
+    return 0;
+  });
+  const [hasAlignedOverview, setHasAlignedOverview] = useState(landingTarget !== 'overview');
+
+  useLayoutEffect(() => {
+    if (landingTarget === 'overview') {
+      const align = () => {
+        const hero = document.getElementById('hero-section');
+        if (!hero) return;
+        const targetY = hero.offsetTop;
+        if (window.__lenis) {
+          window.__lenis.resize();
+          window.__lenis.scrollTo(targetY, { immediate: true });
+        }
+        window.scrollTo({ top: targetY, left: 0, behavior: 'instant' });
+        setScrollY(targetY);
+        setHasAlignedOverview(true);
+      };
+      align();
+      const t1 = setTimeout(align, 20);
+      const t2 = setTimeout(align, 80);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    } else {
+      setHasAlignedOverview(true);
+    }
+  }, [landingTarget]);
+  const [viewportDims, setViewportDims] = useState({ width: 1200, height: 800 });
+  const [activeSection, setActiveSection] = useState('brand-intro');
+  const [isBtnHovered, setIsBtnHovered] = useState(false);
+
+  // Track window scroll and resize metrics for butter-smooth 60fps transform physics
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    const handleResize = () => {
+      setViewportDims({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    handleResize();
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Section observer for right-side vertical scroll bubbles
+  useEffect(() => {
+    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'causal-loop-section', 'faq-section'];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-20% 0px -40% 0px', threshold: 0.1 }
+    );
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+      // High-precision Lenis & wheel scroll snap between Wordmark Intro and Overview
+  useEffect(() => {
+    let isSnapping = false;
+    let snapSafetyTimer = null;
+    let snapTimeout = null;
+
+    const unlockSnapping = () => {
+      isSnapping = false;
+      if (window.__lenis) {
+        window.__lenis.isLocked = false;
+      }
+    };
+
+    const snapToOverview = () => {
+      const hero = document.getElementById("hero-section");
+      if (!hero) return;
+      isSnapping = true;
+      clearTimeout(snapSafetyTimer);
+      snapSafetyTimer = setTimeout(unlockSnapping, 1100);
+
+      setTimeout(() => {
+        if (window.__lenis) {
+          window.__lenis.scrollTo(hero.offsetTop, {
+            duration: 0.82,
+            lock: true,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            onComplete: unlockSnapping
+          });
+        } else {
+          window.scrollTo({ top: hero.offsetTop, behavior: "smooth" });
+          setTimeout(unlockSnapping, 950);
+        }
+      }, 0);
+    };
+
+    const snapToWordmark = () => {
+      isSnapping = true;
+      clearTimeout(snapSafetyTimer);
+      snapSafetyTimer = setTimeout(unlockSnapping, 1100);
+
+      setTimeout(() => {
+        if (window.__lenis) {
+          window.__lenis.scrollTo(0, {
+            duration: 0.82,
+            lock: true,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            onComplete: unlockSnapping
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setTimeout(unlockSnapping, 950);
+        }
+      }, 0);
+    };
+
+    // 1. Wheel gesture handler (catches user scroll intent in either direction, fast or slow)
+    const handleWheel = (e) => {
+      if (isSnapping || window.__lenis?.isLocked) return;
+      const currentY = window.scrollY;
+      const hero = document.getElementById("hero-section");
+      if (!hero) return;
+      const heroTop = hero.offsetTop;
+
+      // Scrolling DOWN from anywhere in Wordmark intro (0 to heroTop - 50)
+      if (currentY < heroTop - 50 && e.deltaY > 0) {
+        if (e.cancelable) e.preventDefault();
+        snapToOverview();
+        return;
+      }
+
+      // Scrolling UP strictly from top of Overview (within 4px of heroTop) OR inside transition zone
+      if (currentY <= heroTop + 4 && currentY > 20 && e.deltaY < 0) {
+        if (e.cancelable) e.preventDefault();
+        snapToWordmark();
+        return;
+      }
+    };
+
+    // 2. Lenis virtual and momentum scroll listener (trackpad, touch, momentum settling)
+    let lastScrollY = window.scrollY;
+    const handleLenisScroll = (e) => {
+      if (isSnapping || window.__lenis?.isLocked) return;
+      const hero = document.getElementById("hero-section");
+      if (!hero) return;
+      const heroTop = hero.offsetTop;
+
+      const currentY = typeof e?.scroll === "number" ? e.scroll : window.scrollY;
+      const direction = typeof e?.direction === "number" && e.direction !== 0
+        ? e.direction 
+        : (currentY > lastScrollY ? 1 : (currentY < lastScrollY ? -1 : 0));
+      lastScrollY = currentY;
+
+      // When user settles strictly in the transition zone between Wordmark and Hero
+      if (currentY > 40 && currentY < heroTop - 40) {
+        clearTimeout(snapTimeout);
+        snapTimeout = setTimeout(() => {
+          if (isSnapping || window.__lenis?.isLocked) return;
+          if (direction === 1 || currentY > heroTop * 0.5) {
+            snapToOverview();
+          } else if (direction === -1 || currentY <= heroTop * 0.5) {
+            snapToWordmark();
+          }
+        }, 75);
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+
+    // Robust Lenis attachment: handles when Lenis initializes after LandingPage mount
+    let lenisBound = false;
+    const bindLenis = () => {
+      if (window.__lenis && !lenisBound) {
+        window.__lenis.on("scroll", handleLenisScroll);
+        lenisBound = true;
+        return true;
+      }
+      return false;
+    };
+
+    if (!bindLenis()) {
+      const lenisInterval = setInterval(() => {
+        if (bindLenis()) clearInterval(lenisInterval);
+      }, 50);
+      setTimeout(() => clearInterval(lenisInterval), 3000);
+    }
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      if (window.__lenis && lenisBound) {
+        window.__lenis.off("scroll", handleLenisScroll);
+      }
+      clearTimeout(snapTimeout);
+      clearTimeout(snapSafetyTimer);
+    };
+  }, []);
+
+  // Compute scroll progress dedicated wordmark intro section
+  const introThreshold = (viewportDims.height || 800) * 0.58;
+  const introProgress = Math.min(1, Math.max(0, scrollY / introThreshold));
+
+  // Wordmark Hinge & Exit Physics:
+  // 1. Drifts smoothly to the left
+  const translateX = -introProgress * Math.min(viewportDims.width * 0.32, 360);
+  // 2. Accelerates downward like gravity
+  const translateY = Math.pow(introProgress, 1.9) * 380;
+  // 3. Hinges/rotates counter-clockwise around the top-left nail (anchored at top-left of letter 'C')
+  const rotation = -introProgress * 16;
+  // 4. Stays crisp initially, then fades smoothly and rapidly
+  const wordmarkOpacity = introProgress < 0.22 ? 1 : Math.max(0, 1 - (introProgress - 0.22) / 0.52);
+  // 5. Cues fade away quickly as scrolling begins
+  const cuesOpacity = Math.max(0, 1 - introProgress * 3.8);
+  // Stretchy Pull-String Lamp Button must ONLY be visible when strictly on the Wordmark Page
+  // and completely hidden everywhere else.
+  const isWordmarkSection = scrollY < 40;
+  const isWordmarkActive = hasAlignedOverview && isWordmarkSection;
+  const lampOpacity = isWordmarkActive ? cuesOpacity : 0;
+  const scale = 1 - introProgress * 0.08;
+
+  // Responsive width for the monumentally enlarged Wordmark in its own dedicated section
+  const wordmarkWidth = Math.min(780, Math.max(280, viewportDims.width * 0.88));
 
   const handleMcpClick = () => {
     playClick();
@@ -64,31 +317,127 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
     <div className="w-full flex flex-col bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-200 select-none overflow-x-hidden">
       
       {/* ══════════════════════════════════════════════════════════════════════
-          1. HERO SECTION (SAHNIRMAAN Single-Screen Fullscreen Containment)
+          0. DEDICATED FULLSCREEN WORDMARK INTRO VIEWPORT
+          (Pristine Void, Enlarged Wordmark, Scroll-driven Hinge Drop & Fade)
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="min-h-[100dvh] w-full flex flex-col justify-center items-center text-center relative px-6 py-20 overflow-hidden">
+      <div id="brand-intro" className="relative w-full h-[106dvh]">
+        <div className="sticky top-0 h-[100dvh] w-full flex flex-col justify-center items-center relative px-6 overflow-hidden select-none">
+          {/* Stretchy Pull-String Lamp Theme Toggle */}
+          <PullCordLampToggle
+            isDarkTheme={isDarkTheme}
+            onToggleTheme={onToggleTheme}
+            opacity={lampOpacity}
+          />
+          {/* Soft Monochromatic Ambient Radial Halo */}
+          <div 
+            aria-hidden="true" 
+            style={{ opacity: wordmarkOpacity * 0.9 }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[820px] h-[240px] sm:h-[420px] bg-white/[0.04] dark:bg-white/[0.04] blur-[100px] sm:blur-[160px] pointer-events-none rounded-full transition-opacity" 
+          />
+
+          {/* Monumentally Enlarged CAVDAX Wordmark with Nail-Hinge & Gravity Physics */}
+          <div 
+            style={{
+              transform: `translate3d(${translateX}px, ${translateY}px, 0) rotate(${rotation}deg) scale(${scale})`,
+              transformOrigin: '14% 12%',
+              opacity: wordmarkOpacity,
+              visibility: wordmarkOpacity <= 0.005 ? 'hidden' : 'visible',
+              willChange: 'transform, opacity'
+            }}
+            className="relative flex items-center justify-center max-w-[820px] w-full py-4 transition-colors"
+          >
+            <CavdaxWordmark width={wordmarkWidth} className="text-slate-950 dark:text-white relative z-10 drop-shadow-xs" />
+          </div>
+
+          {/* Discovery Sub-Cues (CurvyArrow + Button + Downward Mouse Scroll Prompt) */}
+          <div 
+            style={{
+              opacity: cuesOpacity,
+              visibility: cuesOpacity <= 0.01 ? 'hidden' : 'visible',
+              transform: `translate3d(0, -${introProgress * 45}px, 0)`,
+              pointerEvents: cuesOpacity <= 0.1 ? 'none' : 'auto',
+              willChange: 'opacity, transform'
+            }}
+            className="flex flex-col items-center mt-6 sm:mt-10 relative z-20"
+          >
+            {/* CurvyArrow with Interactive Discovery CTA Button (Revealed on Hover) */}
+            <div 
+              onMouseEnter={() => setIsBtnHovered(true)}
+              onMouseLeave={() => setIsBtnHovered(false)}
+              className="relative inline-flex items-center group"
+            >
+              <CurvyArrow
+                direction="top-right"
+                label="HOW IT WORKS"
+                active={isBtnHovered}
+                hoverOnly={true}
+                className="-top-14 sm:-top-16 -right-16 sm:-right-24 pointer-events-none"
+              />
+              <button
+                onMouseEnter={() => setIsBtnHovered(true)}
+                onMouseLeave={() => setIsBtnHovered(false)}
+                onClick={() => {
+                  playClick();
+                  const hero = document.getElementById('hero-section');
+                  if (hero) {
+                    if (window.__lenis) {
+                      window.__lenis.scrollTo(hero.offsetTop, { duration: 0.82, lock: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+                    } else {
+                      hero.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                }}
+                className="relative px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-mono font-medium tracking-tight flex items-center gap-2.5 sm:gap-3 bg-slate-950 text-white dark:bg-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-100 border border-slate-800 dark:border-white/20 hover:border-slate-700 dark:hover:border-white/35 shadow-xs hover:shadow-md transition-all duration-200 ease-out tactile-btn cursor-pointer"
+              >
+                <span>Explore the CAVDAX Causal Engine</span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
+              </button>
+            </div>
+
+            {/* Downward Mouse / Arrow Scroll Prompt */}
+            <div 
+              onClick={() => {
+                playClick();
+                const hero = document.getElementById('hero-section');
+                if (hero) {
+                  if (window.__lenis) {
+                    window.__lenis.scrollTo(hero.offsetTop, { duration: 0.82, lock: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+                  } else {
+                    hero.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }
+              }}
+              className="flex flex-col items-center gap-2 cursor-pointer group mt-8 sm:mt-10 select-none opacity-80 hover:opacity-100 transition-opacity"
+            >
+              <span className="text-[10px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                Scroll to inspect engine
+              </span>
+              <div className="w-5 h-8 rounded-full border border-slate-400/80 dark:border-white/30 flex items-start justify-center p-1 group-hover:border-slate-800 dark:group-hover:border-white transition-colors">
+                <div className="w-1 h-2 rounded-full bg-slate-700 dark:bg-white animate-bounce" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          1. HERO SECTION (Decluttered & Monumentally Upscaled Typography)
+          ══════════════════════════════════════════════════════════════════════ */}
+      <section id="hero-section" className="min-h-[100dvh] w-full flex flex-col justify-center items-center text-center relative px-6 py-20 overflow-hidden">
         {/* Soft Monochromatic Ambient Radial Halo */}
         <div 
           aria-hidden="true" 
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[700px] h-[220px] sm:h-[360px] bg-white/[0.03] dark:bg-white/[0.03] blur-[100px] sm:blur-[140px] pointer-events-none rounded-full" 
         />
 
-        {/* Bespoke Swiss Wordmark (Theme-adaptive, Soft Ambient Glow without rectangular box/border) */}
-        <div className="relative group mb-6 sm:mb-8 px-4 py-2 cursor-default select-none">
-          {/* Soft ambient radial glow blur behind wordmark — NO BOX, NO BORDER */}
-          <div 
-            aria-hidden="true"
-            className="absolute inset-0 -m-6 rounded-full bg-slate-400/15 dark:bg-white/[0.06] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-          />
-          <CavdaxWordmark width={460} className="text-slate-950 dark:text-white relative z-10 drop-shadow-xs" />
-        </div>
-
-        {/* Primary Hero Heading: Distinct visual hierarchy, generous vertical clearance */}
-        <h1 className="max-w-5xl tracking-tight leading-[1.1] mb-8 sm:mb-10 flex flex-col items-center">
-          <span className="text-3xl sm:text-5xl lg:text-[3.75rem] xl:text-[4.25rem] font-black tracking-tight leading-[1.08] bg-clip-text text-transparent bg-gradient-to-b from-slate-950 via-slate-900 to-slate-700 dark:from-white dark:via-slate-100 dark:to-slate-400 block pb-2 sm:pb-3">
+        {/* Primary Hero Heading: Monumental Display Hierarchy (Wordmark elevated to Section 0) */}
+        <h1 className="max-w-6xl tracking-tight leading-[1.05] mb-8 sm:mb-12 flex flex-col items-center">
+          <span className="text-3xl sm:text-5xl md:text-6xl lg:text-[4.75rem] xl:text-[5.5rem] font-black tracking-tight leading-[1.04] bg-clip-text text-transparent bg-gradient-to-b from-slate-950 via-slate-900 to-slate-700 dark:from-white dark:via-slate-100 dark:to-slate-400 block pb-2 sm:pb-3">
             <span className="inline-block whitespace-nowrap">Eliminating Silent Cache Rot</span>
           </span>
-          <span className="text-xl sm:text-3xl lg:text-[2.25rem] font-bold tracking-tight leading-[1.3] text-slate-600 dark:text-slate-300 block pt-2 pb-3 overflow-visible">
+          <span className="text-xl sm:text-3xl md:text-4xl lg:text-[2.65rem] xl:text-[3rem] font-bold tracking-tight leading-[1.25] text-slate-600 dark:text-slate-300 block pt-2 pb-3 overflow-visible">
             <KineticRollingHeadline 
               phrases={[
                 "In Autonomous AI Coding Agents",
@@ -143,7 +492,7 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
           2. CORE PROBLEM SPACE: WHY VECTOR RAG FAILS CODING AGENTS
           (Zero Eyebrow Pills, Zero Tag Noise, Strictly Pure Typography)
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
+      <section id="bento-section" className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
         <div className="text-center mb-12">
           {/* Heading with Integrated Thanos Typewriter Dissolve — strictly NO text below */}
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 pb-2">
@@ -298,7 +647,7 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
           3. SOLUTION SPACE: GRAPH-GROUNDED DECISION EXECUTION
           (Zero Eyebrow Pills, Zero Tag Noise, Strictly Pure Typography)
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
+      <section id="causal-loop-section" className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
         <div className="text-center mb-12">
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
             <span className="text-[#d9a353]">Graph-Grounded</span>
@@ -449,7 +798,7 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
       {/* ══════════════════════════════════════════════════════════════════════
           4. ARCHITECTURAL FAQ ACCORDION SECTION (SAHNIRMAAN Caliber)
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="w-full py-16 px-6 max-w-4xl mx-auto border-t border-slate-300 dark:border-white/10">
+      <section id="faq-section" className="w-full py-16 px-6 max-w-4xl mx-auto border-t border-slate-300 dark:border-white/10">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight">
             Frequently Asked Questions
@@ -465,7 +814,11 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
             return (
               <div 
                 key={idx}
-                className="p-5 rounded-2xl neo-glass-card cursor-pointer select-none"
+                className={`p-5 rounded-2xl neo-glass-card cursor-pointer select-none transition-all duration-300 group border ${
+                  isOpen 
+                    ? "border-slate-400/80 dark:border-white/25 shadow-sm" 
+                    : "border-slate-300/80 dark:border-white/10 hover:border-slate-400/60 dark:hover:border-white/20"
+                }`}
                 onClick={() => {
                   playClick();
                   setExpandedFaq(isOpen ? null : idx);
@@ -475,8 +828,34 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
                   <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white font-mono leading-snug">
                     {faq.q}
                   </span>
-                  <span className="text-slate-500 dark:text-slate-400 font-mono text-sm shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10">
-                    {isOpen ? "−" : "+"}
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border transition-all duration-300 ${
+                    isOpen 
+                      ? "bg-slate-950 text-white border-slate-950 dark:bg-white dark:text-slate-950 dark:border-white shadow-xs" 
+                      : "bg-slate-100 dark:bg-white/5 border-slate-300 dark:border-white/10 text-slate-500 dark:text-slate-400 group-hover:border-slate-400 dark:group-hover:border-white/25 group-hover:text-slate-900 dark:group-hover:text-white"
+                  }`}>
+                    {/* Architectural Precision Transforming Plus-Minus SVG */}
+                    <svg 
+                      viewBox="0 0 16 16" 
+                      className={`w-3.5 h-3.5 overflow-visible transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? "rotate-180" : "rotate-0"}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="1.75" 
+                      strokeLinecap="round"
+                    >
+                      {/* Constant horizontal stroke (minus bar) */}
+                      <line x1="3.5" y1="8" x2="12.5" y2="8" />
+                      {/* Transforming vertical stroke: rotates 90deg and scales down to 0 on open */}
+                      <line 
+                        x1="8" 
+                        y1="3.5" 
+                        x2="8" 
+                        y2="12.5" 
+                        style={{ transformOrigin: "8px 8px" }}
+                        className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                          isOpen ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"
+                        }`}
+                      />
+                    </svg>
                   </span>
                 </div>
                 <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
@@ -495,7 +874,7 @@ export default function LandingPage({ onLaunchConsole, onOpenMcpPage, onOpenMcpM
       {/* ══════════════════════════════════════════════════════════════════════
           5. ACTION CTA SECTION
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="w-full py-20 px-6 max-w-4xl mx-auto border-t border-slate-300 dark:border-white/10 text-center">
+      <section id="cta-section" className="w-full py-20 px-6 max-w-4xl mx-auto border-t border-slate-300 dark:border-white/10 text-center">
         <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-white mb-4 tracking-tight">
           <span className="inline-block whitespace-nowrap">Ready to Witness</span>{' '}
           <span className="inline-block whitespace-nowrap">Graph-Grounded Verification?</span>

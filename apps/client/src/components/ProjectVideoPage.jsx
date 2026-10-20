@@ -50,7 +50,7 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
 
       <div className="max-w-5xl mx-auto w-full relative z-10 flex flex-col items-center">
         {/* Header Cluster */}
-        <div className="text-center mb-10">
+        <div id="project-overview" className="text-center mb-10">
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-950 dark:text-white mb-3">
             System Demonstration
           </h1>
@@ -61,7 +61,7 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
         </div>
 
         {/* Cinema Video Frame */}
-        <div className="w-full neo-glass-card p-3 sm:p-5 rounded-2xl sm:rounded-3xl mb-10 overflow-hidden shadow-2xl">
+        <div id="project-video" className="w-full neo-glass-card p-3 sm:p-5 rounded-2xl sm:rounded-3xl mb-10 overflow-hidden shadow-2xl">
           <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl bg-[#07090D] border border-slate-300 dark:border-white/10 overflow-hidden flex flex-col justify-between p-4 sm:p-6 group">
             {/* Ambient Video Glow */}
             <div 
@@ -138,7 +138,7 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
         </div>
 
         {/* Open Source GNU GPL 3.0 & Repo Information */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div id="project-license" className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Box 1: Open Source License Guarantee */}
           <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between">
             <div>

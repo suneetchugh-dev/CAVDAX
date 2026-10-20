@@ -22,7 +22,7 @@ export default function CavdaxBrandLoader({
   animateOnHover = false,
 }) {
   return (
-    <div className={`cavdax-brand-container flex items-center justify-center group ${className}`}>
+    <div className={`cavdax-brand-container flex items-center justify-center ${animateOnHover ? "cavdax-interactive-hover group" : ""} ${className}`}>
       <svg
         viewBox="0 0 100 100"
         width={size}
@@ -56,32 +56,32 @@ export default function CavdaxBrandLoader({
               transform-origin: 74px 50px;
             }
 
-            .group:hover .cavdax-stroke-c,
-            .cavdax-brand-container:hover .cavdax-stroke-c {
+            .cavdax-interactive-hover:hover .cavdax-stroke-c,
+            .cavdax-interactive-hover.group:hover .cavdax-stroke-c {
               animation: cavdaxHoverTraceC 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
-            .group:hover .cavdax-stroke-v,
-            .cavdax-brand-container:hover .cavdax-stroke-v {
+            .cavdax-interactive-hover:hover .cavdax-stroke-v,
+            .cavdax-interactive-hover.group:hover .cavdax-stroke-v {
               animation: cavdaxHoverTraceV 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
             }
-            .group:hover .dag-spine,
-            .cavdax-brand-container:hover .dag-spine {
+            .cavdax-interactive-hover:hover .dag-spine,
+            .cavdax-interactive-hover.group:hover .dag-spine {
               animation: cavdaxHoverSpine 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.14s forwards;
             }
-            .group:hover .dag-wing,
-            .cavdax-brand-container:hover .dag-wing {
+            .cavdax-interactive-hover:hover .dag-wing,
+            .cavdax-interactive-hover.group:hover .dag-wing {
               animation: cavdaxHoverWing 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards;
             }
-            .group:hover .dag-bridge,
-            .cavdax-brand-container:hover .dag-bridge {
+            .cavdax-interactive-hover:hover .dag-bridge,
+            .cavdax-interactive-hover.group:hover .dag-bridge {
               animation: cavdaxHoverBridge 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.44s forwards;
             }
-            .group:hover .cavdax-nodes-group,
-            .cavdax-brand-container:hover .cavdax-nodes-group {
+            .cavdax-interactive-hover:hover .cavdax-nodes-group,
+            .cavdax-interactive-hover.group:hover .cavdax-nodes-group {
               animation: cavdaxHoverNodePulse 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
-            .group:hover .cavdax-lock-ping,
-            .cavdax-brand-container:hover .cavdax-lock-ping {
+            .cavdax-interactive-hover:hover .cavdax-lock-ping,
+            .cavdax-interactive-hover.group:hover .cavdax-lock-ping {
               animation: cavdaxHoverLockPing 0.7s ease-in-out 0.58s forwards;
             }
 

@@ -55,7 +55,7 @@ export default function TeamPage({ onLaunchConsole }) {
       <div className="max-w-6xl mx-auto w-full relative z-10 flex flex-col items-center">
         
         {/* 1. Hero Section with Soft Golden Amber Glow & CurvyArrow */}
-        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 relative flex flex-col items-center">
+        <div id="team-intro" className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 relative flex flex-col items-center">
           
           {/* Premium golden-amber aura halo behind hero (luminous on dark, subtle on light) */}
           <div
@@ -66,16 +66,29 @@ export default function TeamPage({ onLaunchConsole }) {
           {/* Curvy Arrow pointing to Team Contrarians with seamless infinite dash */}
           <CurvyArrow direction="top-right" className="-right-10 top-2 sm:top-4 hidden sm:inline-flex" label="CONTRARIANS" />
 
-          {/* Team Logo Emblem - Unboxed, completely free */}
-          <div className="h-16 w-16 sm:h-20 sm:w-20 mb-5 relative flex items-center justify-center">
-            <img 
-              src={TEAM_DETAILS.logo} 
-              alt={TEAM_DETAILS.name} 
-              className="h-full w-full object-contain filter dark:brightness-110 drop-shadow-md select-none pointer-events-none"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
+          {/* Team Logo Emblem - Luminous Spherical Orb Circle */}
+          <div className="w-20 h-20 sm:w-24 sm:h-24 mb-5 relative flex items-center justify-center rounded-full p-1.5 group/orb cursor-pointer select-none">
+            {/* Ambient Halo Glow */}
+            <div 
+              aria-hidden="true" 
+              className="absolute inset-0 rounded-full bg-slate-900/10 dark:bg-amber-400/20 blur-md pointer-events-none transition-all duration-500 group-hover/orb:scale-110" 
             />
+            {/* Spherical Orb Vessel */}
+            <div className="relative w-full h-full rounded-full overflow-hidden border border-slate-300/80 dark:border-amber-400/40 bg-gradient-to-b from-white via-slate-50 to-slate-200/90 dark:from-white/10 dark:via-black/50 dark:to-black/90 shadow-[0_8px_24px_rgba(15,23,42,0.10)] dark:shadow-[0_0_35px_rgba(245,158,11,0.22)] ring-1 ring-slate-900/10 dark:ring-amber-400/30 flex items-center justify-center">
+              {/* Glass Specular Curved Highlight */}
+              <div 
+                aria-hidden="true" 
+                className="absolute inset-x-2 top-0.5 h-1/3 rounded-t-full bg-gradient-to-b from-white/40 dark:from-white/20 to-transparent pointer-events-none z-10" 
+              />
+              <img 
+                src={TEAM_DETAILS.logo} 
+                alt={TEAM_DETAILS.name} 
+                className="h-full w-full object-cover rounded-full filter dark:brightness-105 select-none pointer-events-none transition-transform duration-500 group-hover/orb:scale-105"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
           </div>
 
           {/* Headline with Soft Glow Typography */}
@@ -90,7 +103,7 @@ export default function TeamPage({ onLaunchConsole }) {
         </div>
 
         {/* 2. Team Member Bento Grid (2 Columns Symmetrical, SAHNIRMAAN Style) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-14">
+        <div id="team-roster" className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-14">
           {TEAM_MEMBERS.map((member) => (
             <div 
               key={member.id}

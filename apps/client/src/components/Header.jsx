@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   Sun, Moon,
   Layers, SlidersHorizontal, Cable, Play, Users, Settings
@@ -24,23 +24,74 @@ import { playClick } from '../utils/soundFx';
 export default function Header({
   status,
   activeTab = 'landing',
+  landingTarget = 'overview',
   onSelectTab,
   onOpenPreferences,
   isDarkTheme = true,
   onToggleTheme,
 }) {
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(() => (typeof window !== 'undefined' ? window.scrollY > 20 : false));
   const [gearRotation, setGearRotation] = useState(0);
   const [themeRotation, setThemeRotation] = useState(0);
+  
+  // Track tab changes vs scroll morphing to eliminate slow pill-crawl
+  const prevTabRef = useRef(activeTab);
+  const prevScrolledRef = useRef(false);
+  const [animatingTab, setAnimatingTab] = useState(false);
+
+  // Industry-Standard Container-Relative Horizontal Slider Tracking (Immune to scroll jumps & Y-flying)
+  const tabRefs = useRef({});
+  const [pillPosition, setPillPosition] = useState({ x: 0, width: 0, ready: false });
+
+  useLayoutEffect(() => {
+    const updatePill = () => {
+      const activeEl = tabRefs.current[activeTab];
+      if (activeEl) {
+        setPillPosition({
+          x: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+          ready: true,
+        });
+      }
+    };
+    updatePill();
+    const rafId = requestAnimationFrame(updatePill);
+    window.addEventListener('resize', updatePill);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', updatePill);
+    };
+  }, [activeTab, isScrolled]);
+
+  useEffect(() => {
+    if (prevTabRef.current !== activeTab) {
+      prevTabRef.current = activeTab;
+      setAnimatingTab(true);
+      const timer = setTimeout(() => setAnimatingTab(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, isScrolled]);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const y = window.scrollY;
+      setScrollY(y);
+      setIsScrolled(y > 20);
     };
-
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Suppress the navbar exclusively when within the Wordmark Intro Viewport (#brand-intro, before reaching #hero-section)
+  // On all other tabs (/console, /mcp, /project, /team) and on Overview content (#hero-section and below), the navbar is ALWAYS visible!
+  const isWordmarkSection = activeTab === 'landing' && scrollY < (typeof window !== 'undefined' ? ((document.getElementById('hero-section')?.offsetTop || window.innerHeight) - 80) : 600);
+  const isHeaderHidden = isWordmarkSection;
+
+  useEffect(() => {
+    prevScrolledRef.current = isScrolled;
+  }, [isScrolled]);
 
   const handlePreferencesClick = () => {
     playClick();
@@ -55,14 +106,24 @@ export default function Header({
   };
 
   return (
-    <header className={`portfolio-header ${isScrolled ? 'scrolled' : ''}`}>
+    <motion.header
+      layoutRoot
+      className={`portfolio-header ${isScrolled ? 'scrolled' : ''} ${isHeaderHidden ? 'header-hidden' : ''} ${animatingTab ? 'no-morph' : ''}`}>
       {/* 1. Left: Brand Logo (Unboxed, completely free, larger, animate-on-hover only) */}
-      <div className={`flex items-center justify-start ${isScrolled ? 'flex-initial' : 'flex-1'} min-w-0`}>
+      <div
+        style={{
+          flexGrow: isScrolled ? 0 : 1,
+          flexShrink: 0,
+          flexBasis: isScrolled ? 'auto' : 0,
+          transition: 'flex-grow 0.4s cubic-bezier(0.16, 1, 0.3, 1), flex-basis 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+        className="flex items-center justify-start min-w-0"
+      >
         <div
           className="flex items-center cursor-pointer flex-shrink-0 select-none group text-slate-900 dark:text-white hover:text-black dark:hover:text-slate-100 transition-colors"
           onClick={() => {
             playClick();
-            if (onSelectTab) onSelectTab('landing');
+            if (onSelectTab) onSelectTab('landing', { target: 'wordmark' });
           }}
           title="CAVDAX Home"
         >
@@ -75,21 +136,38 @@ export default function Header({
       {/* Left-to-Center Vertical Divider Line — Equidistant in floating navbar */}
       <div className={`block shrink-0 h-4 w-[1px] bg-slate-400/80 dark:bg-white/35 mx-2.5 sm:mx-3.5 transition-opacity duration-300 ${isScrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
 
-      {/* 2. Center: Clean Nav Links with Background Pill Bar & Short Floating Labels */}
+      {/* 2. Center: Clean Nav Links with Container-Relative Horizontal Sliding Pill */}
       <div className="flex items-center justify-center flex-shrink-0">
         <nav
-          className={`flex items-center transition-all duration-300 ${
+          className={`relative flex items-center transition-all duration-300 ${
             isScrolled
-              ? 'p-0.5 rounded-full bg-transparent border-0 gap-1 sm:gap-1.5'
-              : 'p-1 rounded-full bg-slate-200/50 dark:bg-white/[0.06] border border-slate-300/80 dark:border-white/10 backdrop-blur-md shadow-2xs gap-1 sm:gap-1.5'
+              ? "p-1 rounded-full bg-transparent border border-transparent gap-1 sm:gap-1.5"
+              : "p-1 rounded-full bg-slate-200/50 dark:bg-white/[0.06] border border-slate-300/80 dark:border-white/10 backdrop-blur-md shadow-2xs gap-1 sm:gap-1.5"
           }`}
         >
+          {/* Single Container-Relative Horizontal Sliding Pill (Y-locked by CSS, slides ONLY left & right) */}
+          {pillPosition.ready && (
+            <motion.div
+              className="absolute top-1 bottom-1 rounded-full bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
+              initial={false}
+              animate={{
+                x: pillPosition.x,
+                width: pillPosition.width,
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 420,
+                damping: 34,
+              }}
+            />
+          )}
+
           {[
-            { id: 'landing', fullLabel: 'Product Overview', shortLabel: 'Overview', icon: Layers },
-            { id: 'console', fullLabel: 'Verification Console', shortLabel: 'Console', icon: SlidersHorizontal },
-            { id: 'mcp', fullLabel: 'Connect MCP', shortLabel: 'MCP', icon: Cable },
-            { id: 'project', fullLabel: 'Demo Video', shortLabel: 'Demo', icon: Play },
-            { id: 'team', fullLabel: 'Team', shortLabel: 'Team', icon: Users },
+            { id: "landing", label: "Overview", icon: Layers },
+            { id: "console", label: "Console", icon: SlidersHorizontal },
+            { id: "mcp", label: "MCP", icon: Cable },
+            { id: "project", label: "Demo", icon: Play },
+            { id: "team", label: "Team", icon: Users },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -97,28 +175,21 @@ export default function Header({
             return (
               <button
                 key={tab.id}
+                ref={(el) => {
+                  if (el) tabRefs.current[tab.id] = el;
+                }}
                 onClick={() => {
                   playClick();
-                  if (onSelectTab) onSelectTab(tab.id);
+                  if (onSelectTab) onSelectTab(tab.id, { target: tab.id === "landing" ? "overview" : "top" });
                 }}
-                className={`relative px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-mono transition-all duration-200 tactile-btn flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 select-none portfolio-nav-link ${
+                className={`relative px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-mono transition-colors duration-200 tactile-btn flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 select-none portfolio-nav-link ${
                   isActive
-                    ? 'active-pill text-white dark:text-slate-950 font-bold z-10'
-                    : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10'
+                    ? "active-pill text-white dark:text-slate-950 font-bold z-10"
+                    : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-white/10"
                 }`}
               >
-                {/* Active Sliding Pill — works in BOTH normal unscrolled and floating scrolled states */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeNavPill"
-                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    className="absolute inset-0 rounded-full bg-slate-950 dark:bg-white shadow-xs"
-                  />
-                )}
                 <Icon size={13} className="shrink-0 relative z-10" />
-                <span className="relative z-10 whitespace-nowrap transition-opacity duration-200">
-                  {isScrolled ? tab.shortLabel : tab.fullLabel}
-                </span>
+                <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
               </button>
             );
           })}
@@ -129,7 +200,15 @@ export default function Header({
       <div className={`block shrink-0 h-4 w-[1px] bg-slate-400/80 dark:bg-white/35 mx-2.5 sm:mx-3.5 transition-opacity duration-300 ${isScrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
 
       {/* 3. Right: Theme Toggle & Preferences Settings (Symmetric with Left zone) */}
-      <div className={`flex items-center ${isScrolled ? 'justify-start flex-initial' : 'justify-end flex-1'} space-x-2 sm:space-x-2.5 min-w-0`}>
+      <div
+        style={{
+          flexGrow: isScrolled ? 0 : 1,
+          flexShrink: 0,
+          flexBasis: isScrolled ? 'auto' : 0,
+          transition: 'flex-grow 0.4s cubic-bezier(0.16, 1, 0.3, 1), flex-basis 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+        className="flex items-center justify-end space-x-2 sm:space-x-2.5 min-w-0"
+      >
         {/* Theme Toggle Button (SAHNIRMAAN Luxury Rounded Style with 360° Spin Physics) */}
         <Tooltip content={isDarkTheme ? 'Switch to Light' : 'Switch to Dark'} position="bottom">
           <button
@@ -168,6 +247,6 @@ export default function Header({
           </button>
         </Tooltip>
       </div>
-    </header>
+    </motion.header>
   );
 }

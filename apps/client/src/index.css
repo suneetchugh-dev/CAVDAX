@@ -195,6 +195,8 @@ select, label, [onclick], .cursor-pointer {
   justify-content: space-between;
   align-items: center;
   transition:
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.35s ease,
     background-color 0.4s ease,
     border-color 0.4s ease,
     width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
@@ -204,6 +206,19 @@ select, label, [onclick], .cursor-pointer {
     border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
     backdrop-filter 0.4s ease;
+}
+
+/* Header Hidden State: Clean fade-out without off-screen transform to eliminate flying animations */
+.portfolio-header.header-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Tab Navigation stabilization: Disables geometry transitions while switching tabs to eliminate the flying pill problem */
+.portfolio-header.no-morph,
+.portfolio-header.no-morph * {
+  transition: none !important;
 }
 
 .dark .portfolio-header {
@@ -249,6 +264,14 @@ select, label, [onclick], .cursor-pointer {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
+/* Hardware-accelerated subpixel stabilization to eliminate SVG line twitching during morph */
+.portfolio-header svg {
+  transform: translateZ(0);
+  shape-rendering: geometricPrecision;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 .portfolio-header nav {
   align-items: center;
   transition: gap 0.35s cubic-bezier(0.25, 1, 0.5, 1);
@@ -259,6 +282,8 @@ select, label, [onclick], .cursor-pointer {
     display: flex;
   }
 }
+
+
 
 /* Portfolio Navbar Link with Background Pill & Dotted Animated Underline */
 .portfolio-nav-link {
@@ -672,3 +697,130 @@ select, label, [onclick], .cursor-pointer {
 }
 
 
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Footer Center Scroll-to-Top Button (SAHNIRMAAN Signature Architectural Pattern)
+   ══════════════════════════════════════════════════════════════════════════ */
+.scroll-up-img {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+.footer-scroll-top {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 20;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease;
+}
+
+/* Dark Theme Rest (High Visibility Solid Contrast) */
+html.dark .footer-scroll-top,
+:root.dark .footer-scroll-top {
+  background: #111418 !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Executive Gold Amber Glow (Dark Mode Hover - Aligned with Platform Executive Amber Palette) */
+html.dark .footer-scroll-top:hover,
+:root.dark .footer-scroll-top:hover {
+  opacity: 1 !important;
+  transform: translate(-50%, -50%) !important;
+  background: rgba(217, 163, 83, 0.22) !important;
+  border-color: rgba(245, 158, 11, 0.95) !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.75), 
+              0 0 32px rgba(217, 163, 83, 0.5), 
+              inset 0 0 16px rgba(245, 158, 11, 0.55), 
+              inset 0 0 6px rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Light Theme Rest */
+html:not(.dark) .footer-scroll-top,
+:root:not(.dark) .footer-scroll-top {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+  opacity: 1 !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Light Theme Hover: Pure crisp white/slate shadow (No TranslateY) */
+html:not(.dark) .footer-scroll-top:hover,
+:root:not(.dark) .footer-scroll-top:hover {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.28) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 
+              0 2px 6px rgba(0, 0, 0, 0.06), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Arc Reactor Triangle SVG Core (Small, Sleek, Hollow at Rest, Fills Cyan on Hover) */
+.footer-scroll-top .arc-reactor-triangle {
+  width: 13px;
+  height: 13px;
+  display: block;
+  transition: fill 0.25s ease, stroke 0.25s ease, filter 0.25s ease;
+}
+
+/* Dark Theme (Rest & Hover): Solid White Filled Only */
+html.dark .footer-scroll-top .arc-reactor-triangle,
+html.dark .footer-scroll-top .arc-reactor-triangle path,
+:root.dark .footer-scroll-top .arc-reactor-triangle,
+:root.dark .footer-scroll-top .arc-reactor-triangle path,
+html.dark .footer-scroll-top:hover .arc-reactor-triangle,
+html.dark .footer-scroll-top:hover .arc-reactor-triangle path,
+:root.dark .footer-scroll-top:hover .arc-reactor-triangle,
+:root.dark .footer-scroll-top:hover .arc-reactor-triangle path {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+  stroke-width: 1.2px !important;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) !important;
+}
+
+/* Light Theme (Rest & Hover): Solid Slate Filled Permanently */
+html:not(.dark) .footer-scroll-top .arc-reactor-triangle,
+html:not(.dark) .footer-scroll-top .arc-reactor-triangle path,
+:root:not(.dark) .footer-scroll-top .arc-reactor-triangle,
+:root:not(.dark) .footer-scroll-top .arc-reactor-triangle path,
+html:not(.dark) .footer-scroll-top:hover .arc-reactor-triangle,
+html:not(.dark) .footer-scroll-top:hover .arc-reactor-triangle path,
+:root:not(.dark) .footer-scroll-top:hover .arc-reactor-triangle,
+:root:not(.dark) .footer-scroll-top:hover .arc-reactor-triangle path {
+  fill: #0F172A !important;
+  stroke: #0F172A !important;
+  stroke-width: 1.2px !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Global OS Native Scrollbar Suppression (Luxury Editorial Standard)
+   Suppresses Windows/Mac chunky scrollbars while keeping 100% native wheel/touch scroll
+   ══════════════════════════════════════════════════════════════════════════ */
+html, body, #root {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE / Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Chromium Edge */
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+}

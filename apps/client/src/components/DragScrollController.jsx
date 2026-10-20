@@ -57,9 +57,9 @@ export default function DragScrollController() {
 
       let shouldShow = false;
       if (stateRef.current.scrollMode === 'top') {
-        shouldShow = scrollY > 260;
+        shouldShow = scrollY > 300 && !isNearBottom;
       } else {
-        shouldShow = scrollY > 260 && scrollY < (docHeight - winHeight - 200);
+        shouldShow = scrollY > 300 && scrollY < (docHeight - winHeight - 300);
       }
 
       setIsVisible(shouldShow);
