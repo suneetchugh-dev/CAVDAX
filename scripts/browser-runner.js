@@ -141,7 +141,13 @@ export async function openApp(targetUrl = 'http://localhost:5173', options = {})
 // Auto-run if executed directly via `node scripts/browser-runner.js [url]`
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const urlArg = process.argv.find(arg => arg.startsWith('http')) || 'http://localhost:5173';
-  openApp(urlArg).catch(err => {
+  openApp(urlArg).then(({ browser }) => {
+    console.log('\x1b[32m✔ Browser is actively open on your screen! (Close browser window to exit)\x1b[0m');
+    browser.on('disconnected', () => {
+      console.log('Browser closed by user. Exiting.');
+      process.exit(0);
+    });
+  }).catch(err => {
     console.error('\x1b[31m✖ Error launching browser:\x1b[0m', err);
     process.exit(1);
   });
