@@ -26,6 +26,7 @@ import ThanosTypewriterHeadline from './ThanosTypewriterHeadline';
 import McpCableConnectionSvg from './McpCableConnectionSvg';
 import PullCordLampToggle from './PullCordLampToggle';
 import CausalProvenanceRadar from './CausalProvenanceRadar';
+import SpotlightDataRain from './SpotlightDataRain';
 import { playClick } from '../utils/soundFx';
 
 const FAQS = [
@@ -329,6 +330,8 @@ export default function LandingPage({
             onToggleTheme={onToggleTheme}
             opacity={lampOpacity}
           />
+          {/* Interactive Causal Provenance Spotlight Data Rain (Cursor-revealed discovery mask) */}
+          <SpotlightDataRain isDarkTheme={isDarkTheme} opacity={wordmarkOpacity} />
           {/* Soft Monochromatic Ambient Radial Halo */}
           <div 
             aria-hidden="true" 
