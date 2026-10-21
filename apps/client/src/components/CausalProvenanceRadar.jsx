@@ -85,20 +85,20 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
         let opacity = 0;
         let scale = 0.96;
 
-        // Smooth, professional phosphor decay curve (total visibility arc: ~95° = ~2.6s):
-        // 1. Approach: 20° before apex (delta 340° to 360°) -> smooth Hermite S-curve ease-in
-        // 2. Peak: directly at beam apex (delta 0° to 15°) -> solid 100% readable illumination
-        // 3. Phosphor Decay: trailing (delta 15° to 80°) -> long, elegant exponential dissolve to 0
-        if (delta >= 340 && delta < 360) {
-          const t = (delta - 340) / 20;
+        // Subtle, tight phosphor sweep curve (visibility arc: ~60° = ~1.6s):
+        // 1. Approach: 10° before apex (delta 350° to 360°) -> smooth Hermite ease-in
+        // 2. Peak: directly under tight beam (delta 0° to 8°) -> solid 100% readable illumination
+        // 3. Phosphor Decay: trailing (delta 8° to 50°) -> gentle exponential dissolve to 0
+        if (delta >= 350 && delta < 360) {
+          const t = (delta - 350) / 10;
           opacity = t * t * (3 - 2 * t);
           scale = 0.96 + opacity * 0.05;
-        } else if (delta >= 0 && delta <= 15) {
+        } else if (delta >= 0 && delta <= 8) {
           opacity = 1;
           scale = 1.01;
-        } else if (delta > 15 && delta <= 80) {
-          const decayProgress = (delta - 15) / 65;
-          opacity = Math.pow(1 - decayProgress, 2.2);
+        } else if (delta > 8 && delta <= 50) {
+          const decayProgress = (delta - 8) / 42;
+          opacity = Math.pow(1 - decayProgress, 2.0);
           scale = 1.01 - decayProgress * 0.05;
         } else {
           opacity = 0;
@@ -123,7 +123,7 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
       {/* ── Section Title (Clean, Zero Eyebrow Pill Clutter) ── */}
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
-          <span className="text-amber-700 dark:text-[#d9a353]">Continuous Provenance</span>
+          <span className="text-sky-700 dark:text-[#d9a353]">Continuous Provenance</span>
           <span className="text-slate-400 dark:text-slate-600 font-light mx-2 sm:mx-4 select-none">→</span>
           <span>Temporal Invalidation Radar</span>
         </h2>
@@ -138,7 +138,7 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
         {/* ── Top Header Bar ── */}
         <div className="relative z-30 flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Radio className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <Radio className="w-3.5 h-3.5 text-sky-600 dark:text-amber-400" />
             <span className="text-[10px] sm:text-xs font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase">
               Temporal Invalidation Radar
             </span>
@@ -163,45 +163,45 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
           <div className="absolute h-[460px] w-px border-r border-dashed border-slate-300/50 dark:border-white/10" />
 
           {/* Center Emitter Vertex Anchor */}
-          <div className="absolute w-5 h-5 rounded-full bg-amber-500/15 dark:bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-600 dark:bg-[#d9a353]" />
+          <div className="absolute w-4 h-4 rounded-full bg-sky-500/10 dark:bg-amber-500/10 border border-sky-500/30 dark:border-amber-500/30 flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-sky-600 dark:bg-[#d9a353]" />
           </div>
 
-          {/* Theme-Calibrated Volumetric Soft Light Ray (Symmetrically Balanced Wings) */}
+          {/* Theme-Calibrated Precision Light Ray (Subtle, Tight 24° Beam) */}
           <div 
             ref={beamRef}
             style={{ transformOrigin: 'center center' }}
             className="absolute w-[460px] h-[460px] flex items-center justify-center pointer-events-none will-change-transform"
           >
-            {/* Soft, Feathered Radial Conic Light Beam (Symmetrically Balanced Feathering on Both Sides) */}
+            {/* Subtle, Controlled Conic Light Fan (Tight 24° arc with 5px blur) */}
             <div
               className="absolute inset-0 rounded-full"
-              style={{ filter: 'blur(16px)' }}
+              style={{ filter: 'blur(5px)' }}
             >
-              {/* Light Mode: Prominent Executive Burnished Gold / Honey Amber Ray */}
+              {/* Light Mode: Subtle Electric Sky Azure Ray (Clean Optical Scanner) */}
               <div 
                 className="w-full h-full block dark:hidden"
                 style={{
-                  background: 'conic-gradient(from 346deg at 50% 50%, transparent 0deg, rgba(202, 138, 4, 0.08) 6deg, rgba(202, 138, 4, 0.42) 14deg, rgba(202, 138, 4, 0.28) 22deg, rgba(202, 138, 4, 0.12) 36deg, rgba(202, 138, 4, 0.02) 48deg, transparent 60deg)'
+                  background: 'conic-gradient(from 354deg at 50% 50%, transparent 0deg, rgba(14, 165, 233, 0.04) 2deg, rgba(14, 165, 233, 0.28) 6deg, rgba(14, 165, 233, 0.16) 11deg, rgba(14, 165, 233, 0.04) 18deg, transparent 24deg)'
                 }}
               />
-              {/* Dark Mode: Warm Amber / Obsidian Conic Ray */}
+              {/* Dark Mode: Subtle Warm Amber Conic Ray */}
               <div 
                 className="w-full h-full hidden dark:block"
                 style={{
-                  background: 'conic-gradient(from 346deg at 50% 50%, transparent 0deg, rgba(217, 163, 83, 0.08) 6deg, rgba(217, 163, 83, 0.38) 14deg, rgba(217, 163, 83, 0.22) 22deg, rgba(217, 163, 83, 0.09) 36deg, rgba(217, 163, 83, 0.02) 48deg, transparent 60deg)'
+                  background: 'conic-gradient(from 354deg at 50% 50%, transparent 0deg, rgba(217, 163, 83, 0.04) 2deg, rgba(217, 163, 83, 0.30) 6deg, rgba(217, 163, 83, 0.16) 11deg, rgba(217, 163, 83, 0.04) 18deg, transparent 24deg)'
                 }}
               />
             </div>
 
-            {/* Soft Smudged Core Light Ray Needle (Aligned exactly with 14deg peak at 12 oclock) */}
+            {/* Precision Core Needle (Slim 1.5px Ray, Centered at 12 oclock, Aligned with 6deg peak) */}
             <div 
-              style={{ filter: 'blur(2.5px)' }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1/2 origin-bottom bg-gradient-to-t from-amber-600/80 dark:from-[#d9a353]/70 via-amber-500/40 dark:via-[#d9a353]/30 to-transparent"
+              style={{ filter: 'blur(1px)' }}
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.5px] h-1/2 origin-bottom bg-gradient-to-t from-sky-600/75 dark:from-[#d9a353]/70 via-sky-400/30 dark:via-[#d9a353]/30 to-transparent"
             />
 
-            {/* Luminous Atmospheric Ambient Glow Squircle at Ray Tip */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-16 rounded-full bg-amber-500/25 dark:bg-amber-400/20 blur-xl pointer-events-none" />
+            {/* Subtle Precision Micro-Glint at Ray Tip */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-sky-400/60 dark:bg-amber-400/60 blur-[1px] pointer-events-none" />
           </div>
 
         </div>
@@ -216,13 +216,13 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
             const dotColors = {
               valid: 'bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.85)]',
               stale: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.85)]',
-              gate: 'bg-amber-600 dark:bg-[#d9a353] shadow-[0_0_8px_rgba(217,163,83,0.85)]',
+              gate: 'bg-sky-600 dark:bg-[#d9a353] shadow-[0_0_8px_rgba(14,165,233,0.85)] dark:shadow-[0_0_8px_rgba(217,163,83,0.85)]',
             }[target.type];
 
             const textColors = {
               valid: 'text-teal-700 dark:text-teal-300',
               stale: 'text-rose-700 dark:text-rose-300',
-              gate: 'text-amber-800 dark:text-amber-300',
+              gate: 'text-sky-800 dark:text-amber-300',
             }[target.type];
 
             return (
