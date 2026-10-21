@@ -40,6 +40,18 @@ function findSystemBrowser(preferred = 'chrome') {
   return null;
 }
 
+// Get the system's real user profile directory (where your actual everyday bookmarks & logins live)
+function getSystemUserDataDir(browser = 'chrome') {
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA || '';
+    if (browser === 'edge') {
+      return path.join(localAppData, 'Microsoft\\Edge\\User Data');
+    }
+    return path.join(localAppData, 'Google\\Chrome\\User Data');
+  }
+  return null;
+}
+
 // Check if a browser is actively running on port 9222 with remote debugging
 async function isRemoteDebuggingActive(port = 9222) {
   try {
@@ -56,7 +68,7 @@ async function isRemoteDebuggingActive(port = 9222) {
 /**
  * Intelligent Browser Launcher:
  * 1. Mode A: Connects to your existing active browser if started with --remote-debugging-port=9222
- * 2. Mode B: Launches a persistent browser profile (remembers logins, cookies, localStorage forever; never incognito!)
+ * 2. Mode B: Launches browser with full Cloud Sync & Passwords enabled (no anti-sync flags!)
  */
 export async function getBrowser(options = {}) {
   const debugPort = options.debugPort || 9222;
@@ -76,13 +88,26 @@ export async function getBrowser(options = {}) {
     }
   }
 
-  // Fallback: Mode B - Persistent User Profile (Never Incognito)
-  const profileDir = options.userDataDir || path.resolve(__dirname, '../.puppeteer-profile');
-  if (!fs.existsSync(profileDir)) {
-    fs.mkdirSync(profileDir, { recursive: true });
+  const preferredBrowser = options.preferredBrowser || (process.argv.includes('--edge') || process.env.BROWSER === 'edge' ? 'edge' : 'chrome');
+  const useSystemProfile = options.useSystemProfile || process.argv.includes('--system-profile') || process.env.USE_SYSTEM_PROFILE === 'true';
+
+  let profileDir;
+  if (useSystemProfile) {
+    const realDir = getSystemUserDataDir(preferredBrowser);
+    if (realDir && fs.existsSync(realDir)) {
+      profileDir = realDir;
+      console.log(`\x1b[35m★ [System Profile Mode] Using your REAL everyday ${preferredBrowser} profile at:\x1b[0m ${profileDir}`);
+      console.log(`\x1b[33m  (Note: Ensure all standard ${preferredBrowser} windows are closed so the profile lock is free)\x1b[0m`);
+    } else {
+      profileDir = options.userDataDir || path.resolve(__dirname, '../.puppeteer-profile');
+    }
+  } else {
+    profileDir = options.userDataDir || path.resolve(__dirname, '../.puppeteer-profile');
+    if (!fs.existsSync(profileDir)) {
+      fs.mkdirSync(profileDir, { recursive: true });
+    }
   }
 
-  const preferredBrowser = options.preferredBrowser || (process.argv.includes('--edge') || process.env.BROWSER === 'edge' ? 'edge' : 'chrome');
   const executablePath = options.executablePath || findSystemBrowser(preferredBrowser);
   if (!executablePath) {
     throw new Error('Could not find Google Chrome or Microsoft Edge installed on this machine.');
@@ -91,7 +116,7 @@ export async function getBrowser(options = {}) {
   const browserName = executablePath.toLowerCase().includes('msedge') ? 'Microsoft Edge' : 'Google Chrome';
   console.log(`\x1b[32m✔ [Mode B] Launching ${browserName} with persistent profile at:\x1b[0m ${profileDir}`);
   console.log(`\x1b[90m  Browser executable: ${executablePath}\x1b[0m`);
-  console.log(`\x1b[35m  ℹ Log in once in this window — all cookies, tokens, and sessions are permanently saved!\x1b[0m`);
+  console.log(`\x1b[36m  ✔ CLOUD SYNC & OS KEYCHAIN ENABLED (Anti-sync flags stripped)\x1b[0m`);
 
   const browser = await puppeteer.launch({
     headless: false,
@@ -102,8 +127,18 @@ export async function getBrowser(options = {}) {
       '--start-maximized',
       '--no-default-browser-check',
       '--disable-blink-features=AutomationControlled',
+      '--enable-features=NetworkService,NetworkServiceInProcess',
     ],
-    ignoreDefaultArgs: ['--enable-automation'],
+    // STRIP all Puppeteer defaults that disable Cloud Sync, Extensions, and Windows Credential Vault!
+    ignoreDefaultArgs: [
+      '--enable-automation',
+      '--disable-sync',
+      '--disable-extensions',
+      '--disable-default-apps',
+      '--disable-component-extensions-with-background-pages',
+      '--password-store=basic',
+      '--use-mock-keychain',
+    ],
   });
 
   return { browser, isAttached: false };
@@ -118,7 +153,6 @@ export async function openApp(targetUrl = 'http://localhost:5173', options = {})
   let page;
   const pages = await browser.pages();
   if (pages.length > 0) {
-    // If Mode A, check if target URL is already open
     const existingTargetPage = pages.find(p => p.url().includes('localhost:5173') || p.url().includes(targetUrl));
     if (existingTargetPage) {
       page = existingTargetPage;
