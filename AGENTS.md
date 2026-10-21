@@ -162,6 +162,11 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 - **Conventional Commit Standard**:
   - Use conventional prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, `perf:`, `test:`, `chore:`.
   - Add `[skip ci]` to documentation/backend commits that do not trigger frontend builds to preserve daily Vercel deployment quotas.
+- **Atomic Feature Squashing & History Cleanliness (Mandatory)**:
+  - **Ban on Micro-Commit Churn**: Avoid polluting Git commit history with rapid, back-and-forth micro-commits (e.g., *"shift 4px down"*, *"shift a bit up"*, *"fix padding"*, *"revert size"*).
+  - **Session-Level Squashing of Related Changes**: When multiple commits made during recent active pair-programming iterate on or refine the same underlying feature, always squash them into a single, cohesive, atomic commit before concluding the session or opening a PR to `main`.
+  - **Atomic Milestone Integrity**: A feature commit in history must represent a complete, functional milestone where `npm run build` passes cleanly, not intermediate trial-and-error steps.
+  - **Safe Remote Updates**: When updating a feature branch after squashing already-pushed iterative commits, strictly use `git push --force-with-lease origin <branch>` (never bare `--force`) to ensure remote integrity.
 
 ## 4. Multi-Language Parity Rules (When Applicable)
 

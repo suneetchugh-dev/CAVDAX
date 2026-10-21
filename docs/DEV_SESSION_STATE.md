@@ -11,16 +11,27 @@
 
 ## 1.1 Latest Session Achievements (October 21, 2026)
 
-- **Mathematical Polar Synchronization & De-Cluttering of Causal Radar (CausalProvenanceRadar.jsx)**:
+- **Interactive Causal Knowledge Graph & Dynamic Firefly Swarm Engine (`SpotlightDataRain.jsx`)**:
+  - Replaced legacy matrix rain with a high-contrast Causal Knowledge Graph DAG mesh (~95 micro-vertices, directed vector links, and traveling data packets).
+  - Designed an invisible cursor inspection hub: nearby nodes hook into the cursor position with dashed probe lines, with zero physical dot obstruction on the cursor point.
+  - Implemented biomimetic firefly & glow-worm swarm migrations with randomized short (2.2s–4.5s) and long (6.0s–10.5s) intervals, naturally orbiting and contouring around focal elements: the Stretchy Lamp Toggle, the CAVDAX Wordmark, the Explore CTA button, and the Scroll prompt.
+  - Added obstacle boundary avoidance and perimeter glide so fireflies frame UI text without overlapping letters.
+  - Grounded "Scroll to inspect engine" at the viewport bottom (`bottom-10 sm:bottom-12 md:bottom-14 lg:bottom-16`), eliminating negative space across mobile, tablet, and ultra-wide screens.
+
+- **Git Commit Hygiene & Atomic Feature Squashing Standard**:
+  - Enshrined the mandatory **"Atomic Feature Squashing & History Cleanliness"** rule in `AGENTS.md`.
+  - Consolidated iterative micro-commits into a single cohesive, bisectable milestone commit (`3dbca03`) on `origin/frontend`.
+
+- **Mathematical Polar Synchronization & De-Cluttering of Causal Radar (`CausalProvenanceRadar.jsx`)**:
   - Replaced desynchronized CSS animation delays with a unified `requestAnimationFrame` polar coordinate loop (`x = r * sin(theta)`, `y = -r * cos(theta)`).
   - Beam rotation and target illumination are 100% mathematically synchronized: targets illuminate only when the beam sweeps directly over their radial angle.
-  - Replaced jerky stroboscopic pops with smooth Hermite smoothstep ease-in and a lingering exponential decay curve (Math.pow(1 - decay, 2.2)).
+  - Replaced jerky stroboscopic pops with smooth Hermite smoothstep ease-in and a lingering exponential decay curve (`Math.pow(1 - decay, 2.2)`).
   - Calibrated theme beam ray: Deep slate/cobalt (`rgba(30, 41, 59, 0.22)`) in light mode, warm amber (`#d9a353`) in dark mode.
   - Eliminated card clutter: stripped HOP labels, redundant secondary status tags, and explanatory bottom text.
 
-- **Design System Governance: Rule 11C & Checklist Item 20 Added (docs/UI_DESIGN_SYSTEM.md, AGENTS.md)**:
-  - Formalized **Rule 11C (Strict Ban on Card Clutter, Redundant Labels & Over-Explanatory Fluff)** in docs/UI_DESIGN_SYSTEM.md.
-  - Added **Checklist Item 20** to the mandatory UI pre-flight interceptor in AGENTS.md, enforcing the 3-point Indispensable Utility Audit prior to writing or modifying any UI component.
+- **Design System Governance: Rule 11C & Checklist Item 20 Added (`docs/UI_DESIGN_SYSTEM.md`, `AGENTS.md`)**:
+  - Formalized **Rule 11C (Strict Ban on Card Clutter, Redundant Labels & Over-Explanatory Fluff)** in `docs/UI_DESIGN_SYSTEM.md`.
+  - Added **Checklist Item 20** to the mandatory UI pre-flight interceptor in `AGENTS.md`, enforcing the 3-point Indispensable Utility Audit prior to writing or modifying any UI component.
 
 - **Enterprise Audit Subsystem Hardening & BLOCKED Action Logging**:
   - Resolved critical compliance gap: `core/mcp/server.js` and `apps/server/index.js` now record an `AgentAction` node with `status: 'BLOCKED_SUPERSEDED_SOURCE'` when Act III rejects unauthorized agent file writes.
