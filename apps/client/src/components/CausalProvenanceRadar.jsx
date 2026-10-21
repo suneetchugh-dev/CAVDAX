@@ -4,10 +4,11 @@
  * Bespoke architectural radar visualizer based on the 21st.dev radar effect,
  * heavily customized to comply with docs/UI_DESIGN_SYSTEM.md:
  *  - Fully theme-adaptive (Porcelain Light & Obsidian Dark)
- *  - 100% Lucide icons (no react-icons dependency bloat)
+ *  - 100% Lucide icons (no react-icons dependency bloat, zero banned shield SVGs)
  *  - Domain-specific CAVDAX nodes (ADRs, Git commits, Stale Facts, MCP Gate, FalkorDB)
- *  - Zero emojis, monospace badges, amber (#d9a353) radar sweep
- *  - Tactile kinetics with playClick()
+ *  - Zero emojis, zero bracketed tags, zero pulsing orbs, monospace badges
+ *  - Anti-orphan typography (text-pretty)
+ *  - Double-bezel elevation with tactile kinetics (playClick)
  */
 
 import React, { useState } from 'react';
@@ -20,9 +21,7 @@ import {
   Cpu, 
   Database,
   Radio,
-  ArrowRight,
-  ShieldCheck,
-  Zap
+  ArrowRight
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
@@ -32,7 +31,7 @@ function RadarCircle({ sizeRem, opacity, delay = 0 }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: delay * 0.06, duration: 0.3 }}
+      transition={{ delay: delay * 0.05, duration: 0.25 }}
       style={{
         height: `${sizeRem}rem`,
         width: `${sizeRem}rem`,
@@ -70,12 +69,12 @@ function RadarSweep() {
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] sm:w-[840px] h-[360px] sm:h-[420px] overflow-hidden pointer-events-none">
         <div className="animate-cavdax-radar-sweep absolute bottom-0 left-1/2 w-[2px] h-[340px] sm:h-[400px] -translate-x-1/2">
           {/* Leading luminous beam */}
-          <div className="w-full h-full bg-gradient-to-t from-transparent via-[#d9a353] to-[#d9a353] shadow-[0_0_12px_rgba(217,163,83,0.85)]" />
+          <div className="w-full h-full bg-gradient-to-t from-transparent via-[#d9a353] to-[#d9a353] shadow-[0_0_12px_rgba(217,163,83,0.7)]" />
           
           {/* Trailing soft radar glow wedge */}
           <div 
             style={{
-              background: 'linear-gradient(to top, transparent, rgba(217, 163, 83, 0.12) 60%, rgba(217, 163, 83, 0.28) 100%)',
+              background: 'linear-gradient(to top, transparent, rgba(217, 163, 83, 0.08) 50%, rgba(217, 163, 83, 0.22) 100%)',
               clipPath: 'polygon(50% 100%, 0% 0%, 100% 0%)'
             }}
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[160px] sm:w-[220px] h-[320px] sm:h-[380px] -z-10 pointer-events-none"
@@ -93,9 +92,9 @@ function RadarSweep() {
         />
       ))}
 
-      {/* Central radar emitter core */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
-        <div className="w-3.5 h-3.5 rounded-full bg-[#d9a353] shadow-[0_0_10px_#d9a353]" />
+      {/* Central radar emitter core — geometric vertex anchor */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/10 dark:bg-white/5 border border-slate-300 dark:border-white/20 flex items-center justify-center">
+        <div className="w-2.5 h-2.5 rounded-full bg-[#d9a353]" />
       </div>
 
       {/* Horizon baseline separator */}
@@ -116,7 +115,7 @@ function ScannedNodeCard({
 }) {
   const [hovered, setHovered] = useState(false);
 
-  // Verdict style mapping
+  // Verdict style mapping (unbracketed monospace tags)
   const verdictColors = {
     valid: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
     stale: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20',
@@ -162,7 +161,7 @@ function ScannedNodeCard({
               {verdict}
             </span>
           </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 font-sans truncate mt-0.5">
+          <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 font-sans truncate text-pretty mt-0.5">
             {subtitle}
           </p>
         </div>
@@ -176,25 +175,25 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
   return (
     <section id="radar-section" className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
       
-      {/* ── Section Title & Philosophy ── */}
+      {/* ── Section Title & Philosophy (No eyebrow pills above heading) ── */}
       <div className="text-center mb-10 sm:mb-12">
         <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
           <span className="text-[#d9a353]">Continuous Provenance</span>
           <span className="text-slate-400 dark:text-slate-600 font-light mx-2 sm:mx-4 select-none">→</span>
           <span>Temporal Invalidation Radar</span>
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto mt-2 font-sans">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto mt-2 font-sans text-pretty">
           Sub-2ms FalkorDB GraphBLAS radar sweeping git commits, architectural decisions, and active agent tool calls for silent cache rot.
         </p>
       </div>
 
-      {/* ── Main Radar Canvas Container ── */}
+      {/* ── Main Radar Canvas Container (Double-bezel / neo-glass-card geometry) ── */}
       <div className="relative neo-glass-card rounded-2xl border border-slate-300/80 dark:border-white/10 overflow-hidden bg-slate-50/50 dark:bg-black/40 p-4 sm:p-8 min-h-[460px] sm:min-h-[520px] flex flex-col justify-between">
 
-        {/* Top HUD Telemetry Ribbon */}
+        {/* Top HUD Telemetry Ribbon (Monospace indicators, zero brackets, zero pulsing orbs) */}
         <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Radio className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+            <Radio className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span className="text-[10px] sm:text-xs font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase">
               Provenance Radar: Active Sweep
             </span>
@@ -294,7 +293,7 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
 
         {/* Bottom Live Action Callout */}
         <div className="relative z-30 pt-3 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
-          <span className="text-slate-600 dark:text-slate-400 text-center sm:text-left">
+          <span className="text-slate-600 dark:text-slate-400 text-center sm:text-left text-pretty">
             Radar sweeping active repository state against FalkorDB temporal DAG
           </span>
           <button
