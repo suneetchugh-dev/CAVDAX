@@ -276,48 +276,48 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         </div>
       </section>
 
-      {/* 2. Official NPM Package Distribution (Strict Section 38 Double-Bezel Anatomy) */}
+      {/* 2. Official NPM Package Callout Banner */}
       <section className="px-6 max-w-5xl mx-auto w-full mb-8">
-        <div className="neo-glass-card p-6 sm:p-7">
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-3 pb-2 border-b border-slate-200 dark:border-white/5">
-            <div className="flex items-center gap-2">
-              <Package className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
-              <span>Global Package Distribution</span>
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-100/90 dark:bg-white/[0.03] border border-slate-300 dark:border-white/10 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-white/10 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Package className="w-5 h-5 text-amber-400" />
             </div>
-            <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">Registry v1.0.0</span>
-          </div>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="font-mono text-base font-bold text-slate-950 dark:text-white">
-                @cavdax/mcp-server
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-sm sm:text-base font-bold text-slate-950 dark:text-white">
+                  @cavdax/mcp-server
+                </span>
+                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                  v1.0.0
+                </span>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed max-w-2xl">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed">
                 Universal Model Context Protocol daemon and causal verification CLI published to the global npm registry.
               </p>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
-              <div className="px-3 py-1.5 rounded-lg bg-slate-950 dark:bg-black/60 border border-slate-800 dark:border-white/10 font-mono text-xs text-amber-300 flex items-center gap-2">
-                <span>npx -y @cavdax/mcp-server</span>
-                <button
-                  onClick={() => handleCopy('npm-quick', 'npx -y @cavdax/mcp-server')}
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-                  title="Copy NPX execution command"
-                >
-                  {copiedKey === 'npm-quick' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              <a
-                href="https://www.npmjs.com/package/@cavdax/mcp-server"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer border border-slate-300 dark:border-white/10"
-                title="View package on npmjs.com"
+          <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+            <div className="px-3 py-1.5 rounded-lg bg-slate-950 dark:bg-black/60 border border-slate-800 dark:border-white/10 font-mono text-xs text-amber-300 flex items-center gap-2">
+              <span>npx -y @cavdax/mcp-server</span>
+              <button
+                onClick={() => handleCopy('npm-quick', 'npx -y @cavdax/mcp-server')}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="Copy NPX execution command"
               >
-                <ExternalLink className="w-4 h-4" />
-              </a>
+                {copiedKey === 'npm-quick' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
             </div>
+            <a
+              href="https://www.npmjs.com/package/@cavdax/mcp-server"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer border border-slate-300 dark:border-white/10"
+              title="View package on npmjs.com"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </section>
