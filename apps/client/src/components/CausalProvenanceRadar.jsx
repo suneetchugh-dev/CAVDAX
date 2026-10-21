@@ -104,13 +104,10 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
           opacity = 0;
         }
 
-        if (el.dataset.hovered === 'true') {
-          el.style.opacity = '1';
-          el.style.transform = 'scale(1.05)';
-        } else {
-          el.style.opacity = opacity.toFixed(3);
-          el.style.transform = `scale(${scale.toFixed(3)})`;
-        }
+        // Items are revealed strictly and exclusively by the light ray sweep (never artificially unmasked by hover)
+        el.style.opacity = opacity.toFixed(3);
+        el.style.transform = `scale(${scale.toFixed(3)})`;
+        el.style.pointerEvents = opacity > 0.15 ? 'auto' : 'none';
       });
 
       animId = requestAnimationFrame(frame);
@@ -126,7 +123,7 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
       {/* ── Section Title (Clean, Zero Eyebrow Pill Clutter) ── */}
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
-          <span className="text-slate-900 dark:text-[#d9a353]">Continuous Provenance</span>
+          <span className="text-amber-700 dark:text-[#d9a353]">Continuous Provenance</span>
           <span className="text-slate-400 dark:text-slate-600 font-light mx-2 sm:mx-4 select-none">→</span>
           <span>Temporal Invalidation Radar</span>
         </h2>
@@ -141,7 +138,7 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
         {/* ── Top Header Bar ── */}
         <div className="relative z-30 flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Radio className="w-3.5 h-3.5 text-slate-700 dark:text-amber-400" />
+            <Radio className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span className="text-[10px] sm:text-xs font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase">
               Temporal Invalidation Radar
             </span>
@@ -166,45 +163,45 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
           <div className="absolute h-[460px] w-px border-r border-dashed border-slate-300/50 dark:border-white/10" />
 
           {/* Center Emitter Vertex Anchor */}
-          <div className="absolute w-5 h-5 rounded-full bg-slate-200 dark:bg-amber-500/10 border border-slate-400/50 dark:border-amber-500/30 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-slate-700 dark:bg-[#d9a353]" />
+          <div className="absolute w-5 h-5 rounded-full bg-amber-500/15 dark:bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-600 dark:bg-[#d9a353]" />
           </div>
 
-          {/* Theme-Calibrated Volumetric Soft Light Ray */}
+          {/* Theme-Calibrated Volumetric Soft Light Ray (Symmetrically Balanced Wings) */}
           <div 
             ref={beamRef}
             style={{ transformOrigin: 'center center' }}
             className="absolute w-[460px] h-[460px] flex items-center justify-center pointer-events-none will-change-transform"
           >
-            {/* Soft, Feathered Radial Conic Light Beam (Deep Cobalt in Light Mode, Amber in Dark Mode) */}
+            {/* Soft, Feathered Radial Conic Light Beam (Symmetrically Balanced Feathering on Both Sides) */}
             <div
               className="absolute inset-0 rounded-full"
               style={{ filter: 'blur(16px)' }}
             >
-              {/* Light Mode: Deep Cobalt / Slate Conic Ray (Zero Muddy Yellow) */}
+              {/* Light Mode: Prominent Executive Burnished Gold / Honey Amber Ray */}
               <div 
                 className="w-full h-full block dark:hidden"
                 style={{
-                  background: 'conic-gradient(from 0deg at 50% 50%, rgba(30, 41, 59, 0.22) 0deg, rgba(30, 41, 59, 0.10) 14deg, rgba(30, 41, 59, 0.02) 28deg, transparent 42deg)'
+                  background: 'conic-gradient(from 346deg at 50% 50%, transparent 0deg, rgba(202, 138, 4, 0.08) 6deg, rgba(202, 138, 4, 0.42) 14deg, rgba(202, 138, 4, 0.28) 22deg, rgba(202, 138, 4, 0.12) 36deg, rgba(202, 138, 4, 0.02) 48deg, transparent 60deg)'
                 }}
               />
-              {/* Dark Mode: Warm Amber Conic Ray */}
+              {/* Dark Mode: Warm Amber / Obsidian Conic Ray */}
               <div 
                 className="w-full h-full hidden dark:block"
                 style={{
-                  background: 'conic-gradient(from 0deg at 50% 50%, rgba(217, 163, 83, 0.30) 0deg, rgba(217, 163, 83, 0.14) 14deg, rgba(217, 163, 83, 0.03) 28deg, transparent 42deg)'
+                  background: 'conic-gradient(from 346deg at 50% 50%, transparent 0deg, rgba(217, 163, 83, 0.08) 6deg, rgba(217, 163, 83, 0.38) 14deg, rgba(217, 163, 83, 0.22) 22deg, rgba(217, 163, 83, 0.09) 36deg, rgba(217, 163, 83, 0.02) 48deg, transparent 60deg)'
                 }}
               />
             </div>
 
-            {/* Soft Smudged Core Light Ray */}
+            {/* Soft Smudged Core Light Ray Needle (Aligned exactly with 14deg peak at 12 oclock) */}
             <div 
-              style={{ filter: 'blur(3.5px)' }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1/2 origin-bottom bg-gradient-to-t from-slate-700/60 dark:from-[#d9a353]/70 via-slate-600/30 dark:via-[#d9a353]/30 to-transparent"
+              style={{ filter: 'blur(2.5px)' }}
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1/2 origin-bottom bg-gradient-to-t from-amber-600/80 dark:from-[#d9a353]/70 via-amber-500/40 dark:via-[#d9a353]/30 to-transparent"
             />
 
             {/* Luminous Atmospheric Ambient Glow Squircle at Ray Tip */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-16 rounded-full bg-slate-500/15 dark:bg-amber-400/20 blur-xl pointer-events-none" />
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-16 rounded-full bg-amber-500/25 dark:bg-amber-400/20 blur-xl pointer-events-none" />
           </div>
 
         </div>
@@ -219,13 +216,13 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
             const dotColors = {
               valid: 'bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.85)]',
               stale: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.85)]',
-              gate: 'bg-slate-700 dark:bg-[#d9a353] shadow-[0_0_8px_rgba(217,163,83,0.85)]',
+              gate: 'bg-amber-600 dark:bg-[#d9a353] shadow-[0_0_8px_rgba(217,163,83,0.85)]',
             }[target.type];
 
             const textColors = {
               valid: 'text-teal-700 dark:text-teal-300',
               stale: 'text-rose-700 dark:text-rose-300',
-              gate: 'text-slate-800 dark:text-amber-300',
+              gate: 'text-amber-800 dark:text-amber-300',
             }[target.type];
 
             return (
@@ -237,20 +234,13 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
                   left: `calc(50% + ${x}px)`,
                   opacity: 0,
                   transform: 'scale(0.96)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.dataset.hovered = 'true';
-                  e.currentTarget.style.opacity = '1';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.dataset.hovered = 'false';
+                  pointerEvents: 'none',
                 }}
                 onClick={() => {
                   playClick();
                   if (onLaunchConsole) onLaunchConsole();
                 }}
-                className="group absolute z-30 cursor-pointer select-none pointer-events-auto will-change-transform"
+                className="group absolute z-30 cursor-pointer select-none will-change-transform"
               >
                 <div className="relative flex items-center gap-2 -translate-x-2 -translate-y-2">
                   <div className={`w-2 h-2 rounded-full shrink-0 ${dotColors}`} />
