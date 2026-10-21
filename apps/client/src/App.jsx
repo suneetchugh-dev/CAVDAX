@@ -714,14 +714,9 @@ export default function App() {
           {/* Subheader Toolbar & Telemetry */}
           <div className="flex-shrink-0 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-300 dark:border-white/10">
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm sm:text-base font-bold text-slate-950 dark:text-white font-mono">
-                  Interactive Causal Verification Console
-                </h1>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-slate-300 uppercase tracking-wider">
-                  GraphBLAS Live
-                </span>
-              </div>
+              <h1 className="text-sm sm:text-base font-bold text-slate-950 dark:text-white font-mono">
+                Interactive Causal Verification Console
+              </h1>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-sans">
                 Observe autonomous agent tool calls intercepted deterministically before execution.
               </p>

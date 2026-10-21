@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, ArrowLeft, Terminal, ShieldAlert, SlidersHorizontal, Home } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Terminal, SlidersHorizontal, Home } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 /**
