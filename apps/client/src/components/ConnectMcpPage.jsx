@@ -376,7 +376,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
             <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start lg:self-auto relative">
               {transportPill.position.ready && (
                 <motion.div
-                  className="absolute rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
+                  className="absolute top-0 left-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
                   initial={false}
                   animate={{
                     x: transportPill.position.x,
@@ -423,10 +423,10 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
           {/* Client Tabs Bar with Container-Relative Slider Tracking (Anti-Flying Standard) */}
           <div className="mb-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 w-full relative">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 w-full relative">
               {clientPill.position.ready && (
                 <motion.div
-                  className="absolute rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
+                  className="absolute top-0 left-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
                   initial={false}
                   animate={{
                     x: clientPill.position.x,
@@ -524,7 +524,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start sm:self-auto relative">
               {cliTabPill.position.ready && (
                 <motion.div
-                  className="absolute rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
+                  className="absolute top-0 left-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
                   initial={false}
                   animate={{
                     x: cliTabPill.position.x,
