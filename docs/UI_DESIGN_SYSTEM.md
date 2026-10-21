@@ -31,9 +31,11 @@ You must strictly incorporate and enforce every single one of the following 34 a
 7. **FAST, TACTILE KINETIC PHYSICS (100ms - 180ms)**:
    - UI state transitions must feel snappy, instant, and tactile. Never implement sluggish, floaty 400ms+ animations for theme switches, dropdowns, or tab selections. Micro-interactions must complete within 100ms to 180ms with high-performance easing curves.
 
-8. **MANDATORY FRAMER MOTION SHARED-LAYOUT SLIDING PILLS**:
+8. **MANDATORY FRAMER MOTION SLIDING PILLS & ZERO-FLYING STANDARD**:
    - NEVER use static CSS background swaps (`bg-blue-600` vs `bg-transparent`) or jump-cuts for active states in tabs, segmented controls, or mode switchers.
-   - Always implement Framer Motion's shared-layout sliding pill: `<motion.div layoutId="uniqueDomainPill" transition={{ type: "spring", stiffness: 420, damping: 34 }} />`.
+   - **THE ANTI-FLYING PILLBAR STANDARD**: Never blindly drop `<motion.div layoutId="..." />` into conditionally rendered buttons. Global `layoutId` projection causes pills to fly diagonally across the viewport from outer coordinates during page navigation, mount, or tab switches.
+   - **The Approved Solution**: Use Container-Relative Slider Tracking (as engineered in `Header.jsx` and `ConnectMcpPage.jsx` via `usePillTracker`). Position a single `<motion.div initial={false} animate={{ x, y, width, height }} />` relative to the track, clamped to the active element's `offsetLeft` and `offsetWidth`. It is mathematically immune to Y-flying, scroll jumps, and cross-screen warping.
+   - **MANDATORY `top-0 left-0` COORDINATE ANCHORING**: Always apply `className="absolute top-0 left-0 ..."` on the sliding `<motion.div>`. Without `top-0 left-0`, CSS Grid/Flex containers default to static coordinates `top: auto; left: auto;` (e.g. `4px, 4px` inside `p-1`), causing Framer Motion's transforms to double-offset the pill, creating an ugly 4px overhang that partially covers options.
 
 9. **STRICT BAN ON GENERIC SHIELD SVGs & TOYISH SECURITY BADGES**:
    - NEVER use generic shield icons (`Shield`, `ShieldCheck`, `ShieldAlert`, `ShieldQuestion`, or toyish antivirus/security badge SVGs) across navigation, routing, telemetry, cards, or security/verification indicators.
@@ -1060,7 +1062,13 @@ When interactive visualization canvases (such as node graphs, topological maps, 
 - **The Shared-Layout Sliding Indicator Standard**:
   - Multi-option category pickers, client configuration switchers (e.g. Claude Code CLI, Cursor IDE, Claude Desktop, Windsurf), and view toggles must never rely on jumpy, instantaneous background color swaps.
   - Use a recessed background track (`rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-1`) paired with a continuous sliding active indicator:
-    - With Framer Motion: `<motion.div layoutId="activeClientTab" transition={{ type: "spring", stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-xs -z-10" />`
+    - **The Anti-Flying Pillbar Standard (Container-Relative Slider Tracking)**:
+    - Never use global `layoutId` across separate buttons or conditionally rendered elements. This triggers Framer Motion's global bounding-box projection, making pills fly across the entire screen from arbitrary coordinates on mount or view switch.
+    - Implement a single container-relative sliding pill with `initial={false}` using local element references (`tabRefs.current[activeTab]` as established in `Header.jsx` and `ConnectMcpPage.jsx`):
+      - In JSX, render a SINGLE `<motion.div className="absolute top-0 left-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none" initial={false} animate={{ x: pillPosition.x, y: pillPosition.y, width: pillPosition.width, height: pillPosition.height }} transition={{ type: 'spring', stiffness: 420, damping: 34 }} />` at the track level.
+      - **Mandatory `top-0 left-0` Coordinate Zeroing**: The `<motion.div>` MUST have `top-0 left-0`. In containers with padding (`p-1`), an unanchored absolute element defaults to the static offset of the first grid/flex cell (`4px, 4px`). Adding Framer Motion's `translateX`/`translateY` on top causes a double offset, resulting in the pill hanging outside the container and improperly covering options.
+      - **Breakpoint Sizing Standard (`sm:grid-cols-4` over `lg:grid-cols-4`)**: 4-option segmented switchers must standardize on `grid grid-cols-2 sm:grid-cols-4` to prevent awkward 2-row squishing on viewports below 1024px (windowed desktop / 125% scaled 1080p).
+      - Clamp coordinates strictly to local `activeEl.offsetLeft`, `activeEl.offsetTop`, and `activeEl.offsetWidth`.
     - Or with pure CSS: a sliding indicator element using `transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s ease`.
 - **Text & Tag Hierarchy on Client Cards**:
   - When presenting multi-option tools (e.g. Windsurf vs Roo Code), never merge distinct brands into awkward slashed compound labels ("Windsurf / Roo Code") that cause overflow or wrapping. Pick a primary brand representation or present each as its own discrete option.
@@ -1178,3 +1186,104 @@ export default function SystemProvenanceCard({ credits = SYSTEM_CREDITS, title =
 - **Hackathon & Prototype Submissions**: Highlight core partner technology (e.g. FalkorDB, Redis, Groq, Typesense, MongoDB) with precision.
 - **Production Benchmarks & VM Specs**: Display infrastructure specs (e.g. AWS EC2 t3.xlarge, 16GB RAM, Ubuntu 24.04, Docker Engine 26.1).
 - **Security & Regulatory Auditing**: Outline cryptographic audit trails, data residency contracts, and compliance frameworks.
+
+
+---
+
+## 39. Elevated Feature Callout Banners & Highlight Card Standard
+
+### 39.1 Architectural Purpose & Aesthetic Intent
+In high-performance engineering platforms, key architectural features, primary package distributions (e.g. `@cavdax/mcp-server`), and primary integration channels require visual prominence above standard content without resorting to distracting, cheap tropes (such as saturated background fills, rainbow gradients, or glowing status pill badges).
+
+The **Elevated Feature Callout Banner** achieves tangible depth and executive prestige by pairing the platform's `.neo-glass-card` foundation with theme-bifurcated tactile sub-elements.
+
+---
+
+### 39.2 Structural Anatomy & Metrics
+1. **Outer Parent Card (`.neo-glass-card`)**:
+   - Container padding: `p-4 sm:p-5 rounded-2xl`
+   - Responsive layout: `flex flex-col md:flex-row md:items-center justify-between gap-4`
+   - **Light Mode (`:root:not(.dark)`)**:
+     - Background: Pure frosted porcelain glass (`rgba(255, 255, 255, 0.92)`) with `backdrop-filter: blur(20px)`.
+     - Border: Architectural slate-300 hairline (`border-slate-300`).
+     - Inner Specular Reflection: `inset 0 1px 0 rgba(255, 255, 255, 0.95)` creating a crisp, top-lit glass edge.
+     - Shadow: Elevated diffuse drop shadow (`0 10px 25px -5px rgba(0, 0, 0, 0.06)`).
+   - **Dark Mode (`.dark`)**:
+     - Background: Signature warm amber radial rest gradient (`radial-gradient(ellipse 120% 120% at 50% 0%, rgba(245, 158, 11, 0.07) 0%, rgba(217, 163, 83, 0.035) 45%, rgba(14, 12, 10, 0.65) 80%, rgba(9, 8, 7, 0.82) 100%)`).
+     - Border: Frosted glass hairline (`border-white/10`).
+     - Inner Specular Highlight: `inset 0 1px 0 rgba(255, 255, 255, 0.06)`.
+     - Shadow: Deep ambient void shadow with faint amber diffusion (`0 8px 30px -6px rgba(0, 0, 0, 0.65), 0 0 20px 0px rgba(245, 158, 11, 0.08)`).
+
+2. **Semantic Icon Anchor**:
+   - Fixed dimension: `w-10 h-10 rounded-xl flex items-center justify-center shrink-0`
+   - Light Mode: High-contrast obsidian grounding (`bg-slate-950 text-white shadow-xs`).
+   - Dark Mode: Subtle warm amber wash with double-bezel hairline border (`dark:bg-amber-500/[0.08] dark:border dark:border-amber-400/20 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]`).
+   - Icon: Standardized 20px (`w-5 h-5`) semantic glyph in amber (`text-amber-400`).
+
+3. **Typographic Hierarchy & Anti-Orphan Standard**:
+   - **Title**: Clean monospace or sans-serif headline (`font-mono text-sm sm:text-base font-bold text-slate-950 dark:text-white`).
+   - **Version / Metric Suffix**: Unbracketed, quiet monospace text tag (`text-[11px] font-mono text-slate-500 dark:text-slate-400`).
+   - **INVIOLABLE RULE**: NEVER mount colored status pill badges (e.g. green "Published on npm", red "Alert", or bracketed `[v1.0]`) hugging the title. The title must stand on its own typographic dignity.
+   - **Body Copy**: `text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed text-pretty`. The `text-pretty` utility is mandatory to prevent typographic orphans ("lonely child" words dangling on the final line).
+
+4. **Action Cluster & Precision Tokens**:
+   - **Executable Command Chip**:
+     - Container: `px-3 py-1.5 rounded-lg font-mono text-xs text-amber-300 flex items-center gap-2`
+     - Light Mode: Slate-950 dark obsidian chip (`bg-slate-950 border border-slate-800`).
+     - Dark Mode: Deep obsidian sub-container (`dark:bg-[#07090D] border border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]`).
+   - **External Action Button**:
+     - Container: `p-2 rounded-lg border border-slate-300 dark:border-white/10 transition-all duration-200 cursor-pointer`
+     - Light Mode: `bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-950`.
+     - Dark Mode: `dark:bg-white/5 dark:hover:bg-white/10 text-slate-300 dark:hover:text-amber-300 dark:hover:border-amber-400/40`.
+
+---
+
+### 39.3 Canonical Implementation Snippet
+```jsx
+<section className="px-6 max-w-5xl mx-auto w-full mb-8">
+  <div className="neo-glass-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    {/* Left: Icon Anchor + Typographic Hierarchy */}
+    <div className="flex items-start sm:items-center gap-3.5">
+      <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-amber-500/[0.08] border border-slate-800 dark:border-amber-400/20 text-white flex items-center justify-center shrink-0 shadow-xs dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+        <Package className="w-5 h-5 text-amber-400" />
+      </div>
+      <div>
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-sm sm:text-base font-bold text-slate-950 dark:text-white">
+            @cavdax/mcp-server
+          </span>
+          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+            v1.0.0
+          </span>
+        </div>
+        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed text-pretty">
+          Universal Model Context Protocol daemon and causal verification CLI published to npm registry.
+        </p>
+      </div>
+    </div>
+
+    {/* Right: Executable Token Chip + External Link */}
+    <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+      <div className="px-3 py-1.5 rounded-lg bg-slate-950 dark:bg-[#07090D] border border-slate-800 dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] font-mono text-xs text-amber-300 flex items-center gap-2">
+        <span>npx -y @cavdax/mcp-server</span>
+        <button
+          onClick={handleCopy}
+          className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+          title="Copy command"
+        >
+          {copied ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+        </button>
+      </div>
+      <a
+        href="https://www.npmjs.com/package/@cavdax/mcp-server"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-amber-300 transition-all duration-200 cursor-pointer border border-slate-300 dark:border-white/10 dark:hover:border-amber-400/40"
+        title="View on Registry"
+      >
+        <ExternalLink className="w-4 h-4" />
+      </a>
+    </div>
+  </div>
+</section>
+```
