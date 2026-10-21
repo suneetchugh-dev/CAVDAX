@@ -26,27 +26,33 @@
    - [4.1 Eliminating Viewport Dead Space](#41-eliminating-viewport-dead-space)
    - [4.2 Tactile Sizing Preservation](#42-tactile-sizing-preservation)
    - [4.3 Grounding "Scroll to Inspect Engine" at the Viewport Floor](#43-grounding-scroll-to-inspect-engine-at-the-viewport-floor)
-5. [Default Signed-In Browser Setup for Puppeteer Testing (Complete Implementation)](#5-default-signed-in-browser-setup-for-puppeteer-testing-complete-implementation)
-   - [5.1 The Chromium Architecture Problem: `SingletonLock` & Incognito Defaults](#51-the-chromium-architecture-problem-singletonlock--incognito-defaults)
-   - [5.2 Dual-Mode Architecture: Remote Debug Attach vs Persistent Profile](#52-dual-mode-architecture-remote-debug-attach-vs-persistent-profile)
-   - [5.3 Production Implementation of `scripts/browser-runner.js`](#53-production-implementation-of-scriptsbrowser-runnerjs)
-   - [5.4 Windows Remote Debugging Launchers (PowerShell & Batch)](#54-windows-remote-debugging-launchers-powershell--batch)
-   - [5.5 NPM Scripts & Workflow Commands](#55-npm-scripts--workflow-commands)
-   - [5.6 Security Isolation & Git Credential Hygiene](#56-security-isolation--git-credential-hygiene)
-6. [Enterprise Audit Subsystem & Compliance Logging](#6-enterprise-audit-subsystem--compliance-logging)
-   - [6.1 Act III BLOCKED_SUPERSEDED_SOURCE Enforcement](#61-act-iii-blocked_superseded_source-enforcement)
-   - [6.2 Zero-State Elimination & Historical Demo Seeding](#62-zero-state-elimination--historical-demo-seeding)
-7. [Full Design System & Interactive UI Overhaul](#7-full-design-system--interactive-ui-overhaul)
-   - [7.1 Two-Section Asymmetric Bento Architecture](#71-two-section-asymmetric-bento-architecture)
-   - [7.2 Causal Provenance Radar Polar Synchronization](#72-causal-provenance-radar-polar-synchronization)
-   - [7.3 Particle Pointillism Wordmark Canvas (`FooterParticles.jsx`)](#73-particle-pointillism-wordmark-canvas-footerparticlesjsx)
-   - [7.4 Team Page Emblem Lightbox & Parallax Tilt](#74-team-page-emblem-lightbox--parallax-tilt)
-   - [7.5 Unified Golden-Amber Color Token (`#d9a353`)](#75-unified-golden-amber-color-token-d9a353)
-8. [Git Hygiene & Atomic Squashing Protocol](#8-git-hygiene--atomic-squashing-protocol)
-   - [8.1 Why Micro-Commit Churn Harms Git Repositories](#81-why-micro-commit-churn-harms-git-repositories)
-   - [8.2 Consolidation of Iterative Commits into Atomic Milestones](#82-consolidation-of-iterative-commits-into-atomic-milestones)
-   - [8.3 The Constitutional Git Squashing Rule in `AGENTS.md`](#83-the-constitutional-git-squashing-rule-in-agentsmd)
-9. [Complete Inventory of Modified Files & Commit Audit](#9-complete-inventory-of-modified-files--commit-audit)
+5. [Causal Provenance Radar: Pure Unbounded Invalidation Visualizer](#5-causal-provenance-radar-pure-unbounded-invalidation-visualizer)
+   - [5.1 The Concept: Continuous Invalidation Sweep vs Static DAGs](#51-the-concept-continuous-invalidation-sweep-vs-static-dags)
+   - [5.2 Option C: Pinned Scrollytelling Viewport Takeover & Theater Mode](#52-option-c-pinned-scrollytelling-viewport-takeover--theater-mode)
+   - [5.3 Pure Unbounded Ultra-Minimalist HUD Architecture](#53-pure-unbounded-ultra-minimalist-hud-architecture)
+   - [5.4 Screen-Calibrated Target Containment (Orbit Safety)](#54-screen-calibrated-target-containment-orbit-safety)
+   - [5.5 Mathematical Polar Synchronization & Oscilloscope Phosphor Decay](#55-mathematical-polar-synchronization--oscilloscope-phosphor-decay)
+   - [5.6 Dual-Theme Optical Calibration & Scroll Cue Isolation](#56-dual-theme-optical-calibration--scroll-cue-isolation)
+6. [Default Signed-In Browser Setup for Puppeteer Testing (Complete Implementation)](#6-default-signed-in-browser-setup-for-puppeteer-testing-complete-implementation)
+   - [6.1 The Chromium Architecture Problem: `SingletonLock` & Incognito Defaults](#61-the-chromium-architecture-problem-singletonlock--incognito-defaults)
+   - [6.2 Dual-Mode Architecture: Remote Debug Attach vs Persistent Profile](#62-dual-mode-architecture-remote-debug-attach-vs-persistent-profile)
+   - [6.3 Production Implementation of `scripts/browser-runner.js`](#63-production-implementation-of-scriptsbrowser-runnerjs)
+   - [6.4 Windows Remote Debugging Launchers (PowerShell & Batch)](#64-windows-remote-debugging-launchers-powershell--batch)
+   - [6.5 NPM Scripts & Workflow Commands](#65-npm-scripts--workflow-commands)
+   - [6.6 Security Isolation & Git Credential Hygiene](#66-security-isolation--git-credential-hygiene)
+7. [Enterprise Audit Subsystem & Compliance Logging](#7-enterprise-audit-subsystem--compliance-logging)
+   - [7.1 Act III BLOCKED_SUPERSEDED_SOURCE Enforcement](#71-act-iii-blocked_superseded_source-enforcement)
+   - [7.2 Zero-State Elimination & Historical Demo Seeding](#72-zero-state-elimination--historical-demo-seeding)
+8. [Full Design System & Interactive UI Overhaul](#8-full-design-system--interactive-ui-overhaul)
+   - [8.1 Two-Section Asymmetric Bento Architecture](#81-two-section-asymmetric-bento-architecture)
+   - [8.2 Particle Pointillism Wordmark Canvas (`FooterParticles.jsx`)](#82-particle-pointillism-wordmark-canvas-footerparticlesjsx)
+   - [8.3 Team Page Emblem Lightbox & Parallax Tilt](#83-team-page-emblem-lightbox--parallax-tilt)
+   - [8.4 Unified Golden-Amber Color Token (`#d9a353`)](#84-unified-golden-amber-color-token-d9a353)
+9. [Git Hygiene & Atomic Squashing Protocol](#9-git-hygiene--atomic-squashing-protocol)
+   - [9.1 Why Micro-Commit Churn Harms Git Repositories](#91-why-micro-commit-churn-harms-git-repositories)
+   - [9.2 Consolidation of Iterative Commits into Atomic Milestones](#92-consolidation-of-iterative-commits-into-atomic-milestones)
+   - [9.3 The Constitutional Git Squashing Rule in `AGENTS.md`](#93-the-constitutional-git-squashing-rule-in-agentsmd)
+10. [Complete Inventory of Modified Files & Commit Audit](#10-complete-inventory-of-modified-files--commit-audit)
 
 ---
 
@@ -192,9 +198,94 @@ CAVDAX replaces vector blindness with a **FalkorDB GraphBLAS Causal Knowledge Gr
 
 ---
 
-## 5. Default Signed-In Browser Setup for Puppeteer Testing (Complete Implementation)
+## 5. Causal Provenance Radar: Pure Unbounded Invalidation Visualizer
 
-### 5.1 The Chromium Architecture Problem: `SingletonLock` & Incognito Defaults
+### 5.1 The Concept: Continuous Invalidation Sweep vs Static DAGs
+- **File**: [`CausalProvenanceRadar.jsx`](../apps/client/src/components/CausalProvenanceRadar.jsx)
+- **Mission**: While graph node diagrams show static structural links, developers need an intuitive mental model for **continuous background validation**.
+- The **Causal Provenance Radar** models CAVDAX as an active, rotating sweep beam:
+  - As the radar beam sweeps 360°, it interrogates every architectural artifact in the codebase.
+  - **Valid Nodes** glow with reassuring teal phosphor.
+  - **Superseded / Stale Nodes** flare with high-contrast crimson alert signals the instant their upstream contracts expire.
+  - **MCP Action Gates** pulse amber along the traversal perimeter.
+
+### 5.2 Option C: Pinned Scrollytelling Viewport Takeover & Theater Mode
+- **The Scrollytelling Experience**:
+  - Rather than being trapped inside an ordinary static card, the radar features a **Pinned Scrollytelling Viewport Takeover Engine**:
+  ```javascript
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start 85%', 'end end'],
+  });
+  ```
+  - **Tight 150vh Runway**: Engineered a tight 150vh scroll distance (`h-[150vh]`), completely eliminating the awkward empty void below the section.
+  - **Non-Linear Panoramic Expansion**:
+    - As the user scrolls into the section, the radar smoothly expands from a compact resting state (`0.60x`) to an immersive `1.28x` full-screen panoramic theater mode (`100vw × 100dvh`).
+    - The background dims out (`bg-black/80`), backdrop blur locks in, and the navbar softens away.
+    - **Single-Section Containment**: Dynamically calibrated so the radar occupies the screen seamlessly in both standard laptop viewports and F11 Full-Screen mode without overflowing or jitter.
+    - Continuing to scroll smoothly collapses the radar back into regular page flow.
+
+### 5.3 Pure Unbounded Ultra-Minimalist HUD Architecture
+- In strict adherence to our high-end Swiss design guidelines:
+  - **Stripped 100% of Clutter**: Removed all outer card frames, thick borders, nested containers, category tag pills, and redundant explanatory paragraphs.
+  - **Concentric Range Rings**: 4 mathematical range circles (`radiusRatio: 0.25, 0.50, 0.75, 1.0`) drawn with hairline `0.75px` precision.
+  - **Crosshair Reticle**: Subtle orthogonal crosshair lines with center cross-hairs and distance tick marks.
+  - Pure circular HUD floating in an obsidian void.
+
+### 5.4 Screen-Calibrated Target Containment (Orbit Safety)
+- **The Problem**: On standard 13" and 15" laptops, absolute pixel coordinates caused target labels (`ADR-001 (Superseded)`) to clip past the radar edge or monitor boundary.
+- **The Solution**: Re-engineered all target positions into **responsive radial ratios** strictly bounded inside the inner orbital tracks:
+  ```javascript
+  const RADAR_TARGETS = [
+    { id: 'adr-002', name: 'ADR-002: OAuth2', type: 'valid', angle: 42, radiusRatio: 0.36 },
+    { id: 'fact-stale', name: 'TokenAuth.v1 (Stale)', type: 'stale', angle: 318, radiusRatio: 0.44 },
+    { id: 'mcp-gate', name: 'apply_code_change', type: 'gate', angle: 125, radiusRatio: 0.54 },
+    { id: 'dec-103', name: 'DEC-103: RS256', type: 'valid', angle: 198, radiusRatio: 0.62 },
+    { id: 'adr-001', name: 'ADR-001 (Superseded)', type: 'stale', angle: 255, radiusRatio: 0.66 },
+  ];
+  ```
+  - **Strict Inner Boundary**: All targets reside within `radiusRatio <= 0.66` (well within the `1.0` maximum radius).
+  - **Proportional Typography**: Monospace typography scaled to `text-[9px] sm:text-[10px]` with bold weight.
+  - **Zero Clipping**: Guaranteed 100% visible text clearance across 390px mobile, 1366×768 laptop, 1080p desktop, and 1440p displays.
+
+### 5.5 Mathematical Polar Synchronization & Oscilloscope Phosphor Decay
+- Replaced erratic CSS transition delays with a single **60fps `requestAnimationFrame` polar loop**:
+  ```javascript
+  // Polar coordinate transformation
+  const rad = (target.angle * Math.PI) / 180;
+  const x = target.radius * Math.sin(rad);
+  const y = -target.radius * Math.cos(rad);
+  ```
+- **Beam Angle Synchronization**:
+  - The sweep beam rotates continuously at constant angular velocity (`sweepAngle = (timestamp / 24) % 360`).
+  - The script calculates the angular delta between the beam and each target:
+    `delta = (sweepAngle - target.angle + 360) % 360`
+- **Cathode-Ray Phosphor Persistence Curve**:
+  - When the beam passes a target (`delta < 15°`), the target blip instantly illuminates to full luminance (`opacity = 1.0, scale = 1.08`).
+  - As the beam moves away, the target fades following an authentic **oscilloscope exponential decay curve**:
+    `opacity = Math.pow(1 - (delta / decayArc), 2.2)`
+  - Recreates the tactile aesthetic of real analog phosphor CRTs.
+- **Interactive Tactile Inspection**:
+  - Hovering over any target blip locks opacity to `1.0`, expands scale to `1.05`, and reveals its full provenance label.
+  - Clicking any blip triggers acoustic micro-feedback (`playClick()`) and opens the live console.
+
+### 5.6 Dual-Theme Optical Calibration & Scroll Cue Isolation
+- **Light Theme**:
+  - Reticle & Rings: Deep slate-900 hairline borders (`border-slate-900/15`).
+  - Sweep Beam: Deep slate/cobalt gradient (`via-slate-600/30 to-transparent`).
+  - Target Typography: High-contrast slate ink (`text-slate-800`).
+- **Dark Theme**:
+  - Reticle & Rings: Translucent porcelain hairline borders (`border-white/10`).
+  - Sweep Beam: Warm golden-amber gradient (`via-[#d9a353]/30 to-transparent`).
+  - Ray Tip Ambient Glow: Atmospheric amber squircle (`bg-amber-400/20 blur-xl`).
+- **Scroll Cue Isolation**:
+  - Hides external scroll cues and controls when theater mode engages, preventing visual collision with the radar canvas.
+
+---
+
+## 6. Default Signed-In Browser Setup for Puppeteer Testing (Complete Implementation)
+
+### 6.1 The Chromium Architecture Problem: `SingletonLock` & Incognito Defaults
 When developers run Puppeteer or Playwright, they often ask: *"Why can't it just open in my already-opened, signed-in browser instead of opening a blank incognito window every time?"*
 
 The technical reasons:
@@ -209,7 +300,7 @@ The technical reasons:
    - Automated CI testing demands a clean slate so browser extensions don't interfere with DOM assertions.
    - However, during **local development and interactive E2E testing**, developers need their signed-in accounts (Google, GitHub, Auth0, internal dev roles) so they don't have to re-authenticate on every single test run.
 
-### 5.2 Dual-Mode Architecture: Remote Debug Attach vs Persistent Profile
+### 6.2 Dual-Mode Architecture: Remote Debug Attach vs Persistent Profile
 We resolved this by engineering a **Dual-Mode Smart Browser Runner**:
 
 ```mermaid
@@ -223,7 +314,7 @@ flowchart TD
     ModeB --> Profile["Uses persistent directory: .puppeteer-profile<br/>(Log in once -> Stay signed in forever!)"]
 ```
 
-### 5.3 Production Implementation of `scripts/browser-runner.js`
+### 6.3 Production Implementation of `scripts/browser-runner.js`
 - **File**: [`scripts/browser-runner.js`](../scripts/browser-runner.js)
 - **Key Features**:
   1. **Cross-Platform Browser Discovery**: Automatically scans known paths for Google Chrome and Microsoft Edge across Windows, macOS, and Linux.
@@ -256,7 +347,7 @@ flowchart TD
      - **You log in once; you stay logged in forever**.
      - Strips `--enable-automation` banner to avoid bot-detection blocking.
 
-### 5.4 Windows Remote Debugging Launchers (PowerShell & Batch)
+### 6.4 Windows Remote Debugging Launchers (PowerShell & Batch)
 To allow zero-friction launching on Windows, we created two helper scripts:
 1. **PowerShell Script**: [`scripts/launch-signedin-browser.ps1`](../scripts/launch-signedin-browser.ps1)
    - Locates Chrome or Edge.
@@ -265,7 +356,7 @@ To allow zero-friction launching on Windows, we created two helper scripts:
 2. **Batch File**: [`scripts/launch-signedin-browser.bat`](../scripts/launch-signedin-browser.bat)
    - One-click launcher for CMD / Windows Explorer double-click.
 
-### 5.5 NPM Scripts & Workflow Commands
+### 6.5 NPM Scripts & Workflow Commands
 Added to root [`package.json`](../package.json):
 ```json
 {
@@ -283,7 +374,7 @@ Added to root [`package.json`](../package.json):
 | `npm run browser:debug` | Starts your local Chrome/Edge on port 9222 ready for direct Puppeteer attachment. |
 | `npm run test:e2e` | Runs automated E2E tests against the signed-in browser session. |
 
-### 5.6 Security Isolation & Git Credential Hygiene
+### 6.6 Security Isolation & Git Credential Hygiene
 - Updated [`.gitignore`](../.gitignore) to strictly exclude:
   ```gitignore
   # Puppeteer Persistent Profiles & Test Data
@@ -295,9 +386,9 @@ Added to root [`package.json`](../package.json):
 
 ---
 
-## 6. Enterprise Audit Subsystem & Compliance Logging
+## 7. Enterprise Audit Subsystem & Compliance Logging
 
-### 6.1 Act III BLOCKED_SUPERSEDED_SOURCE Enforcement
+### 7.1 Act III BLOCKED_SUPERSEDED_SOURCE Enforcement
 - **Files**: [`core/mcp/server.js`](../core/mcp/server.js), [`apps/server/index.js`](../apps/server/index.js)
 - When an autonomous agent attempts a file write (`mcp__write_file` or `mcp__execute_command`) based on an invalidated decision (Act III of the CAVDAX Demo), the MCP Action Gate rejects the request.
 - **Compliance Hardening**: Instead of a transient console error, CAVDAX now records an `AgentAction` node in the FalkorDB graph with:
@@ -307,47 +398,41 @@ Added to root [`package.json`](../package.json):
   - `blocked_reason`: `'Upstream ADR superseded by Git commit b2c4e1a'`
   - Directed edge `[:GROUNDED_IN]` pointing to the invalidated decision node (`DEC-102`).
 
-### 6.2 Zero-State Elimination & Historical Demo Seeding
+### 7.2 Zero-State Elimination & Historical Demo Seeding
 - **File**: [`core/graph/queries.js`](../core/graph/queries.js)
 - Evaluators visiting the `/audit` tab previously saw an empty table before running the live demo.
 - Added 2 realistic historical actions (`act-hist-001: EXECUTED`, `act-hist-002: BLOCKED_SUPERSEDED_SOURCE`) to initial seed scripts and fallback graph state, ensuring the telemetry and audit UI is populated on initial load.
 
 ---
 
-## 7. Full Design System & Interactive UI Overhaul
+## 8. Full Design System & Interactive UI Overhaul
 
-### 7.1 Two-Section Asymmetric Bento Architecture
+### 8.1 Two-Section Asymmetric Bento Architecture
 - **File**: [`LandingPage.jsx`](../apps/client/src/components/LandingPage.jsx)
 - Structured the landing page into a clean Problem-to-Solution sequence:
   - **Section 1 (The Problem Space)**: "Why Vector RAG Fails" with dynamic Thanos typewriter headline, 4 asymmetric diagnostic cards highlighting *Semantic Cosine Blindness*, *Silent Cache Rot*, *Unprotected Tool Writes*, and *Broken Dependency Cascades*.
   - **Section 2 (The Solution Space)**: "<span class="text-[#d9a353]">Graph-Grounded</span> → Decision Execution" featuring 4 asymmetric solution cards showcasing FalkorDB GraphBLAS, Enclosed MCP Gate, Causal Matrix Invalidation, and Closed-Loop Revalidation.
 
-### 7.2 Causal Provenance Radar Polar Synchronization
-- **File**: [`CausalProvenanceRadar.jsx`](../apps/client/src/components/CausalProvenanceRadar.jsx)
-- Synchronized radar sweep beam with blip illumination using a unified polar coordinate loop (`x = r * sin(theta)`, `y = -r * cos(theta)`).
-- Added smooth Hermite ease-in and exponential decay (`Math.pow(1 - decay, 2.2)`).
-- Calibrated dual-theme palette: Deep cobalt in Light Mode, warm golden-amber (`#d9a353`) in Dark Mode.
-
-### 7.3 Particle Pointillism Wordmark Canvas (`FooterParticles.jsx`)
+### 8.2 Particle Pointillism Wordmark Canvas (`FooterParticles.jsx`)
 - **File**: [`FooterParticles.jsx`](../apps/client/src/components/FooterParticles.jsx)
 - Directly rasterizes `new Path2D(CAVDAX_WORDMARK_LETTERS_PATH)` onto an offscreen canvas buffer before sampling coordinate pixels.
 - Guarantees 100% brand typographic fidelity (90° shear cuts, mitered apexes) inside the interactive particle canvas with zero generic font fallbacks.
 
-### 7.4 Team Page Emblem Lightbox & Parallax Tilt
+### 8.3 Team Page Emblem Lightbox & Parallax Tilt
 - **File**: [`TeamPage.jsx`](../apps/client/src/components/TeamPage.jsx)
 - Added 3D mouse parallax tilt and full-screen lightbox modal to the central **Team Contrarians Emblem**, matching the interactive polish of individual team member cards.
 
-### 7.5 Unified Golden-Amber Color Token (`#d9a353`)
+### 8.4 Unified Golden-Amber Color Token (`#d9a353`)
 - Standardized all warm accents across the landing page (Thanos typewriter headline, `Graph-Grounded` accent, and footer particle center gradient) to the exact canonical hex token `#d9a353`.
 
 ---
 
-## 8. Git Hygiene & Atomic Squashing Protocol
+## 9. Git Hygiene & Atomic Squashing Protocol
 
-### 8.1 Why Micro-Commit Churn Harms Git Repositories
+### 9.1 Why Micro-Commit Churn Harms Git Repositories
 During fast-paced visual design and testing sessions, rapid iterative micro-commits (*"shift 4px down"*, *"fix padding"*, *"revert size"*) clutter Git history, break `git bisect`, and complicate code review.
 
-### 8.2 Consolidation of Iterative Commits into Atomic Milestones
+### 9.2 Consolidation of Iterative Commits into Atomic Milestones
 - Squashed 5 exploratory visual micro-commits into atomic commit:
   - **Commit SHA**: `3dbca03`
   - **Message**: `feat(client): integrate causal knowledge graph DAG with dynamic firefly swarm migrations and grounded responsive layout`
@@ -355,7 +440,7 @@ During fast-paced visual design and testing sessions, rapid iterative micro-comm
   - **Commit SHA**: `e4ec386`
   - **Message**: `feat(test): add signed-in persistent browser automation runner and remote debugging launcher`
 
-### 8.3 The Constitutional Git Squashing Rule in `AGENTS.md`
+### 9.3 The Constitutional Git Squashing Rule in `AGENTS.md`
 Enshrined under Section 3 (**Git Branch Hygiene & Commit Governance**) in [`AGENTS.md`](../AGENTS.md):
 ```markdown
 - **Atomic Feature Squashing & History Cleanliness (Mandatory)**:
@@ -367,14 +452,14 @@ Enshrined under Section 3 (**Git Branch Hygiene & Commit Governance**) in [`AGEN
 
 ---
 
-## 9. Complete Inventory of Modified Files & Commit Audit
+## 10. Complete Inventory of Modified Files & Commit Audit
 
 | File Path | Component / Domain | Core Architectural Changes |
 |---|---|---|
+| [`apps/client/src/components/CausalProvenanceRadar.jsx`](../apps/client/src/components/CausalProvenanceRadar.jsx) | Client Radar | Option C pinned scrollytelling viewport takeover (150vh tight runway, 0.60x to 1.28x panoramic theater expansion, F11 containment, backdrop blur), pure unbounded HUD (zero card borders/chrome), screen-calibrated target orbit containment (radiusRatio <= 0.66), 60fps polar loop with oscilloscope phosphor decay, dual-theme calibration, and scroll cue isolation. |
 | [`apps/client/src/components/SpotlightDataRain.jsx`](../apps/client/src/components/SpotlightDataRain.jsx) | Client Canvas | Causal Knowledge Graph DAG, invisible cursor probe hub (0 anchor dot), biomimetic firefly swarm with 2.2s–10.5s interval cycles, obstacle perimeter glide, 2D harmonic hovering (35 upper / 60 lower nodes). |
 | [`apps/client/src/components/LandingPage.jsx`](../apps/client/src/components/LandingPage.jsx) | Client View | Section 0 layout refactor, original button/prompt sizing preserved, scroll prompt grounded at `bottom-10 sm:bottom-12 md:bottom-14 lg:bottom-16`. |
 | [`apps/client/src/components/PullCordLampToggle.jsx`](../apps/client/src/components/PullCordLampToggle.jsx) | Client Toggle | Added `id="pull-cord-lamp-toggle"` for dynamic firefly swarm targeting. |
-| [`apps/client/src/components/CausalProvenanceRadar.jsx`](../apps/client/src/components/CausalProvenanceRadar.jsx) | Client Radar | Mathematical polar coordinate sweep synchronization, Hermite ease-in, exponential decay curve. |
 | [`apps/client/src/components/TeamPage.jsx`](../apps/client/src/components/TeamPage.jsx) | Client Team | Team Contrarians central emblem 3D parallax tilt & full-screen frosted lightbox modal. |
 | [`apps/client/src/components/FooterParticles.jsx`](../apps/client/src/components/FooterParticles.jsx) | Client Footer | Direct rasterization of `CAVDAX_WORDMARK_LETTERS_PATH` onto offscreen canvas for particle pointillism. |
 | [`scripts/browser-runner.js`](../scripts/browser-runner.js) | Testing Harness | Smart Dual-Mode runner: attaches to live browser on port 9222 (`puppeteer.connect`) or launches persistent profile (`userDataDir: .puppeteer-profile`). |
@@ -390,6 +475,7 @@ Enshrined under Section 3 (**Git Branch Hygiene & Commit Governance**) in [`AGEN
 - **`origin/frontend`**:
   - `3dbca03` — `feat(client): integrate causal knowledge graph DAG with dynamic firefly swarm migrations and grounded responsive layout`
   - `e4ec386` — `feat(test): add signed-in persistent browser automation runner and remote debugging launcher`
+  - `ccced9c` — `docs: add complete master engineering record and puppeteer testing guide`
 - **`origin/docs`**:
   - `0fea5fd` — `docs: codify atomic feature squashing rule and update session state [skip ci]`
 - **Build Status**: Verified with `npm run build` (Exit code `0`, 0 errors).
