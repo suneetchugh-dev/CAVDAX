@@ -6,7 +6,6 @@ import {
   ExternalLink, 
   Copy, 
   Check, 
-  ShieldCheck, 
   SlidersHorizontal,
   Cable,
   FileCode2,

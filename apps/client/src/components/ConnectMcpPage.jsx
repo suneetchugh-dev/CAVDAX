@@ -13,7 +13,7 @@ import {
   FileCode2, 
   Compass,
   GitBranch,
-  ShieldCheck
+  Lock
 } from 'lucide-react';
 import TourGuide from './TourGuide';
 import { playClick } from '../utils/soundFx';
@@ -393,7 +393,7 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
               {/* Header: Icon + Step Badge */}
               <div className="flex items-center justify-between gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 text-slate-950 dark:text-white group-hover:border-slate-900/30 dark:group-hover:border-white/30 transition-colors shadow-xs">
-                  <ShieldCheck className="w-4.5 h-4.5" />
+                  <Lock className="w-4.5 h-4.5" />
                 </div>
                 <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-[10px] font-bold tracking-wider text-slate-600 dark:text-slate-400 uppercase">
                   03 · Execution Gate
