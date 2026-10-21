@@ -292,8 +292,8 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
                   v1.0.0
                 </span>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed">
-                Universal Model Context Protocol daemon and causal verification CLI published to the global npm registry.
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed text-pretty">
+                Universal Model Context Protocol daemon and causal verification CLI published to npm registry.
               </p>
             </div>
           </div>
