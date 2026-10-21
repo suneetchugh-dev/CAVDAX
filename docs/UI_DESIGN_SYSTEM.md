@@ -1178,3 +1178,104 @@ export default function SystemProvenanceCard({ credits = SYSTEM_CREDITS, title =
 - **Hackathon & Prototype Submissions**: Highlight core partner technology (e.g. FalkorDB, Redis, Groq, Typesense, MongoDB) with precision.
 - **Production Benchmarks & VM Specs**: Display infrastructure specs (e.g. AWS EC2 t3.xlarge, 16GB RAM, Ubuntu 24.04, Docker Engine 26.1).
 - **Security & Regulatory Auditing**: Outline cryptographic audit trails, data residency contracts, and compliance frameworks.
+
+
+---
+
+## 39. Elevated Feature Callout Banners & Highlight Card Standard
+
+### 39.1 Architectural Purpose & Aesthetic Intent
+In high-performance engineering platforms, key architectural features, primary package distributions (e.g. `@cavdax/mcp-server`), and primary integration channels require visual prominence above standard content without resorting to distracting, cheap tropes (such as saturated background fills, rainbow gradients, or glowing status pill badges).
+
+The **Elevated Feature Callout Banner** achieves tangible depth and executive prestige by pairing the platform's `.neo-glass-card` foundation with theme-bifurcated tactile sub-elements.
+
+---
+
+### 39.2 Structural Anatomy & Metrics
+1. **Outer Parent Card (`.neo-glass-card`)**:
+   - Container padding: `p-4 sm:p-5 rounded-2xl`
+   - Responsive layout: `flex flex-col md:flex-row md:items-center justify-between gap-4`
+   - **Light Mode (`:root:not(.dark)`)**:
+     - Background: Pure frosted porcelain glass (`rgba(255, 255, 255, 0.92)`) with `backdrop-filter: blur(20px)`.
+     - Border: Architectural slate-300 hairline (`border-slate-300`).
+     - Inner Specular Reflection: `inset 0 1px 0 rgba(255, 255, 255, 0.95)` creating a crisp, top-lit glass edge.
+     - Shadow: Elevated diffuse drop shadow (`0 10px 25px -5px rgba(0, 0, 0, 0.06)`).
+   - **Dark Mode (`.dark`)**:
+     - Background: Signature warm amber radial rest gradient (`radial-gradient(ellipse 120% 120% at 50% 0%, rgba(245, 158, 11, 0.07) 0%, rgba(217, 163, 83, 0.035) 45%, rgba(14, 12, 10, 0.65) 80%, rgba(9, 8, 7, 0.82) 100%)`).
+     - Border: Frosted glass hairline (`border-white/10`).
+     - Inner Specular Highlight: `inset 0 1px 0 rgba(255, 255, 255, 0.06)`.
+     - Shadow: Deep ambient void shadow with faint amber diffusion (`0 8px 30px -6px rgba(0, 0, 0, 0.65), 0 0 20px 0px rgba(245, 158, 11, 0.08)`).
+
+2. **Semantic Icon Anchor**:
+   - Fixed dimension: `w-10 h-10 rounded-xl flex items-center justify-center shrink-0`
+   - Light Mode: High-contrast obsidian grounding (`bg-slate-950 text-white shadow-xs`).
+   - Dark Mode: Subtle warm amber wash with double-bezel hairline border (`dark:bg-amber-500/[0.08] dark:border dark:border-amber-400/20 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]`).
+   - Icon: Standardized 20px (`w-5 h-5`) semantic glyph in amber (`text-amber-400`).
+
+3. **Typographic Hierarchy & Anti-Orphan Standard**:
+   - **Title**: Clean monospace or sans-serif headline (`font-mono text-sm sm:text-base font-bold text-slate-950 dark:text-white`).
+   - **Version / Metric Suffix**: Unbracketed, quiet monospace text tag (`text-[11px] font-mono text-slate-500 dark:text-slate-400`).
+   - **INVIOLABLE RULE**: NEVER mount colored status pill badges (e.g. green "Published on npm", red "Alert", or bracketed `[v1.0]`) hugging the title. The title must stand on its own typographic dignity.
+   - **Body Copy**: `text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed text-pretty`. The `text-pretty` utility is mandatory to prevent typographic orphans ("lonely child" words dangling on the final line).
+
+4. **Action Cluster & Precision Tokens**:
+   - **Executable Command Chip**:
+     - Container: `px-3 py-1.5 rounded-lg font-mono text-xs text-amber-300 flex items-center gap-2`
+     - Light Mode: Slate-950 dark obsidian chip (`bg-slate-950 border border-slate-800`).
+     - Dark Mode: Deep obsidian sub-container (`dark:bg-[#07090D] border border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]`).
+   - **External Action Button**:
+     - Container: `p-2 rounded-lg border border-slate-300 dark:border-white/10 transition-all duration-200 cursor-pointer`
+     - Light Mode: `bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-950`.
+     - Dark Mode: `dark:bg-white/5 dark:hover:bg-white/10 text-slate-300 dark:hover:text-amber-300 dark:hover:border-amber-400/40`.
+
+---
+
+### 39.3 Canonical Implementation Snippet
+```jsx
+<section className="px-6 max-w-5xl mx-auto w-full mb-8">
+  <div className="neo-glass-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    {/* Left: Icon Anchor + Typographic Hierarchy */}
+    <div className="flex items-start sm:items-center gap-3.5">
+      <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-amber-500/[0.08] border border-slate-800 dark:border-amber-400/20 text-white flex items-center justify-center shrink-0 shadow-xs dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+        <Package className="w-5 h-5 text-amber-400" />
+      </div>
+      <div>
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-sm sm:text-base font-bold text-slate-950 dark:text-white">
+            @cavdax/mcp-server
+          </span>
+          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+            v1.0.0
+          </span>
+        </div>
+        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed text-pretty">
+          Universal Model Context Protocol daemon and causal verification CLI published to npm registry.
+        </p>
+      </div>
+    </div>
+
+    {/* Right: Executable Token Chip + External Link */}
+    <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+      <div className="px-3 py-1.5 rounded-lg bg-slate-950 dark:bg-[#07090D] border border-slate-800 dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] font-mono text-xs text-amber-300 flex items-center gap-2">
+        <span>npx -y @cavdax/mcp-server</span>
+        <button
+          onClick={handleCopy}
+          className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+          title="Copy command"
+        >
+          {copied ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+        </button>
+      </div>
+      <a
+        href="https://www.npmjs.com/package/@cavdax/mcp-server"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-amber-300 transition-all duration-200 cursor-pointer border border-slate-300 dark:border-white/10 dark:hover:border-amber-400/40"
+        title="View on Registry"
+      >
+        <ExternalLink className="w-4 h-4" />
+      </a>
+    </div>
+  </div>
+</section>
+```
