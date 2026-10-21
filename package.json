@@ -10,7 +10,10 @@
     "benchmark:scale": "node benchmark/scale_generator.js",
     "docker:up": "docker-compose up --build",
     "docker:down": "docker-compose down",
-    "seed": "curl -X POST http://localhost:3000/api/seed"
+    "seed": "curl -X POST http://localhost:3000/api/seed",
+    "browser:open": "node scripts/browser-runner.js",
+    "browser:debug": "powershell -ExecutionPolicy Bypass -File scripts/launch-signedin-browser.ps1",
+    "test:e2e": "node scripts/browser-runner.js"
   },
   "keywords": [
     "falkordb",
@@ -22,5 +25,8 @@
     "causal-dag"
   ],
   "author": "Suneet Chugh & Geetika Chugh",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "puppeteer-core": "^25.15.0"
+  }
 }

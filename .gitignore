@@ -48,3 +48,7 @@ tmp/
 *.docx
 *.pdf
 
+
+# Puppeteer Persistent Profiles & Test Data
+.puppeteer-profile/
+.puppeteer-user-data/
