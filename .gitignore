@@ -52,3 +52,4 @@ tmp/
 # Puppeteer Persistent Profiles & Test Data
 .puppeteer-profile/
 .puppeteer-user-data/
+screenshot-*.png

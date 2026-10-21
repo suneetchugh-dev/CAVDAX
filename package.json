@@ -13,7 +13,8 @@
     "seed": "curl -X POST http://localhost:3000/api/seed",
     "browser:open": "node scripts/browser-runner.js",
     "browser:debug": "powershell -ExecutionPolicy Bypass -File scripts/launch-signedin-browser.ps1",
-    "test:e2e": "node scripts/browser-runner.js"
+    "test:e2e": "node scripts/browser-runner.js",
+    "test:browser": "node scripts/test-signedin-browser.js"
   },
   "keywords": [
     "falkordb",
