@@ -166,9 +166,9 @@ export default function Header({
             { id: "landing", label: "Overview", icon: Layers },
             { id: "console", label: "Console", icon: SlidersHorizontal },
             { id: "mcp", label: "MCP", icon: Cable },
-            { id: "project", label: "Demo", icon: Play },
-            { id: "team", label: "Team", icon: Users },
             { id: "audit", label: "Audit", icon: ClipboardList },
+            { id: "project", label: "Walkthrough", icon: Play },
+            { id: "team", label: "Team", icon: Users },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
