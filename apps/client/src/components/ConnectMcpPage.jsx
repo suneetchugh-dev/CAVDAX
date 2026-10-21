@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Cable, 
@@ -21,12 +21,47 @@ import {
 import TourGuide from './TourGuide';
 import { playClick } from '../utils/soundFx';
 
+// Container-Relative Slider Tracker Hook (Immune to scroll jumps, unmount morphs, and cross-screen Y-flying)
+function usePillTracker(activeKey, dependencies = []) {
+  const refs = useRef({});
+  const [position, setPosition] = useState({ x: 0, y: 0, width: 0, height: 0, ready: false });
+
+  useLayoutEffect(() => {
+    const update = () => {
+      const el = refs.current[activeKey];
+      if (el) {
+        setPosition({
+          x: el.offsetLeft,
+          y: el.offsetTop,
+          width: el.offsetWidth,
+          height: el.offsetHeight,
+          ready: true,
+        });
+      }
+    };
+    update();
+    const rafId = requestAnimationFrame(update);
+    window.addEventListener('resize', update);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', update);
+    };
+  }, [activeKey, ...dependencies]);
+
+  return { refs, position };
+}
+
 export default function ConnectMcpPage({ onLaunchConsole }) {
   const [activeClient, setActiveClient] = useState('cursor');
   const [transportMode, setTransportMode] = useState('sse'); // 'sse' (Cloud) | 'stdio' (NPX Local)
   const [activeCliTab, setActiveCliTab] = useState('mcp'); // 'mcp' | 'doctor' | 'ingest' | 'check'
   const [copiedKey, setCopiedKey] = useState(null);
   const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Dedicated container-relative slider trackers eliminating global Framer Motion layoutId projection flight
+  const transportPill = usePillTracker(transportMode);
+  const clientPill = usePillTracker(activeClient, [transportMode]);
+  const cliTabPill = usePillTracker(activeCliTab);
 
   useEffect(() => {
     const handleToggle = () => setIsTourOpen(prev => !prev);
@@ -337,9 +372,23 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
               </p>
             </div>
 
-            {/* Transport Toggle: Cloud SSE vs NPX Stdio */}
+            {/* Transport Toggle: Container-Relative Horizontal Slider Tracking (Anti-Flying Standard) */}
             <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start lg:self-auto relative">
+              {transportPill.position.ready && (
+                <motion.div
+                  className="absolute rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
+                  initial={false}
+                  animate={{
+                    x: transportPill.position.x,
+                    y: transportPill.position.y,
+                    width: transportPill.position.width,
+                    height: transportPill.position.height,
+                  }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                />
+              )}
               <button
+                ref={el => { if (el) transportPill.refs.current['sse'] = el; }}
                 onClick={() => {
                   playClick();
                   setTransportMode('sse');
@@ -350,18 +399,12 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
                     : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
-                {transportMode === 'sse' && (
-                  <motion.div
-                    layoutId="activeTransportPill"
-                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    className="absolute inset-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs"
-                  />
-                )}
                 <Cloud className="w-3.5 h-3.5 relative z-10" />
                 <span className="relative z-10">Cloud SSE</span>
               </button>
 
               <button
+                ref={el => { if (el) transportPill.refs.current['stdio'] = el; }}
                 onClick={() => {
                   playClick();
                   setTransportMode('stdio');
@@ -372,27 +415,34 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
                     : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
-                {transportMode === 'stdio' && (
-                  <motion.div
-                    layoutId="activeTransportPill"
-                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    className="absolute inset-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs"
-                  />
-                )}
                 <Terminal className="w-3.5 h-3.5 relative z-10" />
                 <span className="relative z-10">NPX Stdio</span>
               </button>
             </div>
           </div>
 
-          {/* Client Tabs Bar with Sliding Pill */}
+          {/* Client Tabs Bar with Container-Relative Slider Tracking (Anti-Flying Standard) */}
           <div className="mb-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 w-full relative">
+              {clientPill.position.ready && (
+                <motion.div
+                  className="absolute rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
+                  initial={false}
+                  animate={{
+                    x: clientPill.position.x,
+                    y: clientPill.position.y,
+                    width: clientPill.position.width,
+                    height: clientPill.position.height,
+                  }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                />
+              )}
               {Object.keys(clientConfigs[transportMode]).map((key) => {
                 const isSelected = activeClient === key;
                 return (
                   <button
                     key={key}
+                    ref={el => { if (el) clientPill.refs.current[key] = el; }}
                     onClick={() => {
                       playClick();
                       setActiveClient(key);
@@ -403,13 +453,6 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
                         : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white'
                     }`}
                   >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="activeMcpClientPill"
-                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                        className="absolute inset-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs"
-                      />
-                    )}
                     <span className="relative z-10">{clientConfigs[transportMode][key].name}</span>
                   </button>
                 );
@@ -464,7 +507,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         </div>
       </section>
 
-      {/* 4. Universal CLI Command Suite Bento with Framer Motion Sliding Pill */}
+      {/* 4. Universal CLI Command Suite Bento with Container-Relative Slider Tracking */}
       <section className="px-6 max-w-5xl mx-auto w-full mb-12">
         <div className="neo-glass-card p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-white/10">
@@ -479,11 +522,25 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start sm:self-auto relative">
+              {cliTabPill.position.ready && (
+                <motion.div
+                  className="absolute rounded-lg bg-slate-950 dark:bg-white shadow-xs pointer-events-none"
+                  initial={false}
+                  animate={{
+                    x: cliTabPill.position.x,
+                    y: cliTabPill.position.y,
+                    width: cliTabPill.position.width,
+                    height: cliTabPill.position.height,
+                  }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                />
+              )}
               {Object.keys(cliCommands).map((tab) => {
                 const isSelected = activeCliTab === tab;
                 return (
                   <button
                     key={tab}
+                    ref={el => { if (el) cliTabPill.refs.current[tab] = el; }}
                     onClick={() => {
                       playClick();
                       setActiveCliTab(tab);
@@ -494,13 +551,6 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
                     }`}
                   >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="activeCliTabPill"
-                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                        className="absolute inset-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs"
-                      />
-                    )}
                     <span className="relative z-10">{tab}</span>
                   </button>
                 );
