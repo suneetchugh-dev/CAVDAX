@@ -16,8 +16,6 @@ import {
   Lock,
   Cloud,
   Package,
-  Activity,
-  Code2,
   FileCheck2
 } from 'lucide-react';
 import TourGuide from './TourGuide';
@@ -72,7 +70,7 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
             }
           }
         }, null, 2),
-        notes: 'Located at ~/Library/Application Support/Claude/claude_desktop_config.json or %APPDATA%\\Claude\\'
+        notes: 'Located at ~/Library/Application Support/Claude/claude_desktop_config.json'
       },
       windsurf: {
         name: 'Windsurf IDE',
@@ -185,27 +183,27 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  // Syntax highlighting renderer tailored to obsidian amber dark theme & porcelain light theme
+  // Cohesive syntax highlighter calibrated to Obsidian Amber / Slate Porcelain theme
   const renderSyntaxCode = (code, type) => {
     if (type === 'claudecode') {
       const parts = code.split(' ');
       return (
         <span>
           {parts.map((p, idx) => {
-            if (p === 'claude') return <span key={idx} className="text-cyan-400 dark:text-amber-400 font-bold">{p} </span>;
+            if (p === 'claude') return <span key={idx} className="text-amber-400 font-bold">{p} </span>;
             if (p === 'mcp' || p === 'add') return <span key={idx} className="text-slate-300 dark:text-slate-200">{p} </span>;
-            if (p === 'cavdax') return <span key={idx} className="text-amber-300 dark:text-amber-300 font-semibold">{p} </span>;
-            if (p === '--') return <span key={idx} className="text-slate-500 dark:text-slate-400">{p} </span>;
-            if (p === 'npx' || p === '-y') return <span key={idx} className="text-purple-300 dark:text-purple-300">{p} </span>;
-            if (p.includes('http')) return <span key={idx} className="text-emerald-400 dark:text-emerald-400 underline decoration-slate-600">{p} </span>;
-            if (p.includes('@cavdax')) return <span key={idx} className="text-emerald-400 dark:text-emerald-400 font-semibold">{p} </span>;
+            if (p === 'cavdax') return <span key={idx} className="text-amber-300 font-semibold">{p} </span>;
+            if (p === '--') return <span key={idx} className="text-slate-500">{p} </span>;
+            if (p === 'npx' || p === '-y') return <span key={idx} className="text-slate-400 font-mono">{p} </span>;
+            if (p.includes('http')) return <span key={idx} className="text-slate-200 underline decoration-slate-600 font-mono">{p} </span>;
+            if (p.includes('@cavdax')) return <span key={idx} className="text-amber-300 font-mono font-semibold">{p} </span>;
             return <span key={idx} className="text-slate-400">{p} </span>;
           })}
         </span>
       );
     }
 
-    // JSON syntax highlighting
+    // JSON syntax highlighting using theme-calibrated amber and slate tokens
     const lines = code.split('\n');
     return lines.map((line, idx) => {
       const keyValMatch = line.match(/^(\s*)(".*?"):\s*(.*)$/);
@@ -214,14 +212,14 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         return (
           <div key={idx}>
             <span>{indent}</span>
-            <span className="text-amber-400/90 dark:text-amber-400 font-medium">{key}</span>
+            <span className="text-amber-400 font-medium">{key}</span>
             <span className="text-slate-400">: </span>
             {val.startsWith('"') ? (
-              <span className="text-emerald-400 dark:text-emerald-300">{val}</span>
+              <span className="text-slate-200">{val}</span>
             ) : val.startsWith('[') || val.startsWith('{') ? (
-              <span className="text-slate-300 dark:text-slate-200">{val}</span>
+              <span className="text-slate-400">{val}</span>
             ) : (
-              <span className="text-cyan-300 dark:text-cyan-400">{val}</span>
+              <span className="text-amber-300">{val}</span>
             )}
           </div>
         );
@@ -233,14 +231,14 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         return (
           <div key={idx}>
             <span>{indent}</span>
-            <span className="text-emerald-400 dark:text-emerald-300">{str}</span>
-            <span className="text-slate-400">{comma}</span>
+            <span className="text-slate-200">{str}</span>
+            <span className="text-slate-500">{comma}</span>
           </div>
         );
       }
 
       return (
-        <div key={idx} className="text-slate-400 dark:text-slate-300">
+        <div key={idx} className="text-slate-400">
           {line}
         </div>
       );
@@ -278,45 +276,48 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         </div>
       </section>
 
-      {/* 2. Official NPM Package Callout Banner */}
+      {/* 2. Official NPM Package Distribution (Strict Section 38 Double-Bezel Anatomy) */}
       <section className="px-6 max-w-5xl mx-auto w-full mb-8">
-        <div className="p-4 sm:p-5 rounded-2xl bg-slate-100/90 dark:bg-white/[0.03] border border-slate-300 dark:border-white/10 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-white/10 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <Package className="w-5 h-5 text-amber-400" />
+        <div className="neo-glass-card p-6 sm:p-7">
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-3 pb-2 border-b border-slate-200 dark:border-white/5">
+            <div className="flex items-center gap-2">
+              <Package className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
+              <span>Global Package Distribution</span>
             </div>
+            <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">Registry v1.0.0</span>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-sm font-bold text-slate-950 dark:text-white">@cavdax/mcp-server</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-semibold">v1.0.0</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">Published on npm</span>
+              <div className="font-mono text-base font-bold text-slate-950 dark:text-white">
+                @cavdax/mcp-server
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-sans leading-relaxed max-w-2xl">
                 Universal Model Context Protocol daemon and causal verification CLI published to the global npm registry.
               </p>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
-            <div className="px-3 py-1.5 rounded-lg bg-slate-950 dark:bg-black/60 border border-slate-800 dark:border-white/10 font-mono text-xs text-amber-300 flex items-center gap-2">
-              <span>npx -y @cavdax/mcp-server</span>
-              <button
-                onClick={() => handleCopy('npm-quick', 'npx -y @cavdax/mcp-server')}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-                title="Copy NPX execution command"
+            <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+              <div className="px-3 py-1.5 rounded-lg bg-slate-950 dark:bg-black/60 border border-slate-800 dark:border-white/10 font-mono text-xs text-amber-300 flex items-center gap-2">
+                <span>npx -y @cavdax/mcp-server</span>
+                <button
+                  onClick={() => handleCopy('npm-quick', 'npx -y @cavdax/mcp-server')}
+                  className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  title="Copy NPX execution command"
+                >
+                  {copiedKey === 'npm-quick' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+              <a
+                href="https://www.npmjs.com/package/@cavdax/mcp-server"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer border border-slate-300 dark:border-white/10"
+                title="View package on npmjs.com"
               >
-                {copiedKey === 'npm-quick' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
+                <ExternalLink className="w-4 h-4" />
+              </a>
             </div>
-            <a
-              href="https://www.npmjs.com/package/@cavdax/mcp-server"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer border border-slate-300 dark:border-white/10"
-              title="View package on npmjs.com"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
           </div>
         </div>
       </section>
@@ -337,7 +338,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
             </div>
 
             {/* Transport Toggle: Cloud SSE vs NPX Stdio */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start lg:self-auto">
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start lg:self-auto relative">
               <button
                 onClick={() => {
                   playClick();
@@ -357,7 +358,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
                   />
                 )}
                 <Cloud className="w-3.5 h-3.5 relative z-10" />
-                <span className="relative z-10">Cloud SSE (Zero Install)</span>
+                <span className="relative z-10">Cloud SSE</span>
               </button>
 
               <button
@@ -379,12 +380,12 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
                   />
                 )}
                 <Terminal className="w-3.5 h-3.5 relative z-10" />
-                <span className="relative z-10">NPX Stdio (Local)</span>
+                <span className="relative z-10">NPX Stdio</span>
               </button>
             </div>
           </div>
 
-          {/* Client Tabs Bar */}
+          {/* Client Tabs Bar with Sliding Pill */}
           <div className="mb-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 w-full relative">
               {Object.keys(clientConfigs[transportMode]).map((key) => {
@@ -423,23 +424,23 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
               <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 dark:bg-white/[0.03] border-b border-slate-800 dark:border-white/5 text-[11px] font-mono">
                 <div className="flex items-center gap-2.5">
                   <div className="flex items-center gap-1.5 opacity-70">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-600 inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-600 inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-600 inline-block" />
                   </div>
-                  <span className="ml-1 text-slate-400 dark:text-slate-400 font-medium">
+                  <span className="ml-1 text-slate-400 font-medium">
                     {activeConfig.file}
                   </span>
                 </div>
 
                 <button
                   onClick={() => handleCopy(activeClient + transportMode, activeConfig.snippet)}
-                  className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-300 hover:text-white dark:text-slate-300 dark:hover:text-white cursor-pointer transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-300 hover:text-white cursor-pointer transition-colors"
                 >
                   {copiedKey === activeClient + transportMode ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied</span>
+                      <Check className="w-3.5 h-3.5 text-slate-200" />
+                      <span className="text-slate-200">Copied</span>
                     </>
                   ) : (
                     <>
@@ -463,7 +464,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         </div>
       </section>
 
-      {/* 4. Universal CLI Command Suite Bento */}
+      {/* 4. Universal CLI Command Suite Bento with Framer Motion Sliding Pill */}
       <section className="px-6 max-w-5xl mx-auto w-full mb-12">
         <div className="neo-glass-card p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-white/10">
@@ -477,23 +478,33 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start sm:self-auto">
-              {Object.keys(cliCommands).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    playClick();
-                    setActiveCliTab(tab);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono uppercase font-bold transition-all ${
-                    activeCliTab === tab
-                      ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 self-start sm:self-auto relative">
+              {Object.keys(cliCommands).map((tab) => {
+                const isSelected = activeCliTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      playClick();
+                      setActiveCliTab(tab);
+                    }}
+                    className={`relative px-3 py-1 rounded-lg text-xs font-mono uppercase font-bold transition-colors duration-200 select-none ${
+                      isSelected
+                        ? 'text-white dark:text-slate-950 z-10'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
+                    }`}
+                  >
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeCliTabPill"
+                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                        className="absolute inset-0 rounded-lg bg-slate-950 dark:bg-white shadow-xs"
+                      />
+                    )}
+                    <span className="relative z-10">{tab}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -508,8 +519,8 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
             >
               {copiedKey === `cli-${activeCliTab}` ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Copied</span>
+                  <Check className="w-3.5 h-3.5 text-slate-200" />
+                  <span className="text-slate-200">Copied</span>
                 </>
               ) : (
                 <>
@@ -547,7 +558,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
             >
               {copiedKey === 'rules-file' ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check className="w-3.5 h-3.5 text-slate-200" />
                   <span>Copied Instructions</span>
                 </>
               ) : (
@@ -584,10 +595,10 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         {/* 3 Symmetrical Bento Glass Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Step 1: Intercept */}
-          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
             <div 
               aria-hidden="true" 
-              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
+              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none"
             />
 
             <div>
@@ -621,10 +632,10 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
           </div>
 
           {/* Step 2: Causal Provenance Check */}
-          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
             <div 
               aria-hidden="true" 
-              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
+              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none"
             />
 
             <div>
@@ -658,10 +669,10 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
           </div>
 
           {/* Step 3: Deterministic Gate */}
-          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+          <div className="neo-glass-card p-6 sm:p-7 flex flex-col justify-between group hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
             <div 
               aria-hidden="true" 
-              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
+              className="absolute top-0 right-0 w-24 h-24 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none"
             />
 
             <div>
