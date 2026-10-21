@@ -37,9 +37,11 @@
    - [6.1 The Chromium Architecture Problem: `SingletonLock` & Incognito Defaults](#61-the-chromium-architecture-problem-singletonlock--incognito-defaults)
    - [6.2 Dual-Mode Architecture: Remote Debug Attach vs Persistent Profile](#62-dual-mode-architecture-remote-debug-attach-vs-persistent-profile)
    - [6.3 Production Implementation of `scripts/browser-runner.js`](#63-production-implementation-of-scriptsbrowser-runnerjs)
-   - [6.4 Windows Remote Debugging Launchers (PowerShell & Batch)](#64-windows-remote-debugging-launchers-powershell--batch)
-   - [6.5 NPM Scripts & Workflow Commands](#65-npm-scripts--workflow-commands)
-   - [6.6 Security Isolation & Git Credential Hygiene](#66-security-isolation--git-credential-hygiene)
+   - [6.4 Native Microsoft Edge Runner Integration](#64-native-microsoft-edge-runner-integration)
+   - [6.5 One-Click Windows Batch Launchers (Inside `Codebase/`)](#65-one-click-windows-batch-launchers-inside-codebase)
+   - [6.6 Automated Verification Test Suite (`npm run test:browser`)](#66-automated-verification-test-suite-npm-run-testbrowser)
+   - [6.7 Process Lifecycle & Event-Loop Keepalive Architectural Fix](#67-process-lifecycle--event-loop-keepalive-architectural-fix)
+   - [6.8 Security Isolation & Git Credential Hygiene](#68-security-isolation--git-credential-hygiene)
 7. [Enterprise Audit Subsystem & Compliance Logging](#7-enterprise-audit-subsystem--compliance-logging)
    - [7.1 Act III BLOCKED_SUPERSEDED_SOURCE Enforcement](#71-act-iii-blocked_superseded_source-enforcement)
    - [7.2 Zero-State Elimination & Historical Demo Seeding](#72-zero-state-elimination--historical-demo-seeding)
@@ -210,8 +212,7 @@ CAVDAX replaces vector blindness with a **FalkorDB GraphBLAS Causal Knowledge Gr
   - **MCP Action Gates** pulse amber along the traversal perimeter.
 
 ### 5.2 Option C: Pinned Scrollytelling Viewport Takeover & Theater Mode
-- **The Scrollytelling Experience**:
-  - Rather than being trapped inside an ordinary static card, the radar features a **Pinned Scrollytelling Viewport Takeover Engine**:
+- Rather than being trapped inside an ordinary static card, the radar features a **Pinned Scrollytelling Viewport Takeover Engine**:
   ```javascript
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -233,8 +234,7 @@ CAVDAX replaces vector blindness with a **FalkorDB GraphBLAS Causal Knowledge Gr
   - Pure circular HUD floating in an obsidian void.
 
 ### 5.4 Screen-Calibrated Target Containment (Orbit Safety)
-- **The Problem**: On standard 13" and 15" laptops, absolute pixel coordinates caused target labels (`ADR-001 (Superseded)`) to clip past the radar edge or monitor boundary.
-- **The Solution**: Re-engineered all target positions into **responsive radial ratios** strictly bounded inside the inner orbital tracks:
+- Re-engineered all target positions into **responsive radial ratios** strictly bounded inside the inner orbital tracks:
   ```javascript
   const RADAR_TARGETS = [
     { id: 'adr-002', name: 'ADR-002: OAuth2', type: 'valid', angle: 42, radiusRatio: 0.36 },
@@ -250,36 +250,17 @@ CAVDAX replaces vector blindness with a **FalkorDB GraphBLAS Causal Knowledge Gr
 
 ### 5.5 Mathematical Polar Synchronization & Oscilloscope Phosphor Decay
 - Replaced erratic CSS transition delays with a single **60fps `requestAnimationFrame` polar loop**:
-  ```javascript
-  // Polar coordinate transformation
-  const rad = (target.angle * Math.PI) / 180;
-  const x = target.radius * Math.sin(rad);
-  const y = -target.radius * Math.cos(rad);
-  ```
-- **Beam Angle Synchronization**:
-  - The sweep beam rotates continuously at constant angular velocity (`sweepAngle = (timestamp / 24) % 360`).
-  - The script calculates the angular delta between the beam and each target:
-    `delta = (sweepAngle - target.angle + 360) % 360`
-- **Cathode-Ray Phosphor Persistence Curve**:
-  - When the beam passes a target (`delta < 15°`), the target blip instantly illuminates to full luminance (`opacity = 1.0, scale = 1.08`).
-  - As the beam moves away, the target fades following an authentic **oscilloscope exponential decay curve**:
-    `opacity = Math.pow(1 - (delta / decayArc), 2.2)`
-  - Recreates the tactile aesthetic of real analog phosphor CRTs.
-- **Interactive Tactile Inspection**:
-  - Hovering over any target blip locks opacity to `1.0`, expands scale to `1.05`, and reveals its full provenance label.
-  - Clicking any blip triggers acoustic micro-feedback (`playClick()`) and opens the live console.
+  $$\begin{cases} x = r \cdot \sin(\theta) \\ y = -r \cdot \cos(\theta) \end{cases}$$
+- **Beam Angle Synchronization & Phosphor Decay**:
+  - Sweep beam rotates continuously (`sweepAngle = (timestamp / 24) % 360`).
+  - Target flashes to full luminance on beam arrival (`delta < 15°`), then decays smoothly following an authentic oscilloscope exponential curve:
+    $$\text{opacity} = \left(1 - \frac{\Delta}{\text{decayArc}}\right)^{2.2}$$
+- **Interactive Tactile Inspection**: Hovering locks opacity to `1.0` and reveals full provenance; clicking triggers acoustic feedback (`playClick()`) and launches the live console.
 
 ### 5.6 Dual-Theme Optical Calibration & Scroll Cue Isolation
-- **Light Theme**:
-  - Reticle & Rings: Deep slate-900 hairline borders (`border-slate-900/15`).
-  - Sweep Beam: Deep slate/cobalt gradient (`via-slate-600/30 to-transparent`).
-  - Target Typography: High-contrast slate ink (`text-slate-800`).
-- **Dark Theme**:
-  - Reticle & Rings: Translucent porcelain hairline borders (`border-white/10`).
-  - Sweep Beam: Warm golden-amber gradient (`via-[#d9a353]/30 to-transparent`).
-  - Ray Tip Ambient Glow: Atmospheric amber squircle (`bg-amber-400/20 blur-xl`).
-- **Scroll Cue Isolation**:
-  - Hides external scroll cues and controls when theater mode engages, preventing visual collision with the radar canvas.
+- **Light Theme**: Slate-900 hairline borders (`border-slate-900/15`), deep slate/cobalt sweep beam (`via-slate-600/30`), high-contrast slate typography (`text-slate-800`).
+- **Dark Theme**: Translucent porcelain hairline borders (`border-white/10`), golden-amber gradient (`via-[#d9a353]/30`), ambient ray-tip squircle glow (`bg-amber-400/20 blur-xl`).
+- **Scroll Cue Isolation**: External scroll controls automatically hide during theater mode to maintain pure visual immersion.
 
 ---
 
@@ -290,7 +271,7 @@ When developers run Puppeteer or Playwright, they often ask: *"Why can't it just
 
 The technical reasons:
 1. **Chromium's `SingletonLock`**:
-   - Google Chrome and Microsoft Edge place an operating-system level exclusive file lock on your user profile directory (`AppData/Local/Google/Chrome/User Data/SingletonLock`).
+   - Google Chrome and Microsoft Edge place an operating-system level exclusive file lock on your user profile directory (`AppData/Local/Google/Chrome/User Data/SingletonLock` or `Microsoft/Edge/User Data/SingletonLock`).
    - If your personal browser is already running, no secondary process can open that profile database without immediately crashing:
      ```
      ProcessSingleton: The profile appears to be in use by another Chrome process.
@@ -299,13 +280,15 @@ The technical reasons:
 2. **Hermeticity vs Developer Convenience**:
    - Automated CI testing demands a clean slate so browser extensions don't interfere with DOM assertions.
    - However, during **local development and interactive E2E testing**, developers need their signed-in accounts (Google, GitHub, Auth0, internal dev roles) so they don't have to re-authenticate on every single test run.
+3. **Chromium Security Restrictions on Remote Debugging**:
+   - Chromium explicitly blocks `--remote-debugging-port` when using your default everyday user profile without an explicit `--user-data-dir`. This prevents untrusted local scripts from silently hijacking active banking and password stores.
 
 ### 6.2 Dual-Mode Architecture: Remote Debug Attach vs Persistent Profile
 We resolved this by engineering a **Dual-Mode Smart Browser Runner**:
 
 ```mermaid
 flowchart TD
-    Start["npm run browser:open / test:e2e"] --> CheckPort{"Port 9222 Active?<br/>(Remote Debugging)"}
+    Start["npm run browser:edge / browser:open"] --> CheckPort{"Port 9222 Active?<br/>(Remote Debugging)"}
     
     CheckPort -- "YES" --> ModeA["Mode A: puppeteer.connect()"]
     ModeA --> Attach["Attaches directly to your live browser window<br/>(Uses your signed-in accounts & tabs)"]
@@ -326,13 +309,13 @@ flowchart TD
        defaultViewport: null,
      });
      ```
-     Attaches directly into the running browser. If a tab with `localhost:5173` is already open, it brings it to the front; otherwise, it navigates the active tab. Zero new windows.
+     Attaches directly into the running browser without spawning new processes.
   4. **Mode B (Persistent Dev Profile)**:
      ```javascript
      const browser = await puppeteer.launch({
        headless: false,
        executablePath,
-       userDataDir: path.resolve(__dirname, '../.puppeteer-profile'),
+       userDataDir: profileDir,
        defaultViewport: null,
        args: [
          '--start-maximized',
@@ -347,38 +330,53 @@ flowchart TD
      - **You log in once; you stay logged in forever**.
      - Strips `--enable-automation` banner to avoid bot-detection blocking.
 
-### 6.4 Windows Remote Debugging Launchers (PowerShell & Batch)
-To allow zero-friction launching on Windows, we created two helper scripts:
-1. **PowerShell Script**: [`scripts/launch-signedin-browser.ps1`](../scripts/launch-signedin-browser.ps1)
-   - Locates Chrome or Edge.
-   - Launches with `--remote-debugging-port=9222` and `--user-data-dir=".puppeteer-profile"`.
-   - Opens `http://localhost:5173` immediately.
-2. **Batch File**: [`scripts/launch-signedin-browser.bat`](../scripts/launch-signedin-browser.bat)
-   - One-click launcher for CMD / Windows Explorer double-click.
+### 6.4 Native Microsoft Edge Runner Integration
+- Added first-class Microsoft Edge discovery:
+  `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
+- Added `--edge` CLI flag and `process.env.BROWSER === 'edge'` support.
+- Added npm script to `package.json`:
+  ```bash
+  npm run browser:edge
+  ```
 
-### 6.5 NPM Scripts & Workflow Commands
-Added to root [`package.json`](../package.json):
-```json
-{
-  "scripts": {
-    "browser:open": "node scripts/browser-runner.js",
-    "browser:debug": "powershell -ExecutionPolicy Bypass -File scripts/launch-signedin-browser.ps1",
-    "test:e2e": "node scripts/browser-runner.js"
-  }
-}
+### 6.5 One-Click Windows Batch Launchers (Inside `Codebase/`)
+Built dedicated one-click batch files strictly inside `Codebase/` (keeping the outer root folder completely clean per user specifications):
+1. **[`Codebase\launch-edge.bat`](../launch-edge.bat)**:
+   - Validates that the local dev server is responding on `http://localhost:5173`.
+   - Spawns Microsoft Edge via Puppeteer with the persistent profile.
+   - Keeps the console window open with clear visual status messages.
+2. **[`Codebase\launch-chrome.bat`](../launch-chrome.bat)**:
+   - Mirror runner for Google Chrome.
+
+### 6.6 Automated Verification Test Suite (`npm run test:browser`)
+We codified an automated 2-phase verification test in [`scripts/test-signedin-browser.js`](../scripts/test-signedin-browser.js):
+```bash
+npm run test:browser
 ```
+- **Phase 1**: Launches browser with `.puppeteer-profile/`, loads `http://localhost:5173`, injects authentication session tokens and cookies into `localStorage` and `document.cookie`, takes a screenshot, and completely exits the process.
+- **Phase 2**: Restarts a brand-new browser process pointing to the same `.puppeteer-profile/` directory. Asserts that the authentication tokens and cookies are **100% intact**, proving that sessions persist across restarts without incognito resets.
 
-| Command | Action |
-|---|---|
-| `npm run browser:open` | Smart runner: attaches to live browser on port 9222 or launches persistent signed-in profile. |
-| `npm run browser:debug` | Starts your local Chrome/Edge on port 9222 ready for direct Puppeteer attachment. |
-| `npm run test:e2e` | Runs automated E2E tests against the signed-in browser session. |
+### 6.7 Process Lifecycle & Event-Loop Keepalive Architectural Fix
+- **The Issue**: Early iterations of Puppeteer CLI scripts appeared to flash a window and immediately close.
+- **The Root Cause**: Once Node.js finishes executing the asynchronous `openApp()` promise, its event loop has no remaining active listeners. Node exits immediately, causing Puppeteer's child-process cleanup handlers to kill the browser.
+- **The Solution**: We implemented an active process keepalive in `scripts/browser-runner.js`:
+  ```javascript
+  openApp(urlArg).then(({ browser }) => {
+    console.log('Browser is actively open on your screen! (Close browser window to exit)');
+    browser.on('disconnected', () => {
+      console.log('Browser closed by user. Exiting.');
+      process.exit(0);
+    });
+  });
+  ```
+  This keeps Node alive and the browser window active on your screen until you explicitly close it.
 
-### 6.6 Security Isolation & Git Credential Hygiene
+### 6.8 Security Isolation & Git Credential Hygiene
 - Updated [`.gitignore`](../.gitignore) to strictly exclude:
   ```gitignore
   # Puppeteer Persistent Profiles & Test Data
   .puppeteer-profile/
+  .puppeteer-edge-profile/
   .puppeteer-user-data/
   ```
 - Guaranteed that personal session tokens, login cookies, and local database caches are **never staged or committed to Git**.
@@ -400,7 +398,6 @@ Added to root [`package.json`](../package.json):
 
 ### 7.2 Zero-State Elimination & Historical Demo Seeding
 - **File**: [`core/graph/queries.js`](../core/graph/queries.js)
-- Evaluators visiting the `/audit` tab previously saw an empty table before running the live demo.
 - Added 2 realistic historical actions (`act-hist-001: EXECUTED`, `act-hist-002: BLOCKED_SUPERSEDED_SOURCE`) to initial seed scripts and fallback graph state, ensuring the telemetry and audit UI is populated on initial load.
 
 ---
@@ -456,18 +453,22 @@ Enshrined under Section 3 (**Git Branch Hygiene & Commit Governance**) in [`AGEN
 
 | File Path | Component / Domain | Core Architectural Changes |
 |---|---|---|
+| [`launch-edge.bat`](../launch-edge.bat) | Codebase Root Launcher | Windows one-click batch launcher for Microsoft Edge with persistent profile and dev-server health check. |
+| [`launch-chrome.bat`](../launch-chrome.bat) | Codebase Root Launcher | Windows one-click batch launcher for Google Chrome with persistent profile and dev-server health check. |
+| [`scripts/browser-runner.js`](../scripts/browser-runner.js) | Testing Harness | Dual-Mode runner: attaches to live browser on port 9222 (`puppeteer.connect`) or launches persistent profile (`userDataDir: .puppeteer-profile`), with native Edge support (`--edge`), cross-platform discovery, and active process keepalive. |
+| [`scripts/test-signedin-browser.js`](../scripts/test-signedin-browser.js) | Testing Suite | Automated 2-phase verification test proving session storage and authentication cookie persistence across browser restarts. |
+| [`scripts/launch-signedin-browser.ps1`](../scripts/launch-signedin-browser.ps1) | Automation Scripts | PowerShell launcher for Chrome/Edge with `--remote-debugging-port=9222` and persistent profile. |
+| [`scripts/launch-signedin-browser.bat`](../scripts/launch-signedin-browser.bat) | Automation Scripts | Windows batch wrapper for one-click browser launch. |
+| [`package.json`](../package.json) | Monorepo Root | Added `puppeteer-core`, `browser:open`, `browser:edge`, `browser:debug`, `test:browser`, and `test:e2e` scripts. |
+| [`.gitignore`](../.gitignore) | Repository Hygiene | Gitignored `.puppeteer-profile/`, `.puppeteer-edge-profile/`, and `.puppeteer-user-data/` to prevent secret leaks. |
+| [`docs/PUPPETEER_SIGNED_IN_BROWSER.md`](../docs/PUPPETEER_SIGNED_IN_BROWSER.md) | Documentation | Complete architectural documentation for signed-in Puppeteer browser testing. |
+| [`docs/COMPLETE_PROJECT_RECORD.md`](../docs/COMPLETE_PROJECT_RECORD.md) | Master Record | Comprehensive master documentation of all architectural milestones. |
 | [`apps/client/src/components/CausalProvenanceRadar.jsx`](../apps/client/src/components/CausalProvenanceRadar.jsx) | Client Radar | Option C pinned scrollytelling viewport takeover (150vh tight runway, 0.60x to 1.28x panoramic theater expansion, F11 containment, backdrop blur), pure unbounded HUD (zero card borders/chrome), screen-calibrated target orbit containment (radiusRatio <= 0.66), 60fps polar loop with oscilloscope phosphor decay, dual-theme calibration, and scroll cue isolation. |
 | [`apps/client/src/components/SpotlightDataRain.jsx`](../apps/client/src/components/SpotlightDataRain.jsx) | Client Canvas | Causal Knowledge Graph DAG, invisible cursor probe hub (0 anchor dot), biomimetic firefly swarm with 2.2s–10.5s interval cycles, obstacle perimeter glide, 2D harmonic hovering (35 upper / 60 lower nodes). |
 | [`apps/client/src/components/LandingPage.jsx`](../apps/client/src/components/LandingPage.jsx) | Client View | Section 0 layout refactor, original button/prompt sizing preserved, scroll prompt grounded at `bottom-10 sm:bottom-12 md:bottom-14 lg:bottom-16`. |
 | [`apps/client/src/components/PullCordLampToggle.jsx`](../apps/client/src/components/PullCordLampToggle.jsx) | Client Toggle | Added `id="pull-cord-lamp-toggle"` for dynamic firefly swarm targeting. |
 | [`apps/client/src/components/TeamPage.jsx`](../apps/client/src/components/TeamPage.jsx) | Client Team | Team Contrarians central emblem 3D parallax tilt & full-screen frosted lightbox modal. |
 | [`apps/client/src/components/FooterParticles.jsx`](../apps/client/src/components/FooterParticles.jsx) | Client Footer | Direct rasterization of `CAVDAX_WORDMARK_LETTERS_PATH` onto offscreen canvas for particle pointillism. |
-| [`scripts/browser-runner.js`](../scripts/browser-runner.js) | Testing Harness | Smart Dual-Mode runner: attaches to live browser on port 9222 (`puppeteer.connect`) or launches persistent profile (`userDataDir: .puppeteer-profile`). |
-| [`scripts/launch-signedin-browser.ps1`](../scripts/launch-signedin-browser.ps1) | Automation Scripts | PowerShell launcher for Chrome/Edge with `--remote-debugging-port=9222` and persistent profile. |
-| [`scripts/launch-signedin-browser.bat`](../scripts/launch-signedin-browser.bat) | Automation Scripts | Windows batch wrapper for one-click browser launch. |
-| [`package.json`](../package.json) | Monorepo Root | Added `puppeteer-core`, `browser:open`, `browser:debug`, and `test:e2e` scripts. |
-| [`.gitignore`](../.gitignore) | Repository Hygiene | Gitignored `.puppeteer-profile/` and `.puppeteer-user-data/` to prevent secret leaks. |
-| [`docs/PUPPETEER_SIGNED_IN_BROWSER.md`](../docs/PUPPETEER_SIGNED_IN_BROWSER.md) | Documentation | Complete architectural documentation for signed-in Puppeteer browser testing. |
 | [`AGENTS.md`](../AGENTS.md) | Repository Governance | Codified Section 3: **Atomic Feature Squashing & History Cleanliness Standard**. |
 | [`docs/DEV_SESSION_STATE.md`](../docs/DEV_SESSION_STATE.md) | Living Session State | Updated living state log with all October 21 milestones. |
 
@@ -476,6 +477,10 @@ Enshrined under Section 3 (**Git Branch Hygiene & Commit Governance**) in [`AGEN
   - `3dbca03` — `feat(client): integrate causal knowledge graph DAG with dynamic firefly swarm migrations and grounded responsive layout`
   - `e4ec386` — `feat(test): add signed-in persistent browser automation runner and remote debugging launcher`
   - `ccced9c` — `docs: add complete master engineering record and puppeteer testing guide`
+  - `5c8dd3a` — `docs: expand complete technical documentation with causal radar scrollytelling architecture`
+  - `9f250ad` — `test(puppeteer): add automated signed-in browser persistence test suite`
+  - `a444d66` — `feat(browser): add direct Microsoft Edge runner support with persistent profile`
+  - `068cbf3` — `feat(scripts): add one-click Windows batch launchers for Edge and Chrome`
 - **`origin/docs`**:
   - `0fea5fd` — `docs: codify atomic feature squashing rule and update session state [skip ci]`
 - **Build Status**: Verified with `npm run build` (Exit code `0`, 0 errors).
