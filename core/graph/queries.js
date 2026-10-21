@@ -245,6 +245,23 @@ export async function seedDemoGraph(graph) {
     })
     CREATE (f2)-[:EXTRACTED_FROM]->(s2)
 
+    // 5. Historical Demo Agent Actions for Audit Ledger
+    CREATE (a1:AgentAction {
+      id: "act-hist-001",
+      target_file: "src/services/payment.js",
+      status: "EXECUTED",
+      timestamp: timestamp() - 3600000
+    })
+    CREATE (a1)-[:GROUNDED_IN]->(d1)
+
+    CREATE (a2:AgentAction {
+      id: "act-hist-002",
+      target_file: "src/services/billing.js",
+      status: "BLOCKED_SUPERSEDED_SOURCE",
+      timestamp: timestamp() - 1800000
+    })
+    CREATE (a2)-[:GROUNDED_IN]->(d1)
+
     RETURN s1.id AS seeded_source, d1.id AS seeded_decision
   `;
 

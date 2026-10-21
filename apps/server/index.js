@@ -161,12 +161,16 @@ let fallbackGraphState = {
     { id: 'F-Auth-v1', label: 'Fact', claim: 'Payment services require TokenAuth v1', is_stale: false, verified: true },
     { id: 'DEC-102', label: 'Decision', title: 'Generate Checkout Service with TokenAuth v1', status: 'VALID' },
     { id: 'ADR-002', label: 'Source', title: 'Mandatory Migration to OAuth2; TokenAuth v1 Decommissioned', status: 'ACTIVE', type: 'ADR' },
-    { id: 'F-OAuth2', label: 'Fact', claim: 'OAuth2 is strictly enforced; TokenAuth v1 prohibited', is_stale: false, verified: true }
+    { id: 'F-OAuth2', label: 'Fact', claim: 'OAuth2 is strictly enforced; TokenAuth v1 prohibited', is_stale: false, verified: true },
+    { id: 'act-hist-001', label: 'AgentAction', target_file: 'src/services/payment.js', status: 'EXECUTED', timestamp: Date.now() - 3600000 },
+    { id: 'act-hist-002', label: 'AgentAction', target_file: 'src/services/billing.js', status: 'BLOCKED_SUPERSEDED_SOURCE', timestamp: Date.now() - 1800000 }
   ],
   edges: [
     { source: 'F-Auth-v1', target: 'ADR-001', type: 'EXTRACTED_FROM' },
     { source: 'DEC-102', target: 'F-Auth-v1', type: 'DEPENDS_ON' },
-    { source: 'F-OAuth2', target: 'ADR-002', type: 'EXTRACTED_FROM' }
+    { source: 'F-OAuth2', target: 'ADR-002', type: 'EXTRACTED_FROM' },
+    { source: 'act-hist-001', target: 'DEC-102', type: 'GROUNDED_IN' },
+    { source: 'act-hist-002', target: 'DEC-102', type: 'GROUNDED_IN' }
   ]
 };
 
@@ -361,6 +365,20 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
         const isInvalidated = dNode && dNode.status === 'INVALIDATED_NEEDS_REVALIDATION';
 
         if (isInvalidated || isDec102) {
+          const actionId = `act-${Date.now()}`;
+          fallbackGraphState.nodes.push({
+            id: actionId,
+            label: 'AgentAction',
+            target_file: args.file_path,
+            status: 'BLOCKED_SUPERSEDED_SOURCE',
+            timestamp: Date.now()
+          });
+          fallbackGraphState.edges.push({
+            source: actionId,
+            target: args.decision_id,
+            type: 'GROUNDED_IN'
+          });
+
           const rejectResponse = {
             isError: true,
             simulated: true, // FalkorDB offline — in-memory simulation
@@ -386,7 +404,8 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
             id: actionId,
             label: 'AgentAction',
             target_file: args.file_path,
-            status: 'EXECUTED'
+            status: 'EXECUTED',
+            timestamp: Date.now()
           });
           fallbackGraphState.edges.push({
             source: actionId,
@@ -590,15 +609,20 @@ app.get('/api/audit', async (req, res) => {
     // Fallback: derive audit entries from in-memory fallbackGraphState
     const fallbackEntries = fallbackGraphState.nodes
       .filter(n => n.label === 'AgentAction')
-      .map(n => ({
-        action_id:       n.id,
-        target_file:     n.target_file || null,
-        status:          n.status,
-        executed_at:     null,
-        decision_id:     fallbackGraphState.edges.find(e => e.source === n.id && e.type === 'GROUNDED_IN')?.target || null,
-        decision_status: null,
-        decision_title:  null
-      }))
+      .map(n => {
+        const edge = fallbackGraphState.edges.find(e => e.source === n.id && e.type === 'GROUNDED_IN');
+        const decisionId = edge ? edge.target : null;
+        const decisionNode = decisionId ? fallbackGraphState.nodes.find(d => d.id === decisionId) : null;
+        return {
+          action_id:       n.id,
+          target_file:     n.target_file || null,
+          status:          n.status,
+          executed_at:     n.timestamp || Date.now(),
+          decision_id:     decisionId,
+          decision_status: decisionNode ? decisionNode.status : null,
+          decision_title:  decisionNode ? decisionNode.title : null
+        };
+      })
       .slice(0, limit);
 
     return res.json({

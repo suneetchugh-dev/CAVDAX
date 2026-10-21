@@ -92,6 +92,30 @@ export class CavdaxMcpServer {
       console.warn(`[MCP Gate] ⛔ GATE REFUSAL: Action BLOCKED! Verdict: ${checkResult.gate_verdict}`);
       console.warn(`[MCP Gate] Violation path:`, checkResult.violation_paths);
 
+      // Log the blocked attempt in FalkorDB audit trail
+      try {
+        const actionId = `act-${Date.now()}`;
+        await this.graph.query(`
+          MATCH (d:Decision {id: $decisionId})
+          CREATE (a:AgentAction {
+            id: $actionId,
+            target_file: $targetFile,
+            status: $status,
+            timestamp: timestamp()
+          })
+          CREATE (a)-[:GROUNDED_IN]->(d)
+        `, {
+          params: {
+            decisionId: decision_id,
+            actionId,
+            targetFile: file_path,
+            status: checkResult.gate_verdict || "BLOCKED_SUPERSEDED_SOURCE"
+          }
+        });
+      } catch (auditErr) {
+        console.error(`[MCP Gate] Warning: Failed to log blocked audit node:`, auditErr.message);
+      }
+
       // Return structured MCP error payload back to agent (zero files written!)
       return {
         isError: true,

@@ -9,7 +9,24 @@
 
 ## 1. Executive Summary of Complete Theme Makeover
 
-## 1.1 Latest Session Achievements (October 20, 2026)
+## 1.1 Latest Session Achievements (October 21, 2026)
+
+- **Enterprise Audit Subsystem Hardening & BLOCKED Action Logging**:
+  - Resolved critical compliance gap: `core/mcp/server.js` and `apps/server/index.js` now record an `AgentAction` node with `status: 'BLOCKED_SUPERSEDED_SOURCE'` when Act III rejects unauthorized agent file writes.
+  - Linked blocked actions directly to the invalidated decision node (`DEC-102`) via `[:GROUNDED_IN]` edge.
+  - Enriched `/api/audit` simulation fallback to populate `executed_at`, `decision_status`, and `decision_title` dynamically.
+
+- **Zero-State Elimination & Historical Demo Seeding**:
+  - Added 2 realistic historical actions (`act-hist-001: EXECUTED`, `act-hist-002: BLOCKED_SUPERSEDED_SOURCE`) to `core/graph/queries.js` (`seedDemoGraph`) and `fallbackGraphState`.
+  - Visitors and evaluators landing on the `/audit` tab now immediately see a live, populated compliance table with telemetry.
+
+- **Commercial Product Roadmap Architecture (`docs/FUTURE_ROADMAP.md`)**:
+  - Codified Section 5: Commercial Multi-Tenant Architecture & Dual-Mode Visualizer.
+  - Documented Organization Accounts (GitHub/GitLab OAuth), Multi-Tenant FalkorDB Graph Isolation (`cavdax_graph_{orgId}_{repoId}`), and RBAC.
+  - Formulated the Dual-Mode Console pattern: permanently preserving the 4-Act Demo Sandbox alongside connected enterprise live repositories.
+  - Contrasted Local Open-Source Studio (`npx cavdax studio`, zero-auth) with Hosted Enterprise Cloud (`cavdax.sahnirmaan.live`, org-auth).
+
+## 1.2 Previous Session Achievements (October 20, 2026)
 
 - **Two-Section Asymmetric Bento Architecture (`LandingPage.jsx`)**:
   - Structured the landing page into a clean Problem-to-Solution sequence:
