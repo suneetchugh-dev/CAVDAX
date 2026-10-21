@@ -1,182 +1,148 @@
 /**
  * CausalProvenanceRadar.jsx — CAVDAX Continuous Invalidation Radar
  *
- * Bespoke architectural radar visualizer based on the 21st.dev radar effect,
- * heavily customized to comply with docs/UI_DESIGN_SYSTEM.md:
+ * Minimalist, atmospheric radar HUD visualizer:
+ *  - Volumetric, soft-blurred light ray (zero harsh lines, zero sharp polygons)
+ *  - Centered concentric rings & crosshairs (symmetrical 360° visibility)
+ *  - Minimalist detected radar blips: illuminate on sweep pass, then softly fade away
+ *  - Zero bulky cards or tag boxes
  *  - Fully theme-adaptive (Porcelain Light & Obsidian Dark)
- *  - 100% Lucide icons (no react-icons dependency bloat, zero banned shield SVGs)
- *  - Domain-specific CAVDAX nodes (ADRs, Git commits, Stale Facts, MCP Gate, FalkorDB)
- *  - Zero emojis, zero bracketed tags, zero pulsing orbs, monospace badges
- *  - Anti-orphan typography (text-pretty)
- *  - Double-bezel elevation with tactile kinetics (playClick)
+ *  - 100% UI Design System compliant (zero emojis, unbracketed monospace typography)
  */
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  FileText, 
-  GitCommit, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Cpu, 
-  Database,
-  Radio,
-  ArrowRight
-} from 'lucide-react';
+import { Radio, ArrowRight } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
-// ─── Concentric Circle Component ──────────────────────────────────────────────
-function RadarCircle({ sizeRem, opacity, delay = 0 }) {
+// ─── Radar Targets (Grounded CAVDAX Domain Invariants) ────────────────────────
+const RADAR_TARGETS = [
+  {
+    id: 'adr-002',
+    name: 'ADR-002: OAuth2',
+    status: 'ACTIVE SOURCE',
+    type: 'valid',
+    // 45deg: top-right
+    top: 'calc(50% - 105px)',
+    left: 'calc(50% + 95px)',
+    delaySec: 1.25,
+  },
+  {
+    id: 'mcp-gate',
+    name: 'apply_code_change',
+    status: 'MCP GATE INTERCEPT',
+    type: 'gate',
+    // 125deg: bottom-right
+    top: 'calc(50% + 90px)',
+    left: 'calc(50% + 115px)',
+    delaySec: 3.47,
+  },
+  {
+    id: 'dec-103',
+    name: 'DEC-103: RS256 Bearer',
+    status: 'VERIFIED EXECUTABLE',
+    type: 'valid',
+    // 200deg: bottom-left
+    top: 'calc(50% + 75px)',
+    left: 'calc(50% - 175px)',
+    delaySec: 5.55,
+  },
+  {
+    id: 'adr-001',
+    name: 'ADR-001: TokenAuth',
+    status: 'SUPERSEDED',
+    type: 'stale',
+    // 265deg: middle-left
+    top: 'calc(50% - 25px)',
+    left: 'calc(50% - 160px)',
+    delaySec: 7.36,
+  },
+  {
+    id: 'fact-stale',
+    name: 'TokenAuth.v1 Verify',
+    status: 'STALE FACT DETECTED',
+    type: 'stale',
+    // 325deg: top-left
+    top: 'calc(50% - 110px)',
+    left: 'calc(50% - 85px)',
+    delaySec: 9.02,
+  },
+];
+
+// ─── Minimal Radar Target Blip (Illuminates & Fades Away) ───────────────────────
+function RadarTargetBlip({ target, onClick }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Status color palettes (dot & text)
+  const colors = {
+    valid: {
+      dot: 'bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.8)]',
+      ring: 'border-teal-500',
+      text: 'text-teal-600 dark:text-teal-400',
+      status: 'text-teal-600/80 dark:text-teal-400/80',
+    },
+    stale: {
+      dot: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]',
+      ring: 'border-rose-500',
+      text: 'text-rose-600 dark:text-rose-400',
+      status: 'text-rose-600/80 dark:text-rose-400/80',
+    },
+    gate: {
+      dot: 'bg-[#d9a353] shadow-[0_0_8px_rgba(217,163,83,0.8)]',
+      ring: 'border-[#d9a353]',
+      text: 'text-amber-600 dark:text-amber-400',
+      status: 'text-amber-600/80 dark:text-amber-400/80',
+    },
+  }[target.type];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: delay * 0.05, duration: 0.25 }}
+    <div
       style={{
-        height: `${sizeRem}rem`,
-        width: `${sizeRem}rem`,
+        top: target.top,
+        left: target.left,
+        animationDelay: `${target.delaySec}s`,
       }}
-      className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 rounded-full border border-slate-400/20 dark:border-white/10 pointer-events-none"
-    />
-  );
-}
-
-// ─── Sweeping Radar Arm & Concentric Grid ─────────────────────────────────────
-function RadarSweep() {
-  const circles = [6, 12, 18, 24, 30, 36, 42, 48];
-
-  return (
-    <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-full flex items-center justify-center pointer-events-none overflow-hidden h-[360px] sm:h-[420px]">
-      <style>{`
-        @keyframes cavdax-radar-sweep {
-          0% {
-            transform: rotate(-75deg);
-          }
-          50% {
-            transform: rotate(75deg);
-          }
-          100% {
-            transform: rotate(-75deg);
-          }
-        }
-        .animate-cavdax-radar-sweep {
-          animation: cavdax-radar-sweep 8s ease-in-out infinite;
-          transform-origin: bottom center;
-        }
-      `}</style>
-
-      {/* Rotating sweep cone & beam */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] sm:w-[840px] h-[360px] sm:h-[420px] overflow-hidden pointer-events-none">
-        <div className="animate-cavdax-radar-sweep absolute bottom-0 left-1/2 w-[2px] h-[340px] sm:h-[400px] -translate-x-1/2">
-          {/* Leading luminous beam */}
-          <div className="w-full h-full bg-gradient-to-t from-transparent via-[#d9a353] to-[#d9a353] shadow-[0_0_12px_rgba(217,163,83,0.7)]" />
-          
-          {/* Trailing soft radar glow wedge */}
-          <div 
-            style={{
-              background: 'linear-gradient(to top, transparent, rgba(217, 163, 83, 0.08) 50%, rgba(217, 163, 83, 0.22) 100%)',
-              clipPath: 'polygon(50% 100%, 0% 0%, 100% 0%)'
-            }}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[160px] sm:w-[220px] h-[320px] sm:h-[380px] -z-10 pointer-events-none"
-          />
-        </div>
-      </div>
-
-      {/* Concentric rings radiating upwards from bottom */}
-      {circles.map((sizeRem, idx) => (
-        <RadarCircle
-          key={`circle-${idx}`}
-          sizeRem={sizeRem}
-          opacity={1 - idx * 0.1}
-          delay={idx}
-        />
-      ))}
-
-      {/* Central radar emitter core — geometric vertex anchor */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/10 dark:bg-white/5 border border-slate-300 dark:border-white/20 flex items-center justify-center">
-        <div className="w-2.5 h-2.5 rounded-full bg-[#d9a353]" />
-      </div>
-
-      {/* Horizon baseline separator */}
-      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-300 dark:via-white/20 to-transparent" />
-    </div>
-  );
-}
-
-// ─── Scanned Causal Node Card Component ───────────────────────────────────────
-function ScannedNodeCard({ 
-  icon: Icon, 
-  title, 
-  subtitle, 
-  verdict, 
-  verdictType = 'valid', 
-  delay = 0,
-  onClick
-}) {
-  const [hovered, setHovered] = useState(false);
-
-  // Verdict style mapping (unbracketed monospace tags)
-  const verdictColors = {
-    valid: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
-    stale: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20',
-    gate: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
-    neutral: 'text-slate-600 dark:text-slate-400 bg-slate-500/10 border-slate-500/20'
-  };
-
-  const iconColors = {
-    valid: 'text-teal-600 dark:text-teal-400 border-teal-500/25 bg-teal-500/5',
-    stale: 'text-rose-600 dark:text-rose-400 border-rose-500/25 bg-rose-500/5',
-    gate: 'text-amber-600 dark:text-amber-400 border-amber-500/25 bg-amber-500/5',
-    neutral: 'text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-white/5'
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.35, delay }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={() => {
         playClick();
         if (onClick) onClick();
       }}
-      className={`group relative z-30 cursor-pointer rounded-xl border p-2.5 sm:p-3.5 transition-all duration-200 select-none ${
-        hovered
-          ? 'bg-white dark:bg-[#11141B] border-amber-500/50 shadow-md -translate-y-0.5'
-          : 'bg-white/70 dark:bg-[#0B0D11]/80 backdrop-blur-md border-slate-200/90 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+      className={`absolute z-30 cursor-pointer select-none transition-all duration-300 ${
+        isHovered ? '!opacity-100 scale-105' : 'animate-target-fade'
       }`}
     >
-      <div className="flex items-center gap-2.5 sm:gap-3">
-        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${iconColors[verdictType]}`}>
-          <Icon className="w-4 h-4" />
+      <div className="relative flex items-center gap-2">
+        {/* Core detected ping dot */}
+        <div className="relative flex items-center justify-center">
+          <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
+          {/* Expanding radar ripple ping ring */}
+          <div
+            style={{ animationDelay: `${target.delaySec}s` }}
+            className={`absolute w-2 h-2 rounded-full border ${colors.ring} animate-radar-ping pointer-events-none`}
+          />
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 justify-between">
-            <span className="text-xs sm:text-[13px] font-mono font-bold text-slate-900 dark:text-white truncate">
-              {title}
-            </span>
-            <span className={`text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 ${verdictColors[verdictType]}`}>
-              {verdict}
-            </span>
-          </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 font-sans truncate text-pretty mt-0.5">
-            {subtitle}
-          </p>
+
+        {/* Minimal Typography Label (No bulky card, no tags) */}
+        <div className="flex flex-col">
+          <span className="text-[11px] sm:text-xs font-mono font-bold text-slate-800 dark:text-slate-200 tracking-tight whitespace-nowrap">
+            {target.name}
+          </span>
+          <span className={`text-[9px] font-mono font-semibold tracking-wider uppercase whitespace-nowrap ${colors.status}`}>
+            {target.status}
+          </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-// ─── Main Causal Provenance Radar Showcase Section ────────────────────────────
+// ─── Main Causal Provenance Radar Component ───────────────────────────────────
 export default function CausalProvenanceRadar({ onLaunchConsole }) {
   return (
     <section id="radar-section" className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
       
-      {/* ── Section Title & Philosophy (No eyebrow pills above heading) ── */}
-      <div className="text-center mb-10 sm:mb-12">
+      {/* ── Section Title & Philosophy ── */}
+      <div className="text-center mb-8 sm:mb-10">
         <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
           <span className="text-[#d9a353]">Continuous Provenance</span>
           <span className="text-slate-400 dark:text-slate-600 font-light mx-2 sm:mx-4 select-none">→</span>
@@ -187,11 +153,65 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
         </p>
       </div>
 
-      {/* ── Main Radar Canvas Container (Double-bezel / neo-glass-card geometry) ── */}
-      <div className="relative neo-glass-card rounded-2xl border border-slate-300/80 dark:border-white/10 overflow-hidden bg-slate-50/50 dark:bg-black/40 p-4 sm:p-8 min-h-[460px] sm:min-h-[520px] flex flex-col justify-between">
+      {/* ── Main Radar Canvas ── */}
+      <div className="relative neo-glass-card rounded-2xl border border-slate-300/80 dark:border-white/10 overflow-hidden bg-slate-50/60 dark:bg-black/50 p-4 sm:p-6 h-[440px] sm:h-[500px] flex flex-col justify-between">
+        
+        {/* Scoped CSS Keyframes for Radar Sweep, Pings, and Target Fading */}
+        <style>{`
+          @keyframes radar-ray-spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+          .animate-radar-ray {
+            animation: radar-ray-spin 10s linear infinite;
+            transform-origin: center center;
+          }
 
-        {/* Top HUD Telemetry Ribbon (Monospace indicators, zero brackets, zero pulsing orbs) */}
-        <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
+          @keyframes target-ping-fade {
+            0% {
+              opacity: 1;
+              filter: brightness(1.25);
+            }
+            12% {
+              opacity: 0.95;
+              filter: brightness(1);
+            }
+            45% {
+              opacity: 0.18;
+            }
+            100% {
+              opacity: 0.18;
+            }
+          }
+          .animate-target-fade {
+            animation: target-ping-fade 10s ease-out infinite;
+          }
+
+          @keyframes radar-ripple-ping {
+            0% {
+              transform: scale(0.8);
+              opacity: 0.9;
+            }
+            35% {
+              transform: scale(2.8);
+              opacity: 0;
+            }
+            100% {
+              transform: scale(2.8);
+              opacity: 0;
+            }
+          }
+          .animate-radar-ping {
+            animation: radar-ripple-ping 10s ease-out infinite;
+          }
+        `}</style>
+
+        {/* ── Top HUD Telemetry Ribbon ── */}
+        <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 pb-2.5">
           <div className="flex items-center gap-2">
             <Radio className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span className="text-[10px] sm:text-xs font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase">
@@ -208,102 +228,86 @@ export default function CausalProvenanceRadar({ onLaunchConsole }) {
           </div>
         </div>
 
-        {/* Layer 2: Tiered Scanned Orbit Cards */}
-        <div className="relative z-20 my-auto py-6 space-y-4 max-w-4xl mx-auto w-full">
+        {/* ── Centered Radar Screen Display ── */}
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
           
-          {/* Tier 1: Grounded Architectural Sources (ADRs) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <ScannedNodeCard
-              icon={FileText}
-              title="ADR-002: OAuth2"
-              subtitle="Supersedes ADR-001 Bearer Token"
-              verdict="Active Source"
-              verdictType="valid"
-              delay={0.1}
-              onClick={onLaunchConsole}
-            />
-            <ScannedNodeCard
-              icon={GitCommit}
-              title="Commit 9a4f21"
-              subtitle="feat(auth): token deprecation"
-              verdict="Ingested"
-              verdictType="neutral"
-              delay={0.2}
-              onClick={onLaunchConsole}
-            />
-            <ScannedNodeCard
-              icon={AlertTriangle}
-              title="ADR-001: TokenAuth"
-              subtitle="Archived in Git history"
-              verdict="Superseded"
-              verdictType="stale"
-              delay={0.3}
-              onClick={onLaunchConsole}
-            />
+          {/* 1. Symmetrical Concentric Range Rings (Centered) */}
+          <div className="absolute w-[120px] h-[120px] rounded-full border border-slate-300/60 dark:border-white/10" />
+          <div className="absolute w-[240px] h-[240px] rounded-full border border-slate-300/50 dark:border-white/10" />
+          <div className="absolute w-[360px] h-[360px] rounded-full border border-slate-300/40 dark:border-white/10" />
+          <div className="absolute w-[460px] h-[460px] rounded-full border border-slate-300/30 dark:border-white/5" />
+
+          {/* 2. Symmetrical Crosshair Axes */}
+          <div className="absolute w-[460px] h-px border-b border-dashed border-slate-300/40 dark:border-white/10" />
+          <div className="absolute h-[460px] w-px border-r border-dashed border-slate-300/40 dark:border-white/10" />
+
+          {/* 3. Range Distance Labels */}
+          <span className="absolute left-[calc(50%+65px)] top-1/2 -translate-y-3.5 text-[8px] font-mono text-slate-400 dark:text-slate-600 select-none">
+            HOP 1
+          </span>
+          <span className="absolute left-[calc(50%+125px)] top-1/2 -translate-y-3.5 text-[8px] font-mono text-slate-400 dark:text-slate-600 select-none">
+            HOP 2
+          </span>
+          <span className="absolute left-[calc(50%+185px)] top-1/2 -translate-y-3.5 text-[8px] font-mono text-slate-400 dark:text-slate-600 select-none">
+            HOP 3
+          </span>
+
+          {/* 4. Center Emitter Vertex Anchor */}
+          <div className="absolute w-6 h-6 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#d9a353]" />
           </div>
 
-          {/* Tier 2: Extracted Temporal Invariants & In-Flight Gate */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-            <ScannedNodeCard
-              icon={AlertTriangle}
-              title="TokenAuth.v1 Verify"
-              subtitle="Stale Fact — Deprecated in DEC-101"
-              verdict="Stale Intercept"
-              verdictType="stale"
-              delay={0.4}
-              onClick={onLaunchConsole}
+          {/* 5. Volumetric Soft-Blurred Light Ray (Zero harsh lines, zero sharp polygons) */}
+          <div className="animate-radar-ray absolute w-[460px] h-[460px] flex items-center justify-center pointer-events-none">
+            
+            {/* Soft, Feathered Radial Conic Light Beam */}
+            <div
+              style={{
+                background: 'conic-gradient(from 0deg at 50% 50%, rgba(217, 163, 83, 0.32) 0deg, rgba(217, 163, 83, 0.16) 12deg, rgba(217, 163, 83, 0.04) 28deg, transparent 42deg)',
+                filter: 'blur(14px)',
+              }}
+              className="absolute inset-0 rounded-full"
             />
-            <ScannedNodeCard
-              icon={Cpu}
-              title="apply_code_change"
-              subtitle="Agent In-Flight Write Interceptor"
-              verdict="MCP Gate"
-              verdictType="gate"
-              delay={0.5}
-              onClick={onLaunchConsole}
-            />
-          </div>
 
-          {/* Tier 3: Verified Execution & FalkorDB Engine */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
-            <ScannedNodeCard
-              icon={CheckCircle2}
-              title="DEC-103: RS256 Bearer"
-              subtitle="Causally Grounded in Active ADR-002"
-              verdict="Approved Write"
-              verdictType="valid"
-              delay={0.6}
-              onClick={onLaunchConsole}
+            {/* Soft Smudged Core Light Ray (Blurred gradient beam, not a hard line) */}
+            <div 
+              style={{
+                background: 'linear-gradient(to top, rgba(217, 163, 83, 0.75), rgba(217, 163, 83, 0.35) 60%, transparent)',
+                filter: 'blur(3px)',
+              }}
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1/2 origin-bottom"
             />
-            <ScannedNodeCard
-              icon={Database}
-              title="FalkorDB GraphBLAS"
-              subtitle="In-RAM Matrix Multiplications"
-              verdict="Engine Active"
-              verdictType="gate"
-              delay={0.7}
-              onClick={onLaunchConsole}
-            />
+
+            {/* Luminous Atmospheric Ambient Glow at Ray Tip */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-16 rounded-full bg-amber-400/20 blur-xl pointer-events-none" />
           </div>
 
         </div>
 
-        {/* Background Radar Sweeper Visual */}
-        <RadarSweep />
+        {/* ── Detected Items Layer (Clickable, Illuminates, and Fades Away) ── */}
+        <div className="relative z-20 w-full h-full pointer-events-auto">
+          {RADAR_TARGETS.map((target) => (
+            <RadarTargetBlip
+              key={target.id}
+              target={target}
+              onClick={onLaunchConsole}
+            />
+          ))}
+        </div>
 
-        {/* Bottom Live Action Callout */}
-        <div className="relative z-30 pt-3 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
-          <span className="text-slate-600 dark:text-slate-400 text-center sm:text-left text-pretty">
-            Radar sweeping active repository state against FalkorDB temporal DAG
+        {/* ── Bottom Telemetry & Navigation Action ── */}
+        <div className="relative z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono pt-2">
+          <span className="text-slate-500 dark:text-slate-400 text-center sm:text-left text-pretty text-[11px]">
+            Phosphor decay visualization: items illuminate on causal beam pass and softly fade into graph history.
           </span>
           <button
             onClick={() => {
               playClick();
               if (onLaunchConsole) onLaunchConsole();
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-900 dark:text-white bg-slate-200/70 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 transition-colors uppercase tracking-wider text-[10px] font-bold tactile-btn cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-900 dark:text-white bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 transition-colors uppercase tracking-wider text-[10px] font-bold tactile-btn cursor-pointer whitespace-nowrap"
           >
-            <span>Launch Interactive Invalidation</span>
+            <span>Launch Invalidation Console</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
