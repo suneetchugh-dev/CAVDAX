@@ -15,6 +15,7 @@ import { playClick } from '../utils/soundFx';
  * - Drifts and fades smoothly as the user scrolls into the Overview page.
  */
 export default function PullCordLampToggle({
+  id = 'wordmark-lamp-toggle',
   isDarkTheme = true,
   onToggleTheme,
   opacity = 1,
@@ -278,6 +279,7 @@ export default function PullCordLampToggle({
 
   return (
     <div
+      id={id}
       style={{
         opacity,
         visibility: opacity <= 0.01 ? 'hidden' : 'visible',

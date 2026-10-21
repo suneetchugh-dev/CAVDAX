@@ -341,6 +341,7 @@ export default function LandingPage({
 
           {/* Monumentally Enlarged CAVDAX Wordmark with Nail-Hinge & Gravity Physics */}
           <div 
+            id="wordmark-hero-container"
             style={{
               transform: `translate3d(${translateX}px, ${translateY}px, 0) rotate(${rotation}deg) scale(${scale})`,
               transformOrigin: '14% 12%',
@@ -353,7 +354,7 @@ export default function LandingPage({
             <CavdaxWordmark width={wordmarkWidth} className="text-slate-950 dark:text-white relative z-10 drop-shadow-xs" />
           </div>
 
-          {/* Discovery Sub-Cues (CurvyArrow + Button + Downward Mouse Scroll Prompt) */}
+          {/* Discovery Sub-Cues (CurvyArrow + Explore CTA Button) */}
           <div 
             style={{
               opacity: cuesOpacity,
@@ -362,7 +363,7 @@ export default function LandingPage({
               pointerEvents: cuesOpacity <= 0.1 ? 'none' : 'auto',
               willChange: 'opacity, transform'
             }}
-            className="flex flex-col items-center mt-6 sm:mt-10 relative z-20"
+            className="flex flex-col items-center mt-6 sm:mt-8 md:mt-10 relative z-20"
           >
             {/* CurvyArrow with Interactive Discovery CTA Button (Revealed on Hover) */}
             <div 
@@ -378,6 +379,7 @@ export default function LandingPage({
                 className="-top-14 sm:-top-16 -right-16 sm:-right-24 pointer-events-none"
               />
               <button
+                id="wordmark-explore-btn"
                 onMouseEnter={() => setIsBtnHovered(true)}
                 onMouseLeave={() => setIsBtnHovered(false)}
                 onClick={() => {
@@ -397,28 +399,36 @@ export default function LandingPage({
                 <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
               </button>
             </div>
+          </div>
 
-            {/* Downward Mouse / Arrow Scroll Prompt */}
-            <div 
-              onClick={() => {
-                playClick();
-                const hero = document.getElementById('hero-section');
-                if (hero) {
-                  if (window.__lenis) {
-                    window.__lenis.scrollTo(hero.offsetTop, { duration: 0.82, lock: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
-                  } else {
-                    hero.scrollIntoView({ behavior: 'smooth' });
-                  }
+          {/* Downward Mouse / Arrow Scroll Prompt — Grounded at the Bottom of Viewport */}
+          <div 
+            onClick={() => {
+              playClick();
+              const hero = document.getElementById('hero-section');
+              if (hero) {
+                if (window.__lenis) {
+                  window.__lenis.scrollTo(hero.offsetTop, { duration: 0.82, lock: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+                } else {
+                  hero.scrollIntoView({ behavior: 'smooth' });
                 }
-              }}
-              className="flex flex-col items-center gap-2 cursor-pointer group mt-20 sm:mt-28 md:mt-36 lg:mt-44 xl:mt-48 select-none opacity-80 hover:opacity-100 transition-opacity"
-            >
-              <span className="text-[10px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                Scroll to inspect engine
-              </span>
-              <div className="w-5 h-8 rounded-full border border-slate-400/80 dark:border-white/30 flex items-start justify-center p-1 group-hover:border-slate-800 dark:group-hover:border-white transition-colors">
-                <div className="w-1 h-2 rounded-full bg-slate-700 dark:bg-white animate-bounce" />
-              </div>
+              }
+            }}
+            id="wordmark-scroll-prompt"
+            style={{
+              opacity: cuesOpacity,
+              visibility: cuesOpacity <= 0.01 ? 'hidden' : 'visible',
+              transform: `translate3d(-50%, -${introProgress * 30}px, 0)`,
+              pointerEvents: cuesOpacity <= 0.1 ? 'none' : 'auto',
+              willChange: 'opacity, transform'
+            }}
+            className="absolute bottom-10 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 flex flex-col items-center gap-2 cursor-pointer group select-none opacity-80 hover:opacity-100 transition-opacity z-20"
+          >
+            <span className="text-[10px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+              Scroll to inspect engine
+            </span>
+            <div className="w-5 h-8 rounded-full border border-slate-400/80 dark:border-white/30 flex items-start justify-center p-1 group-hover:border-slate-800 dark:group-hover:border-white transition-colors">
+              <div className="w-1 h-2 rounded-full bg-slate-700 dark:bg-white animate-bounce" />
             </div>
           </div>
         </div>
