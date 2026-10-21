@@ -31,6 +31,7 @@ export default function Header({
   onToggleTheme,
 }) {
   const [scrollY, setScrollY] = useState(0);
+  const [isRadarSection, setIsRadarSection] = useState(false);
   const [isScrolled, setIsScrolled] = useState(() => (typeof window !== 'undefined' ? window.scrollY > 20 : false));
   const [gearRotation, setGearRotation] = useState(0);
   const [themeRotation, setThemeRotation] = useState(0);
@@ -78,16 +79,30 @@ export default function Header({
       const y = window.scrollY;
       setScrollY(y);
       setIsScrolled(y > 20);
+
+      // Hide navbar completely when user is inside the continuous radar theater section
+      if (activeTab === 'landing') {
+        const radarEl = document.getElementById('radar-section');
+        if (radarEl) {
+          const rect = radarEl.getBoundingClientRect();
+          const inRadar = rect.top <= window.innerHeight * 0.35 && rect.bottom >= window.innerHeight * 0.15;
+          setIsRadarSection(inRadar);
+        } else {
+          setIsRadarSection(false);
+        }
+      } else {
+        setIsRadarSection(false);
+      }
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [activeTab]);
 
   // Suppress the navbar exclusively when within the Wordmark Intro Viewport (#brand-intro, before reaching #hero-section)
   // On all other tabs (/console, /mcp, /project, /team) and on Overview content (#hero-section and below), the navbar is ALWAYS visible!
   const isWordmarkSection = activeTab === 'landing' && scrollY < (typeof window !== 'undefined' ? ((document.getElementById('hero-section')?.offsetTop || window.innerHeight) - 80) : 600);
-  const isHeaderHidden = isWordmarkSection;
+  const isHeaderHidden = isWordmarkSection || isRadarSection;
 
   useEffect(() => {
     prevScrolledRef.current = isScrolled;

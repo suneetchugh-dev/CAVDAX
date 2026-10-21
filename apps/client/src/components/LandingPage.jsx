@@ -408,7 +408,7 @@ export default function LandingPage({
                   }
                 }
               }}
-              className="flex flex-col items-center gap-2 cursor-pointer group mt-8 sm:mt-10 select-none opacity-80 hover:opacity-100 transition-opacity"
+              className="flex flex-col items-center gap-2 cursor-pointer group mt-12 sm:mt-16 md:mt-20 select-none opacity-80 hover:opacity-100 transition-opacity"
             >
               <span className="text-[10px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                 Scroll to inspect engine
