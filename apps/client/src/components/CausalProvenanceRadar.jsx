@@ -2,310 +2,275 @@
  * CausalProvenanceRadar.jsx — CAVDAX Continuous Invalidation Radar
  *
  * Minimalist, atmospheric radar HUD visualizer:
- *  - Volumetric, soft-blurred light ray (zero harsh lines, zero sharp polygons)
- *  - Centered concentric rings & crosshairs (symmetrical 360° visibility)
- *  - Minimalist detected radar blips: illuminate on sweep pass, then softly fade away
- *  - Zero bulky cards or tag boxes
- *  - Fully theme-adaptive (Porcelain Light & Obsidian Dark)
- *  - 100% UI Design System compliant (zero emojis, unbracketed monospace typography)
+ *  - Mathematically Synchronized Sweep & Smooth Phosphor Decay:
+ *    • Targets gently breathe into visibility as the light ray arrives (~0.6s ease-in)
+ *    • Linger at 100% crisp focus while illuminated (~0.5s)
+ *    • Smoothly, luxuriously fade away into the background (~2.0s exponential decay)
+ *    • Zero fast popping, zero jump cuts, zero eye-jarring jerkiness
+ *  - Theme-Calibrated Light Ray:
+ *    • Light Theme: Deep Cobalt / Slate ray (zero muddy yellow)
+ *    • Dark Theme: Warm Amber / Obsidian ray (#d9a353)
+ *  - Zero Clutter: Completely stripped of redundant labels, hop tags, and descriptive noise.
+ *  - Symmetrical 360° centered coordinate geometry
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Radio, ArrowRight } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
-// ─── Radar Targets (Grounded CAVDAX Domain Invariants) ────────────────────────
+// ─── Clean Domain Targets (Polar Coordinates) ─────────────────────────────────
 const RADAR_TARGETS = [
   {
     id: 'adr-002',
     name: 'ADR-002: OAuth2',
-    status: 'ACTIVE SOURCE',
     type: 'valid',
-    // 45deg: top-right
-    top: 'calc(50% - 105px)',
-    left: 'calc(50% + 95px)',
-    delaySec: 1.25,
+    angle: 45,       // Top-right
+    radius: 140,
   },
   {
     id: 'mcp-gate',
     name: 'apply_code_change',
-    status: 'MCP GATE INTERCEPT',
     type: 'gate',
-    // 125deg: bottom-right
-    top: 'calc(50% + 90px)',
-    left: 'calc(50% + 115px)',
-    delaySec: 3.47,
+    angle: 125,      // Bottom-right
+    radius: 155,
   },
   {
     id: 'dec-103',
-    name: 'DEC-103: RS256 Bearer',
-    status: 'VERIFIED EXECUTABLE',
+    name: 'DEC-103: RS256',
     type: 'valid',
-    // 200deg: bottom-left
-    top: 'calc(50% + 75px)',
-    left: 'calc(50% - 175px)',
-    delaySec: 5.55,
+    angle: 195,      // Bottom-left
+    radius: 175,
   },
   {
     id: 'adr-001',
-    name: 'ADR-001: TokenAuth',
-    status: 'SUPERSEDED',
+    name: 'ADR-001 (Superseded)',
     type: 'stale',
-    // 265deg: middle-left
-    top: 'calc(50% - 25px)',
-    left: 'calc(50% - 160px)',
-    delaySec: 7.36,
+    angle: 265,      // Middle-left
+    radius: 160,
   },
   {
     id: 'fact-stale',
-    name: 'TokenAuth.v1 Verify',
-    status: 'STALE FACT DETECTED',
+    name: 'TokenAuth.v1 (Stale)',
     type: 'stale',
-    // 325deg: top-left
-    top: 'calc(50% - 110px)',
-    left: 'calc(50% - 85px)',
-    delaySec: 9.02,
+    angle: 325,      // Top-left
+    radius: 130,
   },
 ];
 
-// ─── Minimal Radar Target Blip (Illuminates & Fades Away) ───────────────────────
-function RadarTargetBlip({ target, onClick }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Status color palettes (dot & text)
-  const colors = {
-    valid: {
-      dot: 'bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.8)]',
-      ring: 'border-teal-500',
-      text: 'text-teal-600 dark:text-teal-400',
-      status: 'text-teal-600/80 dark:text-teal-400/80',
-    },
-    stale: {
-      dot: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]',
-      ring: 'border-rose-500',
-      text: 'text-rose-600 dark:text-rose-400',
-      status: 'text-rose-600/80 dark:text-rose-400/80',
-    },
-    gate: {
-      dot: 'bg-[#d9a353] shadow-[0_0_8px_rgba(217,163,83,0.8)]',
-      ring: 'border-[#d9a353]',
-      text: 'text-amber-600 dark:text-amber-400',
-      status: 'text-amber-600/80 dark:text-amber-400/80',
-    },
-  }[target.type];
-
-  return (
-    <div
-      style={{
-        top: target.top,
-        left: target.left,
-        animationDelay: `${target.delaySec}s`,
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => {
-        playClick();
-        if (onClick) onClick();
-      }}
-      className={`absolute z-30 cursor-pointer select-none transition-all duration-300 ${
-        isHovered ? '!opacity-100 scale-105' : 'animate-target-fade'
-      }`}
-    >
-      <div className="relative flex items-center gap-2">
-        {/* Core detected ping dot */}
-        <div className="relative flex items-center justify-center">
-          <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
-          {/* Expanding radar ripple ping ring */}
-          <div
-            style={{ animationDelay: `${target.delaySec}s` }}
-            className={`absolute w-2 h-2 rounded-full border ${colors.ring} animate-radar-ping pointer-events-none`}
-          />
-        </div>
-
-        {/* Minimal Typography Label (No bulky card, no tags) */}
-        <div className="flex flex-col">
-          <span className="text-[11px] sm:text-xs font-mono font-bold text-slate-800 dark:text-slate-200 tracking-tight whitespace-nowrap">
-            {target.name}
-          </span>
-          <span className={`text-[9px] font-mono font-semibold tracking-wider uppercase whitespace-nowrap ${colors.status}`}>
-            {target.status}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Causal Provenance Radar Component ───────────────────────────────────
 export default function CausalProvenanceRadar({ onLaunchConsole }) {
+  const beamRef = useRef(null);
+  const targetsRef = useRef([]);
+
+  // ─── 60fps Synchronized Sweep & Smooth Phosphor Decay Engine ────────────────
+  useEffect(() => {
+    let animId;
+    const DURATION_MS = 10000; // 10 seconds per 360° rotation
+    let startTime = performance.now();
+
+    const frame = (now) => {
+      const elapsed = (now - startTime) % DURATION_MS;
+      const beamAngle = (elapsed / DURATION_MS) * 360;
+
+      // 1. Rotate the beam strictly in sync with time
+      if (beamRef.current) {
+        beamRef.current.style.transform = `rotate(${beamAngle}deg)`;
+      }
+
+      // 2. Mathematically compute smooth illumination for each target based on angular distance
+      targetsRef.current.forEach((el, idx) => {
+        if (!el) return;
+        const target = RADAR_TARGETS[idx];
+        const delta = (beamAngle - target.angle + 360) % 360;
+
+        let opacity = 0;
+        let scale = 0.96;
+
+        // Smooth, professional phosphor decay curve (total visibility arc: ~95° = ~2.6s):
+        // 1. Approach: 20° before apex (delta 340° to 360°) -> smooth Hermite S-curve ease-in
+        // 2. Peak: directly at beam apex (delta 0° to 15°) -> solid 100% readable illumination
+        // 3. Phosphor Decay: trailing (delta 15° to 80°) -> long, elegant exponential dissolve to 0
+        if (delta >= 340 && delta < 360) {
+          const t = (delta - 340) / 20;
+          opacity = t * t * (3 - 2 * t);
+          scale = 0.96 + opacity * 0.05;
+        } else if (delta >= 0 && delta <= 15) {
+          opacity = 1;
+          scale = 1.01;
+        } else if (delta > 15 && delta <= 80) {
+          const decayProgress = (delta - 15) / 65;
+          opacity = Math.pow(1 - decayProgress, 2.2);
+          scale = 1.01 - decayProgress * 0.05;
+        } else {
+          opacity = 0;
+        }
+
+        if (el.dataset.hovered === 'true') {
+          el.style.opacity = '1';
+          el.style.transform = 'scale(1.05)';
+        } else {
+          el.style.opacity = opacity.toFixed(3);
+          el.style.transform = `scale(${scale.toFixed(3)})`;
+        }
+      });
+
+      animId = requestAnimationFrame(frame);
+    };
+
+    animId = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
   return (
-    <section id="radar-section" className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
+    <section id="radar-section" className="w-full py-14 px-6 max-w-5xl mx-auto border-t border-slate-300 dark:border-white/10">
       
-      {/* ── Section Title & Philosophy ── */}
-      <div className="text-center mb-8 sm:mb-10">
+      {/* ── Section Title (Clean, Zero Eyebrow Pill Clutter) ── */}
+      <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
-          <span className="text-[#d9a353]">Continuous Provenance</span>
+          <span className="text-slate-900 dark:text-[#d9a353]">Continuous Provenance</span>
           <span className="text-slate-400 dark:text-slate-600 font-light mx-2 sm:mx-4 select-none">→</span>
           <span>Temporal Invalidation Radar</span>
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto mt-2 font-sans text-pretty">
-          Sub-2ms FalkorDB GraphBLAS radar sweeping git commits, architectural decisions, and active agent tool calls for silent cache rot.
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-lg mx-auto mt-2 font-sans text-pretty">
+          Sub-2ms FalkorDB GraphBLAS radar sweeping git commits, decisions, and active agent tool calls.
         </p>
       </div>
 
-      {/* ── Main Radar Canvas ── */}
-      <div className="relative neo-glass-card rounded-2xl border border-slate-300/80 dark:border-white/10 overflow-hidden bg-slate-50/60 dark:bg-black/50 p-4 sm:p-6 h-[440px] sm:h-[500px] flex flex-col justify-between">
-        
-        {/* Scoped CSS Keyframes for Radar Sweep, Pings, and Target Fading */}
-        <style>{`
-          @keyframes radar-ray-spin {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-          .animate-radar-ray {
-            animation: radar-ray-spin 10s linear infinite;
-            transform-origin: center center;
-          }
+      {/* ── Main Radar Canvas (Clutter-Free, Pure Focus on Sweep & Targets) ── */}
+      <div className="relative neo-glass-card rounded-2xl border border-slate-300/80 dark:border-white/10 overflow-hidden bg-white/80 dark:bg-black/50 p-4 sm:p-6 h-[400px] sm:h-[460px] flex flex-col justify-between">
 
-          @keyframes target-ping-fade {
-            0% {
-              opacity: 1;
-              filter: brightness(1.25);
-            }
-            12% {
-              opacity: 0.95;
-              filter: brightness(1);
-            }
-            45% {
-              opacity: 0.18;
-            }
-            100% {
-              opacity: 0.18;
-            }
-          }
-          .animate-target-fade {
-            animation: target-ping-fade 10s ease-out infinite;
-          }
-
-          @keyframes radar-ripple-ping {
-            0% {
-              transform: scale(0.8);
-              opacity: 0.9;
-            }
-            35% {
-              transform: scale(2.8);
-              opacity: 0;
-            }
-            100% {
-              transform: scale(2.8);
-              opacity: 0;
-            }
-          }
-          .animate-radar-ping {
-            animation: radar-ripple-ping 10s ease-out infinite;
-          }
-        `}</style>
-
-        {/* ── Top HUD Telemetry Ribbon ── */}
-        <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 pb-2.5">
+        {/* ── Top Header Bar ── */}
+        <div className="relative z-30 flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Radio className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <Radio className="w-3.5 h-3.5 text-slate-700 dark:text-amber-400" />
             <span className="text-[10px] sm:text-xs font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase">
-              Provenance Radar: Active Sweep
+              Temporal Invalidation Radar
             </span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 text-[10px] font-mono text-slate-500 dark:text-slate-400">
-            <span className="tabular-nums">Sweep: 60Hz</span>
-            <span className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="tabular-nums">Latency: &lt; 2ms BFS</span>
-            <span className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="text-teal-600 dark:text-teal-400 font-bold">100% Causal Invariants</span>
-          </div>
+          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
+            FalkorDB GraphBLAS &lt; 2ms
+          </span>
         </div>
 
-        {/* ── Centered Radar Screen Display ── */}
+        {/* ── Centered Radar Screen Display (360° Symmetrical Visibility) ── */}
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
           
-          {/* 1. Symmetrical Concentric Range Rings (Centered) */}
+          {/* Symmetrical Concentric Range Rings */}
           <div className="absolute w-[120px] h-[120px] rounded-full border border-slate-300/60 dark:border-white/10" />
           <div className="absolute w-[240px] h-[240px] rounded-full border border-slate-300/50 dark:border-white/10" />
           <div className="absolute w-[360px] h-[360px] rounded-full border border-slate-300/40 dark:border-white/10" />
-          <div className="absolute w-[460px] h-[460px] rounded-full border border-slate-300/30 dark:border-white/5" />
+          <div className="absolute w-[460px] h-[460px] rounded-full border border-slate-300/25 dark:border-white/5" />
 
-          {/* 2. Symmetrical Crosshair Axes */}
-          <div className="absolute w-[460px] h-px border-b border-dashed border-slate-300/40 dark:border-white/10" />
-          <div className="absolute h-[460px] w-px border-r border-dashed border-slate-300/40 dark:border-white/10" />
+          {/* Symmetrical Crosshair Axes */}
+          <div className="absolute w-[460px] h-px border-b border-dashed border-slate-300/50 dark:border-white/10" />
+          <div className="absolute h-[460px] w-px border-r border-dashed border-slate-300/50 dark:border-white/10" />
 
-          {/* 3. Range Distance Labels */}
-          <span className="absolute left-[calc(50%+65px)] top-1/2 -translate-y-3.5 text-[8px] font-mono text-slate-400 dark:text-slate-600 select-none">
-            HOP 1
-          </span>
-          <span className="absolute left-[calc(50%+125px)] top-1/2 -translate-y-3.5 text-[8px] font-mono text-slate-400 dark:text-slate-600 select-none">
-            HOP 2
-          </span>
-          <span className="absolute left-[calc(50%+185px)] top-1/2 -translate-y-3.5 text-[8px] font-mono text-slate-400 dark:text-slate-600 select-none">
-            HOP 3
-          </span>
-
-          {/* 4. Center Emitter Vertex Anchor */}
-          <div className="absolute w-6 h-6 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#d9a353]" />
+          {/* Center Emitter Vertex Anchor */}
+          <div className="absolute w-5 h-5 rounded-full bg-slate-200 dark:bg-amber-500/10 border border-slate-400/50 dark:border-amber-500/30 flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-700 dark:bg-[#d9a353]" />
           </div>
 
-          {/* 5. Volumetric Soft-Blurred Light Ray (Zero harsh lines, zero sharp polygons) */}
-          <div className="animate-radar-ray absolute w-[460px] h-[460px] flex items-center justify-center pointer-events-none">
-            
-            {/* Soft, Feathered Radial Conic Light Beam */}
+          {/* Theme-Calibrated Volumetric Soft Light Ray */}
+          <div 
+            ref={beamRef}
+            style={{ transformOrigin: 'center center' }}
+            className="absolute w-[460px] h-[460px] flex items-center justify-center pointer-events-none will-change-transform"
+          >
+            {/* Soft, Feathered Radial Conic Light Beam (Deep Cobalt in Light Mode, Amber in Dark Mode) */}
             <div
-              style={{
-                background: 'conic-gradient(from 0deg at 50% 50%, rgba(217, 163, 83, 0.32) 0deg, rgba(217, 163, 83, 0.16) 12deg, rgba(217, 163, 83, 0.04) 28deg, transparent 42deg)',
-                filter: 'blur(14px)',
-              }}
               className="absolute inset-0 rounded-full"
-            />
+              style={{ filter: 'blur(16px)' }}
+            >
+              {/* Light Mode: Deep Cobalt / Slate Conic Ray (Zero Muddy Yellow) */}
+              <div 
+                className="w-full h-full block dark:hidden"
+                style={{
+                  background: 'conic-gradient(from 0deg at 50% 50%, rgba(30, 41, 59, 0.22) 0deg, rgba(30, 41, 59, 0.10) 14deg, rgba(30, 41, 59, 0.02) 28deg, transparent 42deg)'
+                }}
+              />
+              {/* Dark Mode: Warm Amber Conic Ray */}
+              <div 
+                className="w-full h-full hidden dark:block"
+                style={{
+                  background: 'conic-gradient(from 0deg at 50% 50%, rgba(217, 163, 83, 0.30) 0deg, rgba(217, 163, 83, 0.14) 14deg, rgba(217, 163, 83, 0.03) 28deg, transparent 42deg)'
+                }}
+              />
+            </div>
 
-            {/* Soft Smudged Core Light Ray (Blurred gradient beam, not a hard line) */}
+            {/* Soft Smudged Core Light Ray */}
             <div 
-              style={{
-                background: 'linear-gradient(to top, rgba(217, 163, 83, 0.75), rgba(217, 163, 83, 0.35) 60%, transparent)',
-                filter: 'blur(3px)',
-              }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1/2 origin-bottom"
+              style={{ filter: 'blur(3.5px)' }}
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1/2 origin-bottom bg-gradient-to-t from-slate-700/60 dark:from-[#d9a353]/70 via-slate-600/30 dark:via-[#d9a353]/30 to-transparent"
             />
 
-            {/* Luminous Atmospheric Ambient Glow at Ray Tip */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-16 rounded-full bg-amber-400/20 blur-xl pointer-events-none" />
+            {/* Luminous Atmospheric Ambient Glow Squircle at Ray Tip */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-16 rounded-full bg-slate-500/15 dark:bg-amber-400/20 blur-xl pointer-events-none" />
           </div>
 
         </div>
 
-        {/* ── Detected Items Layer (Clickable, Illuminates, and Fades Away) ── */}
-        <div className="relative z-20 w-full h-full pointer-events-auto">
-          {RADAR_TARGETS.map((target) => (
-            <RadarTargetBlip
-              key={target.id}
-              target={target}
-              onClick={onLaunchConsole}
-            />
-          ))}
+        {/* ── Detected Items Layer (Illuminates Smoothly as Light Sweeps Over) ── */}
+        <div className="relative z-20 w-full h-full pointer-events-none">
+          {RADAR_TARGETS.map((target, idx) => {
+            const rad = (target.angle * Math.PI) / 180;
+            const x = target.radius * Math.sin(rad);
+            const y = -target.radius * Math.cos(rad);
+
+            const dotColors = {
+              valid: 'bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.85)]',
+              stale: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.85)]',
+              gate: 'bg-slate-700 dark:bg-[#d9a353] shadow-[0_0_8px_rgba(217,163,83,0.85)]',
+            }[target.type];
+
+            const textColors = {
+              valid: 'text-teal-700 dark:text-teal-300',
+              stale: 'text-rose-700 dark:text-rose-300',
+              gate: 'text-slate-800 dark:text-amber-300',
+            }[target.type];
+
+            return (
+              <div
+                key={target.id}
+                ref={(el) => (targetsRef.current[idx] = el)}
+                style={{
+                  top: `calc(50% + ${y}px)`,
+                  left: `calc(50% + ${x}px)`,
+                  opacity: 0,
+                  transform: 'scale(0.96)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.dataset.hovered = 'true';
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.dataset.hovered = 'false';
+                }}
+                onClick={() => {
+                  playClick();
+                  if (onLaunchConsole) onLaunchConsole();
+                }}
+                className="group absolute z-30 cursor-pointer select-none pointer-events-auto will-change-transform"
+              >
+                <div className="relative flex items-center gap-2 -translate-x-2 -translate-y-2">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${dotColors}`} />
+                  <span className={`text-[11px] sm:text-xs font-mono font-bold tracking-tight whitespace-nowrap drop-shadow-xs transition-colors ${textColors}`}>
+                    {target.name}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* ── Bottom Telemetry & Navigation Action ── */}
-        <div className="relative z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono pt-2">
-          <span className="text-slate-500 dark:text-slate-400 text-center sm:text-left text-pretty text-[11px]">
-            Phosphor decay visualization: items illuminate on causal beam pass and softly fade into graph history.
-          </span>
+        {/* ── Bottom Clean Action Bar (Zero Explanatory Fluff) ── */}
+        <div className="relative z-30 flex items-center justify-end pt-2 border-t border-slate-200/80 dark:border-white/10">
           <button
             onClick={() => {
               playClick();
               if (onLaunchConsole) onLaunchConsole();
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-900 dark:text-white bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 transition-colors uppercase tracking-wider text-[10px] font-bold tactile-btn cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-900 dark:text-white bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 transition-colors uppercase tracking-wider text-[10px] font-bold tactile-btn cursor-pointer whitespace-nowrap"
           >
             <span>Launch Invalidation Console</span>
             <ArrowRight className="w-3.5 h-3.5" />
