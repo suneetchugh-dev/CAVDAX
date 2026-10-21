@@ -278,7 +278,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
       {/* 2. Official NPM Package Callout Banner */}
       <section className="px-6 max-w-5xl mx-auto w-full mb-8">
-        <div className="p-4 sm:p-5 rounded-2xl bg-slate-100/90 dark:bg-white/[0.03] border border-slate-300 dark:border-white/10 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="neo-glass-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-white/10 text-white flex items-center justify-center shrink-0 shadow-xs">
               <Package className="w-5 h-5 text-amber-400" />
@@ -313,7 +313,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
               href="https://www.npmjs.com/package/@cavdax/mcp-server"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer border border-slate-300 dark:border-white/10"
+              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer border border-slate-300 dark:border-white/10"
               title="View package on npmjs.com"
             >
               <ExternalLink className="w-4 h-4" />
