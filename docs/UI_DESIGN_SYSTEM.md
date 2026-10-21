@@ -31,9 +31,10 @@ You must strictly incorporate and enforce every single one of the following 34 a
 7. **FAST, TACTILE KINETIC PHYSICS (100ms - 180ms)**:
    - UI state transitions must feel snappy, instant, and tactile. Never implement sluggish, floaty 400ms+ animations for theme switches, dropdowns, or tab selections. Micro-interactions must complete within 100ms to 180ms with high-performance easing curves.
 
-8. **MANDATORY FRAMER MOTION SHARED-LAYOUT SLIDING PILLS**:
+8. **MANDATORY FRAMER MOTION SLIDING PILLS & ZERO-FLYING STANDARD**:
    - NEVER use static CSS background swaps (`bg-blue-600` vs `bg-transparent`) or jump-cuts for active states in tabs, segmented controls, or mode switchers.
-   - Always implement Framer Motion's shared-layout sliding pill: `<motion.div layoutId="uniqueDomainPill" transition={{ type: "spring", stiffness: 420, damping: 34 }} />`.
+   - **THE ANTI-FLYING PILLBAR STANDARD**: Never blindly drop `<motion.div layoutId="..." />` into conditionally rendered buttons. Global `layoutId` projection causes pills to fly diagonally across the viewport from outer coordinates during page navigation, mount, or tab switches.
+   - **The Approved Solution**: Use Container-Relative Slider Tracking (as engineered in `Header.jsx` and `ConnectMcpPage.jsx` via `usePillTracker`). Position a single `<motion.div initial={false} animate={{ x, y, width, height }} />` relative to the track, clamped to the active element's `offsetLeft` and `offsetWidth`. It is mathematically immune to Y-flying, scroll jumps, and cross-screen warping.
 
 9. **STRICT BAN ON GENERIC SHIELD SVGs & TOYISH SECURITY BADGES**:
    - NEVER use generic shield icons (`Shield`, `ShieldCheck`, `ShieldAlert`, `ShieldQuestion`, or toyish antivirus/security badge SVGs) across navigation, routing, telemetry, cards, or security/verification indicators.
@@ -1060,7 +1061,11 @@ When interactive visualization canvases (such as node graphs, topological maps, 
 - **The Shared-Layout Sliding Indicator Standard**:
   - Multi-option category pickers, client configuration switchers (e.g. Claude Code CLI, Cursor IDE, Claude Desktop, Windsurf), and view toggles must never rely on jumpy, instantaneous background color swaps.
   - Use a recessed background track (`rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-1`) paired with a continuous sliding active indicator:
-    - With Framer Motion: `<motion.div layoutId="activeClientTab" transition={{ type: "spring", stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-xs -z-10" />`
+    - **The Anti-Flying Pillbar Standard (Container-Relative Slider Tracking)**:
+    - Never use global `layoutId` across separate buttons or conditionally rendered elements. This triggers Framer Motion's global bounding-box projection, making pills fly across the entire screen from arbitrary coordinates on mount or view switch.
+    - Implement a single container-relative sliding pill with `initial={false}` using local element references (`tabRefs.current[activeTab]` as established in `Header.jsx` and `ConnectMcpPage.jsx`):
+      - In JSX, render a SINGLE `<motion.div initial={false} animate={{ x: pillPosition.x, y: pillPosition.y, width: pillPosition.width, height: pillPosition.height }} transition={{ type: 'spring', stiffness: 420, damping: 34 }} />` at the track level.
+      - Clamp coordinates strictly to local `activeEl.offsetLeft`, `activeEl.offsetTop`, and `activeEl.offsetWidth`.
     - Or with pure CSS: a sliding indicator element using `transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s ease`.
 - **Text & Tag Hierarchy on Client Cards**:
   - When presenting multi-option tools (e.g. Windsurf vs Roo Code), never merge distinct brands into awkward slashed compound labels ("Windsurf / Roo Code") that cause overflow or wrapping. Pick a primary brand representation or present each as its own discrete option.
