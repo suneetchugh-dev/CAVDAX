@@ -31,7 +31,7 @@ function resolveTabFromUrl() {
   if (rawPath === '/' || rawPath === '/overview') return 'landing';
   if (rawPath === '/console') return 'console';
   if (rawPath === '/mcp') return 'mcp';
-  if (rawPath === '/project' || rawPath === '/demo') return 'project';
+  if (rawPath === '/project' || rawPath === '/demo' || rawPath === '/walkthrough') return 'project';
   if (rawPath === '/team') return 'team';
   if (rawPath === '/audit') return 'audit';
   if (rawPath === '/dev') return 'dev';
@@ -42,7 +42,7 @@ function resolveTabFromUrl() {
     const h = window.location.hash.toLowerCase();
     if (h === '#console') return 'console';
     if (h === '#mcp') return 'mcp';
-    if (h === '#project' || h === '#demo') return 'project';
+    if (h === '#project' || h === '#demo' || h === '#walkthrough') return 'project';
     if (h === '#team') return 'team';
     if (h === '#overview' || h === '' || h === '#') return 'landing';
     if (h === '#404') return '404';
@@ -56,7 +56,7 @@ const TAB_TO_PATH = {
   landing: '/overview',
   console: '/console',
   mcp: '/mcp',
-  project: '/project',
+  project: '/walkthrough',
   team: '/team',
   audit: '/audit',
   dev: '/dev',
@@ -206,8 +206,9 @@ export default function App() {
       const hashToPath = {
         '#console': '/console',
         '#mcp': '/mcp',
-        '#project': '/project',
-        '#demo': '/project',
+        '#project': '/walkthrough',
+        '#demo': '/walkthrough',
+        '#walkthrough': '/walkthrough',
         '#team': '/team',
         '#overview': '/overview',
         '#404': '/404'
