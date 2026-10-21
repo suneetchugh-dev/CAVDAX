@@ -56,6 +56,7 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 │  • Are there generic shield SVGs? (Shield) ➔ BAN       │
 │  • Are there cliché icons? (Rocket, Bot, Trophy) ➔ BAN │
 │  • Are there hackathon track tags / pills? ➔ BAN       │
+│  • Are there status tags/pills beside headings? ➔ BAN  │
 └─────────────────────────┬──────────────────────────────┘
                           │
                           ▼
@@ -93,7 +94,9 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 ### Pre-Flight Verification Checklist:
 1. **Did I read `docs/UI_DESIGN_SYSTEM.md` (or `UI_DESIGN_SYSTEM.md`)?** Every single UI action — whether adding a new element, modifying existing styles, refactoring layout structure, or removing/deleting a component — must be reconciled against the design system rules, spacing tokens, color palettes, motion physics, and top-priority bans before touching code.
 2. **Are there any emojis or sparkles?** Replace them immediately with clean Lucide line icons.
-3. **Are there bracketed status tags?** Remove brackets (e.g., convert `[VERIFIED]` to `VERIFIED` with unbracketed monospace styling).
+3. **Are there bracketed status tags or status tags beside headings?**
+   - Remove brackets (e.g., convert `[VERIFIED]` to `VERIFIED` with unbracketed monospace styling).
+   - **Strictly ban status badges / pills beside main headings**: Never place floating tags (e.g., `GraphBLAS Live`, `FalkorDB Live`, `Simulation`, `[LIVE]`) alongside or inline with `h1` or `h2` headings. Headings must remain clean, dignified, and uncluttered. System telemetry belongs strictly in dedicated toolbar metrics, status bars, or subheaders.
 4. **Are there generic shield SVGs or cliché icons?**
    - Strictly ban generic shields (`Shield`, `ShieldCheck`, `ShieldAlert`, `ShieldQuestion`).
    - Use precision domain alternatives:

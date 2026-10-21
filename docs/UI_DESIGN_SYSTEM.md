@@ -56,6 +56,12 @@ You must strictly incorporate and enforce every single one of the following 34 a
     - **Pattern to recognise and destroy**: any `<span>` with classes like `rounded-full`, `text-[10px]`, `font-mono`, `uppercase`, `tracking-wider`, `bg-slate-100 dark:bg-white/5`, `border`, `inline-block mb-3` sitting directly above a heading constitutes an eyebrow pill — remove it.
     - Approved alternatives if extra context is needed: a clean `<p>` subheading below the `<h2>` in a lighter weight, or a small monospace unbracketed inline suffix directly in the heading itself.
 
+11B. **STRICT BAN ON STATUS BADGE PILLS / TAGS BESIDE HEADINGS**:
+     - NEVER mount floating status pills, badges, or live indicator tags (e.g. `<span class="... text-[10px] font-mono ...">GraphBLAS Live</span>`, `FalkorDB Live`, `Simulation`, `[LIVE]`) alongside, inline with, or hugging main headings (`h1`, `h2`).
+     - This pattern adds visual clutter, degrades typographic balance, and looks like an amateur dashboard.
+     - Headings (`h1`, `h2`) must remain clean, dignified, and uncluttered.
+     - System telemetry and live connection state belong exclusively in dedicated toolbar metrics, status bars, or subheaders.
+
 12. **STRICT BAN ON BORDER INJECTION & BOUNCY ZOOM JUMPS**:
     - NEVER use `hover:scale-105` or `scale-110` on cards (causes text blurring and GPU re-rasterization).
     - NEVER change border thickness on hover (`hover:border-2` or adding borders where none existed) — this causes an intolerable 1px layout jitter across sibling elements.
