@@ -25,6 +25,7 @@ import KineticRollingHeadline from './KineticRollingHeadline';
 import ThanosTypewriterHeadline from './ThanosTypewriterHeadline';
 import McpCableConnectionSvg from './McpCableConnectionSvg';
 import PullCordLampToggle from './PullCordLampToggle';
+import CausalProvenanceRadar from './CausalProvenanceRadar';
 import { playClick } from '../utils/soundFx';
 
 const FAQS = [
@@ -123,7 +124,7 @@ export default function LandingPage({
 
   // Section observer for right-side vertical scroll bubbles
   useEffect(() => {
-    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'causal-loop-section', 'faq-section'];
+    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'causal-loop-section', 'radar-section', 'faq-section'];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -794,6 +795,11 @@ export default function LandingPage({
 
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          3.5 CONTINUOUS PROVENANCE RADAR (Real-Time Invalidation Sweeper)
+          ══════════════════════════════════════════════════════════════════════ */}
+      <CausalProvenanceRadar onLaunchConsole={onLaunchConsole} />
 
       {/* ══════════════════════════════════════════════════════════════════════
           4. ARCHITECTURAL FAQ ACCORDION SECTION (SAHNIRMAAN Caliber)
