@@ -11,6 +11,17 @@
 
 ## 1.1 Latest Session Achievements (October 21, 2026)
 
+- **Mathematical Polar Synchronization & De-Cluttering of Causal Radar (CausalProvenanceRadar.jsx)**:
+  - Replaced desynchronized CSS animation delays with a unified `requestAnimationFrame` polar coordinate loop (`x = r * sin(theta)`, `y = -r * cos(theta)`).
+  - Beam rotation and target illumination are 100% mathematically synchronized: targets illuminate only when the beam sweeps directly over their radial angle.
+  - Replaced jerky stroboscopic pops with smooth Hermite smoothstep ease-in and a lingering exponential decay curve (Math.pow(1 - decay, 2.2)).
+  - Calibrated theme beam ray: Deep slate/cobalt (`rgba(30, 41, 59, 0.22)`) in light mode, warm amber (`#d9a353`) in dark mode.
+  - Eliminated card clutter: stripped HOP labels, redundant secondary status tags, and explanatory bottom text.
+
+- **Design System Governance: Rule 11C & Checklist Item 20 Added (docs/UI_DESIGN_SYSTEM.md, AGENTS.md)**:
+  - Formalized **Rule 11C (Strict Ban on Card Clutter, Redundant Labels & Over-Explanatory Fluff)** in docs/UI_DESIGN_SYSTEM.md.
+  - Added **Checklist Item 20** to the mandatory UI pre-flight interceptor in AGENTS.md, enforcing the 3-point Indispensable Utility Audit prior to writing or modifying any UI component.
+
 - **Enterprise Audit Subsystem Hardening & BLOCKED Action Logging**:
   - Resolved critical compliance gap: `core/mcp/server.js` and `apps/server/index.js` now record an `AgentAction` node with `status: 'BLOCKED_SUPERSEDED_SOURCE'` when Act III rejects unauthorized agent file writes.
   - Linked blocked actions directly to the invalidated decision node (`DEC-102`) via `[:GROUNDED_IN]` edge.
