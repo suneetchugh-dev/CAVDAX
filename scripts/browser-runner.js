@@ -7,24 +7,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Known standard browser binary paths across Windows, macOS, and Linux
-function findSystemBrowser() {
-  const candidatePaths = [
-    // Windows Chrome
+function findSystemBrowser(preferred = 'chrome') {
+  const chromePaths = [
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     path.join(process.env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe'),
-    // Windows Edge
-    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-    // macOS
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
-    // Linux
     '/usr/bin/google-chrome',
     '/usr/bin/google-chrome-stable',
     '/usr/bin/chromium-browser',
     '/usr/bin/chromium',
   ];
+
+  const edgePaths = [
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    path.join(process.env.LOCALAPPDATA || '', 'Microsoft\\Edge\\Application\\msedge.exe'),
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/usr/bin/microsoft-edge',
+    '/usr/bin/microsoft-edge-stable',
+  ];
+
+  const candidatePaths = preferred === 'edge' 
+    ? [...edgePaths, ...chromePaths] 
+    : [...chromePaths, ...edgePaths];
 
   for (const p of candidatePaths) {
     if (p && fs.existsSync(p)) {
@@ -76,12 +82,14 @@ export async function getBrowser(options = {}) {
     fs.mkdirSync(profileDir, { recursive: true });
   }
 
-  const executablePath = options.executablePath || findSystemBrowser();
+  const preferredBrowser = options.preferredBrowser || (process.argv.includes('--edge') || process.env.BROWSER === 'edge' ? 'edge' : 'chrome');
+  const executablePath = options.executablePath || findSystemBrowser(preferredBrowser);
   if (!executablePath) {
     throw new Error('Could not find Google Chrome or Microsoft Edge installed on this machine.');
   }
 
-  console.log(`\x1b[32m✔ [Mode B] Launching browser with persistent profile at:\x1b[0m ${profileDir}`);
+  const browserName = executablePath.toLowerCase().includes('msedge') ? 'Microsoft Edge' : 'Google Chrome';
+  console.log(`\x1b[32m✔ [Mode B] Launching ${browserName} with persistent profile at:\x1b[0m ${profileDir}`);
   console.log(`\x1b[90m  Browser executable: ${executablePath}\x1b[0m`);
   console.log(`\x1b[35m  ℹ Log in once in this window — all cookies, tokens, and sessions are permanently saved!\x1b[0m`);
 
@@ -104,8 +112,8 @@ export async function getBrowser(options = {}) {
 /**
  * Open target URL in the browser
  */
-export async function openApp(targetUrl = 'http://localhost:5173') {
-  const { browser, isAttached } = await getBrowser();
+export async function openApp(targetUrl = 'http://localhost:5173', options = {}) {
+  const { browser, isAttached } = await getBrowser(options);
   
   let page;
   const pages = await browser.pages();
@@ -132,7 +140,7 @@ export async function openApp(targetUrl = 'http://localhost:5173') {
 
 // Auto-run if executed directly via `node scripts/browser-runner.js [url]`
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const urlArg = process.argv[2] || 'http://localhost:5173';
+  const urlArg = process.argv.find(arg => arg.startsWith('http')) || 'http://localhost:5173';
   openApp(urlArg).catch(err => {
     console.error('\x1b[31m✖ Error launching browser:\x1b[0m', err);
     process.exit(1);
