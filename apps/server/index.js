@@ -70,21 +70,27 @@ const TIER_CONFIG = {
     description: 'Local FalkorDB only. Rate limit: 100 req/min. MCP stdio transport.',
     features: ['stdio MCP', 'ADR ingestion', 'local FalkorDB'],
     rate_limit_per_min: 100,
-    mcp_rate_limit_per_min: 30
+    mcp_rate_limit_per_min: 30,
+    node_limit: 500,         // max graph nodes before writes are rejected
+    audit_log_limit: 10      // max entries returned from GET /api/audit
   },
   pro: {
     label: 'Pro',
     description: 'Cloud FalkorDB + SSE remote MCP. Webhook ingestion enabled.',
     features: ['SSE MCP', 'all source types', 'webhook ingestion', 'audit log'],
     rate_limit_per_min: 300,
-    mcp_rate_limit_per_min: 100
+    mcp_rate_limit_per_min: 100,
+    node_limit: 10_000,      // pro tier graph capacity
+    audit_log_limit: 1000    // pro tier audit history depth
   },
   enterprise: {
     label: 'Enterprise',
     description: 'Multi-tenant FalkorDB. Custom rate limits. SLA guarantees.',
     features: ['multi-tenant', 'custom rate limits', 'SLA', 'RBAC'],
     rate_limit_per_min: -1,   // -1 = unlimited
-    mcp_rate_limit_per_min: -1
+    mcp_rate_limit_per_min: -1,
+    node_limit: -1,           // -1 = no limit (enterprise)
+    audit_log_limit: 500      // enterprise compliance window
   }
 };
 
@@ -232,16 +238,59 @@ let fallbackGraphState = {
 };
 
 // ---------------------------------------------------------------------------
+// NODE COUNT ENFORCEMENT MIDDLEWARE
+// ---------------------------------------------------------------------------
+// Runs MATCH (n) RETURN count(n) against FalkorDB before any write endpoint.
+// Rejects with 429 if the active tier's node_limit is reached.
+//
+// Only enforced when FalkorDB is live — in simulation/fallback mode writes are
+// in-memory only, so storage limits are not meaningful.
+// If the count query itself fails, the write is allowed through (fail-open);
+// the ingest endpoint has its own error handling for subsequent failures.
+// node_limit = -1 means unlimited (Enterprise tier).
+
+async function checkNodeLimit(req, res, next) {
+  const limit = activeTier.node_limit;
+  if (limit === -1) return next(); // Enterprise — unlimited
+
+  if (!isFalkorConnected || !graph) return next(); // FalkorDB offline — let ingest handle it
+
+  try {
+    const result = await graph.query('MATCH (n) RETURN count(n) AS total');
+    const total = result.data?.[0]?.total ?? 0;
+    if (total >= limit) {
+      return res.status(429).json({
+        success: false,
+        error: 'NODE_LIMIT_EXCEEDED',
+        message: `Graph node limit reached for ${activeTier.label} tier (${total}/${limit} nodes). Upgrade tier or delete unused nodes.`,
+        current_nodes: total,
+        tier_limit: limit,
+        tier: CAVDAX_TIER
+      });
+    }
+    next();
+  } catch (err) {
+    // Count query fail — don't block the write, log it
+    console.warn('[CAVDAX NodeLimit] Count query failed, skipping limit check:', err.message);
+    next();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // REST ENDPOINTS
 // ---------------------------------------------------------------------------
 
 // 1. Health & Connection Status
 app.get('/api/health', (req, res) => {
+  // Exposes tier and tier_label so the Web HUD header badge can read the active
+  // tier on the existing health poll — no extra /api/dev/tier-check round-trip needed.
   res.json({
     status: 'online',
     product: 'CAVDAX',
     expansion: 'Contextual Action & Verified Decision Autonomous eXecution',
     falkordb_connected: isFalkorConnected,
+    tier: CAVDAX_TIER,
+    tier_label: activeTier.label,
     timestamp: new Date().toISOString()
   });
 });
@@ -300,7 +349,8 @@ app.get('/api/graph', async (req, res) => {
 });
 
 // 5. Ingest ADR / Commit Mutation (Act II)
-app.post('/api/ingest', requireAuth, async (req, res) => {
+// checkNodeLimit runs before the handler — rejects if tier node_limit is reached
+app.post('/api/ingest', requireAuth, checkNodeLimit, async (req, res) => {
   try {
     if (!isFalkorConnected) await initDb();
     const filePath = req.body?.filePath || path.join(REPO_ROOT, 'demo-repo/docs/adrs/ADR-002.md');
@@ -650,7 +700,10 @@ export default app;
  *   limit  — max entries to return (default: 100, max: 500)
  */
 app.get('/api/audit', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit || '100', 10), 500);
+  // Cap is tier-aware: free=10, pro=1000, enterprise=500.
+  // Reads from activeTier.audit_log_limit — same TIER_CONFIG object that drives rate limits.
+  const tierCap = activeTier.audit_log_limit;
+  const limit = Math.min(parseInt(req.query.limit || '100', 10), tierCap);
 
   try {
     if (!isFalkorConnected) await initDb();
@@ -716,7 +769,8 @@ app.get('/api/audit', async (req, res) => {
  *   codeowners: { ownedPath, newOwner, oldOwner?, filePath? }
  *   issue:      { issueNumber, title, htmlUrl, body?, supersedesIds?, state? }
  */
-app.post('/api/ingest-source', requireAuth, async (req, res) => {
+// checkNodeLimit runs before the handler — rejects if tier node_limit is reached
+app.post('/api/ingest-source', requireAuth, checkNodeLimit, async (req, res) => {
   const { type, ...fields } = req.body || {};
 
   if (!type) {
@@ -1154,10 +1208,101 @@ if (fs.existsSync(clientDistPath)) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// GLOBAL RFC-7807 ERROR ENVELOPE MIDDLEWARE
+// ---------------------------------------------------------------------------
+// Catches any unhandled Express errors (4-argument signature required by Express).
+// Returns a uniform JSON shape so both the Web HUD and coding agents always get a
+// predictable error structure rather than raw stack traces or HTML error pages.
+//
+// Shape: { success: false, error: { code, message, subsystem, remediable } }
+//   code        — machine-readable string (e.g. "NODE_LIMIT_EXCEEDED", "HTTP_500")
+//   subsystem   — which API area the error originated from (inferred from req.path)
+//   remediable  — true for 4xx (caller can fix it), false for 5xx (server-side)
+//
+// Must be registered AFTER all route handlers and static file middleware.
+// Express identifies error handlers by their 4-parameter signature (err, req, res, next).
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+
+  // Infer which subsystem produced the error from the request path
+  let subsystem = 'server';
+  if (req.path.startsWith('/api/mcp')) subsystem = 'mcp_gate';
+  else if (req.path.startsWith('/api/ingest')) subsystem = 'ingestion';
+  else if (req.path.startsWith('/api/auth')) subsystem = 'oauth';
+  else if (req.path.startsWith('/api/audit')) subsystem = 'audit';
+  else if (req.path.startsWith('/api/graph')) subsystem = 'graph';
+
+  // Include stack trace in non-production only — never leak internals to clients
+  const detail = process.env.NODE_ENV !== 'production' ? err.stack : undefined;
+
+  console.error(`[CAVDAX Error] ${subsystem} — ${status} — ${err.message}`);
+
+  res.status(status).json({
+    success: false,
+    error: {
+      code: err.code || `HTTP_${status}`,
+      message: err.message || 'An unexpected error occurred.',
+      subsystem,
+      remediable: status < 500, // 4xx = client can fix it; 5xx = server-side
+      ...(detail ? { detail } : {})
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FALKORDB BACKGROUND AUTO-RECONNECT
+// ---------------------------------------------------------------------------
+// If FalkorDB was unreachable at boot, the server previously had no mechanism
+// to reconnect without a restart. This loop polls continuously in the background.
+//
+// Reconnect schedule: starts at 5 s, doubles on each consecutive failure,
+// caps at 5 minutes. Resets to 5 s the moment a connection succeeds.
+//
+// When already connected, a cheap `RETURN 1` ping validates the link each cycle;
+// if it throws, isFalkorConnected is set to false and the next cycle retries.
+//
+// setTimeout(...).unref() ensures the timer does not keep the Node process alive
+// during graceful shutdown or test teardown.
+
+let _falkorReconnectDelay = 5_000; // starts at 5s
+const FALKOR_RECONNECT_MIN = 5_000;
+const FALKOR_RECONNECT_MAX = 5 * 60 * 1000; // 5 min ceiling
+
+function _scheduleFalkorReconnect() {
+  setTimeout(async () => {
+    if (isFalkorConnected) {
+      // Already connected — silently verify with a cheap ping
+      try {
+        await graph.query('RETURN 1');
+        // Still alive — reset backoff and schedule next check at base interval
+        _falkorReconnectDelay = FALKOR_RECONNECT_MIN;
+      } catch {
+        isFalkorConnected = false;
+        console.warn('[CAVDAX Reconnect] FalkorDB ping failed — marking disconnected.');
+      }
+    } else {
+      console.log(`[CAVDAX Reconnect] Retrying FalkorDB connection (next in ${_falkorReconnectDelay / 1000}s)...`);
+      await initDb();
+      if (isFalkorConnected) {
+        console.log('[CAVDAX Reconnect] FalkorDB reconnected successfully. Backoff reset.');
+        _falkorReconnectDelay = FALKOR_RECONNECT_MIN; // success — reset to base
+      } else {
+        // Exponential backoff: double the delay, cap at max
+        _falkorReconnectDelay = Math.min(_falkorReconnectDelay * 2, FALKOR_RECONNECT_MAX);
+      }
+    }
+    _scheduleFalkorReconnect(); // always reschedule
+  }, _falkorReconnectDelay).unref();
+}
+
 // Start listening
 initDb().finally(() => {
   app.listen(PORT, () => {
     console.log(`[CAVDAX Server] Running at http://localhost:${PORT}`);
     console.log(`[CAVDAX Server] Graph Engine: ${isFalkorConnected ? 'FalkorDB Live' : 'Simulation Fallback Ready'}`);
   });
+  _scheduleFalkorReconnect(); // start background reconnect loop after first boot attempt
 });

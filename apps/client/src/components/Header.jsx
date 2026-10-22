@@ -21,6 +21,9 @@ import { playClick } from '../utils/soundFx';
  * - Monochromatic light/dark theme inversion with zero cyan.
  * - Dedicated PreferencesModal trigger with smooth gear spin.
  */
+// Maps the server-side tier key to the compact 3-character label shown in the header badge.
+const TIER_BADGE = { free: 'FREE', pro: 'PRO', enterprise: 'ENT' };
+
 export default function Header({
   status,
   activeTab = 'landing',
@@ -29,6 +32,7 @@ export default function Header({
   onOpenPreferences,
   isDarkTheme = true,
   onToggleTheme,
+  tier = 'free',
 }) {
   const [scrollY, setScrollY] = useState(0);
   const [isRadarSection, setIsRadarSection] = useState(false);
@@ -233,6 +237,14 @@ export default function Header({
         }}
         className="flex items-center justify-end space-x-2 sm:space-x-2.5 min-w-0"
       >
+        {/* Tier badge — font-mono, muted border, no color fill, hidden on mobile */}
+        <span
+          className="hidden sm:inline-flex items-center font-mono text-[10px] leading-none px-1.5 py-0.5 rounded border border-slate-300/70 dark:border-white/15 bg-slate-100/60 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 select-none tracking-wider"
+          title={`CAVDAX tier: ${tier}`}
+        >
+          {TIER_BADGE[tier] || tier.toUpperCase().slice(0, 3)}
+        </span>
+
         {/* Theme Toggle Button (SAHNIRMAAN Luxury Rounded Style with 360° Spin Physics) */}
         <Tooltip content={isDarkTheme ? 'Switch to Light' : 'Switch to Dark'} position="bottom">
           <button

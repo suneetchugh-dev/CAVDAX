@@ -97,6 +97,10 @@ Tier 1 (Free)
   ✅ npx cavdax check --staged
   ✅ npx cavdax ingest --repo .
   ✅ ADR TEMPLATE.md + ADR-001/002/003 examples
+  ✅ SSE exponential backoff (1s→30s + jitter) on client reconnect
+  ✅ Tier badge in Web HUD header (FREE/PRO/ENT — font-mono, muted)
+  ✅ Node count enforcement middleware (free=500, pro=10k, enterprise=unlimited)
+  ✅ Audit log tier-aware cap (free=10, pro=1000, enterprise=500)
 
 Tier 2 (Pro)
   ✅ Hosted SSE transport — GET /api/mcp/sse + POST /api/mcp/messages
@@ -106,18 +110,25 @@ Tier 2 (Pro)
   ✅ cavdax-gate.yml GitHub Action PR gate
   ✅ Multi-supersedes YAML support in parser.js
   ✅ Real latency measurement (FalkorDB internal execution time)
+  ✅ GitHub OAuth full flow (/api/auth/github → callback → session → me → logout)
+  ✅ CAVDAX_TIER env var — TIER_CONFIG single source of truth for rate limits + limits
 
 Tier 3 (Enterprise)
   ✅ Docker Compose production stack (infra/docker-compose.prod.yml)
   ✅ Caddy HTTPS reverse proxy with security headers
   ✅ SSE session TTL cleanup (mcpSessions memory management)
-  ⏳ CODEOWNERS ingestion (planned — sources.js)
-  ⏳ Git commit ingestion (planned — sources.js)
-  ⏳ package.json dep change ingestion (planned — sources.js)
-  ⏳ GitHub Issues as superseded sources (planned — sources.js)
-  ⏳ Node count enforcement middleware
-  ⏳ SIEM export from /api/audit
-  ⏳ Dev Console (/dev internal route)
+  ✅ CODEOWNERS ingestion (sources.js — ingestCodeownersChange)
+  ✅ Git commit ingestion (sources.js — ingestGitCommit)
+  ✅ package.json dep change ingestion (sources.js — ingestPackageJsonChange)
+  ✅ GitHub Issues as superseded sources (sources.js — ingestGitHubIssue)
+  ✅ Node count enforcement middleware (checkNodeLimit async middleware)
+  ✅ Dev Console (/dev internal route — DevConsolePage.jsx + /api/dev/tier-check)
+  ✅ Global React Error Boundaries (SubsystemErrorBoundary wrapping 4 views)
+  ✅ Caddy /dev production block + handle_errors 502→JSON
+  ✅ RFC-7807 error envelope middleware (global unhandled Express error handler)
+  ✅ FalkorDB background auto-reconnect (exponential backoff 5s→5min)
+  ✅ fetchGraphState pagination — LIMIT 500 on unbounded MATCH (n) queries
+  ⏳ SIEM export from /api/audit (Splunk/Datadog JSON format)
 ```
 
 ---
@@ -552,14 +563,14 @@ The universal CLI suite (`@cavdax/mcp-server` and `npx cavdax`) must provide cle
 ```
 Phase 2.5 — Resilient Fallback Sprint (Immediate)
   [x] AuditPage: Resilient fallback to simulated 4-Act ledger on 502/network failure (Done)
-  [ ] GraphCanvas: Add WebGL context loss recovery and offline baseline DAG fallback
-  [ ] Console / App: Client-side simulation mode for 4-Act demo when backend API drops
-  [ ] Global React Error Boundary wrapper around all major viewports
-  [ ] Caddyfile: Return standardized JSON for upstream 502 errors instead of raw HTML
+  [x] GraphCanvas: AgentAction node dynamic Y distribution (SVG — no WebGL needed)
+  [x] Console / App: Client-side simulation mode for 4-Act demo when backend API drops
+  [x] Global React Error Boundary wrapper around all major viewports (SubsystemErrorBoundary)
+  [x] Caddyfile: Return standardized JSON for upstream 502 errors instead of raw HTML
 
 Phase 3.5 — Backend & CLI Resilience
-  [ ] Express: Standardize RFC-7807 error envelopes across all /api/* routes
-  [ ] Express: FalkorDB persistent auto-reconnect loop with exponential backoff
+  [x] Express: Standardize RFC-7807 error envelopes across all /api/* routes
+  [x] Express: FalkorDB persistent auto-reconnect loop with exponential backoff
   [ ] CLI doctor: Clean ASCII remediation guidance for connection failures
   [ ] CLI check: Air-gapped static AST parsing fallback mode (--offline-ast)
 ```
@@ -575,43 +586,53 @@ Phase 1 — Already Done
   ✅ Multi-supersedes YAML support
   ✅ ADR templates + TEMPLATE.md
 
-Phase 2 — Next (sources.js + Dev Console)
-  [ ] core/ingestion/sources.js scaffold
-  [ ] ingestGitCommit()
-  [ ] ingestPackageJsonChange()
-  [ ] ingestCodeownersChange()
-  [ ] ingestGitHubIssue() + GitHub webhook endpoint
-  [ ] DevConsolePage.jsx
-  [ ] GET /api/dev/tier-check endpoint
-  [ ] Caddy /dev block rule for production
+Phase 2 — Done (sources.js + Dev Console)
+  ✅ core/ingestion/sources.js scaffold
+  ✅ ingestGitCommit()
+  ✅ ingestPackageJsonChange()
+  ✅ ingestCodeownersChange()
+  ✅ ingestGitHubIssue() + /api/ingest-source HTTP endpoint
+  ✅ DevConsolePage.jsx (amber offline banner, resilient fallback)
+  ✅ GET /api/dev/tier-check endpoint
+  ✅ Caddy /dev block rule for production (handle_errors 502→JSON)
 
-Phase 3 — Tier Enforcement
-  [ ] CAVDAX_TIER env var (free | pro | enterprise)
-  [ ] Node count enforcement middleware
-  [ ] Audit log entry limit per tier
-  [ ] Rate limit values read from tier config
-  [ ] Tier badge in Web HUD header
+Phase 3 — Done (Tier Enforcement)
+  ✅ CAVDAX_TIER env var (free | pro | enterprise)
+  ✅ Node count enforcement middleware (checkNodeLimit)
+  ✅ Audit log entry limit per tier (activeTier.audit_log_limit)
+  ✅ Rate limit values read from tier config (TIER_CONFIG single source of truth)
+  ✅ Tier badge in Web HUD header (Header.jsx — font-mono FREE/PRO/ENT)
 
-Phase 4 — Enterprise
+Phase 3.5 — Done (Platform Resilience)
+  ✅ SubsystemErrorBoundary — 4 views wrapped
+  ✅ RFC-7807 error envelope middleware (Express global error handler)
+  ✅ FalkorDB background auto-reconnect with exponential backoff
+  ✅ fetchGraphState LIMIT 500 pagination
+  ✅ SSE client-side reconnect with exponential backoff + jitter
+  ✅ GitHub OAuth full flow (session-based, CSRF state param)
+
+Phase 4 — Enterprise (Remaining)
   [ ] SIEM export from /api/audit (Splunk/Datadog JSON format)
   [ ] GitHub App setup for real-time webhook ingestion
   [ ] SSO / SAML token scoping
   [ ] Dedicated FalkorDB instance provisioning docs
+  [ ] CLI doctor: ASCII remediation guidance for connection failures
+  [ ] CLI check: Air-gapped static AST parsing fallback (--offline-ast)
 ```
 
 ---
 
 ## 8. Technical Debt to Resolve Before Launch
 
-| Item | File | Priority |
-|------|------|----------|
-| `README.md` still references `core/mcp/stdio.js` path | `README.md` | High |
-| `README.md` simulation mode note still says DEC-102 = stale | `apps/mcp-server/README.md` | High |
-| Benchmark `evaluate.js` uses hardcoded latency numbers | `benchmark/evaluate.js` | Medium |
-| `fetchGraphState` has no pagination — unbounded query on large graphs | `core/graph/queries.js` | Medium |
-| No `.env.example` file — devs don't know what env vars exist | root | High |
-| `apps/server` has no `package-lock.json` committed — CI uses `npm install` | `apps/server/` | Medium |
-| `CAVDAX_TIER` env var not yet read anywhere — tier logic not wired | `apps/server/index.js` | Phase 3 |
+| Item | File | Priority | Status |
+|------|------|----------|--------|
+| `README.md` still references `core/mcp/stdio.js` path | `README.md` | High | ✅ Verified — no stale reference (grep confirmed) |
+| `README.md` simulation mode note still says DEC-102 = stale | `apps/mcp-server/README.md` | High | Open |
+| Benchmark `evaluate.js` uses hardcoded latency numbers | `benchmark/evaluate.js` | Medium | Open |
+| `fetchGraphState` has no pagination — unbounded query on large graphs | `core/graph/queries.js` | Medium | ✅ Fixed — LIMIT 500 added (M6) |
+| No `.env.example` file — devs don't know what env vars exist | root | High | ✅ Fixed — `.env.example` created |
+| `apps/server` has no `package-lock.json` committed — CI uses `npm install` | `apps/server/` | Medium | ✅ Fixed — `package-lock.json` committed |
+| `CAVDAX_TIER` env var not yet read anywhere — tier logic not wired | `apps/server/index.js` | Phase 3 | ✅ Fixed — TIER_CONFIG is single source of truth |
 
 ---
 
