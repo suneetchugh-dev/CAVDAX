@@ -4,30 +4,22 @@ import React, { useState } from 'react';
  * CavdaxWordmark
  * 
  * Official Bespoke Typographic Wordmark for CAVDAX
- * Ported from original source: Z+\Z+ Assets\Logo\Components\CavdaxWordmark.jsx
- * Featuring the EXP-4 "C-to-X" Directed Causal Edge Animation:
- * - Root Graph Node (●) drops under 'C' (Cause / Context)
+ * Rendered in Swiss Neo-Grotesk Architectural Typography (Space Grotesk & Inter)
+ * with the "C-to-X" Directed Causal Edge Animation:
+ * - Root Graph Node (●) drops under 'C' (Cause / Context) at x=159
  * - Directed Causal Vector draws across the baseline
- * - Forward Chevron (>) terminates sharply under 'X' (eXecution)
+ * - Decision Graph Node (●) marks the midpoint under 'D' (Decision) at x=565
+ * - Forward Chevron (>) terminates sharply under 'X' (eXecution) at x=885
  * - Continuous subtle Causal Pulse loop across the edge
  *
- * @param {number} width - Component display width in pixels (aspect ratio 1000:260)
+ * @param {number} width - Component display width in pixels (aspect ratio 1000:240)
  * @param {string} className - Optional Tailwind / CSS classes for colors and positioning
  * @param {boolean} animated - Whether to play the initial C-to-X reveal animation (default: true)
  * @param {boolean} pulse - Whether to enable the continuous subtle photon pulse loop (default: true)
  */
-// Exact vector paths for CAVDAX architectural letterforms (Topology: 9 closed contour loops)
 export const CAVDAX_WORDMARK_LETTERS_PATH =
-  
-    "M 21.9 21.1 L 163.2 21.1 L 163.2 59.6 L 68.4 59.6 L 68.4 150.0 L 163.2 150.0 L 163.2 188.6 L 21.9 188.6 Z " +
-    "M 181.6 188.6 L 244.7 20.2 L 276.3 20.2 L 339.5 188.6 L 293.9 188.6 L 280.7 151.8 L 240.4 151.8 L 227.2 188.6 Z " +
-    "M 230.7 123.7 L 289.5 123.7 L 260.5 47.4 Z " +
-    "M 328.9 20.2 L 377.2 20.2 L 407.0 148.2 L 436.8 20.2 L 485.1 20.2 L 430.7 188.6 L 383.3 188.6 Z " +
-    "M 508.8 20.2 L 599.1 20.2 C 625.0 20.2 647.4 42.6 647.4 68.5 L 647.4 140.3 C 647.4 166.2 625.0 188.6 599.1 188.6 L 508.8 188.6 Z " +
-    "M 554.4 60.5 L 554.4 148.3 L 594.7 148.3 C 607.7 148.3 618.3 137.7 618.3 124.7 L 618.3 84.1 C 618.3 71.1 607.7 60.5 594.7 60.5 Z " +
-    "M 661.4 188.6 L 724.6 20.2 L 756.1 20.2 L 819.3 188.6 L 773.7 188.6 L 760.5 151.8 L 720.2 151.8 L 707.0 188.6 Z " +
-    "M 712.3 124.6 L 769.3 124.6 L 740.8 46.5 Z " +
-    "M 830.7 20.2 L 878.1 20.2 L 903.5 86.8 L 929.0 20.2 L 976.3 20.2 L 928.1 104.4 L 976.3 188.6 L 929.0 188.6 L 903.5 122.0 L 878.1 188.6 L 830.7 188.6 L 878.9 104.4 Z";
+  // Retained as clean vector definition for fallback / canvas pointillist particle sampling
+  "M 90 25 C 130 25, 160 55, 160 95 L 125 95 C 125 75, 110 60, 90 60 C 70 60, 55 75, 55 95 C 55 115, 70 130, 90 130 C 110 130, 125 115, 125 95 L 160 95 C 160 135, 130 165, 90 165 C 50 165, 20 135, 20 95 C 20 55, 50 25, 90 25 Z";
 
 export default function CavdaxWordmark({
   width = 460,
@@ -37,13 +29,11 @@ export default function CavdaxWordmark({
 }) {
   const [key] = useState(0);
 
-  const lettersPath = CAVDAX_WORDMARK_LETTERS_PATH;
-
   return (
     <div className={`inline-flex flex-col items-center select-none ${className}`}>
       <svg
         key={key}
-        viewBox="0 0 1000 260"
+        viewBox="0 0 1000 240"
         width={width}
         className="overflow-visible text-slate-900 dark:text-white transition-colors duration-500"
       >
@@ -53,13 +43,13 @@ export default function CavdaxWordmark({
             animation: wmLettersReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           }
           @keyframes wmLettersReveal {
-            0% { opacity: 0; transform: translateY(3px); }
+            0% { opacity: 0; transform: translateY(4px); }
             100% { opacity: 1; transform: translateY(0); }
           }
 
           /* Context Node Drop (under 'C') */
           .wm-node-drop {
-            transform-origin: 92px 223px;
+            transform-origin: 159px 195px;
             animation: wmNodeDrop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s forwards;
             opacity: 0;
           }
@@ -71,33 +61,33 @@ export default function CavdaxWordmark({
 
           /* Decision Node Drop (under 'D') */
           .wm-node-d {
-            transform-origin: 578px 223px;
-            animation: wmNodeDrop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 1.1s forwards;
+            transform-origin: 565px 195px;
+            animation: wmNodeDrop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 1.05s forwards;
             opacity: 0;
           }
 
           /* Execution Node Drop (under 'X') */
           .wm-node-x {
-            transform-origin: 903px 223px;
-            animation: wmNodeDrop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s forwards;
+            transform-origin: 841px 195px;
+            animation: wmNodeDrop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 1.45s forwards;
             opacity: 0;
           }
 
           /* C-to-X Arrow Shaft Left-to-Right Draw */
           .wm-shaft-draw {
-            stroke-dasharray: 860;
-            stroke-dashoffset: 860;
-            animation: wmShaftDraw 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.85s forwards;
+            stroke-dasharray: 730;
+            stroke-dashoffset: 730;
+            animation: wmShaftDraw 1.05s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards;
           }
           @keyframes wmShaftDraw {
-            0% { stroke-dashoffset: 860; }
+            0% { stroke-dashoffset: 730; }
             100% { stroke-dashoffset: 0; }
           }
 
           /* Sleek Arrow Tip Snap */
           .wm-arrow-snap {
-            transform-origin: 938px 223px;
-            animation: wmArrowSnap 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.75s forwards;
+            transform-origin: 885px 195px;
+            animation: wmArrowSnap 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.65s forwards;
             opacity: 0;
           }
           @keyframes wmArrowSnap {
@@ -108,61 +98,71 @@ export default function CavdaxWordmark({
 
           /* Subtle Continuous Causal Pulse Loop */
           .wm-causal-pulse {
-            stroke-dasharray: 80 860;
-            animation: wmPulseLoop 4.2s cubic-bezier(0.4, 0, 0.2, 1) 2.4s infinite;
+            stroke-dasharray: 70 730;
+            animation: wmPulseLoop 4.2s cubic-bezier(0.4, 0, 0.2, 1) 2.2s infinite;
           }
           @keyframes wmPulseLoop {
-            0% { stroke-dashoffset: 860; opacity: 0; }
+            0% { stroke-dashoffset: 730; opacity: 0; }
             15% { opacity: 0.9; filter: drop-shadow(0 0 5px currentColor); }
             70% { opacity: 0.9; filter: drop-shadow(0 0 5px currentColor); }
-            85%, 100% { stroke-dashoffset: -80; opacity: 0; }
+            85%, 100% { stroke-dashoffset: -70; opacity: 0; }
           }
         `}</style>
 
-        {/* 1. CAVDAX Architectural Letters (Pure Geometric Vector Contours) */}
-        <path
-          d={lettersPath}
+        {/* 1. CAVDAX Bespoke Architectural Wordmark Typography */}
+        <text
+          x="500"
+          y="155"
+          textAnchor="middle"
           fill="currentColor"
-          fillRule="evenodd"
           className={animated ? "wm-letters-fade" : ""}
-        />
+          style={{
+            fontFamily: '"Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontSize: '150px',
+            fontWeight: 800,
+            letterSpacing: '0.15em',
+            textRendering: 'geometricPrecision'
+          }}
+        >
+          CAVDAX
+        </text>
 
-        {/* 2. C-to-X Directed Causal Arrow Underline (Matching Final.jpg & wordmark-sleek-c-to-x-arrow.jpg) */}
+        {/* 2. C-to-X Directed Causal Arrow Underline */}
         <g fill="currentColor" stroke="currentColor">
-          {/* Baseline Causal Edge Shaft (Draws from C across through D to X) */}
+          {/* Baseline Causal Edge Shaft (Draws from C through D to X) */}
           <line
-            x1="92"
-            y1="223"
-            x2="928"
-            y2="223"
-            strokeWidth="3.8"
+            x1="159"
+            y1="195"
+            x2="872"
+            y2="195"
+            strokeWidth="3.6"
             strokeLinecap="round"
             className={animated ? "wm-shaft-draw" : ""}
           />
 
           {/* Root Graph Node (●) under 'C' (Cause / Context) */}
           <circle
-            cx="92"
-            cy="223"
-            r="8"
+            cx="159"
+            cy="195"
+            r="7.5"
             stroke="none"
             className={animated ? "wm-node-drop" : ""}
           />
 
           {/* Intermediate Graph Node (●) under 'D' (Decision) */}
           <circle
-            cx="578"
-            cy="223"
-            r="7"
+            cx="565"
+            cy="195"
+            r="6.5"
             stroke="none"
             className={animated ? "wm-node-d" : ""}
           />
 
           {/* Terminal Graph Node (●) under 'X' (Execution) */}
           <circle
-            cx="903"
-            cy="223"
-            r="7"
+            cx="841"
+            cy="195"
+            r="6.5"
             stroke="none"
             className={animated ? "wm-node-x" : ""}
           />
@@ -170,20 +170,20 @@ export default function CavdaxWordmark({
           {/* Optional Luminous Causal Photon Pulse */}
           {pulse && (
             <line
-              x1="92"
-              y1="223"
-              x2="928"
-              y2="223"
-              strokeWidth="5"
+              x1="159"
+              y1="195"
+              x2="872"
+              y2="195"
+              strokeWidth="4.8"
               strokeLinecap="round"
               className="wm-causal-pulse pointer-events-none"
               style={{ opacity: 0 }}
             />
           )}
 
-          {/* Sleek, Razor-Sharp Terminal Arrowhead (Matching Final.jpg) */}
+          {/* Sleek, Razor-Sharp Terminal Arrowhead */}
           <path
-            d="M 922 216 L 938 223 L 922 230 L 925 223 Z"
+            d="M 868 188 L 885 195 L 868 202 L 871 195 Z"
             fill="currentColor"
             stroke="none"
             className={animated ? "wm-arrow-snap" : ""}

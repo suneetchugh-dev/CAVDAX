@@ -116,9 +116,10 @@ export default function CausalProvenanceRadar() {
   );
   const radarScale = useTransform(scrollYProgress, [0.05, 0.24, 0.76, 0.92], [0.65, 1.25, 1.25, 0.65]);
 
-  // ─── 60fps Synchronized Sweep & Smooth Phosphor Decay Engine ────────────────
+  // ─── 60fps Synchronized Sweep & Smooth Phosphor Decay Engine (Pauses when off-screen) ───
   useEffect(() => {
-    let animId;
+    let animId = null;
+    let isRunning = false;
     const DURATION_MS = 14000; // 14s calm, human-readable sweep
     let startTime = performance.now();
 
@@ -173,11 +174,45 @@ export default function CausalProvenanceRadar() {
         setActiveTarget(discovered);
       }
 
-      animId = requestAnimationFrame(frame);
+      if (isRunning) {
+        animId = requestAnimationFrame(frame);
+      }
     };
 
-    animId = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(animId);
+    const startSweep = () => {
+      if (!isRunning) {
+        isRunning = true;
+        animId = requestAnimationFrame(frame);
+      }
+    };
+
+    const stopSweep = () => {
+      isRunning = false;
+      if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    // Pause radar animation when not visible in viewport to preserve CPU/GPU
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        startSweep();
+      } else {
+        stopSweep();
+      }
+    }, { threshold: 0.04 });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    } else {
+      startSweep();
+    }
+
+    return () => {
+      stopSweep();
+      observer.disconnect();
+    };
   }, []);
 
   return (

@@ -227,7 +227,7 @@ export default function App() {
     };
   }, []);
 
-  // Initialize Lenis smooth scroll
+  // Initialize Lenis smooth scroll with Programmatic Navigation Guard
   useEffect(() => {
     let lenis;
     try {
@@ -237,6 +237,49 @@ export default function App() {
         smoothWheel: true,
       });
       window.__lenis = lenis;
+
+      // Wrap scrollTo to flag programmatic section navigation (prevents mid-flight scroll hijacking)
+      const originalScrollTo = lenis.scrollTo.bind(lenis);
+      lenis.scrollTo = (target, options = {}) => {
+        const isCausalDock = target === '#causal-loop-section' || (typeof target === 'object' && target?.id === 'causal-loop-section');
+        if (!isCausalDock && !options.immediate) {
+          window.__isProgrammaticScroll = true;
+          const dur = ((options.duration !== undefined ? options.duration : 1.2) * 1000) + 300;
+          clearTimeout(window.__progScrollTimer);
+          window.__progScrollTimer = setTimeout(() => {
+            window.__isProgrammaticScroll = false;
+          }, dur);
+
+          const origComplete = options.onComplete;
+          options.onComplete = (lenisInstance) => {
+            window.__isProgrammaticScroll = false;
+            if (origComplete) origComplete(lenisInstance);
+          };
+        }
+        return originalScrollTo(target, options);
+      };
+
+      // Wrap native window.scrollTo for smooth programmatic calls (e.g. Scroll to Top)
+      const origWindowScrollTo = window.scrollTo.bind(window);
+      window.scrollTo = (firstArg, ...rest) => {
+        if (typeof firstArg === 'object' && firstArg?.behavior === 'smooth') {
+          window.__isProgrammaticScroll = true;
+          clearTimeout(window.__progScrollTimer);
+          window.__progScrollTimer = setTimeout(() => {
+            window.__isProgrammaticScroll = false;
+          }, 1400);
+        }
+        return origWindowScrollTo(firstArg, ...rest);
+      };
+
+      // User physical manual scroll immediately clears programmatic navigation flag
+      const handleUserGesture = () => {
+        window.__isProgrammaticScroll = false;
+        clearTimeout(window.__progScrollTimer);
+      };
+      window.addEventListener('wheel', handleUserGesture, { passive: true });
+      window.addEventListener('touchstart', handleUserGesture, { passive: true });
+      window.addEventListener('touchmove', handleUserGesture, { passive: true });
 
       function raf(time) {
         if (document.documentElement.scrollHeight > window.innerHeight + 10) {
@@ -781,15 +824,17 @@ export default function App() {
       {/* 2. Main Viewport Switcher */}
       {activeTab === 'landing' ? (
         /* Full Product Landing Page (footer particles live here, not in console §1.6) */
-        <LandingPage
-          landingTarget={landingTarget}
-          onLaunchConsole={() => handleSelectTab('console')}
-          onOpenMcpPage={() => handleSelectTab('mcp')}
-          onOpenMcpModal={() => setIsMcpModalOpen(true)}
-          onStartTour={() => handleSelectTab('console')}
-          isDarkTheme={isDarkTheme}
-          onToggleTheme={() => setIsDarkTheme((d) => !d)}
-        />
+        <SubsystemErrorBoundary name="Landing Viewport">
+          <LandingPage
+            landingTarget={landingTarget}
+            onLaunchConsole={() => handleSelectTab('console')}
+            onOpenMcpPage={() => handleSelectTab('mcp')}
+            onOpenMcpModal={() => setIsMcpModalOpen(true)}
+            onStartTour={() => handleSelectTab('console')}
+            isDarkTheme={isDarkTheme}
+            onToggleTheme={() => setIsDarkTheme((d) => !d)}
+          />
+        </SubsystemErrorBoundary>
       ) : activeTab === 'mcp' ? (
         /* Dedicated Full-Page MCP Architecture & Agent Connection Guide */
         <SubsystemErrorBoundary name="MCP Configuration">
