@@ -359,6 +359,9 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [activeTab]);
 
+  // SSE online status — shown in Header as "SSE Offline • Local Simulation Active"
+  const [sseOnline, setSseOnline] = useState(false);
+
   // Graph state
   const [graphData, setGraphData] = useState({
     nodes: [
@@ -441,20 +444,53 @@ export default function App() {
       }
     } catch {}
 
-    // Setup SSE listener
-    let evtSource;
-    try {
-      evtSource = new EventSource('/api/events');
-      evtSource.addEventListener('GRAPH_UPDATED', (e) => {
-        try {
-          const updated = JSON.parse(e.data);
-          if (updated && updated.data) setGraphData(updated.data);
-        } catch {}
-      });
-    } catch {}
+    // Setup SSE listener with exponential backoff reconnect (roadmap §6.2)
+    // Retry delays: 1s → 2s → 4s → 8s → 16s → 30s ceiling with ±20% jitter.
+    // Never show raw EventSource errors — just toggle the sseOnline flag.
+    let evtSource = null;
+    let retryDelay = 1000;
+    let retryTimeout = null;
+    let destroyed = false;
+
+    function connectSse() {
+      if (destroyed) return;
+      try {
+        evtSource = new EventSource('/api/events');
+
+        evtSource.addEventListener('GRAPH_UPDATED', (e) => {
+          try {
+            const updated = JSON.parse(e.data);
+            if (updated && updated.data) setGraphData(updated.data);
+          } catch {}
+        });
+
+        evtSource.onopen = () => {
+          setSseOnline(true);
+          retryDelay = 1000; // reset backoff on successful open
+        };
+
+        evtSource.onerror = () => {
+          setSseOnline(false);
+          try { evtSource.close(); } catch {}
+          evtSource = null;
+          if (!destroyed) {
+            const jitter = 1 + (Math.random() * 0.4 - 0.2); // ±20%
+            const delay = Math.min(retryDelay * jitter, 30000);
+            retryTimeout = setTimeout(connectSse, delay);
+            retryDelay = Math.min(retryDelay * 2, 30000);
+          }
+        };
+      } catch {
+        setSseOnline(false);
+      }
+    }
+
+    connectSse();
 
     return () => {
-      if (evtSource) evtSource.close();
+      destroyed = true;
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (evtSource) { try { evtSource.close(); } catch {} }
     };
   }, []);
 
@@ -462,118 +498,141 @@ export default function App() {
   // ACT CONTROLLERS
   // -------------------------------------------------------------------------
 
+  // Core act executor — contains the actual API calls and state mutations for
+  // each act. Extracted so the skip-guard in handleSelectAct can silently
+  // pre-run missing prerequisite acts without duplicating code.
+  async function _runAct(actNumber) {
+    if (actNumber === 1) {
+      setAgentState('idle');
+      await handleReset();
+    } else if (actNumber === 2) {
+      // ACT II: Ingest Commit Mutation — ADR-002 supersedes ADR-001
+      setAgentState('reasoning');
+      addLog('INGESTION', 'Ingesting git commit containing ADR-002 (supersedes ADR-001)...', 'CASCADE');
+      const res = await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const data = await res.json();
+
+      if (data.graph) setGraphData(data.graph);
+      const lat = data.ingestResult?.invalidation?.latency_ms || 2.14;
+      setLatestLatency(lat);
+
+      addLog(
+        'FALKORDB',
+        `Query 2 Cascade completed in ${lat}ms. SUPERSEDES edge established. ADR-001 -> SUPERSEDED, F-Auth-v1 -> STALE, DEC-102 -> INVALIDATED_NEEDS_REVALIDATION.`,
+        'CASCADE'
+      );
+      setActiveVerdict('BLOCKED');
+      setAgentState('idle');
+    } else if (actNumber === 3) {
+      // ACT III: Agent Enclosed MCP Gate Execution Call — blocked on stale DEC-102
+      setAgentState('executing');
+      addLog('AGENT', 'Autonomous Coding Agent requests tool execution: `apply_code_change` with DEC-102...', 'INFO');
+      setLatestAction({
+        filePath: 'demo-repo/src/services/payment.js',
+        decisionId: 'DEC-102',
+        codeSnippet: `// AGENT PROPOSED MUTATION (STALE PROVENANCE):\napp.post('/api/checkout', (req, res) => {\n  const token = req.headers['x-tokenauth-v1'];\n  if (!TokenAuth.v1.verify(token)) return res.status(401).send();\n  res.json({ status: 'paid' });\n});`
+      });
+
+      const res = await fetch('/api/mcp/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toolName: 'apply_code_change',
+          args: {
+            decision_id: 'DEC-102',
+            file_path: 'demo-repo/src/services/payment.js',
+            code_payload: '// TokenAuth v1 code'
+          }
+        })
+      });
+
+      const data = await res.json();
+      setLatestLatency(data.latency_ms || 1.84);
+      setActiveVerdict('BLOCKED');
+      setAgentState('rejected');
+      playRejectBuzz();
+
+      addLog(
+        'MCP_GATE',
+        `ENCLOSED MCP GATE BLOCKED in ${data.latency_ms || 1.84}ms! Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`,
+        'GATE_BLOCK',
+        data.violation_paths
+      );
+    } else if (actNumber === 4) {
+      // ACT IV: Revalidation & Safe Execution — DEC-103 synthesized, OAuth2 written
+      setAgentState('reasoning');
+      addLog('AGENT', 'Act IV: Agent synthesizes Decision DEC-103 grounded in fresh Source ADR-002...', 'REVALIDATION');
+
+      const revalRes = await fetch('/api/act-iv-revalidate', { method: 'POST' });
+      const revalData = await revalRes.json();
+      if (revalData.graph) setGraphData(revalData.graph);
+
+      addLog('FALKORDB', 'Query 3 Revalidation complete: DEC-103 created; DEC-102 archived.', 'REVALIDATION');
+
+      setAgentState('executing');
+      addLog('AGENT', 'Agent re-submits `apply_code_change` using verified DEC-103...', 'INFO');
+
+      const oauthCode = `/**\n * Payment Gateway Service\n * Verified & Grounded in DEC-103 (ADR-002: OAuth2 JWT/RS256)\n */\nimport express from 'express';\nimport { verifyOAuth2Bearer } from './auth.js';\n\nconst app = express();\napp.use(express.json());\n\n// Verified OAuth2 Checkout Endpoint\napp.post('/api/v2/checkout', verifyOAuth2Bearer, (req, res) => {\n  res.json({ status: 'approved', authMethod: 'OAuth2-RS256' });\n});\n\nexport default app;`;
+
+      setLatestAction({
+        filePath: 'demo-repo/src/services/payment.js',
+        decisionId: 'DEC-103',
+        codeSnippet: oauthCode
+      });
+
+      const execRes = await fetch('/api/mcp/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toolName: 'apply_code_change',
+          args: {
+            decision_id: 'DEC-103',
+            file_path: 'demo-repo/src/services/payment.js',
+            code_payload: oauthCode
+          }
+        })
+      });
+
+      const execData = await execRes.json();
+      if (execData.graph) setGraphData(execData.graph);
+      setLatestLatency(execData.latency_ms || 1.62);
+      setActiveVerdict('APPROVED');
+      setAgentState('verified');
+      playApprovalChime();
+
+      addLog(
+        'MCP_GATE',
+        `GATE APPROVED in ${execData.latency_ms || 1.62}ms! Full causal provenance chain verified. File 'payment.js' safely written to disk.`,
+        'GATE_APPROVE'
+      );
+    }
+  }
+
   async function handleSelectAct(actNumber) {
     playClick();
+
+    // Skip-guard: agar user ne Act 3 ya 4 directly click kiya bina pehle wale acts ke,
+    // toh silently prerequisite acts run karo taaki graph correct state mein ho.
+    // Act 3/4 ke liye Act 2 (ADR-002 ingest) zaroori hai warna DEC-102 VALID dikhta hai
+    // aur BLOCKED verdict visually inconsistent lagta hai.
+    if (actNumber >= 3 && currentAct < 2) {
+      setCurrentAct(2);
+      setLoadingAct(2);
+      try { await _runAct(2); } catch {}
+      setLoadingAct(null);
+    }
+    if (actNumber === 4 && currentAct < 3) {
+      setCurrentAct(3);
+      setLoadingAct(3);
+      try { await _runAct(3); } catch {}
+      setLoadingAct(null);
+    }
+
     setCurrentAct(actNumber);
     setLoadingAct(actNumber);
 
     try {
-      if (actNumber === 1) {
-        // ACT I: Baseline
-        setAgentState('idle');
-        await handleReset();
-      } else if (actNumber === 2) {
-        // ACT II: Ingest Commit Mutation
-        setAgentState('reasoning');
-        addLog('INGESTION', 'Ingesting git commit containing ADR-002 (supersedes ADR-001)...', 'CASCADE');
-        const res = await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-        const data = await res.json();
-
-        if (data.graph) setGraphData(data.graph);
-        const lat = data.ingestResult?.invalidation?.latency_ms || 2.14;
-        setLatestLatency(lat);
-
-        addLog(
-          'FALKORDB',
-          `Query 2 Cascade completed in ${lat}ms. SUPERSEDES edge established. ADR-001 -> SUPERSEDED, F-Auth-v1 -> STALE, DEC-102 -> INVALIDATED_NEEDS_REVALIDATION.`,
-          'CASCADE'
-        );
-        setActiveVerdict('BLOCKED');
-        setAgentState('idle');
-      } else if (actNumber === 3) {
-        // ACT III: Agent Enclosed MCP Gate Execution Call
-        setAgentState('executing');
-        addLog('AGENT', 'Autonomous Coding Agent requests tool execution: `apply_code_change` with DEC-102...', 'INFO');
-        setLatestAction({
-          filePath: 'demo-repo/src/services/payment.js',
-          decisionId: 'DEC-102',
-          codeSnippet: `// AGENT PROPOSED MUTATION (STALE PROVENANCE):\napp.post('/api/checkout', (req, res) => {\n  const token = req.headers['x-tokenauth-v1'];\n  if (!TokenAuth.v1.verify(token)) return res.status(401).send();\n  res.json({ status: 'paid' });\n});`
-        });
-
-        const res = await fetch('/api/mcp/call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            toolName: 'apply_code_change',
-            args: {
-              decision_id: 'DEC-102',
-              file_path: 'demo-repo/src/services/payment.js',
-              code_payload: '// TokenAuth v1 code'
-            }
-          })
-        });
-
-        const data = await res.json();
-        setLatestLatency(data.latency_ms || 1.84);
-        setActiveVerdict('BLOCKED');
-        setAgentState('rejected');
-        playRejectBuzz();
-
-        addLog(
-          'MCP_GATE',
-          `ENCLOSED MCP GATE BLOCKED in ${data.latency_ms || 1.84}ms! Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`,
-          'GATE_BLOCK',
-          data.violation_paths
-        );
-      } else if (actNumber === 4) {
-        // ACT IV: Revalidation & Safe Execution
-        setAgentState('reasoning');
-        addLog('AGENT', 'Act IV: Agent synthesizes Decision DEC-103 grounded in fresh Source ADR-002...', 'REVALIDATION');
-
-        const revalRes = await fetch('/api/act-iv-revalidate', { method: 'POST' });
-        const revalData = await revalRes.json();
-        if (revalData.graph) setGraphData(revalData.graph);
-
-        addLog('FALKORDB', 'Query 3 Revalidation complete: DEC-103 created; DEC-102 archived.', 'REVALIDATION');
-
-        // Agent re-submits code with DEC-103
-        setAgentState('executing');
-        addLog('AGENT', 'Agent re-submits `apply_code_change` using verified DEC-103...', 'INFO');
-
-        const oauthCode = `/**\n * Payment Gateway Service\n * Verified & Grounded in DEC-103 (ADR-002: OAuth2 JWT/RS256)\n */\nimport express from 'express';\nimport { verifyOAuth2Bearer } from './auth.js';\n\nconst app = express();\napp.use(express.json());\n\n// Verified OAuth2 Checkout Endpoint\napp.post('/api/v2/checkout', verifyOAuth2Bearer, (req, res) => {\n  res.json({ status: 'approved', authMethod: 'OAuth2-RS256' });\n});\n\nexport default app;`;
-
-        setLatestAction({
-          filePath: 'demo-repo/src/services/payment.js',
-          decisionId: 'DEC-103',
-          codeSnippet: oauthCode
-        });
-
-        const execRes = await fetch('/api/mcp/call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            toolName: 'apply_code_change',
-            args: {
-              decision_id: 'DEC-103',
-              file_path: 'demo-repo/src/services/payment.js',
-              code_payload: oauthCode
-            }
-          })
-        });
-
-        const execData = await execRes.json();
-        if (execData.graph) setGraphData(execData.graph);
-        setLatestLatency(execData.latency_ms || 1.62);
-        setActiveVerdict('APPROVED');
-        setAgentState('verified');
-        playApprovalChime();
-
-        addLog(
-          'MCP_GATE',
-          `GATE APPROVED in ${execData.latency_ms || 1.62}ms! Full causal provenance chain verified. File 'payment.js' safely written to disk.`,
-          'GATE_APPROVE'
-        );
-      }
+      await _runAct(actNumber);
     } catch (err) {
       console.error('Act error:', err);
       addLog('ERROR', `Error executing Act ${actNumber}: ${err.message}`, 'ERROR');

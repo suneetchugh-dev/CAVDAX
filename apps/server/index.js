@@ -5,11 +5,12 @@
 
 import express from 'express';
 import cors from 'cors';
+import session from 'express-session';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes } from 'crypto';
 import { rateLimit } from 'express-rate-limit';
 
 import { getFalkorClient } from '../../core/graph/client.js';
@@ -32,29 +33,85 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // ---------------------------------------------------------------------------
-// RATE LIMITING
+// SESSION MIDDLEWARE
 // ---------------------------------------------------------------------------
-// Standard limiter — all API endpoints (100 requests per minute per IP)
+// Used by GitHub OAuth flow to carry the authenticated user across requests.
+// SESSION_SECRET must be set in .env for production.
+// In-memory store is fine for a single-process server; scale to Redis later.
+app.use(session({
+  secret: process.env.SESSION_SECRET || randomBytes(32).toString('hex'),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  }
+}));
+
+// ---------------------------------------------------------------------------
+// TIER CONFIG & RATE LIMITING
+// ---------------------------------------------------------------------------
+// CAVDAX_TIER env var controls rate limits so they are consistent between
+// /api/dev/tier-check (which reports them) and the actual limiters applied.
+// Previously the limits were hardcoded here and only shown in tier-check —
+// now both read from the same source of truth.
+
+const CAVDAX_TIER = (process.env.CAVDAX_TIER || 'free').toLowerCase();
+
+const TIER_CONFIG = {
+  free: {
+    label: 'Free',
+    description: 'Local FalkorDB only. Rate limit: 100 req/min. MCP stdio transport.',
+    features: ['stdio MCP', 'ADR ingestion', 'local FalkorDB'],
+    rate_limit_per_min: 100,
+    mcp_rate_limit_per_min: 30
+  },
+  pro: {
+    label: 'Pro',
+    description: 'Cloud FalkorDB + SSE remote MCP. Webhook ingestion enabled.',
+    features: ['SSE MCP', 'all source types', 'webhook ingestion', 'audit log'],
+    rate_limit_per_min: 300,
+    mcp_rate_limit_per_min: 100
+  },
+  enterprise: {
+    label: 'Enterprise',
+    description: 'Multi-tenant FalkorDB. Custom rate limits. SLA guarantees.',
+    features: ['multi-tenant', 'custom rate limits', 'SLA', 'RBAC'],
+    rate_limit_per_min: -1,   // -1 = unlimited
+    mcp_rate_limit_per_min: -1
+  }
+};
+
+const activeTier = TIER_CONFIG[CAVDAX_TIER] || TIER_CONFIG.free;
+
+// -1 means unlimited — pass a very large max so express-rate-limit is effectively off
+const apiMax = activeTier.rate_limit_per_min === -1 ? 1_000_000 : activeTier.rate_limit_per_min;
+const mcpMax = activeTier.mcp_rate_limit_per_min === -1 ? 1_000_000 : activeTier.mcp_rate_limit_per_min;
+
+console.log(`[CAVDAX] Tier: ${activeTier.label} — API limit: ${activeTier.rate_limit_per_min === -1 ? 'UNLIMITED' : apiMax + ' req/min'}, MCP limit: ${activeTier.mcp_rate_limit_per_min === -1 ? 'UNLIMITED' : mcpMax + ' req/min'}`);
+
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: apiMax,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Rate limit exceeded. Please retry in 60 seconds.' }
+  message: { error: 'Too many requests', message: `Rate limit exceeded (${apiMax} req/min). Please retry in 60 seconds.` }
 });
 
-// Strict limiter — MCP tool execution endpoints (30 requests per minute per IP)
+// Strict limiter — MCP tool execution endpoints
 // Prevents runaway agent loops from hammering FalkorDB with tool calls.
 const mcpLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: mcpMax,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: 'Too many MCP requests', message: 'MCP rate limit exceeded (30 req/min). Check for agent loops.' }
+  message: { error: 'Too many MCP requests', message: `MCP rate limit exceeded (${mcpMax} req/min). Check for agent loops.` }
 });
 
 app.use('/api/', apiLimiter);          // applies to all /api/* routes
@@ -763,36 +820,12 @@ app.post('/api/ingest-source', requireAuth, async (req, res) => {
  * (e.g. only allow internal IPs or VPN).
  */
 app.get('/api/dev/tier-check', (req, res) => {
-  const tier = process.env.CAVDAX_TIER || 'free';
-
-  const tierMeta = {
-    free: {
-      label: 'Free',
-      description: 'Local FalkorDB only. Rate limit: 100 req/min. MCP stdio transport.',
-      features: ['stdio MCP', 'ADR ingestion', 'local FalkorDB'],
-      rate_limit_per_min: 100,
-      mcp_rate_limit_per_min: 30
-    },
-    pro: {
-      label: 'Pro',
-      description: 'Cloud FalkorDB + SSE remote MCP. Webhook ingestion enabled.',
-      features: ['SSE MCP', 'all source types', 'webhook ingestion', 'audit log'],
-      rate_limit_per_min: 300,
-      mcp_rate_limit_per_min: 100
-    },
-    enterprise: {
-      label: 'Enterprise',
-      description: 'Multi-tenant FalkorDB. Custom rate limits. SLA guarantees.',
-      features: ['multi-tenant', 'custom rate limits', 'SLA', 'RBAC'],
-      rate_limit_per_min: -1,
-      mcp_rate_limit_per_min: -1
-    }
-  };
-
+  // Use top-level TIER_CONFIG and CAVDAX_TIER — single source of truth
+  // so the reported limits match the limits actually enforced by the limiters.
   res.json({
     success: true,
-    tier,
-    tier_meta: tierMeta[tier] || tierMeta.free,
+    tier: CAVDAX_TIER,
+    tier_meta: activeTier,
     falkordb: {
       connected: isFalkorConnected,
       host: process.env.FALKORDB_HOST || 'localhost',
@@ -943,6 +976,171 @@ app.post('/api/mcp/messages', requireAuth, async (req, res) => {
       error: { code: -32603, message: err.message }
     })}\n\n`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// GITHUB OAUTH (roadmap 5.2 — hosted cloud authentication)
+// ---------------------------------------------------------------------------
+// Three env vars required (only for hosted deployment — local dev skips OAuth):
+//   GITHUB_CLIENT_ID      — from github.com/settings/apps or /settings/developers
+//   GITHUB_CLIENT_SECRET  — same OAuth app
+//   GITHUB_CALLBACK_URL   — e.g. https://cavdax.sahnirmaan.live/api/auth/github/callback
+//                           or    http://localhost:3000/api/auth/github/callback  (local testing)
+//
+// Flow:
+//   1.  GET /api/auth/github       — redirect user to GitHub authorize page
+//   2.  GET /api/auth/github/callback — GitHub redirects here with ?code=
+//       → exchange code for access_token
+//       → fetch user profile from api.github.com/user
+//       → store { githubId, login, name, avatarUrl, accessToken } in session
+//       → redirect to /mcp (ConnectMcpPage) with ?connected=1
+//   3.  GET /api/auth/me           — returns current session user (or 401)
+//   4.  POST /api/auth/logout      — destroys session
+
+const GITHUB_CLIENT_ID     = process.env.GITHUB_CLIENT_ID     || null;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || null;
+const GITHUB_CALLBACK_URL  = process.env.GITHUB_CALLBACK_URL
+  || `http://localhost:${PORT}/api/auth/github/callback`;
+
+// In-memory CSRF state store (keyed by random state param, TTL 10 min)
+const oauthStateStore = new Map(); // state → { createdAt }
+setInterval(() => {
+  const cutoff = Date.now() - 10 * 60 * 1000;
+  for (const [k, v] of oauthStateStore) {
+    if (v.createdAt < cutoff) oauthStateStore.delete(k);
+  }
+}, 60 * 1000).unref();
+
+/**
+ * GET /api/auth/github
+ * Redirects the browser to GitHub's authorization page.
+ * If GITHUB_CLIENT_ID is not configured, returns a clear 503 explanation.
+ */
+app.get('/api/auth/github', (req, res) => {
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+    return res.status(503).json({
+      success: false,
+      error: 'GITHUB_OAUTH_NOT_CONFIGURED',
+      message: 'GitHub OAuth is not configured on this server. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in your .env file.',
+      docs: 'https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app'
+    });
+  }
+
+  // Generate CSRF state token and store it briefly
+  const state = randomBytes(20).toString('hex');
+  oauthStateStore.set(state, { createdAt: Date.now() });
+
+  const params = new URLSearchParams({
+    client_id: GITHUB_CLIENT_ID,
+    redirect_uri: GITHUB_CALLBACK_URL,
+    scope: 'read:user read:org',
+    state
+  });
+
+  res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+});
+
+/**
+ * GET /api/auth/github/callback
+ * GitHub redirects here after the user approves the OAuth app.
+ */
+app.get('/api/auth/github/callback', async (req, res) => {
+  const { code, state, error: ghError } = req.query;
+
+  // User denied access or GitHub returned an error
+  if (ghError) {
+    return res.redirect(`/mcp?oauth_error=${encodeURIComponent(ghError)}`);
+  }
+
+  // CSRF state validation
+  if (!state || !oauthStateStore.has(state)) {
+    return res.redirect('/mcp?oauth_error=invalid_state');
+  }
+  oauthStateStore.delete(state);
+
+  if (!code) {
+    return res.redirect('/mcp?oauth_error=missing_code');
+  }
+
+  try {
+    // 1. Exchange code for access token
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: GITHUB_CALLBACK_URL
+      })
+    });
+    const tokenData = await tokenRes.json();
+
+    if (tokenData.error || !tokenData.access_token) {
+      console.error('[CAVDAX OAuth] Token exchange failed:', tokenData);
+      return res.redirect(`/mcp?oauth_error=${encodeURIComponent(tokenData.error || 'token_exchange_failed')}`);
+    }
+
+    const accessToken = tokenData.access_token;
+
+    // 2. Fetch GitHub user profile
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+    const userData = await userRes.json();
+
+    if (!userData.id) {
+      return res.redirect('/mcp?oauth_error=user_fetch_failed');
+    }
+
+    // 3. Persist user in session
+    req.session.user = {
+      githubId:   userData.id,
+      login:      userData.login,
+      name:       userData.name || userData.login,
+      avatarUrl:  userData.avatar_url,
+      // Store the token hashed or omit from session in production;
+      // here we keep it so the client can make authenticated GitHub API calls
+      accessToken
+    };
+
+    console.log(`[CAVDAX OAuth] User authenticated: ${userData.login} (id: ${userData.id})`);
+
+    // 4. Redirect back to the MCP page with a success flag
+    res.redirect('/mcp?connected=1');
+
+  } catch (err) {
+    console.error('[CAVDAX OAuth] Callback error:', err.message);
+    res.redirect(`/mcp?oauth_error=${encodeURIComponent('server_error')}`);
+  }
+});
+
+/**
+ * GET /api/auth/me
+ * Returns the authenticated GitHub user from the session.
+ * Used by ConnectMcpPage to show the connected user badge.
+ */
+app.get('/api/auth/me', (req, res) => {
+  if (!req.session?.user) {
+    return res.status(401).json({ authenticated: false });
+  }
+  const { githubId, login, name, avatarUrl } = req.session.user;
+  res.json({ authenticated: true, user: { githubId, login, name, avatarUrl } });
+});
+
+/**
+ * POST /api/auth/logout
+ * Destroys the session and redirects to /mcp.
+ */
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) console.error('[CAVDAX OAuth] Session destroy error:', err.message);
+    res.json({ success: true });
+  });
 });
 
 // ---------------------------------------------------------------------------

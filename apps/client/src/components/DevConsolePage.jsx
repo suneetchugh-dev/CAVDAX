@@ -18,7 +18,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Terminal, RefreshCw, Database, Activity, Cpu, Lock,
-  Server, Layers, Clock, AlertTriangle
+  Server, Layers, Clock
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
@@ -81,24 +81,83 @@ function FeatureList({ features }) {
   );
 }
 
+// ─── Fallback tier state (shown when /api/dev/tier-check is unreachable) ─────
+// Roadmap §6.2: "Render default Tier 1 / Developer state with sample memory
+// metrics and mock health check table" — never show a raw error banner.
+const FALLBACK_DATA = {
+  _offline: true,
+  tier: 'free',
+  tier_meta: {
+    label: 'Free',
+    description: 'Local FalkorDB only. Rate limit: 100 req/min. MCP stdio transport.',
+    features: ['stdio MCP', 'ADR ingestion', 'local FalkorDB'],
+    rate_limit_per_min: 100,
+    mcp_rate_limit_per_min: 30
+  },
+  falkordb: {
+    connected: false,
+    host: 'localhost',
+    port: 6379,
+    graph_name: 'cavdax_core_graph',
+    mode: 'simulation'
+  },
+  sessions: { mcp_active: 0, sse_clients: 0, mcp_ttl_ms: 300000 },
+  server: {
+    uptime_seconds: null,
+    node_version: null,
+    port: 3000,
+    auth_enabled: false
+  }
+};
+
+// ─── Offline notice banner ────────────────────────────────────────────────────
+function OfflineNoticeBanner({ onRetry, loading }) {
+  return (
+    <div className="flex items-start justify-between gap-3 mb-4 px-3 py-2.5 rounded-lg
+                    border border-amber-500/20 bg-amber-500/5">
+      <div className="flex items-start gap-2 min-w-0">
+        <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+        <div>
+          <span className="text-[11px] font-mono font-semibold text-amber-400 uppercase tracking-wider">
+            Offline Demonstration Mode
+          </span>
+          <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
+            Backend unreachable — displaying Tier 1 reference state. Live metrics unavailable.
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onRetry}
+        disabled={loading}
+        className="shrink-0 text-[10px] font-mono text-amber-400/80 hover:text-amber-300
+                   underline underline-offset-2 transition-colors disabled:opacity-40"
+      >
+        Retry Sync
+      </button>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DevConsolePage() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [isOffline, setIsOffline] = useState(false);
   const [lastFetch, setLastFetch] = useState(null);
 
   const fetchTierCheck = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`${API_BASE}/api/dev/tier-check`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setData(json);
+      setIsOffline(false);
       setLastFetch(new Date().toISOString());
-    } catch (err) {
-      setError(err.message);
+    } catch {
+      // Graceful fallback — never expose raw error to UI (roadmap §6.2)
+      setData(FALLBACK_DATA);
+      setIsOffline(true);
     } finally {
       setLoading(false);
     }
@@ -151,13 +210,9 @@ export default function DevConsolePage() {
       {/* ── Body ───────────────────────────────────────────────────────── */}
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
 
-        {/* Error state */}
-        {error && (
-          <div className="flex items-center gap-2 mb-4 px-3 py-2.5 rounded-lg
-                          border border-rose-500/20 bg-rose-500/5">
-            <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-            <span className="text-[11px] font-mono text-rose-400">{error}</span>
-          </div>
+        {/* Offline notice — non-alarmist amber banner, not a red error box */}
+        {isOffline && !loading && (
+          <OfflineNoticeBanner onRetry={handleRefresh} loading={loading} />
         )}
 
         {/* Loading skeleton */}
