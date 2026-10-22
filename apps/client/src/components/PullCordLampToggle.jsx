@@ -15,6 +15,7 @@ import { playClick } from '../utils/soundFx';
  * - Drifts and fades smoothly as the user scrolls into the Overview page.
  */
 export default function PullCordLampToggle({
+  id = 'wordmark-lamp-toggle',
   isDarkTheme = true,
   onToggleTheme,
   opacity = 1,
@@ -22,7 +23,6 @@ export default function PullCordLampToggle({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
-  const [lampFlash, setLampFlash] = useState(false);
 
   const svgRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -75,8 +75,6 @@ export default function PullCordLampToggle({
   // Sound and theme trigger
   const triggerToggle = useCallback(() => {
     playClick();
-    setLampFlash(true);
-    setTimeout(() => setLampFlash(false), 350);
     if (onToggleTheme) {
       onToggleTheme();
     }
@@ -278,6 +276,7 @@ export default function PullCordLampToggle({
 
   return (
     <div
+      id={id}
       style={{
         opacity,
         visibility: opacity <= 0.01 ? 'hidden' : 'visible',
@@ -307,12 +306,7 @@ export default function PullCordLampToggle({
               <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
             </radialGradient>
 
-            {/* Electric Flash Pulse Gradient (Warm Gold in Dark Theme) */}
-            <radialGradient id="flashPulse" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-              <stop offset="50%" stopColor={isDarkTheme ? "#F59E0B" : "#38BDF8"} stopOpacity="0.5" />
-              <stop offset="100%" stopColor={isDarkTheme ? "#F59E0B" : "#38BDF8"} stopOpacity="0" />
-            </radialGradient>
+            
 
             {/* Chain drop shadow */}
             <filter id="cordShadow" x="-20%" y="-20%" width="140%" height="140%">
@@ -320,16 +314,7 @@ export default function PullCordLampToggle({
             </filter>
           </defs>
 
-          {/* Electric pulse flash aura on theme change */}
-          {lampFlash && (
-            <circle
-              cx={renderPos.bobX}
-              cy={renderPos.bobY}
-              r="48"
-              fill="url(#flashPulse)"
-              className="animate-ping pointer-events-none"
-            />
-          )}
+          
 
           {/* Ambient subtle light aura around bob */}
           <circle

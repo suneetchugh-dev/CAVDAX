@@ -25,6 +25,9 @@ import KineticRollingHeadline from './KineticRollingHeadline';
 import ThanosTypewriterHeadline from './ThanosTypewriterHeadline';
 import McpCableConnectionSvg from './McpCableConnectionSvg';
 import PullCordLampToggle from './PullCordLampToggle';
+import CausalProvenanceRadar from './CausalProvenanceRadar';
+import CausalSolutionScroller from './CausalSolutionScroller';
+import SpotlightDataRain from './SpotlightDataRain';
 import { playClick } from '../utils/soundFx';
 
 const FAQS = [
@@ -123,7 +126,7 @@ export default function LandingPage({
 
   // Section observer for right-side vertical scroll bubbles
   useEffect(() => {
-    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'causal-loop-section', 'faq-section'];
+    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'causal-loop-section', 'radar-section', 'faq-section'];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -328,6 +331,8 @@ export default function LandingPage({
             onToggleTheme={onToggleTheme}
             opacity={lampOpacity}
           />
+          {/* Interactive Causal Provenance Spotlight Data Rain (Cursor-revealed discovery mask) */}
+          <SpotlightDataRain isDarkTheme={isDarkTheme} opacity={wordmarkOpacity} />
           {/* Soft Monochromatic Ambient Radial Halo */}
           <div 
             aria-hidden="true" 
@@ -337,6 +342,7 @@ export default function LandingPage({
 
           {/* Monumentally Enlarged CAVDAX Wordmark with Nail-Hinge & Gravity Physics */}
           <div 
+            id="wordmark-hero-container"
             style={{
               transform: `translate3d(${translateX}px, ${translateY}px, 0) rotate(${rotation}deg) scale(${scale})`,
               transformOrigin: '14% 12%',
@@ -349,7 +355,7 @@ export default function LandingPage({
             <CavdaxWordmark width={wordmarkWidth} className="text-slate-950 dark:text-white relative z-10 drop-shadow-xs" />
           </div>
 
-          {/* Discovery Sub-Cues (CurvyArrow + Button + Downward Mouse Scroll Prompt) */}
+          {/* Discovery Sub-Cues (CurvyArrow + Explore CTA Button) */}
           <div 
             style={{
               opacity: cuesOpacity,
@@ -358,7 +364,7 @@ export default function LandingPage({
               pointerEvents: cuesOpacity <= 0.1 ? 'none' : 'auto',
               willChange: 'opacity, transform'
             }}
-            className="flex flex-col items-center mt-6 sm:mt-10 relative z-20"
+            className="flex flex-col items-center mt-6 sm:mt-8 md:mt-10 relative z-20"
           >
             {/* CurvyArrow with Interactive Discovery CTA Button (Revealed on Hover) */}
             <div 
@@ -374,6 +380,7 @@ export default function LandingPage({
                 className="-top-14 sm:-top-16 -right-16 sm:-right-24 pointer-events-none"
               />
               <button
+                id="wordmark-explore-btn"
                 onMouseEnter={() => setIsBtnHovered(true)}
                 onMouseLeave={() => setIsBtnHovered(false)}
                 onClick={() => {
@@ -393,28 +400,36 @@ export default function LandingPage({
                 <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
               </button>
             </div>
+          </div>
 
-            {/* Downward Mouse / Arrow Scroll Prompt */}
-            <div 
-              onClick={() => {
-                playClick();
-                const hero = document.getElementById('hero-section');
-                if (hero) {
-                  if (window.__lenis) {
-                    window.__lenis.scrollTo(hero.offsetTop, { duration: 0.82, lock: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
-                  } else {
-                    hero.scrollIntoView({ behavior: 'smooth' });
-                  }
+          {/* Downward Mouse / Arrow Scroll Prompt — Grounded at the Bottom of Viewport */}
+          <div 
+            onClick={() => {
+              playClick();
+              const hero = document.getElementById('hero-section');
+              if (hero) {
+                if (window.__lenis) {
+                  window.__lenis.scrollTo(hero.offsetTop, { duration: 0.82, lock: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+                } else {
+                  hero.scrollIntoView({ behavior: 'smooth' });
                 }
-              }}
-              className="flex flex-col items-center gap-2 cursor-pointer group mt-8 sm:mt-10 select-none opacity-80 hover:opacity-100 transition-opacity"
-            >
-              <span className="text-[10px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                Scroll to inspect engine
-              </span>
-              <div className="w-5 h-8 rounded-full border border-slate-400/80 dark:border-white/30 flex items-start justify-center p-1 group-hover:border-slate-800 dark:group-hover:border-white transition-colors">
-                <div className="w-1 h-2 rounded-full bg-slate-700 dark:bg-white animate-bounce" />
-              </div>
+              }
+            }}
+            id="wordmark-scroll-prompt"
+            style={{
+              opacity: cuesOpacity,
+              visibility: cuesOpacity <= 0.01 ? 'hidden' : 'visible',
+              transform: `translate3d(-50%, -${introProgress * 30}px, 0)`,
+              pointerEvents: cuesOpacity <= 0.1 ? 'none' : 'auto',
+              willChange: 'opacity, transform'
+            }}
+            className="absolute bottom-10 sm:bottom-12 md:bottom-14 lg:bottom-16 left-1/2 flex flex-col items-center gap-2 cursor-pointer group select-none opacity-80 hover:opacity-100 transition-opacity z-20"
+          >
+            <span className="text-[10px] font-mono tracking-widest uppercase text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+              Scroll to inspect engine
+            </span>
+            <div className="w-5 h-8 rounded-full border border-slate-400/80 dark:border-white/30 flex items-start justify-center p-1 group-hover:border-slate-800 dark:group-hover:border-white transition-colors">
+              <div className="w-1 h-2 rounded-full bg-slate-700 dark:bg-white animate-bounce" />
             </div>
           </div>
         </div>
@@ -643,157 +658,11 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
+            {/* ══════════════════════════════════════════════════════════════════════
           3. SOLUTION SPACE: GRAPH-GROUNDED DECISION EXECUTION
-          (Zero Eyebrow Pills, Zero Tag Noise, Strictly Pure Typography)
+          (Interactive 3D Cylindrical Visual Scrollytelling Sliding Window)
           ══════════════════════════════════════════════════════════════════════ */}
-      <section id="causal-loop-section" className="w-full py-16 px-6 max-w-6xl mx-auto border-t border-slate-300 dark:border-white/10">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 dark:text-white tracking-tight pb-2 flex flex-wrap items-center justify-center">
-            <span className="text-[#d9a353]">Graph-Grounded</span>
-            <span className="text-slate-400 dark:text-slate-600 font-light mx-2 sm:mx-4 select-none">→</span>
-            <span>Decision Execution</span>
-          </h2>
-        </div>
-
-        {/* ASYMMETRIC SOLUTION SPACE BENTO GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          
-          {/* Bento Card 1 (2-Column): The Invalidation Wave Engine */}
-          <div className="md:col-span-2 neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                  <Workflow className="w-4 h-4 text-slate-950 dark:text-white" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
-                  Causal Invalidation Engine
-                </h3>
-              </div>
-              
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                New commits establish explicit <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-white/10 font-mono text-xs">[:SUPERSEDES]</code> edges, cascading invalidation flags across the graph in &lt; 2ms via FalkorDB GraphBLAS.
-              </p>
-
-              {/* Visual Graph Pipeline Path */}
-              <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-800 dark:text-slate-300">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-slate-900 dark:bg-white" />
-                  <span>ADR-002: OAuth2 Mandatory</span>
-                </div>
-                <span className="text-slate-400 font-bold">→ [:SUPERSEDES] →</span>
-                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  <span>F-Auth-v1: STALE</span>
-                </div>
-                <span className="text-slate-400 font-bold">→ [:INVALIDATES] →</span>
-                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  <span>DEC-102: INVALIDATED</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
-              <span>Latency: 1.84ms</span>
-              <span>Traversal: FalkorDB BFS</span>
-            </div>
-          </div>
-
-          {/* Bento Card 2 (1-Column): The Enclosed MCP Action Gate */}
-          <div className="neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                  <Lock className="w-4 h-4 text-slate-950 dark:text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
-                  Enclosed MCP Execution Gate
-                </h3>
-              </div>
-              
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                Agent file modifications are enclosed behind an MCP Cypher gate. Stale dependencies are blocked in-flight with a deterministic 403 Hard Rejection.
-              </p>
-
-              <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300">
-                <div className="text-slate-500 dark:text-slate-400"># Interception Verdict:</div>
-                <div className="text-rose-700 dark:text-rose-400 font-bold">403 HARD REJECT</div>
-                <div className="text-slate-500 text-[10px]">Stale Provenance Intercepted</div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
-              <span>Standard: MCP 2024-11-05</span>
-              <span>Intercept: In-Flight</span>
-            </div>
-          </div>
-
-          {/* Bento Card 3 (1-Column): FalkorDB GraphBLAS Matrix Invalidation */}
-          <div className="neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                  <Database className="w-4 h-4 text-slate-950 dark:text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
-                  Linear Algebraic Matrix Operations
-                </h3>
-              </div>
-              
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                Sparse matrix multiplications (<code className="font-mono text-xs">A ⊕.⊗ B</code>) evaluate deep multi-hop dependency paths in-memory at hardware speeds.
-              </p>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
-              <span>Engine: FalkorDB</span>
-              <span>Memory: In-RAM Matrix</span>
-            </div>
-          </div>
-
-          {/* Bento Card 4 (2-Column): The Act IV Revalidation Loop */}
-          <div className="md:col-span-2 neo-glass-card p-7 sm:p-9 flex flex-col justify-between text-left relative overflow-hidden group">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-4 h-4 text-slate-950 dark:text-white" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
-                  Self-Healing Continuous Revalidation
-                </h3>
-              </div>
-              
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                Rejections pinpoint the exact stale path. Agents automatically pivot, grounding fresh decisions in active sources with verified provenance.
-              </p>
-
-              <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-black/40 border border-slate-200 dark:border-white/5 font-mono text-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-800 dark:text-slate-300">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                  <span>DEC-102: REPLACED_ARCHIVED</span>
-                </div>
-                <span className="text-slate-400 font-bold">→ [:REPLACES] →</span>
-                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span>DEC-103: VALID (OAuth2)</span>
-                </div>
-                <span className="text-slate-400 font-bold">→ [:COMMITS] →</span>
-                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span>200 OK APPROVED</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 font-mono">
-              <span>Integrity: 100% Causal Proof</span>
-              <span>Status: Production Verified</span>
-            </div>
-          </div>
-
-        </div>
-      </section>
+      <CausalSolutionScroller />
 
       {/* ══════════════════════════════════════════════════════════════════════
           4. ARCHITECTURAL FAQ ACCORDION SECTION (SAHNIRMAAN Caliber)
@@ -872,7 +741,12 @@ export default function LandingPage({
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          5. ACTION CTA SECTION
+          5. CONTINUOUS PROVENANCE RADAR (Real-Time Invalidation Sweeper Climax)
+          ══════════════════════════════════════════════════════════════════════ */}
+      <CausalProvenanceRadar onLaunchConsole={onLaunchConsole} />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          6. ACTION CTA SECTION
           ══════════════════════════════════════════════════════════════════════ */}
       <section id="cta-section" className="w-full py-20 px-6 max-w-4xl mx-auto border-t border-slate-300 dark:border-white/10 text-center">
         <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-950 dark:text-white mb-4 tracking-tight">

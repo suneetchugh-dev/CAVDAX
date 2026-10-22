@@ -15,6 +15,7 @@ import ProgressRing from './ProgressRing';
 export default function DragScrollController() {
   const [scrollMode, setScrollMode] = useState('bottom'); // 'top' or 'bottom'
   const [isVisible, setIsVisible] = useState(false);
+  const [isRadarSection, setIsRadarSection] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isHighlighted, setIsHighlighted] = useState(false);
   const [isSnapConfirm, setIsSnapConfirm] = useState(false);
@@ -60,6 +61,26 @@ export default function DragScrollController() {
         shouldShow = scrollY > 300 && !isNearBottom;
       } else {
         shouldShow = scrollY > 300 && scrollY < (docHeight - winHeight - 300);
+      }
+
+      const radarEl = document.getElementById('radar-section');
+      const causalEl = document.getElementById('causal-loop-section');
+      let inTheater = false;
+      if (radarEl) {
+        const rect = radarEl.getBoundingClientRect();
+        if (rect.top <= winHeight * 0.35 && rect.bottom >= winHeight * 0.15) {
+          inTheater = true;
+        }
+      }
+      if (causalEl) {
+        const rect = causalEl.getBoundingClientRect();
+        if (rect.top <= winHeight * 0.35 && rect.bottom >= winHeight * 0.15) {
+          inTheater = true;
+        }
+      }
+      setIsRadarSection(inTheater);
+      if (inTheater) {
+        shouldShow = false;
       }
 
       setIsVisible(shouldShow);
@@ -302,7 +323,7 @@ export default function DragScrollController() {
         onTouchStart={handlePointerStart}
         className={'group fixed bottom-6 right-6 z-[999] w-11 h-11 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing select-none border-0 outline-none focus:outline-none focus:ring-0 transition-[opacity,background-color] duration-300 ' +
           'bg-white/90 dark:bg-[#141418]/90 shadow-lg backdrop-blur-md text-slate-950 dark:text-white ' +
-          (isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none') + ' ' +
+          (isVisible && !isRadarSection ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none') + ' ' +
           (isDragging ? 'shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.25)] bg-slate-100/90 dark:bg-white/10' : '') + ' ' +
           (isSnapConfirm ? 'scale-110 transition-transform duration-300 shadow-[0_0_24px_8px_rgba(0,0,0,0.3)] dark:shadow-[0_0_24px_8px_rgba(255,255,255,0.4)]' : '')
         }

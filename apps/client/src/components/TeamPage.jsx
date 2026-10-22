@@ -66,8 +66,23 @@ export default function TeamPage({ onLaunchConsole }) {
           {/* Curvy Arrow pointing to Team Contrarians with seamless infinite dash */}
           <CurvyArrow direction="top-right" className="-right-10 top-2 sm:top-4 hidden sm:inline-flex" label="CONTRARIANS" />
 
-          {/* Team Logo Emblem - Luminous Spherical Orb Circle */}
-          <div className="w-20 h-20 sm:w-24 sm:h-24 mb-5 relative flex items-center justify-center rounded-full p-1.5 group/orb cursor-pointer select-none">
+          {/* Team Logo Emblem - Luminous Spherical Orb Circle (Interactive 3D Lightbox Viewer) */}
+          <button
+            type="button"
+            onClick={() => {
+              playClick();
+              setLightboxMember({
+                name: `Team ${TEAM_DETAILS.name}`,
+                title: TEAM_DETAILS.tagline,
+                avatar: TEAM_DETAILS.logo,
+                fallbackAvatar: TEAM_DETAILS.logo,
+                isEmblem: true,
+              });
+            }}
+            className="w-20 h-20 sm:w-24 sm:h-24 mb-5 relative flex items-center justify-center rounded-full p-1.5 group/orb cursor-zoom-in select-none focus:outline-none"
+            title={`View Team ${TEAM_DETAILS.name} Emblem`}
+            aria-label={`View Team ${TEAM_DETAILS.name} Emblem`}
+          >
             {/* Ambient Halo Glow */}
             <div 
               aria-hidden="true" 
@@ -89,7 +104,7 @@ export default function TeamPage({ onLaunchConsole }) {
                 }}
               />
             </div>
-          </div>
+          </button>
 
           {/* Headline with Soft Glow Typography */}
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-950 dark:text-white mb-4 text-balance relative">
@@ -312,18 +327,32 @@ export default function TeamPage({ onLaunchConsole }) {
                 <X size={15} />
               </button>
             </div>
-            <img
-              src={lightboxMember.avatar}
-              alt={lightboxMember.name}
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = lightboxMember.fallbackAvatar;
-              }}
-              className="w-full aspect-square object-cover bg-slate-100 dark:bg-white/5"
-            />
+            <div className={`w-full aspect-square relative flex items-center justify-center overflow-hidden ${
+              lightboxMember.isEmblem ? 'p-8 sm:p-12 bg-slate-50 dark:bg-black/60' : 'bg-slate-100 dark:bg-white/5'
+            }`}>
+              {lightboxMember.isEmblem && (
+                <div 
+                  aria-hidden="true" 
+                  className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(217,163,83,0.18),_transparent_70%)] pointer-events-none" 
+                />
+              )}
+              <img
+                src={lightboxMember.avatar}
+                alt={lightboxMember.name}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = lightboxMember.fallbackAvatar;
+                }}
+                className={`w-full h-full ${
+                  lightboxMember.isEmblem 
+                    ? 'object-contain filter dark:brightness-105 drop-shadow-[0_12px_24px_rgba(0,0,0,0.25)] relative z-10' 
+                    : 'object-cover'
+                }`}
+              />
+            </div>
             <div className="p-5 text-center border-t border-slate-200/70 dark:border-white/10">
               <h3 className="text-base font-bold text-slate-950 dark:text-white">{lightboxMember.name}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{lightboxMember.title}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">{lightboxMember.title}</p>
             </div>
           </div>
         </div>
