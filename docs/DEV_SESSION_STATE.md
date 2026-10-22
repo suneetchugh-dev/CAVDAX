@@ -279,3 +279,23 @@ A complete visual and architectural transformation has been executed across the 
     2. Authored `scripts/verify-graph-integrity.py` validating 5 pre-flight criteria: tag balance (exactly 2 `<script>` / `</script>`), zero JS leakage in HTML text, clean trailing boundary, valid dataset counts, and required design tokens.
     3. Integrated the verification gate into `scripts/publish-graph-pages.ps1`, `scripts/publish-graph-pages.sh`, and `.github/workflows/deploy-graph-pages.yml` to halt any deploy with a fatal error if validation fails.
     4. Codified **Section 13 (Pre-Publish Markup Integrity Guard & Zero-Leak Protocol)** into `AGENTS.md` as an inviolable operational standard.
+
+### 7.1 Custom SVG Cursor & Zero-Leak Audio Pool Ingestion from Main Project
+
+- **Authentic Asset Ingestion from Main Client (`apps/client/public`)**:
+  - Automatically synchronizes `apps/client/public/cursors` and `apps/client/public/sounds` into the graph distribution bundle (`graphify-out/cursors`, `graphify-out/sounds`).
+  - Bundled directly to the `gh-pages` branch via updated `publish-graph-pages.ps1` and `publish-graph-pages.sh`.
+- **Custom Pure SVG Cursor Suite Wired**:
+  - `html, body`: `cursor: url('cursors/default_cursor.svg') 6 3, default` (Swiss architectural monoline white arrow).
+  - Interactive buttons, tabs, pills, and links: `cursor: url('cursors/hand-pointer.svg') 10 2, pointer !important`.
+  - Vis.js graph canvas: `cursor: url('cursors/cover_hand_grab_dark.svg') 12 8, grab`.
+  - Vis.js canvas dragging state: dynamically applies `.is-dragging` via `network.on('dragStart')` / `network.on('dragEnd')` switching to `cursor: url('cursors/cover_hand_grab_dark.svg') 12 8, grabbing !important`.
+  - Canvas node hovering: dynamically applies pointer cursor via `network.on('hoverNode')` / `network.on('blurNode')`.
+- **Zero-Leak Audio Pool Engine (`soundFx.js` Pattern)**:
+  - Replicates the production Audio Pool pattern (`POOL_SIZE = 6`) preloading `sounds/click.mp3` (volume `0.35`).
+  - Cycling round-robin index reuses existing `Audio` elements, preventing runtime element allocation on clicks.
+  - Procedural Web Audio fallback hardened against memory leaks: attaches `osc.onended = () => { osc.disconnect(); gain.disconnect(); }` so temporary AudioNodes are garbage collected immediately.
+  - Auto-resumes suspended `AudioContext` upon user interaction.
+- **Verification**:
+  - Live assets return `HTTP 200 OK` on GitHub Pages (`cursors/default_cursor.svg` and `sounds/click.mp3`).
+  - Pre-publish integrity check passes with zero memory leak patterns and zero markup text leaks.

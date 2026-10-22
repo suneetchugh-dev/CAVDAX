@@ -108,6 +108,26 @@ def verify_file(file_path: Path) -> list:
         if token not in content:
             errors.append(f"Missing required design/architecture token: {desc} ('{token}')")
 
+    # 6. Check custom SVG cursors & memory-leak defense tokens
+    advanced_checks = [
+        ("cursors/default_cursor.svg", "Custom default SVG cursor definition"),
+        ("cursors/hand-pointer.svg", "Custom interactive hand-pointer SVG cursor definition"),
+        ("cursors/cover_hand_grab_dark.svg", "Custom canvas grab SVG cursor definition"),
+        ("clickAudioPool", "Zero-leak Audio Pool (soundFx.js pattern)"),
+        ("osc.disconnect()", "Web Audio oscillator disconnection (memory leak defense)"),
+        ("gain.disconnect()", "Web Audio gain node disconnection (memory leak defense)"),
+    ]
+    for token, desc in advanced_checks:
+        if token not in content:
+            errors.append(f"Missing UX/Safety token: {desc} ('{token}')")
+
+    # 7. Check that cursors and sounds folders exist alongside the HTML file
+    parent_dir = file_path.parent
+    if not (parent_dir / "cursors" / "default_cursor.svg").exists():
+        errors.append(f"Missing cursor asset file: {parent_dir / 'cursors' / 'default_cursor.svg'}")
+    if not (parent_dir / "sounds" / "click.mp3").exists():
+        errors.append(f"Missing sound asset file: {parent_dir / 'sounds' / 'click.mp3'}")
+
     return errors
 
 def main():

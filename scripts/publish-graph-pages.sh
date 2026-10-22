@@ -30,11 +30,21 @@ trap 'rm -rf "$TEMP_DIR"' EXIT
 echo "==> Deploying $SOURCE_HTML to gh-pages branch..."
 cp "$SOURCE_HTML" "$TEMP_DIR/index.html"
 
+SOURCE_DIR="$(dirname "$SOURCE_HTML")"
+if [ -d "$SOURCE_DIR/cursors" ]; then
+    echo "==> Bundling custom SVG cursors..."
+    cp -r "$SOURCE_DIR/cursors" "$TEMP_DIR/cursors"
+fi
+if [ -d "$SOURCE_DIR/sounds" ]; then
+    echo "==> Bundling audio assets..."
+    cp -r "$SOURCE_DIR/sounds" "$TEMP_DIR/sounds"
+fi
+
 cd "$TEMP_DIR"
 git init -b gh-pages
 git remote add origin "$ORIGIN_URL"
-git add index.html
-git commit -m "deploy: publish interactive knowledge graph to GitHub Pages [skip ci]"
+git add -A
+git commit -m "deploy: publish interactive knowledge graph with custom cursors & audio assets [skip ci]"
 git push -f origin gh-pages
 
 echo "SUCCESS: Knowledge graph published to gh-pages branch!"

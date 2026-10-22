@@ -45,13 +45,26 @@ try {
     # Copy graph.html as index.html
     $destIndex = Join-Path $tempDir "index.html"
     Copy-Item -Path $sourceHtml -Destination $destIndex -Force
-    
+
+    # Bundle authentic custom SVG cursors and sounds from graphify-out
+    $sourceDir = Split-Path -Parent $sourceHtml
+    $cursorsDir = Join-Path $sourceDir "cursors"
+    $soundsDir = Join-Path $sourceDir "sounds"
+    if (Test-Path $cursorsDir) {
+        Write-Host "==> Bundling custom SVG cursors to gh-pages..."
+        Copy-Item -Path $cursorsDir -Destination (Join-Path $tempDir "cursors") -Recurse -Force
+    }
+    if (Test-Path $soundsDir) {
+        Write-Host "==> Bundling audio assets to gh-pages..."
+        Copy-Item -Path $soundsDir -Destination (Join-Path $tempDir "sounds") -Recurse -Force
+    }
+
     # Initialize git repo in temp workspace
     Push-Location $tempDir
     & git init -b gh-pages
     & git remote add origin (git -C $repoRoot remote get-url origin)
-    & git add index.html
-    & git commit -m "deploy: publish interactive knowledge graph to GitHub Pages [skip ci]"
+    & git add -A
+    & git commit -m "deploy: publish interactive knowledge graph with custom cursors & audio assets [skip ci]"
     
     Write-Host "==> Pushing to origin/gh-pages..."
     & git push -f origin gh-pages

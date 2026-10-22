@@ -30,6 +30,22 @@ def main():
         sys.exit(1)
 
     import json
+    import shutil
+
+    # Synchronize authentic custom SVG cursors and sounds from apps/client/public into output directory
+    client_public = root_dir / "apps" / "client" / "public"
+    if client_public.exists():
+        cursors_src = client_public / "cursors"
+        sounds_src = client_public / "sounds"
+        cursors_dest = target_path.parent / "cursors"
+        sounds_dest = target_path.parent / "sounds"
+        if cursors_src.exists():
+            shutil.copytree(cursors_src, cursors_dest, dirs_exist_ok=True)
+            print(f"==> Synchronized custom SVG cursors to: {cursors_dest}")
+        if sounds_src.exists():
+            shutil.copytree(sounds_src, sounds_dest, dirs_exist_ok=True)
+            print(f"==> Synchronized sound assets to: {sounds_dest}")
+
     nodes_file = target_path.parent / "graph_nodes.json"
     edges_file = target_path.parent / "graph_edges.json"
     legend_file = target_path.parent / "graph_legend.json"
@@ -114,7 +130,10 @@ def main():
   }}
 
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{
+
+  /* Pure SVG Custom Cursors (CAVDAX Design System Standard) */
+  html, body {{
+    cursor: url('cursors/default_cursor.svg') 6 3, default;
     background: var(--bg);
     color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -125,6 +144,22 @@ def main():
     flex-direction: column;
     user-select: none;
     -webkit-font-smoothing: antialiased;
+  }}
+
+  /* Interactive Elements Custom Hand Pointer */
+  button, a, [role="button"], input[type="submit"], input[type="button"],
+  select, label, [onclick], .cursor-pointer, .tab-btn, .ctrl-btn, .header-brand,
+  .legend-item, .search-item, .launch-platform-btn, .legend-action-btn, .custom-cb,
+  .neighbor-chip, #sound-btn, #physics-btn, #tab-inspector-btn, #tab-legend-btn {{
+    cursor: url('cursors/hand-pointer.svg') 10 2, pointer !important;
+  }}
+
+  /* Vis-Network Canvas Grab & Grabbing State */
+  #graph {{
+    cursor: url('cursors/cover_hand_grab_dark.svg') 12 8, grab;
+  }}
+  #graph:active, #graph.is-dragging {{
+    cursor: url('cursors/cover_hand_grab_dark.svg') 12 8, grabbing !important;
   }}
 
   #header {{
@@ -762,6 +797,31 @@ const RAW_NODES = {raw_nodes_json};
 const RAW_EDGES = {raw_edges_json};
 const LEGEND = {raw_legend_json};
 
+// ============================================================================
+// AUDIO POOL & ZERO-LEAK SYNTHESIZER (soundFx.js Standard)
+// ============================================================================
+const CLICK_SOUND_PATH = 'sounds/click.mp3';
+const POOL_SIZE = 6;
+const clickAudioPool = [];
+let poolIndex = 0;
+let isAudioPoolInitialized = false;
+
+function initAudioPool() {{
+  if (isAudioPoolInitialized || typeof Audio === 'undefined') return;
+  isAudioPoolInitialized = true;
+  for (let i = 0; i < POOL_SIZE; i++) {{
+    try {{
+      const audio = new Audio(CLICK_SOUND_PATH);
+      audio.volume = 0.35;
+      audio.preload = 'auto';
+      clickAudioPool.push(audio);
+    }} catch (e) {{
+      console.warn('Click audio pool initialization failed, using Web Audio API:', e);
+      break;
+    }}
+  }}
+}}
+
 let audioCtx = null;
 let soundMuted = localStorage.getItem('cavdax_sounds_muted') === 'true';
 
@@ -769,10 +829,36 @@ function getAudioCtx() {{
   if (!audioCtx && typeof AudioContext !== 'undefined') {{
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }}
+  if (audioCtx && audioCtx.state === 'suspended') {{
+    audioCtx.resume().catch(() => {{}});
+  }}
   return audioCtx;
 }}
 
 function playClick() {{
+  if (soundMuted) return;
+
+  // 1. Prioritize Audio Pool from client public assets
+  initAudioPool();
+  if (clickAudioPool.length > 0) {{
+    try {{
+      const sound = clickAudioPool[poolIndex];
+      sound.currentTime = 0;
+      sound.volume = 0.35;
+      const p = sound.play();
+      if (p !== undefined) {{
+        p.catch(() => playProceduralClick());
+      }}
+      poolIndex = (poolIndex + 1) % clickAudioPool.length;
+      return;
+    }} catch (e) {{}}
+  }}
+
+  // 2. Procedural Web Audio fallback
+  playProceduralClick();
+}}
+
+function playProceduralClick() {{
   if (soundMuted) return;
   const ctx = getAudioCtx();
   if (!ctx) return;
@@ -784,8 +870,18 @@ function playClick() {{
     osc.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.04);
     gain.gain.setValueAtTime(0.08, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    
     osc.connect(gain);
     gain.connect(ctx.destination);
+
+    // CRITICAL MEMORY LEAK DEFENSE: Disconnect nodes upon sound completion
+    osc.onended = () => {{
+      try {{
+        osc.disconnect();
+        gain.disconnect();
+      }} catch (err) {{}}
+    }};
+
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.045);
   }} catch (e) {{}}
@@ -803,8 +899,18 @@ function playChime() {{
     osc.frequency.setValueAtTime(880, ctx.currentTime + 0.05);
     gain.gain.setValueAtTime(0.06, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    
     osc.connect(gain);
     gain.connect(ctx.destination);
+
+    // CRITICAL MEMORY LEAK DEFENSE: Disconnect nodes upon sound completion
+    osc.onended = () => {{
+      try {{
+        osc.disconnect();
+        gain.disconnect();
+      }} catch (err) {{}}
+    }};
+
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.19);
   }} catch (e) {{}}
@@ -905,6 +1011,20 @@ const network = new vis.Network(container, {{ nodes: nodesDS, edges: edgesDS }},
   nodes: {{ shape: 'dot' }},
 }});
 
+// Custom Canvas Drag & Hover Cursor Feedback (CAVDAX Design Standard)
+network.on('dragStart', () => {{
+  container.classList.add('is-dragging');
+}});
+network.on('dragEnd', () => {{
+  container.classList.remove('is-dragging');
+}});
+network.on('hoverNode', () => {{
+  container.style.cursor = "url('cursors/hand-pointer.svg') 10 2, pointer";
+}});
+network.on('blurNode', () => {{
+  container.style.cursor = "";
+}});
+
 let physicsEnabled = true;
 network.once('stabilizationIterationsDone', () => {{
   network.setOptions({{ physics: {{ enabled: false }} }});
@@ -1001,33 +1121,37 @@ network.on('click', params => {{
 const searchInput = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results');
 
+let searchDebounceTimer = null;
 searchInput.addEventListener('input', () => {{
-  const q = searchInput.value.toLowerCase().trim();
-  searchResults.innerHTML = '';
-  if (!q) {{ searchResults.style.display = 'none'; return; }}
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {{
+    const q = searchInput.value.toLowerCase().trim();
+    searchResults.innerHTML = '';
+    if (!q) {{ searchResults.style.display = 'none'; return; }}
 
-  const matches = RAW_NODES.filter(n => n.label.toLowerCase().includes(q) || (n.source_file && n.source_file.toLowerCase().includes(q))).slice(0, 15);
-  if (!matches.length) {{
-    searchResults.innerHTML = '<div style="padding:10px;font-size:11px;color:var(--text-muted);text-align:center;">No matching nodes found</div>';
+    const matches = RAW_NODES.filter(n => n.label.toLowerCase().includes(q) || (n.source_file && n.source_file.toLowerCase().includes(q))).slice(0, 15);
+    if (!matches.length) {{
+      searchResults.innerHTML = '<div style="padding:10px;font-size:11px;color:var(--text-muted);text-align:center;">No matching nodes found</div>';
+      searchResults.style.display = 'block';
+      return;
+    }}
+
     searchResults.style.display = 'block';
-    return;
-  }}
-
-  searchResults.style.display = 'block';
-  matches.forEach(n => {{
-    const item = document.createElement('div');
-    item.className = 'search-item';
-    item.innerHTML = `
-      <div class="search-item-label">${{esc(n.label)}}</div>
-      <div class="search-item-sub">${{esc(n.community_name || 'Cluster ' + n.community)}} • ${{esc(n.source_file || '')}}</div>
-    `;
-    item.onclick = () => {{
-      focusNode(n.id);
-      searchResults.style.display = 'none';
-      searchInput.value = '';
-    }};
-    searchResults.appendChild(item);
-  }});
+    matches.forEach(n => {{
+      const item = document.createElement('div');
+      item.className = 'search-item';
+      item.innerHTML = `
+        <div class="search-item-label">${{esc(n.label)}}</div>
+        <div class="search-item-sub">${{esc(n.community_name || 'Cluster ' + n.community)}} • ${{esc(n.source_file || '')}}</div>
+      `;
+      item.onclick = () => {{
+        focusNode(n.id);
+        searchResults.style.display = 'none';
+        searchInput.value = '';
+      }};
+      searchResults.appendChild(item);
+    }});
+  }}, 80);
 }});
 
 document.addEventListener('click', e => {{
