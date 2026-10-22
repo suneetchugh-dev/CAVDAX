@@ -22,7 +22,7 @@ Codebase/docs/brand_explorations/
 
 ## 1. Wordmarks Directory ([`wordmarks/`](./wordmarks/))
 
-### A. High-Tech & Developer Archetypes (30 Options)
+### A. High-Tech & Developer Archetypes (35 Options)
 - [`wordmark-tech-01-squircle-aerospace.jpg`](./wordmarks/wordmark-tech-01-squircle-aerospace.jpg) — **Cyber-Architectural Squircle** (SpaceX / Aerospace HUD standard)
 - [`wordmark-tech-02-terminal-monospace.jpg`](./wordmarks/wordmark-tech-02-terminal-monospace.jpg) — **Developer Terminal Monospace** (JetBrains & Berkeley Mono developer terminal)
 - [`wordmark-tech-03-chamfered-cryptographic.jpg`](./wordmarks/wordmark-tech-03-chamfered-cryptographic.jpg) — **Chamfered Cryptographic Hardware** (Quantum HSM security with 45° planar cuts)
@@ -53,6 +53,16 @@ Codebase/docs/brand_explorations/
 - [`wordmark-tech-28-chevron-guilloche-matrix.jpg`](./wordmarks/wordmark-tech-28-chevron-guilloche-matrix.jpg) — **Geometric Chevron Guilloché** (Concrete structural mass with internal forward chevron optical acceleration)
 - [`wordmark-tech-29-hex-honeycomb-monolith.jpg`](./wordmarks/wordmark-tech-29-hex-honeycomb-monolith.jpg) — **Hexagonal Honeycomb Exoskeleton** (Aerospace beryllium bulkhead, 60°/120° isometric core weight voids)
 - [`wordmark-tech-30-stepped-brutalist-ziggurat.jpg`](./wordmarks/wordmark-tech-30-stepped-brutalist-ziggurat.jpg) — **Stepped Brutalist Ziggurat** (Tectonic data fortress, 90° stepped orthogonal terraces, pure concrete brutalism)
+- [`wordmark-tech-31-moire-interference-lattice.jpg`](./wordmarks/wordmark-tech-31-moire-interference-lattice.jpg) — **Kinetico-Moiré Interference Lattice** (Op-Art computational wave interference, dual 45°/15° micro-raster optical grating, solid monolithic silhouette)
+- [`wordmark-tech-32-topographic-isocontour-monolith.jpg`](./wordmarks/wordmark-tech-32-topographic-isocontour-monolith.jpg) — **Topographical Causal Iso-Contour Monolith** (Aerial LiDAR elevation isobars, 5-axis CNC titanium contour milling, continuous geodesic slabs)
+- [`wordmark-tech-33-guilloche-banknote-security-weave.jpg`](./wordmarks/wordmark-tech-33-guilloche-banknote-security-weave.jpg) — **Guilloché Banknote Security Weave** (Central bank sovereign currency mathematical rose rosettes, unforgeable passport security threads)
+- [`wordmark-tech-34-quantum-braided-anyon-topology.jpg`](./wordmarks/wordmark-tech-34-quantum-braided-anyon-topology.jpg) — **Quantum Braided Anyon Topological Braid** (Non-Abelian anyon world-line multi-rail braids, topological knot proof, unbreakable monolithic structure)
+- [`wordmark-tech-35-brutalist-rebar-truss.jpg`](./wordmarks/wordmark-tech-35-brutalist-rebar-truss.jpg) — **Brutalist Architectural Rebar Truss** (High-tensile Pratt/Warren truss rebar web, riveted gusset joints, heavy industrial aerospace permanence)
+- [`wordmark-tech-36-penrose-aperiodic-quasicrystal.jpg`](./wordmarks/wordmark-tech-36-penrose-aperiodic-quasicrystal.jpg) — **Penrose Aperiodic Quasicrystal Matrix** (Infinite 5-fold aperiodic kite-and-dart matrix, non-repeating state-space DAG traversal, golden ratio geometry)
+- [`wordmark-tech-37-chladni-cymatics-resonant-waveform.jpg`](./wordmarks/wordmark-tech-37-chladni-cymatics-resonant-waveform.jpg) — **Chladni Cymatics Resonant Waveform** (Acoustic frequency standing wave harmonics, hyperbolic nodal resonance curves, telemetry frequency purity)
+- [`wordmark-tech-38-discrete-cellular-automata-matrix.jpg`](./wordmarks/wordmark-tech-38-discrete-cellular-automata-matrix.jpg) — **Discrete Cellular Automata Matrix** (Stephen Wolfram Rule 30 chaotic pyramid cascades, Conway Game of Life glider coordinates, emergent discrete computation)
+- [`wordmark-tech-39-anisotropic-carbon-monocoque-weave.jpg`](./wordmarks/wordmark-tech-39-anisotropic-carbon-monocoque-weave.jpg) — **Anisotropic Carbon-Fiber Monocoque Weave** (Formula 1 aerospace 2x2 carbon twill blocks, alternating 45°/-45° high-modulus tensile ribs, lightweight extreme strength)
+- [`wordmark-tech-40-fresnel-zone-plate-radar-aperture.jpg`](./wordmarks/wordmark-tech-40-fresnel-zone-plate-radar-aperture.jpg) — **Fresnel Zone Plate & SAR Phase Array** (Optical Fresnel phase-reversal zone rings, synthetic aperture radar beam-steering, laser wavefront coherence)
 
 ### B. Modernist Swiss & Tech Sans Archetypes
 - [`wordmark-classic-01-swiss-neo-grotesk.jpg`](./wordmarks/wordmark-classic-01-swiss-neo-grotesk.jpg) — **Swiss Neo-Grotesk Architectural** (Linear / OpenAI standard)
