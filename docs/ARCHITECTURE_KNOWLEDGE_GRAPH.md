@@ -164,3 +164,37 @@ graphify explain "CausalProvenanceRadar"
 ```
 
 *(Raw graph data and HTML visualizations are excluded from Git to prevent repository bloat, adhering to enterprise Git repository standards).*
+
+---
+
+## 🌐 7. Interactive 3D Web Atlas Hosting & Platform Companion
+
+- **Live Interactive Visualization**: Hosted on GitHub Pages at [https://suneetchugh-dev.github.io/CAVDAX/](https://suneetchugh-dev.github.io/CAVDAX/).
+- **Official Production Platform**: Features a prominent header link and companion notice redirecting visitors to the full autonomous execution platform at [https://cavdax.sahnirmaan.live](https://cavdax.sahnirmaan.live).
+- **Deployment Strategy**: Automated deployment via the dedicated `gh-pages` branch (using `scripts/publish-graph-pages.ps1` and `.github/workflows/deploy-graph-pages.yml`), preserving clean repository history on `main` and feature branches.
+
+---
+
+## 🛡️ 8. Pre-Publish Markup Integrity Guard (Incident Report & Zero-Leak Standard)
+
+### Incident Root Cause Analysis
+During knowledge graph regeneration, an earlier generator script attempted to parse existing graph HTML strings using token search markers (`orig.find("
+
+// HTML-escape helper")`). Following a design system revamp, that exact comment was altered, causing the string slice to inadvertently capture trailing template markup (including `</script></body></html>`). 
+
+When injected into the new document, this premature `</script>` closed the browser script tag prematurely, dumping all subsequent JavaScript declarations (`let audioCtx = null;`, `function playClick()`, `function setTheme()`) directly into the HTML body as visible text.
+
+### Architectural Solution & Permanent Prevention
+1. **Direct Structured Data Ingestion**:
+   - Replaced HTML string slicing with direct, immutable JSON serialization from structured datasets (`graph_nodes.json`, `graph_edges.json`, `graph_legend.json`).
+   - Clean `json.dumps(..., ensure_ascii=False)` formatting guarantees that script tags are never prematurely generated or mangled.
+2. **Automated Pre-Publish Verification Guard (`scripts/verify-graph-integrity.py`)**:
+   - **Tag Balancing**: Asserts that opening `<script` tags match closing `</script>` tags exactly (expected 2 for standalone pages).
+   - **Zero Text Leakage**: Scans all non-script HTML body text for JavaScript declarations (`let audioCtx`, `function playClick`, `function setTheme`, `const nodesDS`).
+   - **Trailing Cleanliness**: Verifies that nothing follows the final `</script>` tag other than `</body></html>`.
+   - **Dataset & Anchor Completeness**: Validates non-empty datasets (1,048 nodes, 1,405 edges, 83 communities) and presence of the official platform anchor (`cavdax.sahnirmaan.live`).
+3. **Hardwired CI/CD & Local Publishing Blockers**:
+   - `scripts/publish-graph-pages.ps1` and `scripts/publish-graph-pages.sh` execute `verify-graph-integrity.py` before creating temporary workspaces or pushing git commits.
+   - `.github/workflows/deploy-graph-pages.yml` enforces the audit step before deploying to GitHub Pages; if any integrity check fails, the workflow aborts with a fatal error.
+4. **Governance Rule 13 in `AGENTS.md`**:
+   - Codified as an inviolable operational standard across all AI agents working in the repository.

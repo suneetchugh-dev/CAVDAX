@@ -253,6 +253,29 @@ A complete visual and architectural transformation has been executed across the 
 - **Prompt Rules Updates**:
   - Updated `#AGENTS.md File.md` and `#UI_DESIGN_SYSTEM.md file.md` in `C:\(Lectures)\+[Dev-Assets]\#(AI-AGENTS)\#Prompts\#General-Main` with the non-collision tour placement engine, dual-boundary scroll rule, fullscreen canvas architecture, SVG chromatic discipline, typewriter cursor discipline, and the End-of-Session Domain-Partitioned Git Governance Protocol.
 
+---
 
+## 7. Knowledge Graph Hosting, UI Design System Overhaul & Pre-Publish Integrity Guard (October 22, 2026)
 
-
+- **Interactive 3D Knowledge Graph Published to GitHub Pages**:
+  - Successfully mapped all **1,048 nodes**, **1,405 directed edges**, and **83 modular communities** extracted via Graphify into a standalone topological atlas.
+  - Hosted live at: **[https://suneetchugh-dev.github.io/CAVDAX/](https://suneetchugh-dev.github.io/CAVDAX/)**.
+  - Deployed cleanly to isolated `gh-pages` branch, keeping the `main` branch lightweight and git-clean.
+  - Added `.github/workflows/deploy-graph-pages.yml` for automated CI/CD builds on merges to `main`.
+- **UI Design System Elevation (`UI_DESIGN_SYSTEM.md`)**:
+  - Revamped the visualization bundle with the **Swiss Architectural Modernism** specification:
+    - Custom SVG brand mark with the bespoke 3-node directed graph pipeline underline (`C -> D -> X`).
+    - Canonical Obsidian void background (`#0B0D0E`), elevated glassmorphic cards, and warm amber accents (`#d9a353`).
+    - Monochromatic Swiss sans-serif typography (`Inter` / `Space Grotesk`) and tabular code metadata (`JetBrains Mono`).
+    - Web Audio API acoustic synthesis (`playClick()`, `playChime()`) with low-latency AudioContext and `localStorage` mute toggle.
+    - Zero emojis anywhere in UI chrome, headings, badges, or controls.
+- **Official Platform Companion Anchor (Option 2)**:
+  - Added prominent header launch button linking directly to the live production platform: `OFFICIAL PLATFORM: CAVDAX.SAHNIRMAAN.LIVE ↗`.
+  - Added topological companion notice in the Inspector panel clarifying that the GitHub Pages site visualizes repo structure, while the full autonomous decision engine runs at `cavdax.sahnirmaan.live`.
+- **Markup Leakage Incident Resolution & Rule 13 Enshrined (`AGENTS.md`)**:
+  - **The Defect**: String slicing on prior HTML output during generation inadvertently captured a trailing `</script>` tag, closing the browser script block prematurely and rendering raw JS code (`let audioCtx = null; playClick()`) as visible HTML text.
+  - **The Resolution**:
+    1. Replaced string-scraping with direct structured JSON data ingestion (`graph_nodes.json`, `graph_edges.json`, `graph_legend.json`).
+    2. Authored `scripts/verify-graph-integrity.py` validating 5 pre-flight criteria: tag balance (exactly 2 `<script>` / `</script>`), zero JS leakage in HTML text, clean trailing boundary, valid dataset counts, and required design tokens.
+    3. Integrated the verification gate into `scripts/publish-graph-pages.ps1`, `scripts/publish-graph-pages.sh`, and `.github/workflows/deploy-graph-pages.yml` to halt any deploy with a fatal error if validation fails.
+    4. Codified **Section 13 (Pre-Publish Markup Integrity Guard & Zero-Leak Protocol)** into `AGENTS.md` as an inviolable operational standard.

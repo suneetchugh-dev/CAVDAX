@@ -48,6 +48,10 @@ jobs:
             cp graphify-out/graph.html graphify-out/index.html
           fi
 
+      - name: Verify Knowledge Graph Markup Integrity
+        run: |
+          python scripts/verify-graph-integrity.py graphify-out/graph.html graphify-out/index.html
+
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:

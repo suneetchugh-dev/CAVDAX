@@ -22,6 +22,19 @@ if (Test-Path $parentGraph) {
 
 Write-Host "==> Found knowledge graph HTML at: $sourceHtml"
 
+# Mandatory Pre-Publish Markup Integrity Guard
+$verifyScript = Join-Path $PSScriptRoot "verify-graph-integrity.py"
+if (Test-Path $verifyScript) {
+    Write-Host "==> Executing Pre-Publish Graph Integrity Audit..." -ForegroundColor Yellow
+    & python $verifyScript $sourceHtml
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "FATAL: Pre-publish integrity check failed! Halting publish to prevent deploying leaking/corrupted HTML."
+        exit 1
+    }
+} else {
+    Write-Warning "verify-graph-integrity.py not found in scripts directory; skipping integrity check."
+}
+
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("cavdax-gh-pages-" + [System.Guid]::NewGuid().ToString().Substring(0, 8))
 

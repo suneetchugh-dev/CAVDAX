@@ -15,6 +15,12 @@ else
     exit 1
 fi
 
+echo "==> Auditing knowledge graph markup integrity before publishing..."
+VERIFY_SCRIPT="$SCRIPT_DIR/verify-graph-integrity.py"
+if [ -f "$VERIFY_SCRIPT" ]; then
+    python3 "$VERIFY_SCRIPT" "$SOURCE_HTML"
+fi
+
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ORIGIN_URL="$(git -C "$REPO_ROOT" remote get-url origin)"
 TEMP_DIR="$(mktemp -d /tmp/cavdax-gh-pages.XXXXXX)"
