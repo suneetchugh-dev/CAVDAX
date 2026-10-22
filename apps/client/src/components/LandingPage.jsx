@@ -27,6 +27,7 @@ import McpCableConnectionSvg from './McpCableConnectionSvg';
 import PullCordLampToggle from './PullCordLampToggle';
 import CausalProvenanceRadar from './CausalProvenanceRadar';
 import CausalSolutionScroller from './CausalSolutionScroller';
+import SubsystemErrorBoundary from './SubsystemErrorBoundary';
 import SpotlightDataRain from './SpotlightDataRain';
 import { playClick } from '../utils/soundFx';
 
@@ -662,7 +663,9 @@ export default function LandingPage({
           3. SOLUTION SPACE: GRAPH-GROUNDED DECISION EXECUTION
           (Interactive 3D Cylindrical Visual Scrollytelling Sliding Window)
           ══════════════════════════════════════════════════════════════════════ */}
-      <CausalSolutionScroller />
+      <SubsystemErrorBoundary name="Solution Showcase">
+        <CausalSolutionScroller />
+      </SubsystemErrorBoundary>
 
       {/* ══════════════════════════════════════════════════════════════════════
           4. ARCHITECTURAL FAQ ACCORDION SECTION (SAHNIRMAAN Caliber)

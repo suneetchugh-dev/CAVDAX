@@ -682,7 +682,7 @@ export default function CausalSolutionScroller() {
           if (current < SOLUTION_STEPS.length - 1) {
             isTransitioningRef.current = true;
             setScrollImpulse(1);
-            setActiveStep((prev) => prev + 1);
+            setActiveStep((prev) => Math.min(SOLUTION_STEPS.length - 1, prev + 1));
             setTimeout(() => {
               setScrollImpulse(0);
               isTransitioningRef.current = false;
@@ -699,7 +699,7 @@ export default function CausalSolutionScroller() {
           if (current > 0) {
             isTransitioningRef.current = true;
             setScrollImpulse(-1);
-            setActiveStep((prev) => prev - 1);
+            setActiveStep((prev) => Math.max(0, prev - 1));
             setTimeout(() => {
               setScrollImpulse(0);
               isTransitioningRef.current = false;
@@ -735,7 +735,7 @@ export default function CausalSolutionScroller() {
         if (current < SOLUTION_STEPS.length - 1) {
           if (e.cancelable) e.preventDefault();
           isTransitioningRef.current = true;
-          setActiveStep((prev) => prev + 1);
+          setActiveStep((prev) => Math.min(SOLUTION_STEPS.length - 1, prev + 1));
           setTimeout(() => {
             isTransitioningRef.current = false;
           }, 360);
@@ -748,7 +748,7 @@ export default function CausalSolutionScroller() {
         if (current > 0) {
           if (e.cancelable) e.preventDefault();
           isTransitioningRef.current = true;
-          setActiveStep((prev) => prev - 1);
+          setActiveStep((prev) => Math.max(0, prev - 1));
           setTimeout(() => {
             isTransitioningRef.current = false;
           }, 360);
@@ -795,14 +795,14 @@ export default function CausalSolutionScroller() {
         if (current < SOLUTION_STEPS.length - 1) {
           e.preventDefault();
           setScrollImpulse(1);
-          setActiveStep((prev) => prev + 1);
+          setActiveStep((prev) => Math.min(SOLUTION_STEPS.length - 1, prev + 1));
           setTimeout(() => setScrollImpulse(0), 380);
         }
       } else if (e.key === 'ArrowLeft') {
         if (current > 0) {
           e.preventDefault();
           setScrollImpulse(-1);
-          setActiveStep((prev) => prev - 1);
+          setActiveStep((prev) => Math.max(0, prev - 1));
           setTimeout(() => setScrollImpulse(0), 380);
         }
       }
@@ -811,7 +811,7 @@ export default function CausalSolutionScroller() {
         e.preventDefault();
         if (current < SOLUTION_STEPS.length - 1) {
           setScrollImpulse(1);
-          setActiveStep((prev) => prev + 1);
+          setActiveStep((prev) => Math.min(SOLUTION_STEPS.length - 1, prev + 1));
           setTimeout(() => setScrollImpulse(0), 380);
         } else {
           // Lock OUT downward to FAQ
@@ -842,7 +842,7 @@ export default function CausalSolutionScroller() {
         e.preventDefault();
         if (current > 0) {
           setScrollImpulse(-1);
-          setActiveStep((prev) => prev - 1);
+          setActiveStep((prev) => Math.max(0, prev - 1));
           setTimeout(() => setScrollImpulse(0), 380);
         } else {
           // Lock OUT upward to Bento
@@ -877,7 +877,9 @@ export default function CausalSolutionScroller() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const currentStep = SOLUTION_STEPS[activeStep];
+  // Defensively clamp activeStep to ensure it never indexes outside [0, SOLUTION_STEPS.length - 1]
+  const safeStep = Math.max(0, Math.min(SOLUTION_STEPS.length - 1, typeof activeStep === 'number' && !isNaN(activeStep) ? activeStep : 0));
+  const currentStep = SOLUTION_STEPS[safeStep] || SOLUTION_STEPS[0];
 
   const renderVisual = (index) => {
     switch (index) {
@@ -915,7 +917,7 @@ export default function CausalSolutionScroller() {
         {/* ── Top HUD Navigation: Active Stage Name & Pill Jumpers (Single Cue) ── */}
         <div className="w-full flex items-center justify-between border-b border-slate-200/80 dark:border-white/5 pb-4">
           <span className="font-mono text-xs font-bold text-slate-950 dark:text-white tracking-widest uppercase">
-            {currentStep.title}
+            {currentStep?.title || ''}
           </span>
 
           {/* Minimal Numbered Tags (01, 02, 03, 04) with Inner 15s Timer Fill */}
@@ -958,7 +960,7 @@ export default function CausalSolutionScroller() {
           <div 
             className="absolute inset-0 pointer-events-none opacity-10 dark:opacity-20 transition-all duration-700 blur-3xl -z-10"
             style={{
-              background: `radial-gradient(circle at 50% 50%, var(--tw-prose-accent, ${currentStep.accentDark}) 0%, transparent 65%)`
+              background: `radial-gradient(circle at 50% 50%, var(--tw-prose-accent, ${currentStep?.accentDark || '#38bdf8'}) 0%, transparent 65%)`
             }}
           />
 
@@ -1066,9 +1068,9 @@ export default function CausalSolutionScroller() {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const clickX = e.clientX - rect.left;
                       if (clickX > rect.width * 0.65 && activeStep < SOLUTION_STEPS.length - 1) {
-                        setActiveStep((prev) => prev + 1);
+                        setActiveStep((prev) => Math.min(SOLUTION_STEPS.length - 1, prev + 1));
                       } else if (clickX < rect.width * 0.35 && activeStep > 0) {
-                        setActiveStep((prev) => prev - 1);
+                        setActiveStep((prev) => Math.max(0, prev - 1));
                       }
                     }
                   }}
@@ -1108,14 +1110,14 @@ export default function CausalSolutionScroller() {
         <div className="w-full flex items-center justify-center border-t border-slate-200/80 dark:border-white/5 pt-4 min-h-[44px]">
           <AnimatePresence mode="wait">
             <motion.p
-              key={currentStep.id}
+              key={currentStep?.id || 0}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25 }}
               className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 font-sans tracking-normal text-center max-w-3xl"
             >
-              {currentStep.punchline}
+              {currentStep?.punchline || ''}
             </motion.p>
           </AnimatePresence>
         </div>

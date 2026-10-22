@@ -824,15 +824,17 @@ export default function App() {
       {/* 2. Main Viewport Switcher */}
       {activeTab === 'landing' ? (
         /* Full Product Landing Page (footer particles live here, not in console §1.6) */
-        <LandingPage
-          landingTarget={landingTarget}
-          onLaunchConsole={() => handleSelectTab('console')}
-          onOpenMcpPage={() => handleSelectTab('mcp')}
-          onOpenMcpModal={() => setIsMcpModalOpen(true)}
-          onStartTour={() => handleSelectTab('console')}
-          isDarkTheme={isDarkTheme}
-          onToggleTheme={() => setIsDarkTheme((d) => !d)}
-        />
+        <SubsystemErrorBoundary name="Landing Viewport">
+          <LandingPage
+            landingTarget={landingTarget}
+            onLaunchConsole={() => handleSelectTab('console')}
+            onOpenMcpPage={() => handleSelectTab('mcp')}
+            onOpenMcpModal={() => setIsMcpModalOpen(true)}
+            onStartTour={() => handleSelectTab('console')}
+            isDarkTheme={isDarkTheme}
+            onToggleTheme={() => setIsDarkTheme((d) => !d)}
+          />
+        </SubsystemErrorBoundary>
       ) : activeTab === 'mcp' ? (
         /* Dedicated Full-Page MCP Architecture & Agent Connection Guide */
         <SubsystemErrorBoundary name="MCP Configuration">
