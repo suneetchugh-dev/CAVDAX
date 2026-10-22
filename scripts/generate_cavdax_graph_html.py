@@ -171,6 +171,42 @@ def main():
     gap: 8px;
   }}
 
+  .launch-platform-btn {{
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }}
+  .launch-platform-btn:hover {{
+    background: var(--accent);
+    color: #000000;
+    box-shadow: 0 0 12px rgba(217, 163, 83, 0.4);
+    transform: translateY(-1px);
+  }}
+  .launch-platform-btn .pulse-indicator {{
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }}
+  .launch-platform-btn:hover .pulse-indicator {{
+    background: #000000;
+    box-shadow: none;
+  }}
+
   .ctrl-btn {{
     height: 32px;
     padding: 0 10px;
@@ -617,6 +653,12 @@ def main():
   </div>
 
   <div class="header-controls">
+    <a href="https://cavdax.sahnirmaan.live" target="_blank" rel="noopener noreferrer" class="launch-platform-btn" onclick="playClick()" title="Launch official CAVDAX autonomous decision execution platform">
+      <span class="pulse-indicator"></span>
+      <span>OFFICIAL PLATFORM: CAVDAX.SAHNIRMAAN.LIVE</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+    </a>
+
     <button class="ctrl-btn" id="physics-btn" onclick="togglePhysics()" title="Freeze / Resume Graph Physics">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
       <span id="physics-label">FREEZE</span>
@@ -677,6 +719,13 @@ def main():
         <div class="empty-state">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <div>Click any node or use search to inspect granular causal provenance</div>
+          <div style="margin-top:16px;padding:12px;background:var(--accent-subtle);border:1px solid var(--border-active);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-secondary);line-height:1.6;text-align:left;">
+            <div style="color:var(--accent);font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">TOPOLOGICAL GRAPH COMPANION</div>
+            This page visualizes the repository architecture. To launch the full autonomous decision execution platform, visit the official production app at:
+            <div style="margin-top:6px;">
+              <a href="https://cavdax.sahnirmaan.live" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600;text-decoration:underline;">cavdax.sahnirmaan.live &rarr;</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
