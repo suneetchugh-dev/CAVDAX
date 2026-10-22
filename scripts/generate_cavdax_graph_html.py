@@ -29,25 +29,38 @@ def main():
         print("ERROR: graphify-out/graph.html not found! Run graphify first.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"==> Reading raw graph from: {target_path}")
-    orig = target_path.read_text(encoding="utf-8")
+    import json
+    nodes_file = target_path.parent / "graph_nodes.json"
+    edges_file = target_path.parent / "graph_edges.json"
+    legend_file = target_path.parent / "graph_legend.json"
 
-    start_nodes = orig.find("const RAW_NODES = ")
-    end_nodes = orig.find(";\nconst RAW_EDGES = ", start_nodes)
-    if start_nodes == -1 or end_nodes == -1:
-        print("ERROR: Could not locate RAW_NODES in graph.html", file=sys.stderr)
-        sys.exit(1)
-    raw_nodes_str = orig[start_nodes:end_nodes]
-
-    start_edges = end_nodes + 2
-    end_edges = orig.find(";\nconst LEGEND = ", start_edges)
-    raw_edges_str = orig[start_edges:end_edges]
-
-    start_legend = end_edges + 2
-    end_legend = orig.find("\n\n// HTML-escape helper", start_legend)
-    if end_legend == -1:
-        end_legend = orig.find(";\n\nconst nodesDS = ", start_legend)
-    raw_legend_str = orig[start_legend:end_legend]
+    if nodes_file.exists() and edges_file.exists() and legend_file.exists():
+        print(f"==> Loading structured graph datasets from: {target_path.parent}")
+        raw_nodes_json = nodes_file.read_text(encoding="utf-8")
+        raw_edges_json = edges_file.read_text(encoding="utf-8")
+        raw_legend_json = legend_file.read_text(encoding="utf-8")
+    else:
+        print(f"==> Reading raw graph from: {target_path}")
+        orig = target_path.read_text(encoding="utf-8")
+        n_s = orig.find('const RAW_NODES = [')
+        n_e = orig.find('];\nconst RAW_EDGES', n_s) + 1
+        nodes = json.loads(orig[n_s + len('const RAW_NODES = '):n_e])
+        
+        e_s = orig.find('const RAW_EDGES = [')
+        e_e = orig.find('];\nconst LEGEND', e_s) + 1
+        edges = json.loads(orig[e_s + len('const RAW_EDGES = '):e_e])
+        
+        l_s = orig.find('const LEGEND = [')
+        l_e = orig.find('];', l_s) + 1
+        leg = json.loads(orig[l_s + len('const LEGEND = '):l_e])
+        
+        raw_nodes_json = json.dumps(nodes, ensure_ascii=False)
+        raw_edges_json = json.dumps(edges, ensure_ascii=False)
+        raw_legend_json = json.dumps(leg, ensure_ascii=False)
+        
+        nodes_file.write_text(raw_nodes_json, encoding="utf-8")
+        edges_file.write_text(raw_edges_json, encoding="utf-8")
+        legend_file.write_text(raw_legend_json, encoding="utf-8")
 
     html_template = f"""<!DOCTYPE html>
 <html lang="en" data-theme="dark">
@@ -745,9 +758,9 @@ def main():
 </main>
 
 <script>
-{raw_nodes_str};
-{raw_edges_str};
-{raw_legend_str};
+const RAW_NODES = {raw_nodes_json};
+const RAW_EDGES = {raw_edges_json};
+const LEGEND = {raw_legend_json};
 
 let audioCtx = null;
 let soundMuted = localStorage.getItem('cavdax_sounds_muted') === 'true';
