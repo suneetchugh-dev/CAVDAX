@@ -14,20 +14,26 @@ def main():
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     root_dir = Path(__file__).resolve().parent.parent
-    graph_html_paths = [
-        root_dir.parent / "graphify-out" / "graph.html",
-        root_dir / "graphify-out" / "graph.html"
+    candidate_dirs = [
+        root_dir / "graphify-out",
+        root_dir.parent / "graphify-out"
     ]
 
-    target_path = None
-    for p in graph_html_paths:
-        if p.exists():
-            target_path = p
+    target_dir = None
+    for d in candidate_dirs:
+        if d.exists() and (
+            (d / "graph_nodes.json").exists() or 
+            (d / "graph.json").exists() or 
+            (d / "graph.html").exists()
+        ):
+            target_dir = d
             break
 
-    if not target_path:
-        print("ERROR: graphify-out/graph.html not found! Run graphify first.", file=sys.stderr)
-        sys.exit(1)
+    if not target_dir:
+        target_dir = root_dir / "graphify-out"
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+    target_path = target_dir / "graph.html" 
 
     import json
     import shutil

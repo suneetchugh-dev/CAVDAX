@@ -9,7 +9,54 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
-## 1.0 Latest Session Achievements (October 22, 2026)
+<<<<<<< Updated upstream
+=======
+## 1.0.1 Latest Session Achievements (October 23, 2026 - PR #20 Merge & Industry PR Architecture)
+
+- **PR #20 Critical Senior Audit, Approval & Production Squash-Merge**:
+  - Critically audited teammate Geetika Chugh's PR #20 (eat(resilience): platform-wide graceful fallbacks, tier enforcement & enterprise error handling).
+  - Verified: zero credential leaks, client-side simulation engine on backend drops (_simulateAct2, _simulateAct3Block, _simulateAct4Approve), skip-guard auto-running prerequisite acts on direct Act 3/4 clicks, SVG Y-bounding (Y=[60, 400]) fixing node overflow, localized React SubsystemErrorBoundary with double-bezel cards, bounded Cypher queries (LIMIT 500), and RFC-7807 error envelopes.
+  - Formally approved and executed squash-merge (gh pr merge 20 --squash --delete-branch) into main (32dd5a2). Remote feature branch cleanly deleted.
+
+- **Enterprise Session Store Architecture Advisory (docs/GEETIKA_SESSION_STORE_REDIS_MIGRATION_GUIDE.md)**:
+  - Authored a comprehensive technical guide for Geetika explaining why MemoryStore is 100% fine for single-container hackathon evaluation, but causes session flapping, process restart dropouts, and unbounded memory leaks in multi-replica enterprise clusters.
+  - Provided complete drop-in connect-redis + 
+edis code pattern with graceful local development memory fallback.
+
+- **Universal Git PR Governance & Generalized Pre-Merge Invariant Checklist**:
+  - Formulated the **6 Industry-Standard PR Lifecycle Stages** and **4 AI-Agent PR Delegation Tasks** as constitutional guidelines.
+  - Refined master prompt files in C:\(Lectures)\+[Dev-Assets]\#(AI-AGENTS)\#Prompts\#General-Main:
+    - #AGENTS.md File.md (Sections 3.5, 3.6, 3.7, 3.8: 6 PR stages, 4 agent delegation tasks, 7 pre-merge invariants, cross-stack translation matrix).
+    - #EVERY-PROJECT_STARTER.md (Section 5: PR lifecycle & invariant checklist).
+    - ##The 6 Context Files.md (Workflow lifecycle diagram).
+    - Codebase/AGENTS.md (Section 3 updated).
+
+>>>>>>> Stashed changes
+## 1.0 Latest Session Achievements (October 22, 2026 - Part 2)
+
+- **Automated Knowledge Graph CI/CD & Zero-Leak Pre-Publish Integrity (Option A)**:
+  - Tracked lightweight, curated knowledge graph datasets (`graph_nodes.json`, `graph_edges.json`, `graph_legend.json`, `graph.json`, `manifest.json`, `GRAPH_REPORT.md`) along with custom SVG cursors and audio suites in `graphify-out/`.
+  - Configured `.gitignore` to track structured JSON and asset suites while strictly ignoring dynamic output (`*.html`), heavy caches (`cache/`, `converted/`, `transcripts/`), and temporary files.
+  - Refactored `scripts/generate_cavdax_graph_html.py` to synthesize the complete Swiss-designed `graph.html` and `index.html` directly from the local JSON datasets without requiring external LLM API keys or a pre-existing `graph.html`.
+  - Streamlined `.github/workflows/deploy-graph-pages.yml`: removed slow `pip install graphifyy` and third-party tree-sitter compilation. CI now executes deterministic HTML generation in 2 seconds, audits the output via `verify-graph-integrity.py` (Rule 13), and deploys cleanly to `gh-pages`.
+
+- **Scroll Navigation Hijack Elimination (`App.jsx` & `CausalSolutionScroller.jsx`)**:
+  - Resolved mid-flight scroll hijacking where clicking footer "Scroll to Top" or navigation cues caused the 3D horizontal scroller to treat the transit as an arrival and forcefully lock the viewport.
+  - Added a global programmatic navigation flag `window.__isProgrammaticScroll = true` inside `lenis.scrollTo` and `window.scrollTo` wrappers, auto-clearing upon arrival or immediately when manual wheel/touch input is detected.
+  - Guarded `handleScrollCheck` in `CausalSolutionScroller.jsx` to immediately bypass docking and release any active lock during programmatic transit.
+
+- **FOUC Lamp Stretch & 60-120 FPS React Re-render Elimination (`PullCordLampToggle.jsx`)**:
+  - Fixed horizontal stretch bug on initial page load by adding explicit inline styles (`width: 360px`, `height: 360px`, `position: fixed`, `right: 40px`, `top: 0`) preventing unstyled `div` expansion prior to Tailwind evaluation.
+  - Replaced per-frame `setRenderPos` React state churn with direct DOM attribute manipulation (`glowCircleRef`, `beadedPathRef`, `corePathRef`, `bobGroupRef`, `tooltipRef`), completely eliminating 60–120 React virtual-DOM diffs and re-renders per second.
+  - Added visibility sleep (`opacity <= 0.01` check) to pause the physics animation loop when scrolled off-screen.
+
+- **Initial Load Latency & Background RAF Optimization (`SplashLoader.jsx`, `SpotlightDataRain.jsx`, `CausalProvenanceRadar.jsx`)**:
+  - Scaled `SplashLoader.jsx` duration from 4,800ms down to a crisp 1,800ms for first-time visitors, and added `sessionStorage` tracking (`cavdax_splash_shown`) so page reloads skip the loader instantly.
+  - Removed `getBoundingClientRect()` layout thrashing calls from the 30-frame interval in `SpotlightDataRain.jsx`.
+  - Added `IntersectionObserver` instances to both `SpotlightDataRain.jsx` and `CausalProvenanceRadar.jsx` to put canvas and SVG rotation animation loops to sleep when scrolled out of view.
+  - Updated `apps/client/Dockerfile` to compile production assets (`RUN npm run build`) and serve via `npm run preview`.
+
+## 1.1 Previous Session Achievements (October 22, 2026 - Part 1)
 
 - **Causal Solution Scroller: 3D Rolling Cylindrical Card Sliding Window & Bidirectional Docking Engine**:
   - Implemented standalone production component in `apps/client/src/components/CausalSolutionScroller.jsx` replacing flat carousels with a 3D cylindrical perspective stage (`perspective: 1200px`).
