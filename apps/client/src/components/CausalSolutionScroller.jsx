@@ -477,6 +477,19 @@ export default function CausalSolutionScroller() {
   // 1. Precise Viewport Docking: Lock IN when reached, lock OUT only after seeing all cards
   useEffect(() => {
     const handleScrollCheck = () => {
+      // Programmatic Navigation Guard: Never hijack or dock when the user clicked a button/cue/scroll-to-top to navigate elsewhere
+      if (typeof window !== 'undefined' && window.__isProgrammaticScroll) {
+        if (isLockedRef.current) {
+          isLockedRef.current = false;
+          setIsLocked(false);
+          if (window.__lenis) {
+            window.__lenis.isLocked = false;
+            window.__lenis.start();
+          }
+        }
+        return;
+      }
+
       if (isExitingRef.current) return;
       const el = containerRef.current;
       if (!el) return;

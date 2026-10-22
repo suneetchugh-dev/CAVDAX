@@ -26,6 +26,11 @@ export default function PullCordLampToggle({
 
   const svgRef = useRef(null);
   const animFrameRef = useRef(null);
+  const glowCircleRef = useRef(null);
+  const beadedPathRef = useRef(null);
+  const corePathRef = useRef(null);
+  const bobGroupRef = useRef(null);
+  const tooltipRef = useRef(null);
 
   // Physics simulation constants
   const ANCHOR_X = 180;
@@ -65,12 +70,7 @@ export default function PullCordLampToggle({
     autoPullProgress: 0
   });
 
-  const [renderPos, setRenderPos] = useState({
-    bobX: ANCHOR_X,
-    bobY: REST_LENGTH,
-    pathD: `M ${ANCHOR_X} ${ANCHOR_Y} L ${ANCHOR_X} ${REST_LENGTH}`,
-    angle: 0
-  });
+
 
   // Sound and theme trigger
   const triggerToggle = useCallback(() => {
@@ -80,8 +80,17 @@ export default function PullCordLampToggle({
     }
   }, [onToggleTheme]);
 
-  // Main physics loop
+  // Main physics loop (direct DOM updates for zero React state thrashing, pauses when off-screen)
   useEffect(() => {
+    // If cord is invisible/scrolled out, sleep physics loop completely
+    if (opacity <= 0.01) {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+      return;
+    }
+
     let lastTime = performance.now();
 
     const loop = (currentTime) => {
@@ -183,21 +192,35 @@ export default function PullCordLampToggle({
       const segDy = p.y - lastNode.y;
       const rawAngle = Math.atan2(segDx, segDy) * (180 / Math.PI);
 
-      setRenderPos({
-        bobX: p.x,
-        bobY: p.y,
-        pathD: d,
-        angle: rawAngle // Completely unconstrained natural rotation
-      });
+      // Direct DOM updates: 0 React re-renders per second!
+      if (glowCircleRef.current) {
+        glowCircleRef.current.setAttribute('cx', p.x.toFixed(1));
+        glowCircleRef.current.setAttribute('cy', p.y.toFixed(1));
+      }
+      if (beadedPathRef.current) {
+        beadedPathRef.current.setAttribute('d', d);
+      }
+      if (corePathRef.current) {
+        corePathRef.current.setAttribute('d', d);
+      }
+      if (bobGroupRef.current) {
+        bobGroupRef.current.setAttribute('transform', `translate(${p.x.toFixed(1)}, ${p.y.toFixed(1)}) rotate(${rawAngle.toFixed(2)})`);
+      }
+      if (tooltipRef.current) {
+        tooltipRef.current.style.transform = `translate3d(calc(${p.x.toFixed(1)}px - 50%), calc(${p.y.toFixed(1)}px + 28px), 0)`;
+      }
 
       animFrameRef.current = requestAnimationFrame(loop);
     };
 
     animFrameRef.current = requestAnimationFrame(loop);
     return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
     };
-  }, [triggerToggle]);
+  }, [triggerToggle, opacity]);
 
   // Pointer drag interactions (Free-form 360 drag with natural pendulum swing)
   const handlePointerDown = (e) => {
@@ -278,6 +301,12 @@ export default function PullCordLampToggle({
     <div
       id={id}
       style={{
+        position: 'fixed',
+        top: 0,
+        right: '40px',
+        width: '360px',
+        height: '360px',
+        zIndex: 40,
         opacity,
         visibility: opacity <= 0.01 ? 'hidden' : 'visible',
         display: opacity <= 0.01 ? 'none' : 'flex',
@@ -287,15 +316,19 @@ export default function PullCordLampToggle({
       className={`fixed top-0 right-4 sm:right-10 z-40 select-none pointer-events-auto flex flex-col items-center ${className}`}
     >
       {/* Ceiling Connection Stem */}
-      <div className="w-[1.5px] h-3 bg-slate-400/80 dark:bg-amber-400/30" />
+      <div className="w-[1.5px] h-3 bg-slate-400/80 dark:bg-amber-400/30" style={{ width: '1.5px', height: '12px' }} />
 
       {/* 2. Interactive SVG Stretchy Chain + Pull Bob Canvas */}
-      <div className="relative w-[360px] h-[360px] -mt-1 cursor-default select-none">
+      <div 
+        style={{ position: 'relative', width: '360px', height: '360px', margin: '-4px auto 0 auto' }}
+        className="relative w-[360px] h-[360px] -mt-1 cursor-default select-none"
+      >
         <svg
           ref={svgRef}
           width="360"
           height="360"
           viewBox="0 0 360 360"
+          style={{ width: '360px', height: '360px', overflow: 'visible' }}
           className="overflow-visible"
         >
           <defs>
@@ -318,8 +351,9 @@ export default function PullCordLampToggle({
 
           {/* Ambient subtle light aura around bob */}
           <circle
-            cx={renderPos.bobX}
-            cy={renderPos.bobY}
+            ref={glowCircleRef}
+            cx={ANCHOR_X}
+            cy={REST_LENGTH}
             r="26"
             fill="url(#lampGlow)"
             className="pointer-events-none opacity-80"
@@ -327,7 +361,8 @@ export default function PullCordLampToggle({
 
           {/* The Elastic Cord / Beaded Pull String */}
           <path
-            d={renderPos.pathD}
+            ref={beadedPathRef}
+            d={`M ${ANCHOR_X} ${ANCHOR_Y} L ${ANCHOR_X} ${REST_LENGTH}`}
             fill="none"
             stroke={isDarkTheme ? '#E2E8F0' : '#334155'}
             strokeWidth="2.2"
@@ -339,7 +374,8 @@ export default function PullCordLampToggle({
 
           {/* Secondary solid inner core line for tensile depth */}
           <path
-            d={renderPos.pathD}
+            ref={corePathRef}
+            d={`M ${ANCHOR_X} ${ANCHOR_Y} L ${ANCHOR_X} ${REST_LENGTH}`}
             fill="none"
             stroke={isDarkTheme ? '#94A3B8' : '#64748B'}
             strokeWidth="1.1"
@@ -395,10 +431,11 @@ export default function PullCordLampToggle({
 
           {/* The Tactile Pull Bob / Acorn Lamp Switch */}
           <g
+            ref={bobGroupRef}
             role="button"
             tabIndex={0}
             aria-label="Toggle theme pull cord"
-            transform={`translate(${renderPos.bobX}, ${renderPos.bobY}) rotate(${renderPos.angle})`}
+            transform={`translate(${ANCHOR_X}, ${REST_LENGTH}) rotate(0)`}
             onPointerDown={handlePointerDown}
             onClick={handleClick}
             onKeyDown={(e) => {
@@ -477,8 +514,9 @@ export default function PullCordLampToggle({
 
         {/* 3. Floating Tooltip / Interactive Prompt on Hover */}
         <div
+          ref={tooltipRef}
           style={{
-            transform: `translate3d(calc(${renderPos.bobX}px - 50%), calc(${renderPos.bobY}px + 28px), 0)`,
+            transform: `translate3d(calc(${ANCHOR_X}px - 50%), calc(${REST_LENGTH}px + 28px), 0)`,
             opacity: isHovered || isPulling ? 1 : 0,
             pointerEvents: 'none'
           }}

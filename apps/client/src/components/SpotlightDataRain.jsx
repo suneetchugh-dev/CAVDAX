@@ -212,6 +212,8 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
 
       initNodes();
       updateObstacles();
+      setTimeout(updateObstacles, 800);
+      setTimeout(updateObstacles, 2200);
 
       if (swarmPos.x < 0) {
         swarmPos.x = width - 65;
@@ -268,9 +270,7 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
     // ─── Graph Physics & Firefly Swarm Engine ────────────────────────────────
     const updateGraph = () => {
       frameCount++;
-      if (frameCount % 30 === 0) {
-        updateObstacles();
-      }
+      // Eliminated per-30-frame getBoundingClientRect() layout thrashing. Obstacles are scanned on resize & settled mount.
 
       // ─── 1. Interval Swarm Focal Migration (Random Short & Long Intervals) ──
       const now = performance.now();
@@ -687,8 +687,9 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
 
     rafId = requestAnimationFrame(loop);
 
+    let isIntersecting = true;
     const handleVisibility = () => {
-      if (document.hidden) {
+      if (document.hidden || !isIntersecting) {
         isRunning = false;
         cancelAnimationFrame(rafId);
       } else {
@@ -701,6 +702,20 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
 
     document.addEventListener('visibilitychange', handleVisibility);
 
+    // Sleep canvas RAF loop when hero is scrolled out of viewport
+    const io = new IntersectionObserver(([entry]) => {
+      isIntersecting = entry.isIntersecting;
+      if (!isIntersecting) {
+        isRunning = false;
+        cancelAnimationFrame(rafId);
+      } else if (!document.hidden && !isRunning) {
+        isRunning = true;
+        rafId = requestAnimationFrame(loop);
+      }
+    }, { threshold: 0.02 });
+
+    io.observe(container);
+
     return () => {
       isRunning = false;
       cancelAnimationFrame(rafId);
@@ -708,6 +723,7 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
       window.removeEventListener('mousemove', handleMove);
       document.removeEventListener('visibilitychange', handleVisibility);
       ro.disconnect();
+      io.disconnect();
     };
   }, [isDarkTheme]);
 

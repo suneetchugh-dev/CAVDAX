@@ -5,19 +5,24 @@ import { playLoadingSound } from '../utils/soundFx';
 export let isInitialSplashFinished = false;
 
 const FULL_FORM_WORDS = [
-  { prefix: '', acro: 'C', suffix: 'ontextual', delay: '0.3s' },
-  { prefix: '', acro: 'A', suffix: 'ction', delay: '0.6s' },
-  { prefix: '', acro: '&', suffix: '', isSymbol: true, delay: '0.9s' },
-  { prefix: '', acro: 'V', suffix: 'erified', delay: '1.2s' },
-  { prefix: '', acro: 'D', suffix: 'ecision', delay: '1.5s' },
-  { prefix: '', acro: 'A', suffix: 'utonomous', delay: '1.8s' },
-  { prefix: 'e', acro: 'X', suffix: 'ecution', delay: '2.1s' },
+  { prefix: '', acro: 'C', suffix: 'ontextual', delay: '0.15s' },
+  { prefix: '', acro: 'A', suffix: 'ction', delay: '0.3s' },
+  { prefix: '', acro: '&', suffix: '', isSymbol: true, delay: '0.45s' },
+  { prefix: '', acro: 'V', suffix: 'erified', delay: '0.6s' },
+  { prefix: '', acro: 'D', suffix: 'ecision', delay: '0.75s' },
+  { prefix: '', acro: 'A', suffix: 'utonomous', delay: '0.9s' },
+  { prefix: 'e', acro: 'X', suffix: 'ecution', delay: '1.05s' },
 ];
 
 export default function SplashLoader({ isDarkTheme }) {
-  const [isVisible, setIsVisible] = useState(true);
+  const hasSeenSplash = typeof window !== 'undefined' && sessionStorage.getItem('cavdax_splash_shown') === 'true';
+  const [isVisible, setIsVisible] = useState(!hasSeenSplash);
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(hasSeenSplash ? 100 : 0);
+
+  if (hasSeenSplash) {
+    isInitialSplashFinished = true;
+  }
 
   // Determine active theme with zero-latency fallback to localStorage
   const isDark = isDarkTheme !== undefined
@@ -25,9 +30,14 @@ export default function SplashLoader({ isDarkTheme }) {
     : (typeof window !== 'undefined' ? localStorage.getItem('cavdax_theme') !== 'light' : true);
 
   useEffect(() => {
-    // Total animation cycle + full form text reveal hold (4.8s)
-    const drawDuration = 4800;
-    const fadeDuration = 650;
+    if (hasSeenSplash) {
+      isInitialSplashFinished = true;
+      return;
+    }
+
+    // Snappy, high-performance animation cycle (~1.8s) so page is interactive immediately
+    const drawDuration = 1800;
+    const fadeDuration = 500;
 
     // Smooth telemetry progress tracking (0% to 100% across duration)
     const startTime = Date.now();
@@ -36,11 +46,12 @@ export default function SplashLoader({ isDarkTheme }) {
       const pct = Math.min(100, Math.round((elapsed / drawDuration) * 100));
       setProgress(pct);
       if (pct >= 100) clearInterval(interval);
-    }, 30);
+    }, 20);
 
     const fadeOutTimer = setTimeout(() => {
       setIsFadingOut(true);
       isInitialSplashFinished = true;
+      sessionStorage.setItem('cavdax_splash_shown', 'true');
       playLoadingSound();
     }, drawDuration);
 
@@ -51,6 +62,7 @@ export default function SplashLoader({ isDarkTheme }) {
     const handleKeyDown = () => {
       setIsFadingOut(true);
       isInitialSplashFinished = true;
+      sessionStorage.setItem('cavdax_splash_shown', 'true');
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -60,7 +72,7 @@ export default function SplashLoader({ isDarkTheme }) {
       clearTimeout(unmountTimer);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [hasSeenSplash]);
 
   if (!isVisible) return null;
 
