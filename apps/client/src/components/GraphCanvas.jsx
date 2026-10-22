@@ -67,15 +67,38 @@ export default function GraphCanvas({ graphData, onSelectNode, selectedNodeId, s
     'DEC-103': { x: 540, y: 310 }
   };
 
-  let actionCounter = 0;
+  // Pre-count AgentAction nodes so we can distribute them evenly within viewBox height
+  // viewBox is "0 0 880 440" — usable Y range for actions: 60 to 400 (40px margin each side)
+  const ACTION_X = 740;
+  const ACTION_Y_MIN = 60;
+  const ACTION_Y_MAX = 400;
+  const allActionNodes = (graphData?.nodes || []).filter(
+    n => n.label === 'AgentAction' || n.id?.startsWith('act-')
+  );
+  const actionCount = allActionNodes.length;
+  // Spacing: distribute evenly; if only 1 node, center it at Y=220
+  const actionSpacing = actionCount <= 1 ? 0 : Math.min(90, (ACTION_Y_MAX - ACTION_Y_MIN) / (actionCount - 1));
+  const actionStartY = actionCount <= 1
+    ? 220
+    : ACTION_Y_MIN + ((ACTION_Y_MAX - ACTION_Y_MIN) - actionSpacing * (actionCount - 1)) / 2;
+
+  // Build a stable index map for actions by their order in the nodes array
+  let actionCounterMap = 0;
+  const actionIndexMap = new Map();
+  for (const n of (graphData?.nodes || [])) {
+    if (n.label === 'AgentAction' || n.id?.startsWith('act-')) {
+      actionIndexMap.set(n.id, actionCounterMap++);
+    }
+  }
+
   const columnCounters = {};
 
   const nodes = (graphData?.nodes || []).map((node) => {
     let pos = layoutPositions[node.id];
     if (!pos) {
       if (node.label === 'AgentAction' || node.id?.startsWith('act-')) {
-        pos = { x: 740, y: 180 + actionCounter * 90 };
-        actionCounter++;
+        const idx = actionIndexMap.get(node.id) ?? 0;
+        pos = { x: ACTION_X, y: actionStartY + idx * actionSpacing };
       } else {
         const layerX = { Source: 100, Fact: 320, Decision: 540 }[node.label] ?? 540;
         const layerIdx = columnCounters[node.label] ?? 0;

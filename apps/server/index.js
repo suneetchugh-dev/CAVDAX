@@ -5,11 +5,12 @@
 
 import express from 'express';
 import cors from 'cors';
+import session from 'express-session';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes } from 'crypto';
 import { rateLimit } from 'express-rate-limit';
 
 import { getFalkorClient } from '../../core/graph/client.js';
@@ -32,29 +33,91 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // ---------------------------------------------------------------------------
-// RATE LIMITING
+// SESSION MIDDLEWARE
 // ---------------------------------------------------------------------------
-// Standard limiter — all API endpoints (100 requests per minute per IP)
+// Used by GitHub OAuth flow to carry the authenticated user across requests.
+// SESSION_SECRET must be set in .env for production.
+// In-memory store is fine for a single-process server; scale to Redis later.
+app.use(session({
+  secret: process.env.SESSION_SECRET || randomBytes(32).toString('hex'),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  }
+}));
+
+// ---------------------------------------------------------------------------
+// TIER CONFIG & RATE LIMITING
+// ---------------------------------------------------------------------------
+// CAVDAX_TIER env var controls rate limits so they are consistent between
+// /api/dev/tier-check (which reports them) and the actual limiters applied.
+// Previously the limits were hardcoded here and only shown in tier-check —
+// now both read from the same source of truth.
+
+const CAVDAX_TIER = (process.env.CAVDAX_TIER || 'free').toLowerCase();
+
+const TIER_CONFIG = {
+  free: {
+    label: 'Free',
+    description: 'Local FalkorDB only. Rate limit: 100 req/min. MCP stdio transport.',
+    features: ['stdio MCP', 'ADR ingestion', 'local FalkorDB'],
+    rate_limit_per_min: 100,
+    mcp_rate_limit_per_min: 30,
+    node_limit: 500,         // max graph nodes before writes are rejected
+    audit_log_limit: 10      // max entries returned from GET /api/audit
+  },
+  pro: {
+    label: 'Pro',
+    description: 'Cloud FalkorDB + SSE remote MCP. Webhook ingestion enabled.',
+    features: ['SSE MCP', 'all source types', 'webhook ingestion', 'audit log'],
+    rate_limit_per_min: 300,
+    mcp_rate_limit_per_min: 100,
+    node_limit: 10_000,      // pro tier graph capacity
+    audit_log_limit: 1000    // pro tier audit history depth
+  },
+  enterprise: {
+    label: 'Enterprise',
+    description: 'Multi-tenant FalkorDB. Custom rate limits. SLA guarantees.',
+    features: ['multi-tenant', 'custom rate limits', 'SLA', 'RBAC'],
+    rate_limit_per_min: -1,   // -1 = unlimited
+    mcp_rate_limit_per_min: -1,
+    node_limit: -1,           // -1 = no limit (enterprise)
+    audit_log_limit: 500      // enterprise compliance window
+  }
+};
+
+const activeTier = TIER_CONFIG[CAVDAX_TIER] || TIER_CONFIG.free;
+
+// -1 means unlimited — pass a very large max so express-rate-limit is effectively off
+const apiMax = activeTier.rate_limit_per_min === -1 ? 1_000_000 : activeTier.rate_limit_per_min;
+const mcpMax = activeTier.mcp_rate_limit_per_min === -1 ? 1_000_000 : activeTier.mcp_rate_limit_per_min;
+
+console.log(`[CAVDAX] Tier: ${activeTier.label} — API limit: ${activeTier.rate_limit_per_min === -1 ? 'UNLIMITED' : apiMax + ' req/min'}, MCP limit: ${activeTier.mcp_rate_limit_per_min === -1 ? 'UNLIMITED' : mcpMax + ' req/min'}`);
+
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: apiMax,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Rate limit exceeded. Please retry in 60 seconds.' }
+  message: { error: 'Too many requests', message: `Rate limit exceeded (${apiMax} req/min). Please retry in 60 seconds.` }
 });
 
-// Strict limiter — MCP tool execution endpoints (30 requests per minute per IP)
+// Strict limiter — MCP tool execution endpoints
 // Prevents runaway agent loops from hammering FalkorDB with tool calls.
 const mcpLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: mcpMax,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: 'Too many MCP requests', message: 'MCP rate limit exceeded (30 req/min). Check for agent loops.' }
+  message: { error: 'Too many MCP requests', message: `MCP rate limit exceeded (${mcpMax} req/min). Check for agent loops.` }
 });
 
 app.use('/api/', apiLimiter);          // applies to all /api/* routes
@@ -175,16 +238,59 @@ let fallbackGraphState = {
 };
 
 // ---------------------------------------------------------------------------
+// NODE COUNT ENFORCEMENT MIDDLEWARE
+// ---------------------------------------------------------------------------
+// Runs MATCH (n) RETURN count(n) against FalkorDB before any write endpoint.
+// Rejects with 429 if the active tier's node_limit is reached.
+//
+// Only enforced when FalkorDB is live — in simulation/fallback mode writes are
+// in-memory only, so storage limits are not meaningful.
+// If the count query itself fails, the write is allowed through (fail-open);
+// the ingest endpoint has its own error handling for subsequent failures.
+// node_limit = -1 means unlimited (Enterprise tier).
+
+async function checkNodeLimit(req, res, next) {
+  const limit = activeTier.node_limit;
+  if (limit === -1) return next(); // Enterprise — unlimited
+
+  if (!isFalkorConnected || !graph) return next(); // FalkorDB offline — let ingest handle it
+
+  try {
+    const result = await graph.query('MATCH (n) RETURN count(n) AS total');
+    const total = result.data?.[0]?.total ?? 0;
+    if (total >= limit) {
+      return res.status(429).json({
+        success: false,
+        error: 'NODE_LIMIT_EXCEEDED',
+        message: `Graph node limit reached for ${activeTier.label} tier (${total}/${limit} nodes). Upgrade tier or delete unused nodes.`,
+        current_nodes: total,
+        tier_limit: limit,
+        tier: CAVDAX_TIER
+      });
+    }
+    next();
+  } catch (err) {
+    // Count query fail — don't block the write, log it
+    console.warn('[CAVDAX NodeLimit] Count query failed, skipping limit check:', err.message);
+    next();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // REST ENDPOINTS
 // ---------------------------------------------------------------------------
 
 // 1. Health & Connection Status
 app.get('/api/health', (req, res) => {
+  // Exposes tier and tier_label so the Web HUD header badge can read the active
+  // tier on the existing health poll — no extra /api/dev/tier-check round-trip needed.
   res.json({
     status: 'online',
     product: 'CAVDAX',
     expansion: 'Contextual Action & Verified Decision Autonomous eXecution',
     falkordb_connected: isFalkorConnected,
+    tier: CAVDAX_TIER,
+    tier_label: activeTier.label,
     timestamp: new Date().toISOString()
   });
 });
@@ -243,7 +349,8 @@ app.get('/api/graph', async (req, res) => {
 });
 
 // 5. Ingest ADR / Commit Mutation (Act II)
-app.post('/api/ingest', requireAuth, async (req, res) => {
+// checkNodeLimit runs before the handler — rejects if tier node_limit is reached
+app.post('/api/ingest', requireAuth, checkNodeLimit, async (req, res) => {
   try {
     if (!isFalkorConnected) await initDb();
     const filePath = req.body?.filePath || path.join(REPO_ROOT, 'demo-repo/docs/adrs/ADR-002.md');
@@ -593,7 +700,10 @@ export default app;
  *   limit  — max entries to return (default: 100, max: 500)
  */
 app.get('/api/audit', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit || '100', 10), 500);
+  // Cap is tier-aware: free=10, pro=1000, enterprise=500.
+  // Reads from activeTier.audit_log_limit — same TIER_CONFIG object that drives rate limits.
+  const tierCap = activeTier.audit_log_limit;
+  const limit = Math.min(parseInt(req.query.limit || '100', 10), tierCap);
 
   try {
     if (!isFalkorConnected) await initDb();
@@ -659,7 +769,8 @@ app.get('/api/audit', async (req, res) => {
  *   codeowners: { ownedPath, newOwner, oldOwner?, filePath? }
  *   issue:      { issueNumber, title, htmlUrl, body?, supersedesIds?, state? }
  */
-app.post('/api/ingest-source', requireAuth, async (req, res) => {
+// checkNodeLimit runs before the handler — rejects if tier node_limit is reached
+app.post('/api/ingest-source', requireAuth, checkNodeLimit, async (req, res) => {
   const { type, ...fields } = req.body || {};
 
   if (!type) {
@@ -763,36 +874,12 @@ app.post('/api/ingest-source', requireAuth, async (req, res) => {
  * (e.g. only allow internal IPs or VPN).
  */
 app.get('/api/dev/tier-check', (req, res) => {
-  const tier = process.env.CAVDAX_TIER || 'free';
-
-  const tierMeta = {
-    free: {
-      label: 'Free',
-      description: 'Local FalkorDB only. Rate limit: 100 req/min. MCP stdio transport.',
-      features: ['stdio MCP', 'ADR ingestion', 'local FalkorDB'],
-      rate_limit_per_min: 100,
-      mcp_rate_limit_per_min: 30
-    },
-    pro: {
-      label: 'Pro',
-      description: 'Cloud FalkorDB + SSE remote MCP. Webhook ingestion enabled.',
-      features: ['SSE MCP', 'all source types', 'webhook ingestion', 'audit log'],
-      rate_limit_per_min: 300,
-      mcp_rate_limit_per_min: 100
-    },
-    enterprise: {
-      label: 'Enterprise',
-      description: 'Multi-tenant FalkorDB. Custom rate limits. SLA guarantees.',
-      features: ['multi-tenant', 'custom rate limits', 'SLA', 'RBAC'],
-      rate_limit_per_min: -1,
-      mcp_rate_limit_per_min: -1
-    }
-  };
-
+  // Use top-level TIER_CONFIG and CAVDAX_TIER — single source of truth
+  // so the reported limits match the limits actually enforced by the limiters.
   res.json({
     success: true,
-    tier,
-    tier_meta: tierMeta[tier] || tierMeta.free,
+    tier: CAVDAX_TIER,
+    tier_meta: activeTier,
     falkordb: {
       connected: isFalkorConnected,
       host: process.env.FALKORDB_HOST || 'localhost',
@@ -946,6 +1033,171 @@ app.post('/api/mcp/messages', requireAuth, async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// GITHUB OAUTH (roadmap 5.2 — hosted cloud authentication)
+// ---------------------------------------------------------------------------
+// Three env vars required (only for hosted deployment — local dev skips OAuth):
+//   GITHUB_CLIENT_ID      — from github.com/settings/apps or /settings/developers
+//   GITHUB_CLIENT_SECRET  — same OAuth app
+//   GITHUB_CALLBACK_URL   — e.g. https://cavdax.sahnirmaan.live/api/auth/github/callback
+//                           or    http://localhost:3000/api/auth/github/callback  (local testing)
+//
+// Flow:
+//   1.  GET /api/auth/github       — redirect user to GitHub authorize page
+//   2.  GET /api/auth/github/callback — GitHub redirects here with ?code=
+//       → exchange code for access_token
+//       → fetch user profile from api.github.com/user
+//       → store { githubId, login, name, avatarUrl, accessToken } in session
+//       → redirect to /mcp (ConnectMcpPage) with ?connected=1
+//   3.  GET /api/auth/me           — returns current session user (or 401)
+//   4.  POST /api/auth/logout      — destroys session
+
+const GITHUB_CLIENT_ID     = process.env.GITHUB_CLIENT_ID     || null;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || null;
+const GITHUB_CALLBACK_URL  = process.env.GITHUB_CALLBACK_URL
+  || `http://localhost:${PORT}/api/auth/github/callback`;
+
+// In-memory CSRF state store (keyed by random state param, TTL 10 min)
+const oauthStateStore = new Map(); // state → { createdAt }
+setInterval(() => {
+  const cutoff = Date.now() - 10 * 60 * 1000;
+  for (const [k, v] of oauthStateStore) {
+    if (v.createdAt < cutoff) oauthStateStore.delete(k);
+  }
+}, 60 * 1000).unref();
+
+/**
+ * GET /api/auth/github
+ * Redirects the browser to GitHub's authorization page.
+ * If GITHUB_CLIENT_ID is not configured, returns a clear 503 explanation.
+ */
+app.get('/api/auth/github', (req, res) => {
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+    return res.status(503).json({
+      success: false,
+      error: 'GITHUB_OAUTH_NOT_CONFIGURED',
+      message: 'GitHub OAuth is not configured on this server. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in your .env file.',
+      docs: 'https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app'
+    });
+  }
+
+  // Generate CSRF state token and store it briefly
+  const state = randomBytes(20).toString('hex');
+  oauthStateStore.set(state, { createdAt: Date.now() });
+
+  const params = new URLSearchParams({
+    client_id: GITHUB_CLIENT_ID,
+    redirect_uri: GITHUB_CALLBACK_URL,
+    scope: 'read:user read:org',
+    state
+  });
+
+  res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+});
+
+/**
+ * GET /api/auth/github/callback
+ * GitHub redirects here after the user approves the OAuth app.
+ */
+app.get('/api/auth/github/callback', async (req, res) => {
+  const { code, state, error: ghError } = req.query;
+
+  // User denied access or GitHub returned an error
+  if (ghError) {
+    return res.redirect(`/mcp?oauth_error=${encodeURIComponent(ghError)}`);
+  }
+
+  // CSRF state validation
+  if (!state || !oauthStateStore.has(state)) {
+    return res.redirect('/mcp?oauth_error=invalid_state');
+  }
+  oauthStateStore.delete(state);
+
+  if (!code) {
+    return res.redirect('/mcp?oauth_error=missing_code');
+  }
+
+  try {
+    // 1. Exchange code for access token
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: GITHUB_CALLBACK_URL
+      })
+    });
+    const tokenData = await tokenRes.json();
+
+    if (tokenData.error || !tokenData.access_token) {
+      console.error('[CAVDAX OAuth] Token exchange failed:', tokenData);
+      return res.redirect(`/mcp?oauth_error=${encodeURIComponent(tokenData.error || 'token_exchange_failed')}`);
+    }
+
+    const accessToken = tokenData.access_token;
+
+    // 2. Fetch GitHub user profile
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+    const userData = await userRes.json();
+
+    if (!userData.id) {
+      return res.redirect('/mcp?oauth_error=user_fetch_failed');
+    }
+
+    // 3. Persist user in session
+    req.session.user = {
+      githubId:   userData.id,
+      login:      userData.login,
+      name:       userData.name || userData.login,
+      avatarUrl:  userData.avatar_url,
+      // Store the token hashed or omit from session in production;
+      // here we keep it so the client can make authenticated GitHub API calls
+      accessToken
+    };
+
+    console.log(`[CAVDAX OAuth] User authenticated: ${userData.login} (id: ${userData.id})`);
+
+    // 4. Redirect back to the MCP page with a success flag
+    res.redirect('/mcp?connected=1');
+
+  } catch (err) {
+    console.error('[CAVDAX OAuth] Callback error:', err.message);
+    res.redirect(`/mcp?oauth_error=${encodeURIComponent('server_error')}`);
+  }
+});
+
+/**
+ * GET /api/auth/me
+ * Returns the authenticated GitHub user from the session.
+ * Used by ConnectMcpPage to show the connected user badge.
+ */
+app.get('/api/auth/me', (req, res) => {
+  if (!req.session?.user) {
+    return res.status(401).json({ authenticated: false });
+  }
+  const { githubId, login, name, avatarUrl } = req.session.user;
+  res.json({ authenticated: true, user: { githubId, login, name, avatarUrl } });
+});
+
+/**
+ * POST /api/auth/logout
+ * Destroys the session and redirects to /mcp.
+ */
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) console.error('[CAVDAX OAuth] Session destroy error:', err.message);
+    res.json({ success: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 9. Static Web HUD Serving & SPA Path Routing Fallback (/overview, /console, /mcp, /project, /team)
 const clientDistPath = path.resolve(__dirname, '../client/dist');
 if (fs.existsSync(clientDistPath)) {
@@ -956,10 +1208,101 @@ if (fs.existsSync(clientDistPath)) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// GLOBAL RFC-7807 ERROR ENVELOPE MIDDLEWARE
+// ---------------------------------------------------------------------------
+// Catches any unhandled Express errors (4-argument signature required by Express).
+// Returns a uniform JSON shape so both the Web HUD and coding agents always get a
+// predictable error structure rather than raw stack traces or HTML error pages.
+//
+// Shape: { success: false, error: { code, message, subsystem, remediable } }
+//   code        — machine-readable string (e.g. "NODE_LIMIT_EXCEEDED", "HTTP_500")
+//   subsystem   — which API area the error originated from (inferred from req.path)
+//   remediable  — true for 4xx (caller can fix it), false for 5xx (server-side)
+//
+// Must be registered AFTER all route handlers and static file middleware.
+// Express identifies error handlers by their 4-parameter signature (err, req, res, next).
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+
+  // Infer which subsystem produced the error from the request path
+  let subsystem = 'server';
+  if (req.path.startsWith('/api/mcp')) subsystem = 'mcp_gate';
+  else if (req.path.startsWith('/api/ingest')) subsystem = 'ingestion';
+  else if (req.path.startsWith('/api/auth')) subsystem = 'oauth';
+  else if (req.path.startsWith('/api/audit')) subsystem = 'audit';
+  else if (req.path.startsWith('/api/graph')) subsystem = 'graph';
+
+  // Include stack trace in non-production only — never leak internals to clients
+  const detail = process.env.NODE_ENV !== 'production' ? err.stack : undefined;
+
+  console.error(`[CAVDAX Error] ${subsystem} — ${status} — ${err.message}`);
+
+  res.status(status).json({
+    success: false,
+    error: {
+      code: err.code || `HTTP_${status}`,
+      message: err.message || 'An unexpected error occurred.',
+      subsystem,
+      remediable: status < 500, // 4xx = client can fix it; 5xx = server-side
+      ...(detail ? { detail } : {})
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FALKORDB BACKGROUND AUTO-RECONNECT
+// ---------------------------------------------------------------------------
+// If FalkorDB was unreachable at boot, the server previously had no mechanism
+// to reconnect without a restart. This loop polls continuously in the background.
+//
+// Reconnect schedule: starts at 5 s, doubles on each consecutive failure,
+// caps at 5 minutes. Resets to 5 s the moment a connection succeeds.
+//
+// When already connected, a cheap `RETURN 1` ping validates the link each cycle;
+// if it throws, isFalkorConnected is set to false and the next cycle retries.
+//
+// setTimeout(...).unref() ensures the timer does not keep the Node process alive
+// during graceful shutdown or test teardown.
+
+let _falkorReconnectDelay = 5_000; // starts at 5s
+const FALKOR_RECONNECT_MIN = 5_000;
+const FALKOR_RECONNECT_MAX = 5 * 60 * 1000; // 5 min ceiling
+
+function _scheduleFalkorReconnect() {
+  setTimeout(async () => {
+    if (isFalkorConnected) {
+      // Already connected — silently verify with a cheap ping
+      try {
+        await graph.query('RETURN 1');
+        // Still alive — reset backoff and schedule next check at base interval
+        _falkorReconnectDelay = FALKOR_RECONNECT_MIN;
+      } catch {
+        isFalkorConnected = false;
+        console.warn('[CAVDAX Reconnect] FalkorDB ping failed — marking disconnected.');
+      }
+    } else {
+      console.log(`[CAVDAX Reconnect] Retrying FalkorDB connection (next in ${_falkorReconnectDelay / 1000}s)...`);
+      await initDb();
+      if (isFalkorConnected) {
+        console.log('[CAVDAX Reconnect] FalkorDB reconnected successfully. Backoff reset.');
+        _falkorReconnectDelay = FALKOR_RECONNECT_MIN; // success — reset to base
+      } else {
+        // Exponential backoff: double the delay, cap at max
+        _falkorReconnectDelay = Math.min(_falkorReconnectDelay * 2, FALKOR_RECONNECT_MAX);
+      }
+    }
+    _scheduleFalkorReconnect(); // always reschedule
+  }, _falkorReconnectDelay).unref();
+}
+
 // Start listening
 initDb().finally(() => {
   app.listen(PORT, () => {
     console.log(`[CAVDAX Server] Running at http://localhost:${PORT}`);
     console.log(`[CAVDAX Server] Graph Engine: ${isFalkorConnected ? 'FalkorDB Live' : 'Simulation Fallback Ready'}`);
   });
+  _scheduleFalkorReconnect(); // start background reconnect loop after first boot attempt
 });

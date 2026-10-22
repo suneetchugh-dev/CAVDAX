@@ -3,6 +3,16 @@
 
 cavdax.sahnirmaan.live, {$DOMAIN:localhost} {
     tls internal
+
+    # ── /dev production block (roadmap Access Control) ───────────────────
+    # /dev route is internal-only — block all non-loopback, non-RFC-1918 IPs.
+    # Locally (localhost:5173 or direct Caddy on 443) this is always bypassed.
+    @dev_block {
+        path /dev*
+        not remote_ip 127.0.0.1 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+    }
+    respond @dev_block 403
+
     # 1. Route API requests and real-time SSE streams to CAVDAX Backend Server
     handle /api/* {
         reverse_proxy server:3000 {
@@ -24,4 +34,19 @@ cavdax.sahnirmaan.live, {$DOMAIN:localhost} {
     }
 
     encode gzip zstd
+
+    # ── Upstream error handling (roadmap §6.3) ───────────────────────────────
+    # When the Express backend container is restarting or unreachable, Caddy
+    # returns a raw HTML 502/503/504. Replace it with a clean JSON envelope
+    # so the Web HUD and CLI tools always get a parseable response on /api/*.
+    handle_errors {
+        @api_error {
+            path /api/*
+            expression `{err.status_code} in [502, 503, 504]`
+        }
+        handle @api_error {
+            header Content-Type "application/json; charset=utf-8"
+            respond `{"success":false,"error":{"code":"SERVICE_RESTARTING","message":"CAVDAX backend is temporarily unavailable. Retry in a few seconds.","subsystem":"caddy_gateway","remediable":true},"retry_after":5}` {err.status_code}
+        }
+    }
 }

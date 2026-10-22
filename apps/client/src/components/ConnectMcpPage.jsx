@@ -58,6 +58,45 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
   const [copiedKey, setCopiedKey] = useState(null);
   const [isTourOpen, setIsTourOpen] = useState(false);
 
+  // ── GitHub OAuth state ────────────────────────────────────────────────────
+  // githubUser: null (not checked yet) | false (not authed) | { login, name, avatarUrl }
+  const [githubUser, setGithubUser] = useState(null);
+  const [oauthMsg, setOauthMsg] = useState(null); // success / error banner
+
+  useEffect(() => {
+    // Check ?connected=1 or ?oauth_error= from callback redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('connected') === '1') {
+      setOauthMsg({ type: 'success', text: 'GitHub account connected successfully.' });
+      // Clean the query string without a page reload
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('oauth_error')) {
+      const errCode = params.get('oauth_error');
+      setOauthMsg({ type: 'error', text: `GitHub OAuth failed: ${errCode}` });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Fetch current session user
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setGithubUser(d.authenticated ? d.user : false))
+      .catch(() => setGithubUser(false));
+  }, []);
+
+  const handleGithubConnect = () => {
+    window.location.href = '/api/auth/github';
+  };
+
+  const handleGithubDisconnect = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      setGithubUser(false);
+      setOauthMsg({ type: 'success', text: 'GitHub account disconnected.' });
+    } catch {
+      setOauthMsg({ type: 'error', text: 'Logout failed — please try again.' });
+    }
+  };
+
   // Dedicated container-relative slider trackers eliminating global Framer Motion layoutId projection flight
   const transportPill = usePillTracker(transportMode);
   const clientPill = usePillTracker(activeClient, [transportMode]);
@@ -307,6 +346,74 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
               <Compass className="w-3.5 h-3.5 text-slate-800 dark:text-white group-hover:rotate-45 transition-transform duration-300" />
               <span>Interactive Guide</span>
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* 1b. OAuth message banner — success or error from callback */}
+      {oauthMsg && (
+        <section className="px-6 max-w-5xl mx-auto w-full -mt-4 mb-2">
+          <div className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border text-[11px] font-mono ${
+            oauthMsg.type === 'success'
+              ? 'border-emerald-400/30 bg-emerald-500/5 text-emerald-400'
+              : 'border-amber-400/30 bg-amber-500/5 text-amber-400'
+          }`}>
+            <span>{oauthMsg.text}</span>
+            <button onClick={() => setOauthMsg(null)} className="text-slate-500 hover:text-slate-300 transition-colors ml-2 shrink-0">✕</button>
+          </div>
+        </section>
+      )}
+
+      {/* 1c. GitHub Repository Connect Banner */}
+      <section className="px-6 max-w-5xl mx-auto w-full mb-6">
+        <div className="neo-glass-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-950 dark:bg-white/5 border border-slate-800 dark:border-white/10 flex items-center justify-center shrink-0">
+              <GitBranch className="w-4 h-4 text-slate-300" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-950 dark:text-white font-mono">
+                {githubUser
+                  ? `Connected as @${githubUser.login}`
+                  : 'Connect Your GitHub Repository'}
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-sans leading-relaxed">
+                {githubUser
+                  ? 'Your GitHub account is linked. CAVDAX can now ingest ADRs and decision events from your repositories.'
+                  : 'Authenticate with GitHub to enable live ADR ingestion, webhook events, and per-repo causal graphs.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            {githubUser === null ? (
+              // Still checking session — show nothing
+              <span className="text-[10px] font-mono text-slate-600">Checking...</span>
+            ) : githubUser ? (
+              <>
+                {githubUser.avatarUrl && (
+                  <img
+                    src={githubUser.avatarUrl}
+                    alt={githubUser.login}
+                    className="w-6 h-6 rounded-full border border-white/10"
+                  />
+                )}
+                <button
+                  onClick={handleGithubDisconnect}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-[11px] font-mono text-slate-700 dark:text-slate-300 transition-colors"
+                >
+                  Disconnect
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleGithubConnect}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 text-[12px] font-mono font-semibold transition-colors"
+              >
+                <GitBranch className="w-3.5 h-3.5" />
+                Connect GitHub
+              </button>
+            )}
           </div>
         </div>
       </section>

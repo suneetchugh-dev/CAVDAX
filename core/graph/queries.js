@@ -162,17 +162,22 @@ export async function revalidateDecision(graph, { newSourceId, oldDecisionId, ne
  * Returns formatted nodes and edges for react-force-graph-2d / Cytoscape.
  */
 export async function fetchGraphState(graph) {
+  // Both queries are bounded to 500 rows. An unbounded MATCH (n) on a large graph
+  // causes a full table scan and returns a payload the Web HUD cannot usefully render.
+  // 500 nodes is well above the visual threshold of the canvas; this is a safety cap.
   const nodesResult = await graph.query(`
     MATCH (n)
     RETURN id(n) AS internal_id, labels(n)[0] AS label, properties(n) AS props
+    LIMIT 500
   `);
 
   const edgesResult = await graph.query(`
     MATCH (a)-[r]->(b)
-    RETURN id(a) AS source_internal, id(b) AS target_internal, 
-           coalesce(a.id, a.ref) AS source_id, 
-           coalesce(b.id, b.ref) AS target_id, 
+    RETURN id(a) AS source_internal, id(b) AS target_internal,
+           coalesce(a.id, a.ref) AS source_id,
+           coalesce(b.id, b.ref) AS target_id,
            type(r) AS rel_type
+    LIMIT 500
   `);
 
   const nodes = (nodesResult.data || []).map(row => ({
