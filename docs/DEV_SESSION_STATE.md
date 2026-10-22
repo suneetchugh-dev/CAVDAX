@@ -30,6 +30,16 @@
     - Eliminated uncalibrated neon cyan fills in light theme.
   - **Live Browser Verification**:
     - Verified via Chrome DevTools in both directions: forward (Bento -> Card 01 -> 02 -> 03 -> 04 -> FAQ) and reverse (FAQ -> Card 04 -> 03 -> 02 -> 01 -> Bento) with zero page freezing.
+  - **Multi-Plane 3D Parallax & Depth Separation**:
+    - Stage perspective calibrated to `perspective: 1200px` without `transformStyle: 'preserve-3d'`, ensuring robust 2D DOM hit-testing while projecting authentic 3D spatial geometry.
+    - Active center card floats forward at `zPos = +20px` (or `-15px` during dynamic scroll impulse); flanking cards recede into depth at `zPos = -100px` (`scale: 0.82`, `rotateY: ∓24deg`, `opacity: 0.40`).
+    - Internal multi-plane SVG separation: diagrams, AST apertures, and status badges implement `transform: translateZ(28px)` with `transformStyle: 'preserve-3d'`, causing graphic elements to visibly float above the frosted glass plane.
+    - Interactive pointer micro-tilt tracks mouse position applying spring-damped micro-tilt ($\pm 6^\circ$ `rotateX`, $\pm 9^\circ$ `rotateY`) with 0.40x scaled flanking dampening.
+  - **Direction-Aware 10-Second Auto-Scroll & Inner Pill Countdown Fill Bar**:
+    - Directional cycling: cards automatically advance every 10.0 seconds along active heading ($01 	o 04$ downward, $04 	o 01$ upward).
+    - Inner pill countdown fill: active HUD pill tag renders an inner `0%` to `100%` width fill layer (`bg-white/25` / `dark:bg-slate-950/25`) behind the `z-10` text, providing visual anticipation without clutter.
+    - WCAG 2.2.2 hover pause: cursor entry into the stage container immediately freezes countdown and holds the fill bar steady.
+    - Directional card clicking: clicks on the right 35% of the center card advance to next; clicks on the left 35% step backward. Flanking cards capture clicks directly with `e.stopPropagation()`.
 
 ## 1.1 Previous Session Achievements (October 21, 2026)
 

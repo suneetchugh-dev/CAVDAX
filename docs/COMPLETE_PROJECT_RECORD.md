@@ -663,6 +663,18 @@ In Card 01 (`ADR & Git Ingestion`), the user requested eliminating an unappealin
     <text x="0" y="48" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400 font-mono text-[8.5px] font-bold">SUPERSEDED</text>
   </g>
   ```
+
+### 11.6 Multi-Plane 3D Parallax & Depth Separation
+- **Stage Perspective Architecture**: The stage uses `perspective: 1200px` without `transformStyle: 'preserve-3d'`, ensuring standard 2D DOM hit-testing while projecting authentic 3D spatial geometry.
+- **Z-Axis Cylindrical Trajectory**: Active center card floats forward at `zPos = +20px` (or `-15px` during dynamic scroll impulse); flanking cards recede into screen depth at `zPos = -100px` (`scale: 0.82`, `rotateY: ∓24deg`, `opacity: 0.40`).
+- **Internal Multi-Plane Separation**: SVG diagrams and badges inside the cards implement `transform: translateZ(28px)` with `transformStyle: 'preserve-3d'`, causing graphic elements to visibly float above the frosted glass plane.
+- **Interactive Pointer Micro-Tilt**: Smoothly tracks mouse coordinates across the stage applying spring-damped micro-tilt ($\pm 6^\circ$ `rotateX`, $\pm 9^\circ$ `rotateY`). Flanking cards inherit a scaled dampening factor ($0.40	imes$) for cohesive cylinder movement.
+
+### 11.7 Direction-Aware 10-Second Auto-Scroll & Inner Pill Countdown Fill Bar
+- **Directional Cadence**: The stage automatically advances cards every 10.0 seconds along the active browsing heading ($01 	o 04$ downward, $04 	o 01$ upward).
+- **Inner Pill Countdown Fill Bar**: The active HUD button tag renders an inner `0%` to `100%` width fill layer (`bg-white/25` / `dark:bg-slate-950/25`) behind the `z-10` text, providing visual anticipation without clutter.
+- **WCAG 2.2.2 Hover Pause**: Cursor entry into the stage container immediately freezes the timer and progress bar, ensuring users can inspect technical code diffs and matrix values without sudden auto-scroll jumps.
+- **Directional Card Clicking**: Clicks on the right 35% of the center card advance to the next card; clicks on the left 35% step backward. Flanking cards capture clicks directly with `e.stopPropagation()`.
 - **Zero Cyan in Light Mode**: Clean Slate-950 / Wine accents replace uncalibrated neon cyan fills in the light theme.
 
 ---
