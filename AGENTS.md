@@ -308,3 +308,23 @@ Every AI coding agent must treat the **6 Canonical Context Files** as the persis
 4. **Injection Vector Hardening**:
    - Neutralize XSS vectors: never use `dangerouslySetInnerHTML` with unsanitized user or external feed strings.
    - Neutralize Cypher/SQL/NoSQL injection: use parameterized queries and ORM binding exclusively.
+
+---
+
+## 13. Pre-Publish Markup Integrity Guard & Zero-Leak Protocol (Mandatory)
+
+- **The Absolute Rule**: Generated HTML documents (such as interactive knowledge graphs, architectural visualizations, or standalone doc bundles) must **NEVER leak raw JavaScript code, function declarations, or unparsed script contents into visible HTML text nodes**.
+- **Banned Generation Practices**:
+  - **Never parse or slice existing HTML/markup to extract data**: String searches (`orig.find(...)` or string token splits) on previously generated HTML files are brittle and easily cause recursive script tags or premature closing tag injection (`</script>`).
+  - **Direct Structured Data Ingestion Only**: Always read data directly from structured JSON (`graph.json`, `graph_nodes.json`, `graph_edges.json`), typed database dumps, or native AST exports.
+  - **Clean Native Serialization**: Serialize data arrays strictly with native serializers (`json.dumps(..., ensure_ascii=False)`) directly into template variables.
+- **Mandatory Pre-Publish Verification**:
+  - Before ANY generated HTML is committed, pushed to `gh-pages`, or deployed to hosting surfaces, the automated verification script (`scripts/verify-graph-integrity.py`) **MUST** be executed and pass with zero errors.
+  - **The 5-Point Pre-Flight Audit Checklist**:
+    1. **Tag Balancing**: Number of opening `<script` tags must exactly equal closing `</script>` tags (expected exactly 2 for standalone graph pages). Number of `<style>` tags must match `</style>`.
+    2. **Zero Text Leaks**: No JavaScript keywords (`let audioCtx`, `function playClick`, `function setTheme`, `const nodesDS`, `soundMuted =`) may appear outside `<script>` or `<style>` blocks.
+    3. **Clean Trailing Boundary**: Nothing may follow the final `</script>` tag except `</body></html>` and whitespace.
+    4. **Data Completeness**: `RAW_NODES`, `RAW_EDGES`, and `LEGEND` must be non-empty, valid JSON arrays.
+    5. **Design System & Telemetry Compliance**: Must verify presence of official platform CTA (`cavdax.sahnirmaan.live`), `#d9a353` warm amber tokens, and dark theme defaults.
+- **Automated Pipeline Enforcement**:
+  - Both local deployment scripts (`publish-graph-pages.ps1`, `publish-graph-pages.sh`) and CI/CD pipelines (`.github/workflows/deploy-graph-pages.yml`) execute `verify-graph-integrity.py` before git staging or deployment. If any check fails, publication is immediately halted with a fatal error.
