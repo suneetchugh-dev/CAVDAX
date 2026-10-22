@@ -137,10 +137,14 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 21. **Bidirectional Docking Horizontal Card Scroller Standard**: When implementing locked horizontal card sequences or 3D rolling cylindrical windows, strictly enforce:
     - **Normalized Center-Distance Docking**: Calculate viewport docking using normalized vertical center-distance (`Math.abs(sectionCenter - viewportCenter) < 0.35 * H`) rather than fragile top/bottom inequalities.
     - **Synchronous Mutable Reference Mirroring**: Mirror all active state in a Synchronous Ref Triad (`isLockedRef`, `activeStepRef`, `isExitingRef`) to eliminate React re-render closure lag across high-frequency trackpad streams.
-    - **Directional Entry Parity**: Top-to-bottom entry seeds Step 0; bottom-to-top entry seeds Step N-1.
-    - **Gesture Debounce Cooldown (360ms)**: Enforce `isTransitioningRef.current = true` for 360ms after each card advance, mapping one physical trackpad flick to one card transition.
+    - **Directional Entry Parity**: Top-to-bottom entry seeds Step 0 (`autoDirection = 1`); bottom-to-top entry seeds Step N-1 (`autoDirection = -1`).
+    - **Gesture Debounce Cooldown (380ms)**: Enforce `isTransitioningRef.current = true` for 380ms after each card advance, mapping one physical trackpad flick to one card transition.
     - **Natural Directional Lock-Outs**: Downward exit glides to following section; upward exit glides to preceding section's bottom edge (`el.offsetTop - 0.75 * H`), never to `0px`.
     - **Lenis Force-Execution Parameter**: Always pass `{ force: true }` to `window.__lenis.scrollTo()` and call `window.__lenis.start()` so programmatic exit commands execute reliably without stalling.
+    - **Multi-Plane 3D Parallax Separation**: Outer stage establishes `perspective: 1200px` without `transformStyle: 'preserve-3d'` to ensure standard 2D DOM hit-testing and clickable negative-Z flanking cards (`zPos = -100px`, `scale: 0.82`, `rotateY: ∓24deg`, `opacity: 0.40`). Center active card floats forward at `zPos = +20px`. Inside each card, graphic content is separated along the Z-axis with `transform: translateZ(28px)`.
+    - **Direction-Aware 10s Auto-Scroll & Countdown Fill**: The stage auto-cycles cards every 10.0 seconds along the active browsing direction ($01 	o 04$ downward, $04 	o 01$ upward). Active HUD pill renders an inner `0%` to `100%` width countdown fill layer (`bg-white/25` / `dark:bg-slate-950/25`) behind the `z-10` text.
+    - **WCAG 2.2.2 Hover Pause**: Cursor entry into the stage container immediately freezes the auto-advance countdown and holds the inner pill progress bar steady.
+    - **Directional Card Clicking**: Clicks on the right 35% of the center card advance to next; clicks on the left 35% step backward. Flanking cards capture clicks directly with `e.stopPropagation()`.
     - **Monochromatic Vertex Outlines**: Superseded/invalidated nodes must feature a crisp, solid circular monochromatic outline (`stroke-slate-950 dark:stroke-white/80`, `strokeWidth="1.8"`). Strictly ban gray dotted circles, dashed rings, or reticle tick clutter.
 22. **Continuous Causal Provenance Radar Standard**:
     - Restrict all radar targets to `radiusRatio <= 0.66` to prevent label/pin clipping on 16:9 laptop screens when scaled to 1.25x in theater mode.
