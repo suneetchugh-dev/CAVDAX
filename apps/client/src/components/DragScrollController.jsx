@@ -64,13 +64,22 @@ export default function DragScrollController() {
       }
 
       const radarEl = document.getElementById('radar-section');
-      let inRadar = false;
+      const causalEl = document.getElementById('causal-loop-section');
+      let inTheater = false;
       if (radarEl) {
         const rect = radarEl.getBoundingClientRect();
-        inRadar = rect.top <= winHeight * 0.35 && rect.bottom >= winHeight * 0.15;
+        if (rect.top <= winHeight * 0.35 && rect.bottom >= winHeight * 0.15) {
+          inTheater = true;
+        }
       }
-      setIsRadarSection(inRadar);
-      if (inRadar) {
+      if (causalEl) {
+        const rect = causalEl.getBoundingClientRect();
+        if (rect.top <= winHeight * 0.35 && rect.bottom >= winHeight * 0.15) {
+          inTheater = true;
+        }
+      }
+      setIsRadarSection(inTheater);
+      if (inTheater) {
         shouldShow = false;
       }
 

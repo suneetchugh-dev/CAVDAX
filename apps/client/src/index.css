@@ -196,7 +196,8 @@ select, label, [onclick], .cursor-pointer {
   align-items: center;
   transition:
     transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.35s ease,
+    opacity 0.4s ease,
+    visibility 0.4s ease,
     background-color 0.4s ease,
     border-color 0.4s ease,
     width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
@@ -212,7 +213,8 @@ select, label, [onclick], .cursor-pointer {
 .portfolio-header.header-hidden {
   opacity: 0 !important;
   pointer-events: none !important;
-  visibility: hidden !important;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 /* Tab Navigation stabilization: Disables geometry transitions while switching tabs to eliminate the flying pill problem */

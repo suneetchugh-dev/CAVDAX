@@ -7,8 +7,9 @@ const TAB_SECTIONS = {
     { id: 'hero-section', label: '02 · Causal Engine' },
     { id: 'bento-section', label: '03 · Vector Rot vs Graph' },
     { id: 'causal-loop-section', label: '04 · Verification Loop' },
-    { id: 'radar-section', label: '05 · Invalidation Radar' },
-    { id: 'faq-section', label: '06 · Specifications' },
+    { id: 'faq-section', label: '05 · Specifications' },
+    { id: 'radar-section', label: '06 · Invalidation Radar' },
+    { id: 'cta-section', label: '07 · Live Verification' },
   ],
   mcp: [
     { id: 'mcp-header', label: '01 · Protocol Gateway' },
@@ -52,6 +53,7 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
   const [hoveredSection, setHoveredSection] = useState(null);
   const [activeSection, setActiveSection] = useState('');
   const [isRadarSection, setIsRadarSection] = useState(false);
+  const [isCausalSection, setIsCausalSection] = useState(false);
 
   const containerRef = useRef(null);
   const isHoldingRef = useRef(false);
@@ -82,12 +84,20 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
       }
 
       const radarEl = document.getElementById('radar-section');
+      const causalEl = document.getElementById('causal-loop-section');
       if (radarEl && activeTab === 'landing') {
         const rect = radarEl.getBoundingClientRect();
         const inRadar = rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15;
         setIsRadarSection(inRadar);
       } else {
         setIsRadarSection(false);
+      }
+      if (causalEl && activeTab === 'landing') {
+        const rect = causalEl.getBoundingClientRect();
+        const inCausal = rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15;
+        setIsCausalSection(inCausal);
+      } else {
+        setIsCausalSection(false);
       }
     };
 
@@ -256,8 +266,10 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
   // Hide exclusively on Wordmark Intro section, reveal on other pages & sections with smooth subtle fade
   const isWordmarkIntro = activeTab === 'landing' && scrollY < (typeof window !== 'undefined' ? window.innerHeight * 0.52 : 420);
 
+  // During causal loop section: hide the vertical scroll cue entirely (only horizontal cue is present)
   // During radar section: only scroll cue is visible, kept very dimmed (0.20) as requested
-  const currentOpacity = isWordmarkIntro 
+  const isHidden = isWordmarkIntro || isCausalSection;
+  const currentOpacity = isHidden 
     ? 0 
     : (isRadarSection ? (hoveredSection || isHolding ? 0.6 : 0.20) : 1);
 
@@ -266,8 +278,8 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
       aria-label="Universal Section Navigation and Scrubber"
       style={{
         opacity: currentOpacity,
-        transform: `translate3d(${isWordmarkIntro ? '16px' : '0px'}, -50%, 0)`,
-        pointerEvents: isWordmarkIntro ? 'none' : 'auto',
+        transform: `translate3d(${isHidden ? '16px' : '0px'}, -50%, 0)`,
+        pointerEvents: isHidden ? 'none' : 'auto',
         transition: 'opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
       className="fixed right-3 sm:right-6 top-1/2 z-[75] hidden sm:flex items-center select-none"

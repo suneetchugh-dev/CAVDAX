@@ -14,44 +14,49 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 // ─── Compact Domain Targets (Strictly Contained Within Inner Orbits) ───────────
 const RADAR_TARGETS = [
   {
     id: 'adr-002',
     name: 'ADR-002: OAuth2',
+    description: 'ADR-002: OAuth2 — Validated root invariant across active services',
     type: 'valid',
     angle: 42,
-    radiusRatio: 0.36,  // Inner track
+    radiusRatio: 0.36,
   },
   {
     id: 'fact-stale',
     name: 'TokenAuth.v1 (Stale)',
+    description: 'TokenAuth.v1 (Stale) — Cache rot detected; disk write quarantined',
     type: 'stale',
     angle: 318,
-    radiusRatio: 0.44,  // Inner-mid track
+    radiusRatio: 0.44,
   },
   {
     id: 'mcp-gate',
     name: 'apply_code_change',
+    description: 'apply_code_change — Intercepted at protocol gate for Cypher verification',
     type: 'gate',
     angle: 125,
-    radiusRatio: 0.54,  // Mid track
+    radiusRatio: 0.54,
   },
   {
     id: 'dec-103',
     name: 'DEC-103: RS256',
+    description: 'DEC-103: RS256 — Token signing invariant grounded in active architecture',
     type: 'valid',
     angle: 198,
-    radiusRatio: 0.62,  // Mid-outer track
+    radiusRatio: 0.62,
   },
   {
     id: 'adr-001',
     name: 'ADR-001 (Superseded)',
+    description: 'ADR-001 (Superseded) — Deprecated requirement isolated in memory',
     type: 'stale',
     angle: 255,
-    radiusRatio: 0.66,  // Safely inside outer boundary (0.66 vs 1.0)
+    radiusRatio: 0.66,
   },
 ];
 
@@ -59,6 +64,8 @@ export default function CausalProvenanceRadar() {
   const containerRef = useRef(null);
   const beamRef = useRef(null);
   const targetsRef = useRef([]);
+  const currentActiveRef = useRef(null);
+  const [activeTarget, setActiveTarget] = useState(null);
 
   // Responsive Viewport Tracking (Dynamic for F11 Full Screen & Standard Laptops)
   const [viewport, setViewport] = useState({
@@ -74,35 +81,52 @@ export default function CausalProvenanceRadar() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ─── Tight 150vh Scrollytelling Runway (Eliminates Excessive Gap Below) ─────
+  // ─── Calibrated 128vh Scrollytelling Runway (Trimmed Negative Space Below) ───
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start 85%', 'end end'],
   });
 
-  // Base instrument size calibrated to viewport (fits perfectly in F11 mode)
-  const maxAvailable = Math.min(viewport.width * 0.72, viewport.height * 0.72, 460);
-  const BASE_DIAMETER = Math.max(280, maxAvailable);
+  // Monumental instrument size calibrated to viewport (enlarged & spacious)
+  const maxAvailable = Math.min(viewport.width * 0.82, viewport.height * 0.78, 560);
+  const BASE_DIAMETER = Math.max(320, maxAvailable);
   const radarRadius = BASE_DIAMETER / 2;
 
-  // ─── Refined Zoom Curve (0.60x -> 1.28x) ──────────────────────────────────
-  // 0.00 -> 0.04: Approaching in natural flow
-  // 0.04 -> 0.22: Instant backdrop blur/dimming & smooth forward zoom
-  // 0.22 -> 0.78: Fullscreen Theater Hold (Balanced, zero-overflow view)
-  // 0.78 -> 0.94: Smooth reverse zoom back to flow
-  // 0.94 -> 1.00: Seamless transition into FAQ section below
-  const backdropOpacity = useTransform(scrollYProgress, [0.01, 0.14, 0.84, 0.96], [0, 1, 1, 0]);
-  const radarScale = useTransform(scrollYProgress, [0.04, 0.22, 0.78, 0.94], [0.60, 1.28, 1.28, 0.60]);
+  // ─── Refined Zoom Curve & Tightened Negative Space ────────────────────────
+  // Precise, smooth blur & opacity envelope (Smooth in & out transition)
+  const backdropOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.12, 0.28, 0.72, 0.88, 1],
+    [0, 0, 1, 1, 0, 0],
+    { clamp: true }
+  );
+
+  const blurPx = useTransform(
+    scrollYProgress,
+    [0, 0.12, 0.28, 0.72, 0.88, 1],
+    [0, 0, 40, 40, 0, 0],
+    { clamp: true }
+  );
+
+  const backdropFilter = useTransform(blurPx, (v) => `blur(${v.toFixed(1)}px)`);
+
+  const backdropVisibility = useTransform(
+    backdropOpacity,
+    (val) => (val > 0.002 ? 'visible' : 'hidden')
+  );
+  const radarScale = useTransform(scrollYProgress, [0.05, 0.24, 0.76, 0.92], [0.65, 1.25, 1.25, 0.65]);
 
   // ─── 60fps Synchronized Sweep & Smooth Phosphor Decay Engine ────────────────
   useEffect(() => {
     let animId;
-    const DURATION_MS = 10000; // 10 seconds per 360° rotation
+    const DURATION_MS = 14000; // 14s calm, human-readable sweep
     let startTime = performance.now();
 
     const frame = (now) => {
       const elapsed = (now - startTime) % DURATION_MS;
       const beamAngle = (elapsed / DURATION_MS) * 360;
+      let discovered = null;
+      let maxOpacity = 0;
 
       // 1. Rotate the beam strictly in sync with time
       if (beamRef.current) {
@@ -118,17 +142,17 @@ export default function CausalProvenanceRadar() {
         let opacity = 0;
         let scale = 0.96;
 
-        // Subtle, tight phosphor sweep curve (visibility arc: ~60° = ~1.6s)
-        if (delta >= 350 && delta < 360) {
-          const t = (delta - 350) / 10;
+        // Calibrated phosphor sweep curve with human-readable dwell time (~3s per discovery)
+        if (delta >= 348 && delta < 360) {
+          const t = (delta - 348) / 12;
           opacity = t * t * (3 - 2 * t);
           scale = 0.96 + opacity * 0.04;
-        } else if (delta >= 0 && delta <= 8) {
+        } else if (delta >= 0 && delta <= 12) {
           opacity = 1;
           scale = 1.0;
-        } else if (delta > 8 && delta <= 50) {
-          const decayProgress = (delta - 8) / 42;
-          opacity = Math.pow(1 - decayProgress, 2.0);
+        } else if (delta > 12 && delta <= 65) {
+          const decayProgress = (delta - 12) / 53;
+          opacity = Math.pow(1 - decayProgress, 1.8);
           scale = 1.0 - decayProgress * 0.04;
         } else {
           opacity = 0;
@@ -136,8 +160,18 @@ export default function CausalProvenanceRadar() {
 
         el.style.opacity = opacity.toFixed(3);
         el.style.transform = `scale(${scale.toFixed(3)})`;
-        el.style.pointerEvents = opacity > 0.15 ? 'auto' : 'none';
+        el.style.pointerEvents = opacity > 0.12 ? 'auto' : 'none';
+
+        if (opacity > maxOpacity && opacity > 0.16) {
+          maxOpacity = opacity;
+          discovered = target;
+        }
       });
+
+      if (currentActiveRef.current !== (discovered ? discovered.id : null)) {
+        currentActiveRef.current = discovered ? discovered.id : null;
+        setActiveTarget(discovered);
+      }
 
       animId = requestAnimationFrame(frame);
     };
@@ -147,12 +181,17 @@ export default function CausalProvenanceRadar() {
   }, []);
 
   return (
-    <section ref={containerRef} id="radar-section" className="relative w-full h-[150vh] z-[60] border-none">
+    <section ref={containerRef} id="radar-section" className="relative w-full h-[128vh] z-[60] border-none">
       
       {/* ── Fixed Heavy Dimming & Blur Backdrop (Navbar & Page Fully Disappear) ── */}
       <motion.div 
-        style={{ opacity: backdropOpacity }}
-        className="fixed inset-0 z-[70] bg-white/94 dark:bg-[#07090b]/96 backdrop-blur-3xl pointer-events-none will-change-transform"
+        style={{
+          opacity: backdropOpacity,
+          visibility: backdropVisibility,
+          backdropFilter,
+          WebkitBackdropFilter: backdropFilter,
+        }}
+        className="fixed inset-0 z-[70] bg-white/94 dark:bg-[#07090b]/96 pointer-events-none will-change-[opacity,backdrop-filter]"
       />
 
       {/* ── Sticky Fullscreen Stage (Fits 100% in Single Viewport, Zero Overflow) ── */}
@@ -267,7 +306,7 @@ export default function CausalProvenanceRadar() {
                 >
                   <div className="relative flex items-center gap-1.5 -translate-x-1.5 -translate-y-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColors}`} />
-                    <span className={`text-[9px] sm:text-[10px] font-mono font-medium tracking-tight whitespace-nowrap drop-shadow-xs transition-colors ${textColors}`}>
+                    <span className={`text-[9.5px] sm:text-[10.5px] font-mono font-medium tracking-tight whitespace-nowrap drop-shadow-xs transition-colors ${textColors}`}>
                       {target.name}
                     </span>
                   </div>
@@ -276,6 +315,24 @@ export default function CausalProvenanceRadar() {
             })}
           </div>
         </motion.div>
+
+        {/* ── Subtext Telemetry Display STRICTLY BELOW the Radar (Shifted down with generous top breathing room) ── */}
+        <div className="absolute bottom-3 sm:bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 text-center pointer-events-none select-none z-30 h-10 flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            {activeTarget && (
+              <motion.p
+                key={activeTarget.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="text-xs sm:text-sm md:text-[15px] font-sans font-medium tracking-tight text-slate-800 dark:text-slate-200 whitespace-nowrap text-center drop-shadow-xs"
+              >
+                {activeTarget.description}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
 
       </div>
 

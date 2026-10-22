@@ -80,16 +80,24 @@ export default function Header({
       setScrollY(y);
       setIsScrolled(y > 20);
 
-      // Hide navbar completely when user is inside the continuous radar theater section
+      // Hide navbar completely when user is inside the continuous radar theater section or causal solution theater
       if (activeTab === 'landing') {
         const radarEl = document.getElementById('radar-section');
+        const causalEl = document.getElementById('causal-loop-section');
+        let inTheater = false;
         if (radarEl) {
           const rect = radarEl.getBoundingClientRect();
-          const inRadar = rect.top <= window.innerHeight * 0.35 && rect.bottom >= window.innerHeight * 0.15;
-          setIsRadarSection(inRadar);
-        } else {
-          setIsRadarSection(false);
+          if (rect.top <= window.innerHeight * 0.35 && rect.bottom >= window.innerHeight * 0.15) {
+            inTheater = true;
+          }
         }
+        if (causalEl) {
+          const rect = causalEl.getBoundingClientRect();
+          if (rect.top <= window.innerHeight * 0.35 && rect.bottom >= window.innerHeight * 0.15) {
+            inTheater = true;
+          }
+        }
+        setIsRadarSection(inTheater);
       } else {
         setIsRadarSection(false);
       }
