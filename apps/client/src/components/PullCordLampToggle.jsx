@@ -310,10 +310,10 @@ export default function PullCordLampToggle({
         opacity,
         visibility: opacity <= 0.01 ? 'hidden' : 'visible',
         display: opacity <= 0.01 ? 'none' : 'flex',
-        pointerEvents: opacity <= 0.01 ? 'none' : 'auto',
+        pointerEvents: 'none',
         transition: 'opacity 0.25s ease, visibility 0.25s ease'
       }}
-      className={`fixed top-0 right-4 sm:right-10 z-40 select-none pointer-events-auto flex flex-col items-center ${className}`}
+      className={`fixed top-0 right-4 sm:right-10 z-40 select-none pointer-events-none flex flex-col items-center ${className}`}
     >
       {/* Ceiling Connection Stem */}
       <div className="w-[1.5px] h-3 bg-slate-400/80 dark:bg-amber-400/30" style={{ width: '1.5px', height: '12px' }} />
@@ -435,6 +435,7 @@ export default function PullCordLampToggle({
             role="button"
             tabIndex={0}
             aria-label="Toggle theme pull cord"
+            style={{ pointerEvents: opacity <= 0.01 ? 'none' : 'auto' }}
             transform={`translate(${ANCHOR_X}, ${REST_LENGTH}) rotate(0)`}
             onPointerDown={handlePointerDown}
             onClick={handleClick}
