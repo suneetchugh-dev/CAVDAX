@@ -11,6 +11,15 @@
 
 ## 1.1 Latest Session Achievements (October 21, 2026)
 
+- **Puppeteer Signed-In Browser Automation & Persistent Profile Architecture**:
+  - Implemented the industry-standard dual-mode browser automation runner in `scripts/browser-runner.js`:
+    - **Mode A (Direct Attach to Live Browser)**: If Chrome or Edge is running with `--remote-debugging-port=9222`, Puppeteer automatically connects (`puppeteer.connect`) straight to the user's active, open browser session. No new window is opened; tests execute against the user's live signed-in tabs.
+    - **Mode B (Persistent Dev Profile)**: If no debug port is active, launches Chrome/Edge with `userDataDir: .puppeteer-profile/`. The user logs in once, and all authentication tokens, cookies, and localStorage are saved permanently across all test runs. Zero incognito resets.
+  - Added Windows one-click debug launcher: `scripts/launch-signedin-browser.ps1` and `scripts/launch-signedin-browser.bat`.
+  - Added npm scripts to `package.json`: `npm run browser:open`, `npm run browser:debug`, and `npm run test:e2e`.
+  - Added `.puppeteer-profile/` and `.puppeteer-user-data/` to `.gitignore` to prevent any accidental staging or leakage of developer session cookies.
+  - Authored comprehensive developer documentation in `docs/PUPPETEER_SIGNED_IN_BROWSER.md`.
+
 - **Enterprise Audit Subsystem Hardening & BLOCKED Action Logging**:
   - Resolved critical compliance gap: `core/mcp/server.js` and `apps/server/index.js` now record an `AgentAction` node with `status: 'BLOCKED_SUPERSEDED_SOURCE'` when Act III rejects unauthorized agent file writes.
   - Linked blocked actions directly to the invalidated decision node (`DEC-102`) via `[:GROUNDED_IN]` edge.
@@ -189,6 +198,7 @@ A complete visual and architectural transformation has been executed across the 
   - Removed decorative category eyebrow pills above headings (`Architectural Problem Space`, `Knowledge Base & System Architecture`).
 - **Prompt Rules Updates**:
   - Updated `#AGENTS.md File.md` and `#UI_DESIGN_SYSTEM.md file.md` in `C:\(Lectures)\+[Dev-Assets]\#(AI-AGENTS)\#Prompts\#General-Main` with the non-collision tour placement engine, dual-boundary scroll rule, fullscreen canvas architecture, SVG chromatic discipline, typewriter cursor discipline, and the End-of-Session Domain-Partitioned Git Governance Protocol.
+
 
 
 
