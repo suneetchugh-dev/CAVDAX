@@ -407,6 +407,14 @@ export default function CausalSolutionScroller() {
   const containerRef = useRef(null);
   const [activeStep, setActiveStep] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [scrollImpulse, setScrollImpulse] = useState(0);
+
+  // 15-Second Auto-Scroll Timer & Direction Cue State
+  const [autoProgress, setAutoProgress] = useState(0);
+  const [autoDirection, setAutoDirection] = useState(1); // +1 = 01->04 (Down), -1 = 04->01 (Up)
+  const [isHovered, setIsHovered] = useState(false);
+  const autoTimerRef = useRef(0);
 
   // Smooth scroll-driven backdrop opacity: Fades in early as user approaches section
   const { scrollYProgress } = useScroll({
@@ -502,11 +510,15 @@ export default function CausalSolutionScroller() {
       if (!isLockedRef.current && isDocked) {
         isLockedRef.current = true;
         setIsLocked(true);
+        autoTimerRef.current = 0;
+        setAutoProgress(0);
         if (scrollingDown) {
-          // Approaching from TOP (Bento -> Causal): Start at Card 01
+          // Approaching from TOP (Bento -> Causal): Start at Card 01, auto-scroll forward
+          setAutoDirection(1);
           setActiveStep(0);
         } else {
-          // Approaching from BOTTOM (FAQ -> Causal): Start at Card 04
+          // Approaching from BOTTOM (FAQ -> Causal): Start at Card 04, auto-scroll reverse
+          setAutoDirection(-1);
           setActiveStep(SOLUTION_STEPS.length - 1);
         }
         if (window.__lenis) {
@@ -529,6 +541,53 @@ export default function CausalSolutionScroller() {
       }
     };
   }, []);
+
+  // Auto-Scroll Timer (10 Seconds per Card, Direction-Aware, Hover-Paused)
+  useEffect(() => {
+    if (!isLocked) {
+      setAutoProgress(0);
+      autoTimerRef.current = 0;
+      return;
+    }
+
+    const DURATION = 10000;
+    const TICK = 60;
+
+    const timer = setInterval(() => {
+      // Pause timer when user hovers over cards or during active transitions
+      if (isHovered || isTransitioningRef.current || isExitingRef.current) {
+        return;
+      }
+
+      autoTimerRef.current += TICK;
+      const progress = Math.min(1, autoTimerRef.current / DURATION);
+      setAutoProgress(progress);
+
+      if (autoTimerRef.current >= DURATION) {
+        autoTimerRef.current = 0;
+        setAutoProgress(0);
+        isTransitioningRef.current = true;
+        setScrollImpulse(autoDirection);
+
+        setActiveStep((prev) => {
+          if (autoDirection === 1) {
+            // Forward cycle: 01 -> 02 -> 03 -> 04 -> 01
+            return (prev + 1) % SOLUTION_STEPS.length;
+          } else {
+            // Reverse cycle: 04 -> 03 -> 02 -> 01 -> 04
+            return (prev - 1 + SOLUTION_STEPS.length) % SOLUTION_STEPS.length;
+          }
+        });
+
+        setTimeout(() => {
+          setScrollImpulse(0);
+          isTransitioningRef.current = false;
+        }, 380);
+      }
+    }, TICK);
+
+    return () => clearInterval(timer);
+  }, [isLocked, isHovered, autoDirection]);
 
   // 2. Guaranteed Step Lock-In & Natural Directional Exit (Wheel, Touchpad, Touch)
   useEffect(() => {
@@ -604,24 +663,34 @@ export default function CausalSolutionScroller() {
 
         if (dominantDelta > 10) {
           // Scrolling DOWN / Swiping LEFT: 01 -> 02 -> 03 -> 04
+          autoTimerRef.current = 0;
+          setAutoProgress(0);
+          setAutoDirection(1);
           if (current < SOLUTION_STEPS.length - 1) {
             isTransitioningRef.current = true;
+            setScrollImpulse(1);
             setActiveStep((prev) => prev + 1);
             setTimeout(() => {
+              setScrollImpulse(0);
               isTransitioningRef.current = false;
-            }, 360);
+            }, 380);
           } else {
             // On Card 04 (final card): Exit smoothly downward to FAQ
             exitDownward();
           }
         } else if (dominantDelta < -10) {
           // Scrolling UP / Swiping RIGHT: 04 -> 03 -> 02 -> 01
+          autoTimerRef.current = 0;
+          setAutoProgress(0);
+          setAutoDirection(-1);
           if (current > 0) {
             isTransitioningRef.current = true;
+            setScrollImpulse(-1);
             setActiveStep((prev) => prev - 1);
             setTimeout(() => {
+              setScrollImpulse(0);
               isTransitioningRef.current = false;
-            }, 360);
+            }, 380);
           } else {
             // On Card 01 (first card): Exit smoothly upward to Bento
             exitUpward();
@@ -712,19 +781,25 @@ export default function CausalSolutionScroller() {
       if (e.key === 'ArrowRight') {
         if (current < SOLUTION_STEPS.length - 1) {
           e.preventDefault();
+          setScrollImpulse(1);
           setActiveStep((prev) => prev + 1);
+          setTimeout(() => setScrollImpulse(0), 380);
         }
       } else if (e.key === 'ArrowLeft') {
         if (current > 0) {
           e.preventDefault();
+          setScrollImpulse(-1);
           setActiveStep((prev) => prev - 1);
+          setTimeout(() => setScrollImpulse(0), 380);
         }
       }
       // Vertical Keyboard Browsing (ArrowDown, PageDown, Space)
       else if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) {
         e.preventDefault();
         if (current < SOLUTION_STEPS.length - 1) {
+          setScrollImpulse(1);
           setActiveStep((prev) => prev + 1);
+          setTimeout(() => setScrollImpulse(0), 380);
         } else {
           // Lock OUT downward to FAQ
           isExitingRef.current = true;
@@ -753,7 +828,9 @@ export default function CausalSolutionScroller() {
       else if (e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey)) {
         e.preventDefault();
         if (current > 0) {
+          setScrollImpulse(-1);
           setActiveStep((prev) => prev - 1);
+          setTimeout(() => setScrollImpulse(0), 380);
         } else {
           // Lock OUT upward to Bento
           const el = containerRef.current;
@@ -828,23 +905,36 @@ export default function CausalSolutionScroller() {
             {currentStep.title}
           </span>
 
-          {/* Minimal Numbered Tags (01, 02, 03, 04) - Only Cue Used */}
+          {/* Minimal Numbered Tags (01, 02, 03, 04) with Inner 15s Timer Fill */}
           <div className="flex items-center gap-1.5">
-            {SOLUTION_STEPS.map((step, idx) => (
-              <button
-                key={step.id}
-                onClick={() => {
-                  setActiveStep(idx);
-                }}
-                className={`px-3.5 py-1 rounded-full font-mono text-xs font-semibold transition-all duration-200 ${
-                  idx === activeStep 
-                    ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-xs' 
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
-                }`}
-              >
-                {step.indexStr}
-              </button>
-            ))}
+            {SOLUTION_STEPS.map((step, idx) => {
+              const isActive = idx === activeStep;
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => {
+                    autoTimerRef.current = 0;
+                    setAutoProgress(0);
+                    setActiveStep(idx);
+                  }}
+                  className={`relative overflow-hidden px-3.5 py-1 rounded-full font-mono text-xs font-semibold transition-all duration-200 select-none ${
+                    isActive 
+                      ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-xs' 
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
+                  }`}
+                  title={isActive ? (isHovered ? 'Timer Paused (Hovered)' : `Auto-scrolls in ${(10 * (1 - autoProgress)).toFixed(0)}s`) : undefined}
+                >
+                  {/* Inner auto-scroll timer progress fill layer */}
+                  {isActive && (
+                    <span 
+                      className="absolute inset-y-0 left-0 bg-white/25 dark:bg-slate-950/25 pointer-events-none transition-[width] duration-75 ease-linear rounded-full"
+                      style={{ width: `${Math.min(100, autoProgress * 100)}%` }}
+                    />
+                  )}
+                  <span className="relative z-10">{step.indexStr}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -859,8 +949,19 @@ export default function CausalSolutionScroller() {
             }}
           />
 
-          {/* 3D Perspective Rolling Stage Container */}
+          {/* 3D Perspective Rolling Stage Container with Interactive Parallax & Hover Pause */}
           <div 
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const xNorm = (e.clientX - rect.left) / rect.width - 0.5;
+              const yNorm = (e.clientY - rect.top) / rect.height - 0.5;
+              setTilt({ x: -(yNorm * 6), y: xNorm * 9 });
+            }}
+            onMouseLeave={() => {
+              setIsHovered(false);
+              setTilt({ x: 0, y: 0 });
+            }}
             className="w-full h-[380px] sm:h-[420px] relative flex items-center justify-center overflow-visible"
             style={{
               perspective: '1200px',
@@ -872,7 +973,9 @@ export default function CausalSolutionScroller() {
               const isCenter = offset === 0;
 
               let xPos = '0%';
+              let zPos = 0;
               let rotateY = 0;
+              let rotateX = 0;
               let scale = 1;
               let opacity = 0;
               let zIndex = 10;
@@ -880,33 +983,41 @@ export default function CausalSolutionScroller() {
 
               if (offset === 0) {
                 xPos = '0%';
-                rotateY = 0;
+                zPos = scrollImpulse !== 0 ? -15 : 20;
+                rotateY = tilt.y;
+                rotateX = tilt.x;
                 scale = 1.05;
                 opacity = 1;
                 zIndex = 30;
                 pointerEvents = 'auto';
               } else if (offset === 1) {
                 xPos = '68%';
-                rotateY = -24;
+                zPos = -100;
+                rotateY = -24 + tilt.y * 0.4;
+                rotateX = tilt.x * 0.4;
                 scale = 0.82;
-                opacity = 0.35;
-                zIndex = 15;
+                opacity = 0.4;
+                zIndex = 20;
                 pointerEvents = 'auto';
               } else if (offset === -1) {
                 xPos = '-68%';
-                rotateY = 24;
+                zPos = -100;
+                rotateY = 24 + tilt.y * 0.4;
+                rotateX = tilt.x * 0.4;
                 scale = 0.82;
-                opacity = 0.35;
-                zIndex = 15;
+                opacity = 0.4;
+                zIndex = 20;
                 pointerEvents = 'auto';
               } else if (offset > 1) {
-                xPos = '120%';
+                xPos = '125%';
+                zPos = -240;
                 rotateY = -35;
                 scale = 0.65;
                 opacity = 0;
                 zIndex = 5;
               } else if (offset < -1) {
-                xPos = '-120%';
+                xPos = '-125%';
+                zPos = -240;
                 rotateY = 35;
                 scale = 0.65;
                 opacity = 0;
@@ -918,7 +1029,9 @@ export default function CausalSolutionScroller() {
                   key={step.id}
                   animate={{
                     x: xPos,
+                    z: zPos,
                     rotateY,
+                    rotateX,
                     scale,
                     opacity,
                     zIndex,
@@ -931,12 +1044,34 @@ export default function CausalSolutionScroller() {
                     transformStyle: 'preserve-3d',
                     pointerEvents,
                   }}
-                  onClick={() => {
-                    if (!isCenter) setActiveStep(idx);
+                  onClick={(e) => {
+                    if (!isCenter) {
+                      e.stopPropagation();
+                      setActiveStep(idx);
+                    } else {
+                      // Center card: clicking right side advances; clicking left side retreats
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickX = e.clientX - rect.left;
+                      if (clickX > rect.width * 0.65 && activeStep < SOLUTION_STEPS.length - 1) {
+                        setActiveStep((prev) => prev + 1);
+                      } else if (clickX < rect.width * 0.35 && activeStep > 0) {
+                        setActiveStep((prev) => prev - 1);
+                      }
+                    }
                   }}
-                  className="absolute w-full max-w-[920px] h-[330px] sm:h-[370px] rounded-2xl bg-white/70 dark:bg-[#0c0e14]/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)] flex items-center justify-center p-3 sm:p-6 cursor-pointer"
+                  className="absolute w-full max-w-[920px] h-[330px] sm:h-[370px] rounded-2xl bg-white/70 dark:bg-[#0c0e14]/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)] flex items-center justify-center p-3 sm:p-6 cursor-pointer select-none"
                 >
-                  {renderVisual(idx)}
+                  {/* Multi-Plane Parallax Layer for Graphic Content */}
+                  <div
+                    className="w-full h-full flex items-center justify-center pointer-events-none"
+                    style={{
+                      transform: isCenter ? 'translateZ(28px)' : 'translateZ(0px)',
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  >
+                    {renderVisual(idx)}
+                  </div>
                 </motion.div>
               );
             })}
