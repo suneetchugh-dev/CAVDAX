@@ -142,6 +142,17 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
     - **Natural Directional Lock-Outs**: Downward exit glides to following section; upward exit glides to preceding section's bottom edge (`el.offsetTop - 0.75 * H`), never to `0px`.
     - **Lenis Force-Execution Parameter**: Always pass `{ force: true }` to `window.__lenis.scrollTo()` and call `window.__lenis.start()` so programmatic exit commands execute reliably without stalling.
     - **Monochromatic Vertex Outlines**: Superseded/invalidated nodes must feature a crisp, solid circular monochromatic outline (`stroke-slate-950 dark:stroke-white/80`, `strokeWidth="1.8"`). Strictly ban gray dotted circles, dashed rings, or reticle tick clutter.
+22. **Continuous Causal Provenance Radar Standard**:
+    - Restrict all radar targets to `radiusRatio <= 0.66` to prevent label/pin clipping on 16:9 laptop screens when scaled to 1.25x in theater mode.
+    - Strictly ban rectangular card borders around polar grids (pure unbounded HUD only).
+    - Synchronize target discovery to the physical sweep beam angle: $\theta_{\text{beam}}(t) = (t / 14000) \times 360^\circ$.
+    - Use calibrated exponential phosphor trailing decay $\alpha = (1 - p)^{1.8}$ over a $53^\circ$ trailing window.
+    - Keep runways tight ($\le 150\text{vh}$) to eliminate dead-space voids.
+23. **Causal Knowledge Graph Web Canvas Standard**:
+    - Strictly enforce the **Invisible Cursor Probe Rule**: never draw a visible dot on the mouse pointer; project hairline vector edges from nearby nodes into the transparent cursor coordinates.
+    - Maintain a minimum 24px exclusion buffer around wordmarks and primary buttons with tangential deflection glide.
+    - Enforce dual-hemisphere node balancing (35 upper / 60 lower) with soft restorative springs to prevent gravitational settling.
+    - Schedule biomimetic swarm migrations across key waypoints using alternating short flits (2.2s–4.5s) and long roosts (6.0s–10.5s).
 
 ---
 
