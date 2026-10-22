@@ -9,7 +9,31 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
-## 1.0 Latest Session Achievements (October 22, 2026)
+## 1.0 Latest Session Achievements (October 22, 2026 - Part 2)
+
+- **Automated Knowledge Graph CI/CD & Zero-Leak Pre-Publish Integrity (Option A)**:
+  - Tracked lightweight, curated knowledge graph datasets (`graph_nodes.json`, `graph_edges.json`, `graph_legend.json`, `graph.json`, `manifest.json`, `GRAPH_REPORT.md`) along with custom SVG cursors and audio suites in `graphify-out/`.
+  - Configured `.gitignore` to track structured JSON and asset suites while strictly ignoring dynamic output (`*.html`), heavy caches (`cache/`, `converted/`, `transcripts/`), and temporary files.
+  - Refactored `scripts/generate_cavdax_graph_html.py` to synthesize the complete Swiss-designed `graph.html` and `index.html` directly from the local JSON datasets without requiring external LLM API keys or a pre-existing `graph.html`.
+  - Streamlined `.github/workflows/deploy-graph-pages.yml`: removed slow `pip install graphifyy` and third-party tree-sitter compilation. CI now executes deterministic HTML generation in 2 seconds, audits the output via `verify-graph-integrity.py` (Rule 13), and deploys cleanly to `gh-pages`.
+
+- **Scroll Navigation Hijack Elimination (`App.jsx` & `CausalSolutionScroller.jsx`)**:
+  - Resolved mid-flight scroll hijacking where clicking footer "Scroll to Top" or navigation cues caused the 3D horizontal scroller to treat the transit as an arrival and forcefully lock the viewport.
+  - Added a global programmatic navigation flag `window.__isProgrammaticScroll = true` inside `lenis.scrollTo` and `window.scrollTo` wrappers, auto-clearing upon arrival or immediately when manual wheel/touch input is detected.
+  - Guarded `handleScrollCheck` in `CausalSolutionScroller.jsx` to immediately bypass docking and release any active lock during programmatic transit.
+
+- **FOUC Lamp Stretch & 60-120 FPS React Re-render Elimination (`PullCordLampToggle.jsx`)**:
+  - Fixed horizontal stretch bug on initial page load by adding explicit inline styles (`width: 360px`, `height: 360px`, `position: fixed`, `right: 40px`, `top: 0`) preventing unstyled `div` expansion prior to Tailwind evaluation.
+  - Replaced per-frame `setRenderPos` React state churn with direct DOM attribute manipulation (`glowCircleRef`, `beadedPathRef`, `corePathRef`, `bobGroupRef`, `tooltipRef`), completely eliminating 60–120 React virtual-DOM diffs and re-renders per second.
+  - Added visibility sleep (`opacity <= 0.01` check) to pause the physics animation loop when scrolled off-screen.
+
+- **Initial Load Latency & Background RAF Optimization (`SplashLoader.jsx`, `SpotlightDataRain.jsx`, `CausalProvenanceRadar.jsx`)**:
+  - Scaled `SplashLoader.jsx` duration from 4,800ms down to a crisp 1,800ms for first-time visitors, and added `sessionStorage` tracking (`cavdax_splash_shown`) so page reloads skip the loader instantly.
+  - Removed `getBoundingClientRect()` layout thrashing calls from the 30-frame interval in `SpotlightDataRain.jsx`.
+  - Added `IntersectionObserver` instances to both `SpotlightDataRain.jsx` and `CausalProvenanceRadar.jsx` to put canvas and SVG rotation animation loops to sleep when scrolled out of view.
+  - Updated `apps/client/Dockerfile` to compile production assets (`RUN npm run build`) and serve via `npm run preview`.
+
+## 1.1 Previous Session Achievements (October 22, 2026 - Part 1)
 
 - **Causal Solution Scroller: 3D Rolling Cylindrical Card Sliding Window & Bidirectional Docking Engine**:
   - Implemented standalone production component in `apps/client/src/components/CausalSolutionScroller.jsx` replacing flat carousels with a 3D cylindrical perspective stage (`perspective: 1200px`).

@@ -8,6 +8,7 @@ on:
       - 'core/**'
       - 'apps/**'
       - 'scripts/**'
+      - 'graphify-out/**'
   workflow_dispatch:
 
 permissions:
@@ -32,18 +33,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Graphify
+      - name: Build CAVDAX Knowledge Graph
         run: |
-          python -m pip install --upgrade pip
-          pip install graphifyy
-
-      - name: Extract Graph & Apply CAVDAX Design System
-        run: |
-          mkdir -p graphify-out
-          graphify . --no-viz || true
-          graphify export html || true
-          python scripts/generate_cavdax_graph_html.py || true
-          # Guarantee index.html exists in publish directory
+          python scripts/generate_cavdax_graph_html.py
           if [ -f graphify-out/graph.html ] && [ ! -f graphify-out/index.html ]; then
             cp graphify-out/graph.html graphify-out/index.html
           fi
