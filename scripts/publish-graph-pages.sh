@@ -31,5 +31,5 @@ git add index.html
 git commit -m "deploy: publish interactive knowledge graph to GitHub Pages [skip ci]"
 git push -f origin gh-pages
 
-echo "✅ SUCCESS: Knowledge graph published to gh-pages branch!"
+echo "SUCCESS: Knowledge graph published to gh-pages branch!"
 echo "Live URL: https://suneetchugh-dev.github.io/CAVDAX/"

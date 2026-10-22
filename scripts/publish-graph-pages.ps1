@@ -45,7 +45,7 @@ try {
     
     Write-Host ""
     Write-Host "==========================================================================" -ForegroundColor Green
-    Write-Host "✅ SUCCESS: Interactive 3D Knowledge Graph published to gh-pages branch!" -ForegroundColor Green
+    Write-Host "SUCCESS: Interactive 3D Knowledge Graph published to gh-pages branch!" -ForegroundColor Green
     Write-Host "Live URL (when GitHub Pages is enabled):" -ForegroundColor Cyan
     Write-Host "  https://suneetchugh-dev.github.io/CAVDAX/" -ForegroundColor Cyan
     Write-Host "==========================================================================" -ForegroundColor Green
