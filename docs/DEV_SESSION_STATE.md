@@ -7,9 +7,31 @@
 
 ---
 
-## 1. Executive Summary of Complete Theme Makeover
+## 1. Executive Summary of Complete Theme & Scroller Makeover
 
-## 1.1 Latest Session Achievements (October 21, 2026)
+## 1.0 Latest Session Achievements (October 22, 2026)
+
+- **Causal Solution Scroller: 3D Rolling Cylindrical Card Sliding Window & Bidirectional Docking Engine**:
+  - Implemented standalone production component in `apps/client/src/components/CausalSolutionScroller.jsx` replacing flat carousels with a 3D cylindrical perspective stage (`perspective: 1200px`).
+  - **The Problem Space & Failures Resolved**:
+    - **Lenis Virtual Scroll Collision**: Calling `lenis.stop()` halted Lenis internal RAF loop and caused subsequent `scrollTo()` calls to be silently dropped due to Lenis checking `(this.isStopped || this.isLocked) && !force`. The user became permanently immobilized.
+    - **Premature Card Skipping**: Global keyboard listeners scrolled cards before the user even arrived at the section.
+    - **High-Frequency Touchpad Bypass**: Laptop trackpads emitting 60+ wheel events per second skipped all 4 cards in 50ms without debouncing.
+    - **Reverse Scrolling Failure (Bottom-to-Top)**: When scrolling up from `#faq-section`, viewport coordinate inversion caused the dock check to fail or initialize at Card 01 instead of Card 04, triggering an immediate exit to Bento without showing cards.
+    - **Stale React Closures**: Recreating event listeners inside `useEffect([activeStep])` caused dropped events during fast scroll momentum.
+  - **The Battle-Tested Architecture**:
+    - **Synchronous Ref Triad**: `isLockedRef`, `activeStepRef`, and `isExitingRef` guarantee zero-latency state reads across high-frequency browser wheel and trackpad streams.
+    - **Mathematical Center-Distance Docking**: Viewport capture formula `Math.abs(sectionCenter - viewportCenter) < 0.35 * H` is invariant to screen sizes and laptop DPI scaling.
+    - **Directional Entry Seeding**: Approaching from above initializes at Card 01 (`activeStep = 0`); approaching from below initializes at Card 04 (`activeStep = 3`).
+    - **Gesture Normalization & 360ms Cooldown**: Normalizes 2-finger horizontal and vertical swipes (`Math.abs(deltaX) > Math.abs(deltaY)`) with a 360ms cooldown preventing multiple card skips.
+    - **Natural Directional Lock-Out**: On Card 04, downward gestures smoothly unlock Lenis and glide to `#faq-section`. On Card 01, upward gestures smoothly unlock Lenis and glide back to the bottom of `#bento-section` (`el.offsetTop - 0.75 * H`).
+  - **Card 01 Monochromatic Outline Polish**:
+    - Replaced unappealing gray dotted circle around the invalidation `X` mark with a crisp, solid circular border: `<circle r="20" className="fill-transparent stroke-slate-950 dark:stroke-white/80" strokeWidth="1.8" />`.
+    - Eliminated uncalibrated neon cyan fills in light theme.
+  - **Live Browser Verification**:
+    - Verified via Chrome DevTools in both directions: forward (Bento -> Card 01 -> 02 -> 03 -> 04 -> FAQ) and reverse (FAQ -> Card 04 -> 03 -> 02 -> 01 -> Bento) with zero page freezing.
+
+## 1.1 Previous Session Achievements (October 21, 2026)
 
 - **Interactive Causal Knowledge Graph & Dynamic Firefly Swarm Engine (`SpotlightDataRain.jsx`)**:
   - Replaced legacy matrix rain with a high-contrast Causal Knowledge Graph DAG mesh (~95 micro-vertices, directed vector links, and traveling data packets).

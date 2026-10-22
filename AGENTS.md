@@ -134,6 +134,14 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
     - **Canvas Vector Fidelity**: For canvas rasterization of the brand acronym, directly rasterize the exact vector geometry contours (`CAVDAX_WORDMARK_LETTERS_PATH` via `Path2D`) featuring Swiss 90-degree orthogonal terminal cuts on 'C' and 'D', razor-sharp mitered apexes on 'A', 'V', 'X', and calibrated monoline stroke weight.
     - **Typography Fallback**: If standard text rendering is invoked, strictly enforce the Swiss Architectural Grotesk specification (`Space Grotesk` 900 Ultra-Black weight, uppercase, wide tracking) matching the Wordmark DNA.
 20. **Mandatory Card & Component De-Clutter Audit**: Before creating or editing ANY UI component, ruthlessly audit all copy and chrome. Remove all clutter, unnecessary text, redundant labels, explanatory filler, duplicate status tags, and decorative metadata that do not serve an indispensable purpose (neither for critical technical explanation nor for genuine visual clarity). If text or metadata does not actively help the user make an immediate decision or understand state, it must be removed. Visuals and clean typography must do the heavy lifting; text must be surgical, concise, and minimal.
+21. **Bidirectional Docking Horizontal Card Scroller Standard**: When implementing locked horizontal card sequences or 3D rolling cylindrical windows, strictly enforce:
+    - **Normalized Center-Distance Docking**: Calculate viewport docking using normalized vertical center-distance (`Math.abs(sectionCenter - viewportCenter) < 0.35 * H`) rather than fragile top/bottom inequalities.
+    - **Synchronous Mutable Reference Mirroring**: Mirror all active state in a Synchronous Ref Triad (`isLockedRef`, `activeStepRef`, `isExitingRef`) to eliminate React re-render closure lag across high-frequency trackpad streams.
+    - **Directional Entry Parity**: Top-to-bottom entry seeds Step 0; bottom-to-top entry seeds Step N-1.
+    - **Gesture Debounce Cooldown (360ms)**: Enforce `isTransitioningRef.current = true` for 360ms after each card advance, mapping one physical trackpad flick to one card transition.
+    - **Natural Directional Lock-Outs**: Downward exit glides to following section; upward exit glides to preceding section's bottom edge (`el.offsetTop - 0.75 * H`), never to `0px`.
+    - **Lenis Force-Execution Parameter**: Always pass `{ force: true }` to `window.__lenis.scrollTo()` and call `window.__lenis.start()` so programmatic exit commands execute reliably without stalling.
+    - **Monochromatic Vertex Outlines**: Superseded/invalidated nodes must feature a crisp, solid circular monochromatic outline (`stroke-slate-950 dark:stroke-white/80`, `strokeWidth="1.8"`). Strictly ban gray dotted circles, dashed rings, or reticle tick clutter.
 
 ---
 
