@@ -33,6 +33,20 @@ Operational constitution, architecture standards, and safety governance for AI c
 
 ---
 
+5. **Mandatory Asset & Artifact Categorization Rule**:
+   - **Never dump files into flat parent directories**: Any generated brand assets, typography explorations, logo variants, banners, or component screenshots must be categorized immediately into dedicated domain-specific subfolders.
+   - **Standard Categorization Layout**:
+     * Wordmark typography & logotypes -> docs/brand_explorations/wordmarks/
+     * Monograms, DAG shields, & execution gates -> docs/brand_explorations/logos/
+     * Technical publication banners & headers -> docs/brand_explorations/banners/
+     * 3D conceptual art & protocol diagrams -> docs/brand_explorations/concepts/
+     * Live browser captures & component previews -> docs/brand_explorations/previews/
+      - **Continuous Typography Dossier Maintenance Rule**: Whenever ANY new wordmark or typography exploration is created, you MUST immediately update `docs/brand_explorations/wordmarks/TYPOGRAPHY_SPECIFICATION.md` in the same turn with its comprehensive technical anatomy, design inspiration, glyph geometry (terminals, apexes, apertures, stroke weight), causal graph baseline specs, and relative asset links. Never leave an asset undocumented.
+   - **Semantic Naming & Indexing**: Every file must bear a clean, semantic name (e.g. wordmark-tech-01-squircle-aerospace.jpg) without random timestamp hashes, and every archive directory must maintain a catalog README.md documenting all assets.
+
+
+---
+
 ## 2. The Mandatory UI/UX Pre-Flight Interceptor Loop
 
 Whenever your current task touches, modifies, refactors, creates, adds, or **REMOVES/DELETES** ANY user interface component, style, page, section, or layout, **YOU MUST FIRST READ & RECONCILE with `docs/UI_DESIGN_SYSTEM.md` BEFORE WRITING, EDITING, OR DELETING ANY CODE**:
@@ -190,6 +204,28 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
   - **Session-Level Squashing of Related Changes**: When multiple commits made during recent active pair-programming iterate on or refine the same underlying feature, always squash them into a single, cohesive, atomic commit before concluding the session or opening a PR to `main`.
   - **Atomic Milestone Integrity**: A feature commit in history must represent a complete, functional milestone where `npm run build` passes cleanly, not intermediate trial-and-error steps.
   - **Safe Remote Updates**: When updating a feature branch after squashing already-pushed iterative commits, strictly use `git push --force-with-lease origin <branch>` (never bare `--force`) to ensure remote integrity.
+- **The 6 Industry-Standard PR Lifecycle Stages (Mandatory Before Merging)**:
+  1. *Stage 1: Pre-Flight Automated CI Gates*: Static analysis, linting, compilation, and automated tests must pass 100% green before human or peer review.
+  2. *Stage 2: Multi-Axis Code Review Matrix*: Audit against Correctness/Edge Cases, Security/Data Safety, Architecture/Modularity, and Observability.
+  3. *Stage 3: Formal GitHub Review Actions*: Reviewers submit structured Comment, Request Changes, or Approve via GitHub UI or gh pr review.
+  4. *Stage 4: Merge Strategy Selection*: Default to **Squash and Merge (--squash)** for clean atomic history on main; use --merge for large release epics.
+  5. *Stage 5: CI/CD Post-Merge Verification*: Automated build verification confirms main remains deployable and healthy.
+  6. *Stage 6: Post-Merge Hygiene & Branch Pruning*: Delete merged remote branches (--delete-branch) and sync local git working state.
+- **The 4 AI-Agent PR Delegation Tasks (Human-in-the-Loop Protocol)**:
+  1. *Task 1: Automated Deep Audit*: Agent inspects diffs, verifies secrets, traces inputs, checks query bounds (LIMIT 500), and audits error handling.
+  2. *Task 2: Branch Patching*: Agent checks out PR branches, applies surgical fixes, tests locally, and pushes clean commits.
+  3. *Task 3: Formal Review & CLI Merge*: Agent formats structured review feedback and executes approved merges via gh pr merge.
+  4. *Task 4: Workspace State Sync*: Agent pulls updated main, synchronizes working branches, and keeps DEV_SESSION_STATE.md accurate.
+- **The Generalized Pre-Merge Invariant Checklist (Stack-Agnostic)**:
+  - No code merges into main without verifying:
+    1. *Zero Secret Leaks*: Diff contains zero credentials, real keys, or .env files.
+    2. *Clean Build & Compilation*: 
+pm run build (or equivalent) passes with zero fatal errors.
+    3. *Regression Tests Pass*: All unit, integration, and benchmark tests continue to pass green.
+    4. *Dependency Lockfile Integrity*: package-lock.json matches package.json changes.
+    5. *Contract & Schema Compatibility*: Backward compatibility preserved on API endpoints and database models.
+    6. *Accurate Concept Framing*: Zero unauthorized government/institutional claims or fake escrow assertions.
+    7. *Persistent Memory Sync*: docs/DEV_SESSION_STATE.md synchronized.
 
 ## 4. Multi-Language Parity Rules (When Applicable)
 
