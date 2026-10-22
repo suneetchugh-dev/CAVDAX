@@ -64,18 +64,26 @@ You must strictly incorporate and enforce every single one of the following 34 a
      - Headings (`h1`, `h2`) must remain clean, dignified, and uncluttered.
      - System telemetry and live connection state belong exclusively in dedicated toolbar metrics, status bars, or subheaders.
 
+11C. **STRICT BAN ON CARD CLUTTER, REDUNDANT LABELS & OVER-EXPLANATORY FLUFF**:
+     - NEVER clutter cards, panels, or widgets with superfluous metadata, verbose self-explanatory prose, redundant category tags, or decorative badge spam (e.g. HOP 1 (ROOT), INACTIVE, PROVENANCE STALE, or redundant paragraphs explaining what the visual already clearly communicates).
+     - **Mandatory Pre-Flight De-Clutter Audit**: Before creating or editing ANY UI component, ruthlessly audit all copy and chrome against these three tests:
+       1. **Indispensable Utility Test**: Does this label or text convey novel, actionable information that the visual or title does not already communicate? If NO — **REMOVE IT**.
+       2. **Fluff & Filler Test**: Is this text serving as filler, decorative padding, or over-explaining self-evident UI interactions? If YES — **REMOVE IT**.
+       3. **Typography Compression Test**: Can this element communicate its state with a single clean, high-contrast monospace identifier and minimalist icon rather than stacked lines of badges? If YES — **SIMPLIFY TO SINGLE-LINE MONOSPACE**.
+     - Cards must remain crisp, calm, and breathable. Visuals and clean typography must do the heavy lifting; text must be surgical, concise, and minimal.
+
 12. **STRICT BAN ON BORDER INJECTION & BOUNCY ZOOM JUMPS**:
     - NEVER use `hover:scale-105` or `scale-110` on cards (causes text blurring and GPU re-rasterization).
     - NEVER change border thickness on hover (`hover:border-2` or adding borders where none existed) — this causes an intolerable 1px layout jitter across sibling elements.
     - Use subtle `-translate-y-0.5` lift, specular highlight brightening, or `outline` / `box-shadow: inset` instead.
 
-12. **STRICT BAN ON MULTI-LINE CENTERED BODY PROSE**:
+13. **STRICT BAN ON MULTI-LINE CENTERED BODY PROSE**:
     - NEVER apply `text-center` across multi-line paragraphs (> 2 lines). It destroys visual eye-tracking. Left-align body copy (`text-left`) and center only short single-line subheaders.
 
-13. **STRICT BAN ON AMBIENT BLOB BLUR OVERKILL**:
+14. **STRICT BAN ON AMBIENT BLOB BLUR OVERKILL**:
     - Ban giant, saturated `blur-3xl` gradient circles that cause GPU frame drops on mobile devices. Background depth must be achieved with fine CSS hairlines, subtle noise, or targeted linear gradients.
 
-14. **STRICT ZERO-OVERFLOW DESKTOP & F11 FULL SCREEN CONTAINMENT**:
+15. **STRICT ZERO-OVERFLOW DESKTOP & F11 FULL SCREEN CONTAINMENT**:
     - Operational dashboards, map consoles, telemetry command centers, and interactive workspaces must NEVER produce an outer browser window vertical scrollbar (`overflow-y: hidden` on root layout, `html`, and `body`).
     - The workspace must fit 100% within a single screen across both standard desktop viewports (calibrated for 15.6" HP Victus at 1920×1080 with 125% Windows scaling = 1536×864 effective CSS pixels, with ~714px–740px height inside windowed browser chrome) AND in **F11 Full Screen presentation mode** (where browser address bar, tab strip, and bookmarks disappear, expanding the canvas to the full 864px or 1080px).
     - In F11 Full Screen mode, the layout must seamlessly and dynamically breathe to occupy the newly available vertical space via dynamic flex/grid containment (`h-[100dvh] flex flex-col`, `flex-1 min-h-0 overflow-hidden`) without layout distortion, without bottom cutoff, and without requiring a page refresh.

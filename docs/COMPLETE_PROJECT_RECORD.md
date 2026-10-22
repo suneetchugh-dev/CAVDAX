@@ -55,6 +55,13 @@
    - [9.2 Consolidation of Iterative Commits into Atomic Milestones](#92-consolidation-of-iterative-commits-into-atomic-milestones)
    - [9.3 The Constitutional Git Squashing Rule in `AGENTS.md`](#93-the-constitutional-git-squashing-rule-in-agentsmd)
 10. [Complete Inventory of Modified Files & Commit Audit](#10-complete-inventory-of-modified-files--commit-audit)
+11. [Causal Solution Scroller: 3D Rolling Cylindrical Card Sliding Window & Bidirectional Viewport Docking Engine](#11-causal-solution-scroller-3d-rolling-cylindrical-card-sliding-window--bidirectional-viewport-docking-engine)
+    - [11.1 Architectural Vision: 3D Rolling Cylinder Window vs Flat Grids](#111-architectural-vision-3d-rolling-cylinder-window-vs-flat-grids)
+    - [11.2 The Problem Space & Technical Challenges](#112-the-problem-space--technical-challenges)
+    - [11.3 Evolutionary Engineering Journey: Approaches Tested & Abandoned](#113-evolutionary-engineering-journey-approaches-tested--abandoned)
+    - [11.4 The Final Battle-Tested Solution & Architectural Proof](#114-the-final-battle-tested-solution--architectural-proof)
+    - [11.5 Premium Monochromatic Visual Engineering (Card 1 Outline Polish)](#115-premium-monochromatic-visual-engineering-card-1-outline-polish)
+    - [11.6 Live Chrome DevTools Bidirectional Verification Results](#116-live-chrome-devtools-bidirectional-verification-results)
 
 ---
 
@@ -449,7 +456,238 @@ Enshrined under Section 3 (**Git Branch Hygiene & Commit Governance**) in [`AGEN
 
 ---
 
-## 10. Complete Inventory of Modified Files & Commit Audit
+## 11. Causal Solution Scroller: 3D Rolling Cylindrical Card Sliding Window & Bidirectional Viewport Docking Engine
+
+### 11.1 Architectural Vision: 3D Rolling Cylinder Window vs Flat Grids
+The Solution Space of CAVDAX represents the 4-phase lifecycle of autonomous causal graph execution:
+1. **01. ADR & Git Ingestion**: Autonomous AST parsing of architecture decision records and Git commits into directed causal vertices.
+2. **02. FalkorDB GraphBLAS Engine**: Sparse adjacency matrix multiplication computing transitive reachability in under 2ms.
+3. **03. Enclosed MCP Firewall Gate**: Protocol-level interception hard-rejecting tool mutations grounded in stale ancestry.
+4. **04. Continuous Revalidation Loop**: Closed-loop verification and deterministic self-healing writes.
+
+Instead of displaying these complex mechanisms as static stacked cards or flat carousels, the engine implements a **3D Rolling Cylindrical Sliding Window**:
+- **Perspective Stage (`perspective: 1200px`)**: The cards are physically projected on an invisible 3D rotating cylinder.
+- **Center Focus (`offset === 0`)**: Scale `1.05x`, `rotateY(0deg)`, full opacity `1.0`, `z-index: 30`.
+- **Flanking Depth (`offset === ±1`)**: Scale `0.82x`, angled rotation `rotateY(±24deg)`, offset `xPos: ±68%`, translucent opacity `0.35`, `z-index: 15`.
+- **Horizon Cards (`offset === ±2`)**: Receded to `±120%`, `rotateY(±35deg)`, `scale(0.65)`, opacity `0`, `z-index: 5`.
+
+---
+
+### 11.2 The Problem Space & Technical Challenges
+
+During initial implementation and user testing, several severe UX and architectural failure modes emerged:
+
+#### Challenge 1: The Lenis Virtual Scroll Collision & Page Freeze Bug
+- When attempting to capture scroll events inside the card section, calling `window.__lenis.stop()` halted Lenis's internal `requestAnimationFrame` loop.
+- In Lenis v1.1.x, `scrollTo()` checks `if ((this.isStopped || this.isLocked) && !force) return;`. Because the loop was stopped, programmatic scroll requests (`scrollTo('#faq-section')`) were silently dropped.
+- The user became permanently immobilized on the page, unable to scroll up or down.
+
+#### Challenge 2: Premature Card Navigation on Vertical Browsing
+- When the user navigated the page with vertical keyboard keys (`ArrowDown`, `PageDown`, `Space`), the key handler was listening globally without checking whether the section was actively centered in view.
+- Consequently, while the user was still browsing the upper Bento section, pressing `ArrowDown` silently incremented the card state from Card 01 to Card 04 before the user even arrived at the section.
+
+#### Challenge 3: Viewport Bypass via Mouse Wheel & High-Frequency Touchpad Swipes
+- Without strict docking, users flicking their mouse wheel or laptop touchpad blew past the entire 4-card sequence in a single stroke without seeing the infographics.
+- Laptop touchpads emit 60+ wheel events per second with small fractional deltas (`e.deltaY ~ 1.5 - 4.0`), while discrete mouse wheels emit abrupt large deltas (`e.deltaY ~ 100`).
+- Without gesture debouncing, a single two-finger trackpad flick would trigger all 4 cards sequentially in under 50 milliseconds.
+
+#### Challenge 4: The Reverse-Scroll Trap (Bottom-to-Top Failure)
+- While top-to-bottom scroll locking was initially tuned to work, scrolling in reverse (from `#faq-section` upward into `#causal-loop-section`) completely broke down:
+  1. **Coordinate Inversion**: When approaching from below, `rect.top` is negative and `rect.bottom` enters from the top of the viewport. Formulae that only checked `rect.top >= 0` failed to engage.
+  2. **Initial Step Mismatch**: When entering from below, `activeStep` remained at `0` (Card 01) or whatever previous state it held. When the user scrolled UP, the component detected `activeStep === 0`, concluded the user had already reached the start, and instantly unlocked the page, bypassing all cards.
+  3. **Hard Teleporting**: Attempting to align via `el.scrollIntoView({ block: 'start' })` during reverse entry caused a violent 800px visual snap that disoriented the user.
+
+#### Challenge 5: Stale Closures in React Event Listeners
+- Binding `activeStep` directly in `useEffect` dependency arrays caused event listeners to detach and re-attach on every step change.
+- Rapid trackpad gestures received by the window wheel listener during React re-renders read stale values of `activeStep`, causing inconsistent skipping or dropped transitions.
+
+---
+
+### 11.3 Evolutionary Engineering Journey: Approaches Tested & Abandoned
+
+| Phase / Attempt | Approach Taken | Failure Mode / Flaw Discovered | Why It Was Abandoned |
+|---|---|---|---|
+| **Attempt 1** | Native `handleWheel` with `e.preventDefault()` based on arbitrary `window.scrollY` ranges. | Breakpoint fragility; fails on different viewport heights (1366x768 vs 1920x1080) and zoom levels. | Hardcoded pixel coordinates do not adapt to responsive layout shifts. |
+| **Attempt 2** | Lenis hard-lock (`lenis.stop()` and `lenis.isLocked = true`) upon entering the section. | Froze Lenis RAF loop permanently. Prevented `scrollTo` callbacks from executing, leaving the page frozen. | Lenis cannot be stopped mid-flight without explicit `{ force: true }` and synchronous lifecycle management. |
+| **Attempt 3** | Viewport fraction check: `rect.top <= 0.25 * H && rect.bottom >= 0.75 * H` in React state. | In strict mode, fast scrolls jumped past the narrow 25%–75% boundary between animation frames, failing to lock. | Asynchronous React state updates lag behind high-frequency browser scroll events. |
+| **Attempt 4** | Directional checks without reverse step initialization. | User approaching from FAQ landed on Card 01 instead of Card 04, causing reverse scroll to immediately eject to Bento. | Asymmetric state: downward entry requires Step 0; upward entry requires Step 3. |
+
+---
+
+### 11.4 The Final Battle-Tested Solution & Architectural Proof
+
+The final implementation in [`CausalSolutionScroller.jsx`](../apps/client/src/components/CausalSolutionScroller.jsx) resolves all failure modes through 6 synchronized architectural primitives:
+
+```
+                          USER SCROLL GESTURE
+                        (Wheel / Touchpad / Key)
+                                   │
+                                   ▼
+                   ┌───────────────────────────────┐
+                   │  Is Section Centered in View? │
+                   │  |sectionCenter - viewCenter| │
+                   │          < 0.35 * H           │
+                   └───────────────┬───────────────┘
+                                   │
+                   ┌───────────────┴───────────────┐
+                   │                               │
+             [NO: Bypass]                    [YES: Dock In]
+                   │                               │
+        Normal Page Scroll                         ▼
+                                   ┌───────────────────────────────┐
+                                   │ Directional Step Initializer  │
+                                   │ • Scrolling Down ➔ Step 0     │
+                                   │ • Scrolling Up   ➔ Step 3     │
+                                   └───────────────┬───────────────┘
+                                                   │
+                                                   ▼
+                                   ┌───────────────────────────────┐
+                                   │ Synchronous Ref Hard-Lock     │
+                                   │ isLockedRef = true            │
+                                   │ window.__lenis.stop()         │
+                                   │ window.__lenis.scrollTo(el,   │
+                                   │    { force: true })           │
+                                   └───────────────┬───────────────┘
+                                                   │
+                 ┌─────────────────────────────────┴─────────────────────────────────┐
+                 │                                                                   │
+                 ▼                                                                   ▼
+       [DOWNWARD GESTURE / KEY]                                            [UPWARD GESTURE / KEY]
+                 │                                                                   │
+    ┌────────────┴────────────┐                                         ┌────────────┴────────────┐
+    │                         │                                         │                         │
+[Step < 3]                [Step === 3]                              [Step > 0]                [Step === 0]
+    │                         │                                         │                         │
+    ▼                         ▼                                         ▼                         ▼
+Increment Step            LOCK OUT DOWN                             Decrement Step            LOCK OUT UP
+(360ms Cooldown)    • isLockedRef = false                       (360ms Cooldown)    • isLockedRef = false
+                    • isExitingRef = true                                           • isExitingRef = true
+                    • lenis.start()                                                 • lenis.start()
+                    • scrollTo('#faq-section',                                      • scrollTo(targetY,
+                        { duration: 0.85 })                                             { duration: 0.85 })
+```
+
+#### Core Primitive 1: Synchronous Reference Triad
+To eliminate React re-render lag and stale closures, all critical flags are mirrored in mutable refs:
+```javascript
+const isLockedRef = useRef(false);
+const isExitingRef = useRef(false);
+const isTransitioningRef = useRef(false);
+const activeStepRef = useRef(0);
+const lastScrollYRef = useRef(window.scrollY);
+```
+Event listeners are attached once on mount and read `activeStepRef.current` synchronously without recreating closures.
+
+#### Core Primitive 2: Mathematical Center-Distance Viewport Docking
+Instead of fragile top/bottom inequality comparisons, docking uses normalized center-distance:
+```javascript
+const sectionCenter = rect.top + rect.height / 2;
+const viewportCenter = window.innerHeight / 2;
+const isDocked = Math.abs(sectionCenter - viewportCenter) < window.innerHeight * 0.35;
+```
+This formula is mathematically invariant to screen heights, laptop scaling (125%, 150%), and aspect ratios.
+
+#### Core Primitive 3: Directional Entry Initializer
+When the section docks, it samples the scroll direction to seed the starting card:
+```javascript
+if (!isLockedRef.current && isDocked) {
+  isLockedRef.current = true;
+  setIsLocked(true);
+  if (scrollingDown) {
+    setActiveStep(0); // Entering from Bento ➔ Card 01
+  } else {
+    setActiveStep(SOLUTION_STEPS.length - 1); // Entering from FAQ ➔ Card 04
+  }
+  if (window.__lenis) {
+    window.__lenis.stop();
+    window.__lenis.scrollTo(el, { immediate: true, force: true });
+  }
+}
+```
+
+#### Core Primitive 4: Dual-Vector Trackpad Gesture Normalization with 360ms Cooldown
+Supports both two-finger vertical scrolling and two-finger horizontal swiping:
+```javascript
+const isHorizontalSwipe = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+const dominantDelta = isHorizontalSwipe ? e.deltaX : e.deltaY;
+if (Math.abs(dominantDelta) < 10) return; // Discard trackpad jitter
+```
+When stepping, `isTransitioningRef.current = true` locks navigation for 360ms, ensuring one physical gesture equals exactly one card advance.
+
+#### Core Primitive 5: Natural Directional Lock-Out
+- **Downward Exit (Card 04 $\to$ `#faq-section`)**:
+  ```javascript
+  isExitingRef.current = true;
+  isLockedRef.current = false;
+  setIsLocked(false);
+  window.__lenis.start();
+  window.__lenis.scrollTo('#faq-section', {
+    duration: 0.85,
+    force: true,
+    onComplete: () => { isExitingRef.current = false; }
+  });
+  ```
+- **Upward Exit (Card 01 $\to$ `#bento-section`)**:
+  ```javascript
+  const targetY = Math.max(0, el.offsetTop - window.innerHeight * 0.75);
+  isExitingRef.current = true;
+  isLockedRef.current = false;
+  setIsLocked(false);
+  window.__lenis.start();
+  window.__lenis.scrollTo(targetY, {
+    duration: 0.85,
+    force: true,
+    onComplete: () => { isExitingRef.current = false; }
+  });
+  ```
+  Calculating `targetY = el.offsetTop - window.innerHeight * 0.75` brings the user smoothly into the bottom cards of the Bento grid rather than violently scrolling 1200px to the top.
+
+---
+
+### 11.5 Premium Monochromatic Visual Engineering (Card 1 Outline Polish)
+
+In Card 01 (`ADR & Git Ingestion`), the user requested eliminating an unappealing gray dotted circle around the invalidation `X` mark.
+- **Removed**: Dotted/dashed strokes, heavy gray borders, and busy reticle ticks.
+- **Implemented**: A crisp, architectural solid circular ring rendered in theme-calibrated monochromatic tones:
+  ```jsx
+  {/* Superseded Node ADR-001: Clean Solid Monochromatic Outline */}
+  <g transform="translate(185, 50)">
+    <circle 
+      r="20" 
+      className="fill-transparent stroke-slate-950 dark:stroke-white/80" 
+      strokeWidth="1.8" 
+    />
+    <line x1="-6.5" y1="-6.5" x2="6.5" y2="6.5" stroke="#be123c" strokeWidth="1.8" strokeLinecap="round" />
+    <line x1="6.5" y1="-6.5" x2="-6.5" y2="6.5" stroke="#be123c" strokeWidth="1.8" strokeLinecap="round" />
+    <text x="0" y="36" textAnchor="middle" className="fill-slate-700 dark:fill-slate-300 font-mono text-[10px] font-medium">ADR-001</text>
+    <text x="0" y="48" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400 font-mono text-[8.5px] font-bold">SUPERSEDED</text>
+  </g>
+  ```
+- **Zero Cyan in Light Mode**: Clean Slate-950 / Wine accents replace uncalibrated neon cyan fills in the light theme.
+
+---
+
+### 11.6 Live Chrome DevTools Bidirectional Verification Results
+
+The implementation was verified through real-time script evaluation and event dispatching in Chrome DevTools:
+
+| Test Vector | Action Dispatched | Observed Telemetry / Output | Result |
+|---|---|---|---|
+| **Top $\to$ Bottom Approach** | Scrolled down from Bento | `scrollY: 2458px ➔ rect.top: 0.32px`, `isStopped: true`, Title: `"ADR & GIT INGESTION"` | ✅ **Docked at Card 01** |
+| **Card Step 1 $\to$ 2** | `ArrowRight` (or wheel down) | Title: `"FALKORDB GRAPHBLAS ENGINE"`, active card index: `1` | ✅ **Passed** |
+| **Card Step 2 $\to$ 3** | `ArrowRight` (or wheel down) | Title: `"ENCLOSED MCP FIREWALL GATE"`, active card index: `2` | ✅ **Passed** |
+| **Card Step 3 $\to$ 4** | `ArrowRight` (or wheel down) | Title: `"CONTINUOUS REVALIDATION LOOP"`, active card index: `3` | ✅ **Passed** |
+| **Downward Lock-Out** | `ArrowDown` on Card 04 | `faqTop: 3.52px`, `scrollY: 3182px`, `isStopped: false` | ✅ **Smoothly locked out to FAQ** |
+| **Bottom $\to$ Top Approach** | Scrolled up from FAQ | `scrollY: 2444px`, `isStopped: true`, Title: `"CONTINUOUS REVALIDATION LOOP"` | ✅ **Docked at Card 04 in reverse** |
+| **Reverse Step 4 $\to$ 3** | `ArrowLeft` (or wheel up) | Title: `"ENCLOSED MCP FIREWALL GATE"`, active card index: `2` | ✅ **Passed** |
+| **Reverse Step 3 $\to$ 2** | `ArrowLeft` (or wheel up) | Title: `"FALKORDB GRAPHBLAS ENGINE"`, active card index: `1` | ✅ **Passed** |
+| **Reverse Step 2 $\to$ 1** | `ArrowLeft` (or wheel up) | Title: `"ADR & GIT INGESTION"`, active card index: `0` | ✅ **Passed** |
+| **Upward Lock-Out** | `ArrowUp` on Card 01 | `causalRect: 508px`, `scrollY: 1936px`, `isStopped: false` | ✅ **Smoothly locked out to Bento** |
+
+---
+
+## 12. Complete Inventory of Modified Files & Commit Audit
+
 
 | File Path | Component / Domain | Core Architectural Changes |
 |---|---|---|
@@ -463,6 +701,7 @@ Enshrined under Section 3 (**Git Branch Hygiene & Commit Governance**) in [`AGEN
 | [`.gitignore`](../.gitignore) | Repository Hygiene | Gitignored `.puppeteer-profile/`, `.puppeteer-edge-profile/`, and `.puppeteer-user-data/` to prevent secret leaks. |
 | [`docs/PUPPETEER_SIGNED_IN_BROWSER.md`](../docs/PUPPETEER_SIGNED_IN_BROWSER.md) | Documentation | Complete architectural documentation for signed-in Puppeteer browser testing. |
 | [`docs/COMPLETE_PROJECT_RECORD.md`](../docs/COMPLETE_PROJECT_RECORD.md) | Master Record | Comprehensive master documentation of all architectural milestones. |
+| [`apps/client/src/components/CausalSolutionScroller.jsx`](../apps/client/src/components/CausalSolutionScroller.jsx) | Client View | Standalone 3D rolling cylindrical sliding window (1200px perspective) with mathematical center-distance bidirectional viewport docking, directional entry initialization (`scrollingDown ? 0 : 3`), two-finger trackpad/mouse gesture normalization with 360ms cooldown, complete keyboard arrow navigation, natural directional lock-out (`#faq-section` downward, `#bento-section` upward), zero cyan in light mode, and crisp monochromatic solid outline on Card 01 invalidation cross. |
 | [`apps/client/src/components/CausalProvenanceRadar.jsx`](../apps/client/src/components/CausalProvenanceRadar.jsx) | Client Radar | Option C pinned scrollytelling viewport takeover (150vh tight runway, 0.60x to 1.28x panoramic theater expansion, F11 containment, backdrop blur), pure unbounded HUD (zero card borders/chrome), screen-calibrated target orbit containment (radiusRatio <= 0.66), 60fps polar loop with oscilloscope phosphor decay, dual-theme calibration, and scroll cue isolation. |
 | [`apps/client/src/components/SpotlightDataRain.jsx`](../apps/client/src/components/SpotlightDataRain.jsx) | Client Canvas | Causal Knowledge Graph DAG, invisible cursor probe hub (0 anchor dot), biomimetic firefly swarm with 2.2s–10.5s interval cycles, obstacle perimeter glide, 2D harmonic hovering (35 upper / 60 lower nodes). |
 | [`apps/client/src/components/LandingPage.jsx`](../apps/client/src/components/LandingPage.jsx) | Client View | Section 0 layout refactor, original button/prompt sizing preserved, scroll prompt grounded at `bottom-10 sm:bottom-12 md:bottom-14 lg:bottom-16`. |

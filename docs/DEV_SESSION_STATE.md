@@ -7,9 +7,53 @@
 
 ---
 
-## 1. Executive Summary of Complete Theme Makeover
+## 1. Executive Summary of Complete Theme & Scroller Makeover
 
-## 1.1 Latest Session Achievements (October 21, 2026)
+## 1.0 Latest Session Achievements (October 22, 2026)
+
+- **Causal Solution Scroller: 3D Rolling Cylindrical Card Sliding Window & Bidirectional Docking Engine**:
+  - Implemented standalone production component in `apps/client/src/components/CausalSolutionScroller.jsx` replacing flat carousels with a 3D cylindrical perspective stage (`perspective: 1200px`).
+  - **The Problem Space & Failures Resolved**:
+    - **Lenis Virtual Scroll Collision**: Calling `lenis.stop()` halted Lenis internal RAF loop and caused subsequent `scrollTo()` calls to be silently dropped due to Lenis checking `(this.isStopped || this.isLocked) && !force`. The user became permanently immobilized.
+    - **Premature Card Skipping**: Global keyboard listeners scrolled cards before the user even arrived at the section.
+    - **High-Frequency Touchpad Bypass**: Laptop trackpads emitting 60+ wheel events per second skipped all 4 cards in 50ms without debouncing.
+    - **Reverse Scrolling Failure (Bottom-to-Top)**: When scrolling up from `#faq-section`, viewport coordinate inversion caused the dock check to fail or initialize at Card 01 instead of Card 04, triggering an immediate exit to Bento without showing cards.
+    - **Stale React Closures**: Recreating event listeners inside `useEffect([activeStep])` caused dropped events during fast scroll momentum.
+  - **The Battle-Tested Architecture**:
+    - **Synchronous Ref Triad**: `isLockedRef`, `activeStepRef`, and `isExitingRef` guarantee zero-latency state reads across high-frequency browser wheel and trackpad streams.
+    - **Mathematical Center-Distance Docking**: Viewport capture formula `Math.abs(sectionCenter - viewportCenter) < 0.35 * H` is invariant to screen sizes and laptop DPI scaling.
+    - **Directional Entry Seeding**: Approaching from above initializes at Card 01 (`activeStep = 0`); approaching from below initializes at Card 04 (`activeStep = 3`).
+    - **Gesture Normalization & 360ms Cooldown**: Normalizes 2-finger horizontal and vertical swipes (`Math.abs(deltaX) > Math.abs(deltaY)`) with a 360ms cooldown preventing multiple card skips.
+    - **Natural Directional Lock-Out**: On Card 04, downward gestures smoothly unlock Lenis and glide to `#faq-section`. On Card 01, upward gestures smoothly unlock Lenis and glide back to the bottom of `#bento-section` (`el.offsetTop - 0.75 * H`).
+  - **Card 01 Monochromatic Outline Polish**:
+    - Replaced unappealing gray dotted circle around the invalidation `X` mark with a crisp, solid circular border: `<circle r="20" className="fill-transparent stroke-slate-950 dark:stroke-white/80" strokeWidth="1.8" />`.
+    - Eliminated uncalibrated neon cyan fills in light theme.
+  - **Live Browser Verification**:
+    - Verified via Chrome DevTools in both directions: forward (Bento -> Card 01 -> 02 -> 03 -> 04 -> FAQ) and reverse (FAQ -> Card 04 -> 03 -> 02 -> 01 -> Bento) with zero page freezing.
+
+## 1.1 Previous Session Achievements (October 21, 2026)
+
+- **Interactive Causal Knowledge Graph & Dynamic Firefly Swarm Engine (`SpotlightDataRain.jsx`)**:
+  - Replaced legacy matrix rain with a high-contrast Causal Knowledge Graph DAG mesh (~95 micro-vertices, directed vector links, and traveling data packets).
+  - Designed an invisible cursor inspection hub: nearby nodes hook into the cursor position with dashed probe lines, with zero physical dot obstruction on the cursor point.
+  - Implemented biomimetic firefly & glow-worm swarm migrations with randomized short (2.2s–4.5s) and long (6.0s–10.5s) intervals, naturally orbiting and contouring around focal elements: the Stretchy Lamp Toggle, the CAVDAX Wordmark, the Explore CTA button, and the Scroll prompt.
+  - Added obstacle boundary avoidance and perimeter glide so fireflies frame UI text without overlapping letters.
+  - Grounded "Scroll to inspect engine" at the viewport bottom (`bottom-10 sm:bottom-12 md:bottom-14 lg:bottom-16`), eliminating negative space across mobile, tablet, and ultra-wide screens.
+
+- **Git Commit Hygiene & Atomic Feature Squashing Standard**:
+  - Enshrined the mandatory **"Atomic Feature Squashing & History Cleanliness"** rule in `AGENTS.md`.
+  - Consolidated iterative micro-commits into a single cohesive, bisectable milestone commit (`3dbca03`) on `origin/frontend`.
+
+- **Mathematical Polar Synchronization & De-Cluttering of Causal Radar (`CausalProvenanceRadar.jsx`)**:
+  - Replaced desynchronized CSS animation delays with a unified `requestAnimationFrame` polar coordinate loop (`x = r * sin(theta)`, `y = -r * cos(theta)`).
+  - Beam rotation and target illumination are 100% mathematically synchronized: targets illuminate only when the beam sweeps directly over their radial angle.
+  - Replaced jerky stroboscopic pops with smooth Hermite smoothstep ease-in and a lingering exponential decay curve (`Math.pow(1 - decay, 2.2)`).
+  - Calibrated theme beam ray: Deep slate/cobalt (`rgba(30, 41, 59, 0.22)`) in light mode, warm amber (`#d9a353`) in dark mode.
+  - Eliminated card clutter: stripped HOP labels, redundant secondary status tags, and explanatory bottom text.
+
+- **Design System Governance: Rule 11C & Checklist Item 20 Added (`docs/UI_DESIGN_SYSTEM.md`, `AGENTS.md`)**:
+  - Formalized **Rule 11C (Strict Ban on Card Clutter, Redundant Labels & Over-Explanatory Fluff)** in `docs/UI_DESIGN_SYSTEM.md`.
+  - Added **Checklist Item 20** to the mandatory UI pre-flight interceptor in `AGENTS.md`, enforcing the 3-point Indispensable Utility Audit prior to writing or modifying any UI component.
 
 - **Puppeteer Signed-In Browser Automation & Persistent Profile Architecture**:
   - Implemented the industry-standard dual-mode browser automation runner in `scripts/browser-runner.js`:
