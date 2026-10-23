@@ -142,7 +142,11 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
             const b = Math.round(36 + yRatio * 40);
             const alphaMultiplier = size > 2.0 ? 1.0 : 0.92;
             const darkColor = `rgba(${r}, ${g}, ${b}, ${(rawAlpha * alphaMultiplier).toFixed(3)})`;
-            const lightColor = `rgba(15, 23, 42, ${(rawAlpha * 0.95).toFixed(3)})`;
+            // Light mode: Deep, authoritative obsidian pitch-black (Premium Swiss architectural density)
+            const lightAlpha = size > 2.0 
+              ? Math.min(1.0, 0.92 + (alpha / 255) * 0.08) 
+              : Math.min(1.0, 0.82 + (alpha / 255) * 0.16);
+            const lightColor = `rgba(2, 6, 23, ${lightAlpha.toFixed(3)})`;
 
             newParticles.push({
               x: x,
@@ -178,16 +182,23 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
         const b = Math.round(36 + yRatio * 40);
 
         newParticles.push({
-          origX: x,
-          origY: roundedUnderlineY,
-          x: x + (Math.random() - 0.5) * 6,
-          y: roundedUnderlineY + (Math.random() - 0.5) * 6,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
+          x: x,
+          y: roundedUnderlineY,
+          originX: x,
+          originY: roundedUnderlineY,
+          vx: 0,
+          vy: 0,
           size: 1.4,
-          colorDark: `rgba(${r}, ${g}, ${b}, 0.85)`,
-          colorLight: 'rgba(2, 6, 23, 0.82)',
-          settled: false,
+          alpha: 1,
+          originalAlpha: 1,
+          spring: 0.05 + Math.random() * 0.03,
+          friction: 0.84 + Math.random() * 0.04,
+          disperseForce: 1.4 + Math.random() * 0.8,
+          isDissolving: false,
+          ashVx: 0,
+          ashVy: 0,
+          darkColor: `rgba(${r}, ${g}, ${b}, 0.85)`,
+          lightColor: 'rgba(2, 6, 23, 0.94)',
         });
       }
 
