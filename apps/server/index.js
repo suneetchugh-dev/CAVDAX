@@ -1204,6 +1204,58 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+/**
+ * GET /api/github/repos
+ * Returns repositories accessible to the authenticated GitHub session.
+ */
+app.get('/api/github/repos', async (req, res) => {
+  if (!req.session?.user?.accessToken) {
+    return res.status(401).json({
+      authenticated: false,
+      repos: [],
+      message: 'GitHub authentication required to list repositories.'
+    });
+  }
+
+  try {
+    const ghRes = await fetch('https://api.github.com/user/repos?sort=updated&per_page=30&affiliation=owner,collaborator', {
+      headers: {
+        Authorization: `Bearer ${req.session.user.accessToken}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+
+    if (!ghRes.ok) {
+      const errText = await ghRes.text();
+      console.warn('[CAVDAX Repos] GitHub API error:', ghRes.status, errText);
+      return res.status(ghRes.status).json({
+        authenticated: true,
+        repos: [],
+        error: 'Failed to fetch repositories from GitHub.'
+      });
+    }
+
+    const repos = await ghRes.json();
+    const cleanRepos = (Array.isArray(repos) ? repos : []).map(r => ({
+      id: String(r.id),
+      name: r.name,
+      full_name: r.full_name,
+      owner: r.owner?.login,
+      private: Boolean(r.private),
+      default_branch: r.default_branch || 'main',
+      html_url: r.html_url,
+      description: r.description,
+      updated_at: r.updated_at
+    }));
+
+    res.json({ authenticated: true, repos: cleanRepos });
+  } catch (err) {
+    console.error('[CAVDAX Repos] Fetch error:', err.message);
+    res.status(500).json({ authenticated: true, repos: [], error: err.message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // 9. Static Web HUD Serving & SPA Path Routing Fallback (/overview, /console, /mcp, /project, /team)
 const clientDistPath = path.resolve(__dirname, '../client/dist');
