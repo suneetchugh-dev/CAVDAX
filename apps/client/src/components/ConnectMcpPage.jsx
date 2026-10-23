@@ -108,7 +108,7 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
     // githubUser: null (not checked yet) | false (not authed) | { login, name, avatarUrl }
   const [githubUser, setGithubUser] = useState(() => {
-    if (propUser) return propUser;
+    if (propUser !== undefined && propUser !== null) return propUser;
     try {
       const raw = localStorage.getItem('cavdax_user_session');
       if (raw) {
@@ -127,6 +127,12 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
   });
 
   const [oauthMsg, setOauthMsg] = useState(null);
+
+  useEffect(() => {
+    if (propUser !== undefined) {
+      setGithubUser(propUser);
+    }
+  }, [propUser]);
 
   useEffect(() => {
     // Check ?connected=1 or ?oauth_error= from callback redirect
@@ -163,15 +169,24 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
       window.history.replaceState({}, '', window.location.pathname);
     }
 
+    let isCancelled = false;
+
     // Fetch current session user
     fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
+      .then(async (r) => {
+        try {
+          return await r.json();
+        } catch {
+          return { authenticated: false };
+        }
+      })
+      .then((d) => {
+        if (isCancelled) return;
         if (d?.authenticated && d?.user) {
           const u = {
             login: d.user.login,
             name: d.user.name || d.user.login,
-            avatarUrl: d.user.avatarUrl || d.user.avatar_url,
+            avatarUrl: d.user.avatarUrl || d.user.avatar_url || '',
             githubId: d.user.githubId
           };
           setGithubUser(u);
@@ -186,7 +201,7 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
           } catch {}
           window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: u }));
           if (onAuthChange) onAuthChange(u);
-        } else if (d && !d.authenticated) {
+        } else {
           const currentParams = new URLSearchParams(window.location.search);
           if (currentParams.get('connected') !== '1') {
             setGithubUser(false);
@@ -194,11 +209,24 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
         }
       })
       .catch(() => {
+        if (isCancelled) return;
         const currentParams = new URLSearchParams(window.location.search);
         if (currentParams.get('connected') !== '1') {
           setGithubUser(false);
         }
       });
+
+    // Fallback: Never let "Checking..." hang for more than 2000ms if server/network is slow
+    const fallbackTimer = setTimeout(() => {
+      if (!isCancelled) {
+        setGithubUser((prev) => (prev === null ? false : prev));
+      }
+    }, 2000);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
 
