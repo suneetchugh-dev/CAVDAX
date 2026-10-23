@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, CheckCircle2, Lock, Terminal,
-  ArrowRight, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut
+  ArrowRight, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut, Github
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
@@ -28,6 +28,7 @@ export default function ProfilePage({
   const [currentTier, setCurrentTier] = useState(tier);
   const [copiedKey, setCopiedKey] = useState(false);
   const [isSponsorHovered, setIsSponsorHovered] = useState(false);
+  const [isLogoutHovered, setIsLogoutHovered] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
   const [apiKeySuffix, setApiKeySuffix] = useState('a8f27e69');
@@ -75,7 +76,7 @@ export default function ProfilePage({
     }
 
     if (!isAuthorizedDev) {
-      const planName = newTier === 'pro' ? 'Pro Autonomous ($9/mo)' : 'Enterprise Mesh';
+      const planName = newTier === 'pro' ? 'Pro Autonomous ($4/mo)' : 'Enterprise Mesh';
       showToast(`${planName} requires an active subscription. Razorpay payment integration in progress.`);
       return;
     }
@@ -229,14 +230,69 @@ export default function ProfilePage({
             </span>
           </button>
 
-          {user && (
+          {user ? (
             <button
               onClick={handleLogout}
-              className="h-[32px] sm:h-[34px] min-w-[120px] sm:min-w-[130px] px-4 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:border-rose-500/50 hover:bg-rose-500/10 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-mono font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer tactile-btn shadow-xs"
+              onMouseEnter={() => setIsLogoutHovered(true)}
+              onMouseLeave={() => setIsLogoutHovered(false)}
+              className={`relative overflow-hidden group h-[32px] sm:h-[34px] min-w-[120px] sm:min-w-[130px] px-4 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
+                isLogoutHovered
+                  ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
+                  : 'border-rose-500/50 dark:border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+              }`}
               title="Sign out of current GitHub session"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Log Out</span>
+              {/* Fluid Water Fill Layer */}
+              <div
+                aria-hidden="true"
+                style={{
+                  transform: isLogoutHovered ? 'translateY(0%)' : 'translateY(105%)',
+                  opacity: isLogoutHovered ? 1 : 0,
+                  transition: isLogoutHovered
+                    ? 'transform 1000ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                    : 'opacity 250ms ease-out, transform 0s 250ms'
+                }}
+                className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+              >
+                <svg
+                  viewBox="0 0 320 48"
+                  preserveAspectRatio="none"
+                  className="w-full h-6 shrink-0 text-rose-600 fill-current block"
+                >
+                  <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                  <circle cx="80" cy="20" r="4.5" />
+                  <circle cx="120" cy="12" r="3.5" />
+                  <circle cx="160" cy="15" r="5" />
+                  <circle cx="200" cy="13" r="3.5" />
+                  <circle cx="240" cy="22" r="4.5" />
+                  <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                </svg>
+                <div className="flex-1 w-full bg-rose-600" />
+              </div>
+
+              <LogOut className={`w-3.5 h-3.5 relative z-10 transition-colors duration-500 ${
+                isLogoutHovered ? 'text-white' : 'text-rose-600 dark:text-rose-400'
+              }`} />
+              <span className={`relative z-10 transition-colors duration-500 ${
+                isLogoutHovered ? 'text-white' : ''
+              }`}>
+                Log Out
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                playClick();
+                window.location.href = '/api/auth/github';
+              }}
+              className="h-[32px] sm:h-[34px] min-w-[130px] sm:min-w-[144px] px-4 rounded-lg border border-slate-300 dark:border-white/20 bg-slate-100/90 dark:bg-white/5 hover:border-slate-900 dark:hover:border-white text-slate-800 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white text-xs font-mono font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer tactile-btn shadow-xs"
+              title="Connect with GitHub OAuth"
+            >
+              <Github className="w-3.5 h-3.5" />
+              <span>Connect GitHub</span>
             </button>
           )}
         </div>
@@ -250,17 +306,43 @@ export default function ProfilePage({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 items-stretch">
           {/* Tier 1: Community (Exactly 4 Benefits) */}
           <div className={`p-4 sm:p-5 rounded-xl border transition-all ${
             currentTier === 'free'
               ? 'bg-slate-50 dark:bg-[#12141A] border-slate-400 dark:border-white/30 ring-1 ring-slate-400/40 shadow-xs'
               : 'bg-transparent border-slate-200/80 dark:border-white/10 opacity-70 hover:opacity-100'
           }`}>
-            <div className="mb-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                Community
-              </span>
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                {/* 45-Degree Tilted Community Hackers / Group With Hat & Keyboard SVG */}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 shrink-0 transform -rotate-45"
+                  aria-hidden="true"
+                >
+                  <path d="M7 8h10" />
+                  <path d="M8.5 8c0-2 1.5-3.5 3.5-3.5s3.5 1.5 3.5 3.5" />
+                  <circle cx="5" cy="11" r="1.75" />
+                  <path d="M2.5 17c0-2 1.5-3 3-3 .8 0 1.5.3 2 .8" />
+                  <circle cx="19" cy="11" r="1.75" />
+                  <path d="M21.5 17c0-2-1.5-3-3-3-.8 0-1.5.3-2 .8" />
+                  <path d="M9 16c0-1.8 1.3-2.5 3-2.5s3 .7 3 2.5" />
+                  <rect x="5" y="18" width="14" height="4.5" rx="1" fill="currentColor" fillOpacity="0.12" />
+                  <line x1="8" y1="20" x2="8.01" y2="20" strokeWidth="2" />
+                  <line x1="11" y1="20" x2="11.01" y2="20" strokeWidth="2" />
+                  <line x1="14" y1="20" x2="14.01" y2="20" strokeWidth="2" />
+                  <line x1="16.5" y1="20" x2="16.51" y2="20" strokeWidth="2" />
+                </svg>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                  Community
+                </span>
+              </div>
             </div>
             <div className="text-xl font-bold font-mono text-slate-950 dark:text-white mb-2">
               $0 <span className="text-[11px] font-normal text-slate-500 font-sans">/ mo</span>
@@ -329,14 +411,18 @@ export default function ProfilePage({
             </button>
           </div>
 
-          {/* Tier 2: Pro Autonomous (Gated if unauthenticated) */}
-          <div className={`p-4 sm:p-5 rounded-xl border transition-all ${
+          {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
+          <div className={`p-4 sm:p-5 rounded-xl border transition-all md:scale-[1.03] md:-translate-y-1.5 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] ${
             currentTier === 'pro'
-              ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400/60 ring-1 ring-amber-400/40 shadow-xs'
+              ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
               : (!user
-                  ? 'bg-transparent border-slate-200/80 dark:border-white/10 opacity-50 hover:opacity-75 transition-opacity'
-                  : 'bg-transparent border-slate-200/80 dark:border-white/10 opacity-70 hover:opacity-100 transition-opacity')
+                  ? 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 opacity-90 hover:opacity-100'
+                  : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 opacity-95 hover:opacity-100')
           }`}>
+            {/* Top Floating Popular Badge */}
+            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-mono text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1 z-20">
+              <span>POPULAR</span>
+            </div>
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 {/* 45-Degree Tilted Premium Diamond SVG */}
@@ -373,7 +459,7 @@ export default function ProfilePage({
               )}
             </div>
             <div className="text-xl font-bold font-mono text-slate-950 dark:text-white mb-2">
-              $9 <span className="text-[11px] font-normal text-slate-500 font-sans">/ mo</span>
+              $4 <span className="text-[11px] font-normal text-slate-500 font-sans">/ mo</span>
             </div>
             <ul className="text-xs font-mono space-y-1.5 mb-4 text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
@@ -440,7 +526,7 @@ export default function ProfilePage({
                     ? 'Active'
                     : (!user
                         ? 'Sign In to Unlock'
-                        : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade ($9/mo)'))}
+                        : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade ($4/mo)'))}
                 </span>
               </span>
             </button>
