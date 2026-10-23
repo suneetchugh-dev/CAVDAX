@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Coffee, CheckCircle2, ArrowRight, Heart, Code2 } from 'lucide-react';
+import { Coffee, CheckCircle2, ArrowRight, Heart } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 /**
@@ -7,7 +7,7 @@ import { playClick } from '../utils/soundFx';
  * 
  * Strict Compliance with UI_DESIGN_SYSTEM.md:
  * - Ultra-minimalist, clutter-free layout with concise typography.
- * - Reduced, student/dev-friendly coffee pricing ($2, $5, $15).
+ * - Reduced, student/dev-friendly coffee pricing ($2, $4, $10).
  * - Calibrated monochrome with subtle amber accent.
  * - Zero decorative noise, zero emojis, zero cyan/teal.
  */
@@ -118,9 +118,9 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
           </button>
         </div>
 
-        {/* Tier 2: 3 Coffees ($5) — Popular */}
-        <div className="p-6 sm:p-7 rounded-2xl border border-slate-400 dark:border-white/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 px-2 py-0.5 bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-mono font-bold text-[9px] uppercase rounded-bl-md">
+        {/* Tier 2: 2 Coffees ($4) — Popular */}
+        <div className="p-6 sm:p-7 rounded-2xl border border-amber-400 dark:border-amber-400/90 ring-2 ring-amber-400/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative overflow-hidden md:scale-[1.03] md:-translate-y-2 shadow-[0_14px_38px_rgba(245,158,11,0.20)] dark:shadow-[0_0_36px_rgba(245,158,11,0.16)] z-10">
+          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-400 text-slate-950 font-mono font-extrabold text-[9px] uppercase tracking-widest rounded-full shadow-md z-20">
             Popular
           </div>
           <div>
@@ -128,7 +128,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
               <Coffee className="w-4 h-4" />
             </div>
             <div className="text-lg font-bold font-mono text-slate-950 dark:text-white mb-1">
-              $5 <span className="text-[11px] font-normal text-slate-500 font-sans">/ 3 cups</span>
+              $4 <span className="text-[11px] font-normal text-slate-500 font-sans">/ 2 cups</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-sans mb-4">
               Powers automated graph fuzzing and regression passes.
@@ -146,7 +146,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
             </ul>
           </div>
           <button
-            onClick={() => handleSponsor('$5 Supporter')}
+            onClick={() => handleSponsor('$4 Supporter')}
             onMouseEnter={() => setHoveredTier(2)}
             onMouseLeave={() => setHoveredTier(null)}
             className={`relative overflow-hidden group w-full h-[36px] flex items-center justify-center rounded-lg border text-xs font-mono font-bold shadow-xs cursor-pointer select-none transition-all duration-300 ${
@@ -181,22 +181,41 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
               <div className="flex-1 w-full bg-amber-400" />
             </div>
             <span className="relative z-10 transition-colors duration-300">
-              Sponsor ($5)
+              Sponsor ($4)
             </span>
           </button>
         </div>
 
-        {/* Tier 3: Core Supporter ($15) */}
+        {/* Tier 3: Core Supporter ($10) */}
         <div className="p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between hover:border-slate-400 dark:hover:border-white/30 transition-all">
           <div>
-            <div className="w-8 h-8 rounded-lg bg-purple-950/20 border border-purple-800/40 flex items-center justify-center text-purple-400 mb-3">
-              <Code2 className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-500 dark:text-amber-400 mb-3">
+              {/* Ember Gold Honey & Artisan Pour-Over Drip Coffee SVG */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-4 h-4 text-amber-500 dark:text-amber-400"
+                aria-hidden="true"
+              >
+                <path d="M5 9h14l-1.5 9.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5L5 9z" fill="currentColor" fillOpacity="0.15" />
+                <path d="M4 9h16" />
+                <path d="M7 5h10" />
+                <path d="M9 5c0-1.5 1.5-2 3-2s3 .5 3 2" />
+                <circle cx="12" cy="14" r="1.5" fill="currentColor" />
+                <path d="M12 11v1.5" />
+                <line x1="8.5" y1="13" x2="10" y2="13" />
+                <line x1="14" y1="13" x2="15.5" y2="13" />
+              </svg>
             </div>
             <div className="text-lg font-bold font-mono text-slate-950 dark:text-white mb-1">
-              $15 <span className="text-[11px] font-normal text-slate-500 font-sans">/ core</span>
+              $10 <span className="text-[11px] font-normal text-slate-500 font-sans">/ core</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-sans mb-4">
-              Funds high-frequency FalkorDB benchmark instances.
+              Funds high-frequency FalkorDB benchmark instances &amp; continuous graph validation.
             </p>
             <ul className="text-xs font-mono space-y-1.5 text-slate-600 dark:text-slate-300 mb-5">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
@@ -211,13 +230,13 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
             </ul>
           </div>
           <button
-            onClick={() => handleSponsor('$15 Core Backer')}
+            onClick={() => handleSponsor('$10 Core Backer')}
             onMouseEnter={() => setHoveredTier(3)}
             onMouseLeave={() => setHoveredTier(null)}
             className={`relative overflow-hidden group w-full h-[36px] flex items-center justify-center rounded-lg border text-xs font-mono font-semibold shadow-xs cursor-pointer select-none transition-all duration-300 ${
               hoveredTier === 3
-                ? 'border-purple-600 dark:border-purple-400 text-white cursor-pointer shadow-xs'
-                : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-purple-600 dark:hover:border-purple-400 text-slate-900 dark:text-white'
+                ? 'border-amber-500 dark:border-amber-400 text-slate-950 dark:text-white cursor-pointer shadow-xs'
+                : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-amber-500 dark:hover:border-amber-400 text-slate-900 dark:text-white'
             }`}
           >
             <div
@@ -231,7 +250,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
               }}
               className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
             >
-              <svg viewBox="0 0 320 48" preserveAspectRatio="none" className="w-full h-6 shrink-0 text-purple-400 fill-current block" >
+              <svg viewBox="0 0 320 48" preserveAspectRatio="none" className="w-full h-6 shrink-0 text-amber-500 fill-current block" >
                 <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
                 <circle cx="80" cy="20" r="4.5" />
                 <circle cx="120" cy="12" r="3.5" />
@@ -243,10 +262,10 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
                 <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
                 <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
               </svg>
-              <div className="flex-1 w-full bg-[#1e1035] dark:bg-[#180b2d]" />
+              <div className="flex-1 w-full bg-amber-500" />
             </div>
             <span className="relative z-10 transition-colors duration-300">
-              Sponsor ($15)
+              Sponsor ($10)
             </span>
           </button>
         </div>

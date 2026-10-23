@@ -86,6 +86,10 @@ pm install --omit=dev). Never hardcode a partial subset of packages that causes 
 
    - Never claim to hold or move live third-party financial escrow funds unless operating in a sandbox test mode.
 
+2b. **Mandatory Continuous Updating of Prompts & Dev-Assets (Knowledge Persistence Rule)**:
+
+   - Whenever a new component, fluid micro-interaction, architectural pattern, security fix, or high-value solution is designed and implemented, the AI agent must immediately update or append the corresponding master guide in C:\(Lectures)\+[Dev-Assets]\#(AI-AGENTS)\#Prompts in a generalized format with clear ASCII architecture diagrams, mathematical curves, and verified React/CSS implementations.
+
 
 
 3. **Mandatory Pull Before Every Working Session**:
