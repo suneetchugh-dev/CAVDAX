@@ -101,24 +101,16 @@ export default function App() {
     initGlobalClickSound();
 
     fetch('/api/auth/me', { credentials: 'include' })
-      .then((r) => r.json())
+      .then(async (r) => {
+        try { return await r.json(); } catch { return { authenticated: false }; }
+      })
       .then((d) => {
-        if (d.authenticated && d.user) {
+        if (d?.authenticated && d?.user) {
           setGithubUser(d.user);
           if (d.user.tier) setActiveTierKey(d.user.tier);
         }
       })
-      .catch(() => {
-        try {
-          const raw = localStorage.getItem('cavdax_user_session');
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed?.username) {
-              setGithubUser({ login: parsed.username, name: parsed.username });
-            }
-          }
-        } catch {}
-      });
+      .catch(() => {});
 
     const handleTierChange = (e) => {
       if (e.detail?.tier) setActiveTierKey(e.detail.tier);
@@ -491,12 +483,14 @@ export default function App() {
   // Sync auth state with session cookie & listen to custom user-change events
   useEffect(() => {
     const handleUserChanged = (e) => {
-      setGithubUser(e.detail || null);
+      setGithubUser(e.detail || false);
     };
     window.addEventListener('cavdax:user-changed', handleUserChanged);
 
     fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
+      .then(async (r) => {
+        try { return await r.json(); } catch { return { authenticated: false }; }
+      })
       .then(d => {
         if (d?.authenticated && d?.user) {
           const u = {
@@ -514,9 +508,15 @@ export default function App() {
               connectedAt: new Date().toISOString()
             }));
           } catch {}
+        } else if (d && !d.authenticated) {
+          const raw = localStorage.getItem('cavdax_user_session');
+          if (!raw) setGithubUser(false);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        const raw = localStorage.getItem('cavdax_user_session');
+        if (!raw) setGithubUser(false);
+      });
 
     return () => {
       window.removeEventListener('cavdax:user-changed', handleUserChanged);
