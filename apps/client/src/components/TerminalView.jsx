@@ -4,6 +4,85 @@ import CavdaxAgentStateIndicator from './CavdaxAgentStateIndicator';
 
 export default function TerminalView({ terminalLogs, activeVerdict, latestAction, currentAct, agentState = 'idle' }) {
   const logContainerRef = useRef(null);
+  const trackRef = useRef(null);
+  const thumbRef = useRef(null);
+  const [scrollProgress, setScrollProgress] = React.useState(1);
+  const [isHolding, setIsHolding] = React.useState(false);
+  const isHoldingRef = useRef(false);
+  const rafIdRef = useRef(null);
+
+  const updateScrollProgress = () => {
+    if (!logContainerRef.current) return;
+    const el = logContainerRef.current;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    const ratio = maxScroll > 0 ? Math.min(1, Math.max(0, el.scrollTop / maxScroll)) : 1;
+    setScrollProgress(ratio);
+    if (thumbRef.current && !isHoldingRef.current) {
+      thumbRef.current.style.top = `${Math.min(94, Math.max(6, ratio * 100))}%`;
+    }
+  };
+
+  const handleScroll = () => {
+    if (!isHoldingRef.current) {
+      updateScrollProgress();
+    }
+  };
+
+  const scrollToRatio = (ratio) => {
+    if (!logContainerRef.current) return;
+    const el = logContainerRef.current;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    el.scrollTop = ratio * maxScroll;
+    if (thumbRef.current) {
+      thumbRef.current.style.top = `${Math.min(94, Math.max(6, ratio * 100))}%`;
+    }
+  };
+
+  const handlePointerDown = (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (!trackRef.current) return;
+
+    isHoldingRef.current = true;
+    setIsHolding(true);
+
+    try {
+      trackRef.current.setPointerCapture(e.pointerId);
+    } catch {}
+
+    const rect = trackRef.current.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    scrollToRatio(ratio);
+
+    const onPointerMove = (moveEvent) => {
+      if (!isHoldingRef.current || !trackRef.current) return;
+      moveEvent.preventDefault();
+      
+      // Cancel pending animation frame to prevent jitter
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+
+      rafIdRef.current = requestAnimationFrame(() => {
+        if (!trackRef.current || !isHoldingRef.current) return;
+        const curRect = trackRef.current.getBoundingClientRect();
+        const curRatio = Math.min(1, Math.max(0, (moveEvent.clientY - curRect.top) / curRect.height));
+        scrollToRatio(curRatio);
+      });
+    };
+
+    const onPointerUp = (upEvent) => {
+      isHoldingRef.current = false;
+      setIsHolding(false);
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      try {
+        if (trackRef.current) trackRef.current.releasePointerCapture(upEvent.pointerId);
+      } catch {}
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      updateScrollProgress();
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
 
   useEffect(() => {
     if (logContainerRef.current) {
@@ -70,7 +149,7 @@ export default function TerminalView({ terminalLogs, activeVerdict, latestAction
 
       {/* Visual Gate Alert Banner (MCP Interceptor Gate) */}
       <div data-tour="mcp-gate" className="w-full">
-        {currentAct < 3 && (
+        {currentAct === 1 && (
           <div className="p-3 bg-slate-50 dark:bg-[#0E1118] border-b border-slate-300 dark:border-white/10 flex items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <Cpu className="w-5 h-5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
@@ -85,6 +164,25 @@ export default function TerminalView({ terminalLogs, activeVerdict, latestAction
             </div>
             <div className="shrink-0 p-1 rounded-xl bg-white dark:bg-[#060709] border border-slate-300 dark:border-white/10">
               <CavdaxAgentStateIndicator status="idle" size={38} strokeWidth={4} />
+            </div>
+          </div>
+        )}
+
+        {currentAct === 2 && (
+          <div className="p-3 bg-amber-50/60 dark:bg-[#1a1408] border-b border-amber-200 dark:border-amber-900/40 flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Cpu className="w-5 h-5 text-amber-600 dark:text-[#d9a353] shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <div className="font-bold text-amber-950 dark:text-[#fef08a] font-mono tracking-wide">
+                  INGESTION PIPELINE: EVALUATING AST &amp; INVALIDATING DAG
+                </div>
+                <div className="text-amber-900/80 dark:text-amber-200/80 mt-0.5 font-mono text-[11px]">
+                  AST parser parsed superseding ADR-002; GraphBLAS actively recomputing dependency reachability in 2.1ms.
+                </div>
+              </div>
+            </div>
+            <div className="shrink-0 p-1 rounded-xl bg-white dark:bg-[#060709] border border-amber-300 dark:border-amber-500/30">
+              <CavdaxAgentStateIndicator status="executing" size={40} strokeWidth={4} />
             </div>
           </div>
         )}
@@ -147,8 +245,59 @@ export default function TerminalView({ terminalLogs, activeVerdict, latestAction
         </div>
       )}
 
-      {/* Terminal Log Console */}
-      <div ref={logContainerRef} className="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-2 select-text">
+      {/* Terminal Log Console with Slim Theme-Matching Scrollbar & Mini-Scrubber Cue */}
+      <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
+        <style>{`
+          /* Pure Mini Scroll Cue Only: Browser scrollbars completely suppressed */
+          .terminal-cue-only-scroll {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+          .terminal-cue-only-scroll::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+          }
+        `}</style>
+
+        {/* Universal Architectural Scroll Cue & Rail Scrubber (Landing Page Parity: Discrete Cue -> Rail on Hold) */}
+        <div
+          ref={trackRef}
+          onPointerDown={handlePointerDown}
+          className="absolute right-1.5 top-3 bottom-3 w-4 flex items-center justify-center cursor-pointer select-none z-20 group"
+          title="Hold to scrub terminal output"
+          aria-label="Terminal scroll cue and rail scrubber"
+        >
+          {/* Architectural Rail Line: Fades in exclusively on hold/press */}
+          <div
+            className={`w-[2px] h-full rounded-full bg-slate-300 dark:bg-white/20 transition-all duration-200 pointer-events-none ${
+              isHolding ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-75'
+            }`}
+          />
+
+          {/* Thumb / Cue Indicator:
+              - In resting state: Discrete floating scroll cue pill (w-1.5 h-5 rounded-full bg-slate-400 dark:bg-white/40).
+              - In holding state: Morphs smoothly into the architectural luminous draggable scrubber thumb.
+          */}
+          <div
+            ref={thumbRef}
+            style={{
+              top: `${Math.min(94, Math.max(6, scrollProgress * 100))}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+            className={`absolute left-1/2 rounded-full pointer-events-none transition-all ${
+              isHolding
+                ? 'w-2.5 h-7 bg-slate-950 dark:bg-white shadow-[0_0_12px_rgba(0,0,0,0.4)] dark:shadow-[0_0_12px_rgba(255,255,255,0.7)] duration-75'
+                : 'w-1.5 h-5 bg-slate-400 dark:bg-white/40 group-hover:bg-slate-700 dark:group-hover:bg-white/80 group-hover:h-6 duration-200'
+            }`}
+          />
+        </div>
+
+        <div
+          ref={logContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 p-4 overflow-y-auto terminal-cue-only-scroll font-mono text-xs space-y-2 select-text"
+        >
         {terminalLogs.map((log, index) => {
           let badgeColor = 'text-slate-800 dark:text-slate-300';
           let borderClass = 'border-slate-200 dark:border-white/10';
@@ -198,6 +347,7 @@ export default function TerminalView({ terminalLogs, activeVerdict, latestAction
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

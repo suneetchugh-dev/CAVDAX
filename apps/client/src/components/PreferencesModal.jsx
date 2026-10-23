@@ -20,7 +20,7 @@ import { playClick, playLoadingSound, isSoundEnabled, toggleSound } from '../uti
 
 /**
  * High-Precision ToggleSwitch Component
- * Ported from SAHNIRMAAN: clean semantic React button slider with zero outline artifacts.
+ * Ported from CAVDAX: clean semantic React button slider with zero outline artifacts.
  */
 function ToggleSwitch({ checked, onChange, disabled = false, size = 'md', ariaLabel = 'Toggle setting' }) {
   const isSmall = size === 'sm';
@@ -64,7 +64,7 @@ function ToggleSwitch({ checked, onChange, disabled = false, size = 'md', ariaLa
 
 /**
  * PreferencesModal
- * Replicates SAHNIRMAAN's luxury monochromatic settings modal:
+ * Replicates CAVDAX's luxury monochromatic settings modal:
  * - Bare unboxed rotating Settings gear SVG
  * - Display appearance theme toggle (Obsidian Dark / Porcelain Light)
  * - Sensory Sound FX with expandable accordion & live micro-click testing
@@ -187,7 +187,7 @@ export default function PreferencesModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      {/* Modal Dialog Card (Ported from SAHNIRMAAN Luxury Architectural Shell) */}
+      {/* Modal Dialog Card (Ported from CAVDAX Luxury Architectural Shell) */}
       <div className="relative w-full max-w-lg max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto custom-scrollbar bg-white/95 dark:bg-[#0A0D12] border border-slate-200/90 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.6)] backdrop-blur-2xl animate-in zoom-in-95 duration-250 p-4 sm:p-7">
         
         {/* Close Button */}
@@ -215,7 +215,7 @@ export default function PreferencesModal({
             </h2>
           </div>
           <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 ml-7 leading-snug">
-            Configure telemetry channels, sensory audio feedback, visual kinetics, and platform state.
+            Configure signal channels, sensory audio feedback, visual kinetics, and platform state.
           </p>
         </div>
 

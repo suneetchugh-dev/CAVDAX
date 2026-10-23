@@ -17,7 +17,7 @@ import { playClick } from '../utils/soundFx';
 
 /**
  * TeamPage — Team Contrarians Presentation
- * Built with full fidelity to SAHNIRMAAN Team Page:
+ * Built with full fidelity to CAVDAX Team Page:
  * - CurvyArrow with mathematically seamless infinite dash-march pointing to CONTRARIANS
  * - Golden-amber atmospheric radial aura halo behind Team Name & Header
  * - Golden outline ring with luminous amber glow on member profile avatars
@@ -41,7 +41,7 @@ export default function TeamPage({ onLaunchConsole }) {
 
   return (
     <div className="w-full flex-1 flex flex-col bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-200 select-none relative overflow-hidden pt-24 sm:pt-28 pb-20 px-4 sm:px-6">
-      {/* 0. Monumental Background Typography Watermark - High Visibility Contrast like SAHNIRMAAN */}
+      {/* 0. Monumental Background Typography Watermark - High Visibility Contrast like CAVDAX */}
       <div 
         aria-hidden="true" 
         className="absolute inset-0 pointer-events-none flex items-center justify-center select-none -z-0 overflow-hidden"
@@ -117,14 +117,14 @@ export default function TeamPage({ onLaunchConsole }) {
           </p>
         </div>
 
-        {/* 2. Team Member Bento Grid (2 Columns Symmetrical, SAHNIRMAAN Style) */}
+        {/* 2. Team Member Bento Grid (2 Columns Symmetrical, CAVDAX Style) */}
         <div id="team-roster" className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-14">
           {TEAM_MEMBERS.map((member) => (
             <div 
               key={member.id}
               className="meet-clusterguilders-card team-member-card neo-glass-card p-6 sm:p-8 flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
             >
-              {/* Corner Fan Accent from SAHNIRMAAN */}
+              {/* Corner Fan Accent from CAVDAX */}
               <div 
                 aria-hidden="true" 
                 className="absolute top-0 right-0 w-28 h-28 bg-slate-950/5 dark:bg-white/5 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
@@ -155,7 +155,7 @@ export default function TeamPage({ onLaunchConsole }) {
                         className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-transparent ring-0 shadow-md transition-all duration-300 group-hover/avatar:scale-105 group-hover/avatar:border-slate-900/60 dark:group-hover/avatar:border-amber-400/40 group-hover/avatar:ring-1 group-hover/avatar:ring-slate-900/25 dark:group-hover/avatar:ring-amber-400/30 group-hover/avatar:shadow-[0_4px_16px_rgba(15,23,42,0.18)] dark:group-hover/avatar:shadow-[0_0_12px_rgba(217,163,83,0.20)]"
                       />
                     </button>
-                    {/* Role Corner Badge from SAHNIRMAAN */}
+                    {/* Role Corner Badge from CAVDAX */}
                     <div className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full bg-slate-950 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center font-mono text-[9px] font-bold shadow-xs">
                       {member.role === 'Team Leader' ? 'LEAD' : 'DEV'}
                     </div>
@@ -295,7 +295,7 @@ export default function TeamPage({ onLaunchConsole }) {
         </div>
       </div>
 
-      {/* 5. Interactive 3D Tilt Lightbox Modal from SAHNIRMAAN */}
+      {/* 5. Interactive 3D Tilt Lightbox Modal from CAVDAX */}
       {lightboxMember && (
         <div
           className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-8 bg-black/80 dark:bg-[#080808]/92 backdrop-blur-md"
