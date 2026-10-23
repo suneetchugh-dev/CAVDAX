@@ -193,19 +193,10 @@ export default function AuditPage() {
       {/* ── Header bar ── */}
       <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-white/10">
         <div>
-          <div className="flex items-center gap-2">
+          <div>
             <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-mono">
               Agent Action Audit Log
             </h1>
-            {isFallback ? (
-              <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                Offline Demo Mode
-              </span>
-            ) : (
-              <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                FalkorDB Live
-              </span>
-            )}
           </div>
           <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-sans">
             Every MCP gate decision — approved writes and blocked attempts — recorded in FalkorDB.

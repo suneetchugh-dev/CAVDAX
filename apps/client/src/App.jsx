@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Lenis from 'lenis';
-import { Compass, RotateCcw, Cable, Zap, GitBranch, ChevronDown, Plus, Check } from 'lucide-react';
+import { Compass, RotateCcw, Cable, GitBranch, ChevronDown, Plus, Check, SlidersHorizontal } from 'lucide-react';
 import Header from './components/Header.jsx';
 import SplashLoader from './components/SplashLoader.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -1079,13 +1079,10 @@ export default function App() {
           {/* Subheader Toolbar & Metrics */}
           <div className="flex-shrink-0 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-300 dark:border-white/10">
             <div>
-              <div className="flex items-center gap-2">
+              <div>
                 <h1 className="text-sm sm:text-base font-bold text-slate-950 dark:text-white font-mono">
                   Interactive Causal Verification Console
                 </h1>
-                <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300">
-                  {activeWorkspace === "demo" ? "Permanent 4-Act Sandbox" : "Tenant Workspace"}
-                </span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-sans">
                 Observe autonomous agent tool calls intercepted deterministically before execution.
@@ -1101,9 +1098,9 @@ export default function App() {
                   title="Switch between the canonical 4-Act demo and live connected repositories"
                 >
                   {activeWorkspace === "demo" ? (
-                    <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 shrink-0" />
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0" />
                   ) : (
-                    <GitBranch className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <GitBranch className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0" />
                   )}
                   <span className="font-semibold truncate max-w-[150px] sm:max-w-[210px]">
                     {activeWorkspace === "demo"
@@ -1120,9 +1117,8 @@ export default function App() {
                       onClick={() => setIsWorkspaceDropdownOpen(false)}
                     />
                     <div className="absolute right-0 top-full mt-1.5 w-80 rounded-xl bg-white dark:bg-[#111113] border border-slate-200 dark:border-white/15 shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 font-mono text-xs">
-                      <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-white/10 mb-1 flex items-center justify-between">
+                      <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-white/10 mb-1">
                         <span>Workspace Mode</span>
-                        <span className="text-[9px] text-slate-400">Keyspaced Isolation</span>
                       </div>
 
                       {/* Option 1: Canonical 4-Act Demo (Permanent Sandbox) */}
@@ -1135,18 +1131,18 @@ export default function App() {
                         }}
                         className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all cursor-pointer ${
                           activeWorkspace === "demo"
-                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20"
+                            ? "bg-slate-100 dark:bg-white/10 text-slate-950 dark:text-white font-bold border border-slate-300 dark:border-white/20"
                             : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0" />
                           <div className="truncate">
                             <div className="text-xs truncate">Demo: TokenAuth v1 → OAuth2</div>
                             <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400">Permanent 4-Act Showcase Sandbox</div>
                           </div>
                         </div>
-                        {activeWorkspace === "demo" && <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 ml-2" />}
+                        {activeWorkspace === "demo" && <Check className="w-3.5 h-3.5 text-slate-950 dark:text-white shrink-0 ml-2" />}
                       </button>
 
                       {/* Connected Repositories Section */}
