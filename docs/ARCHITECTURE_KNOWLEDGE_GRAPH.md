@@ -85,7 +85,7 @@ graph TB
   1. `cascadeInvalidation` (Query 1: 2.14ms invalidation cascade)
   2. `verifyProvenancePath` (Query 2: 1.62ms gate path verification)
   3. `revalidateDecision` (Query 3: 1.84ms self-healing revalidation loop)
-  4. `fetchGraphState` (Query 4: formatted Web HUD telemetry)
+  4. `fetchGraphState` (Query 4: formatted Web HUD metrics)
 
 ### Community 5: High-End UI Design System & Audio Architecture
 - **Anchor Files**: [`docs/UI_DESIGN_SYSTEM.md`](./UI_DESIGN_SYSTEM.md), [`apps/client/src/utils/soundFx.js`](../apps/client/src/utils/soundFx.js)

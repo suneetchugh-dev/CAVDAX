@@ -405,7 +405,7 @@ npm run test:browser
 
 ### 7.2 Zero-State Elimination & Historical Demo Seeding
 - **File**: [`core/graph/queries.js`](../core/graph/queries.js)
-- Added 2 realistic historical actions (`act-hist-001: EXECUTED`, `act-hist-002: BLOCKED_SUPERSEDED_SOURCE`) to initial seed scripts and fallback graph state, ensuring the telemetry and audit UI is populated on initial load.
+- Added 2 realistic historical actions (`act-hist-001: EXECUTED`, `act-hist-002: BLOCKED_SUPERSEDED_SOURCE`) to initial seed scripts and fallback graph state, ensuring the metrics and audit UI is populated on initial load.
 
 ---
 
@@ -683,7 +683,7 @@ In Card 01 (`ADR & Git Ingestion`), the user requested eliminating an unappealin
 
 The implementation was verified through real-time script evaluation and event dispatching in Chrome DevTools:
 
-| Test Vector | Action Dispatched | Observed Telemetry / Output | Result |
+| Test Vector | Action Dispatched | Observed Metrics / Output | Result |
 |---|---|---|---|
 | **Top $\to$ Bottom Approach** | Scrolled down from Bento | `scrollY: 2458px ➔ rect.top: 0.32px`, `isStopped: true`, Title: `"ADR & GIT INGESTION"` | ✅ **Docked at Card 01** |
 | **Card Step 1 $\to$ 2** | `ArrowRight` (or wheel down) | Title: `"FALKORDB GRAPHBLAS ENGINE"`, active card index: `1` | ✅ **Passed** |
