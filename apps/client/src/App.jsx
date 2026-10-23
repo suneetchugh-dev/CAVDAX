@@ -475,13 +475,53 @@ export default function App() {
       const raw = localStorage.getItem('cavdax_user_session');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed?.username) {
-          return { login: parsed.username, name: parsed.username, role: parsed.role };
+        if (parsed?.username || parsed?.login) {
+          return {
+            login: parsed.username || parsed.login,
+            name: parsed.name || parsed.username || parsed.login,
+            avatarUrl: parsed.avatarUrl || parsed.avatar_url || parsed.avatar || '',
+            role: parsed.role || 'user'
+          };
         }
       }
     } catch {}
     return null;
   });
+
+  // Sync auth state with session cookie & listen to custom user-change events
+  useEffect(() => {
+    const handleUserChanged = (e) => {
+      setGithubUser(e.detail || null);
+    };
+    window.addEventListener('cavdax:user-changed', handleUserChanged);
+
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.authenticated && d?.user) {
+          const u = {
+            login: d.user.login,
+            name: d.user.name || d.user.login,
+            avatarUrl: d.user.avatarUrl || d.user.avatar_url || '',
+            role: 'user'
+          };
+          setGithubUser(u);
+          try {
+            localStorage.setItem('cavdax_user_session', JSON.stringify({
+              username: u.login,
+              name: u.name,
+              avatarUrl: u.avatarUrl,
+              connectedAt: new Date().toISOString()
+            }));
+          } catch {}
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      window.removeEventListener('cavdax:user-changed', handleUserChanged);
+    };
+  }, []);
   const [isDevAuthorized, setIsDevAuthorized] = useState(() => {
     if (typeof window !== 'undefined' && import.meta.env.DEV) {
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -914,6 +954,7 @@ export default function App() {
         <SubsystemErrorBoundary name="Landing Viewport">
           <LandingPage
             landingTarget={landingTarget}
+            onSelectTab={handleSelectTab}
             onLaunchConsole={() => handleSelectTab('console')}
             onOpenMcpPage={() => handleSelectTab('mcp')}
             onOpenMcpModal={() => setIsMcpModalOpen(true)}
@@ -926,6 +967,8 @@ export default function App() {
         /* Dedicated Full-Page MCP Architecture & Agent Connection Guide */
         <SubsystemErrorBoundary name="MCP Configuration">
           <ConnectMcpPage
+            user={githubUser}
+            onAuthChange={(u) => setGithubUser(u)}
             onLaunchConsole={() => handleSelectTab('console')}
           />
         </SubsystemErrorBoundary>

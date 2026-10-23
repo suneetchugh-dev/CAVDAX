@@ -114,6 +114,8 @@ export default function LandingPage({
 
   landingTarget = 'overview',
 
+  onSelectTab,
+
   onLaunchConsole, 
 
   onOpenMcpPage, 
@@ -1576,7 +1578,7 @@ export default function LandingPage({
 
           ══════════════════════════════════════════════════════════════════════ */}
 
-      <FooterParticles text="CAVDAX" />
+      <FooterParticles text="CAVDAX" onSelectTab={onSelectTab} onLaunchConsole={onLaunchConsole} />
 
 
 
