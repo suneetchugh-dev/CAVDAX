@@ -3,7 +3,7 @@ import { playClick } from '../utils/soundFx';
 import ProgressRing from './ProgressRing';
 
 /**
- * DragScrollController (SAHNIRMAAN Luxury Architectural Port)
+ * DragScrollController (CAVDAX Luxury Architectural Port)
  * Full reproduction of the signature Draggable Scroll System:
  * - Diagonal -45deg drag track
  * - Tactile drag-to-rotate inertia physics loop (0.14 damping factor)

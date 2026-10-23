@@ -77,40 +77,52 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
       offscreen.width = width;
       offscreen.height = height;
 
-      const isCavdax = typeof text === 'string' && text.trim().toUpperCase() === 'CAVDAX';
+      // High-assurance Swiss Architectural Typography rasterization
+      const fontSize = Math.max(38, Math.min(136, Math.floor(width * 0.155)));
+      offCtx.font = `800 ${fontSize}px "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.fillStyle = '#ffffff';
 
-      if (isCavdax && typeof Path2D !== 'undefined') {
-        // EXACT WORDMARK VECTOR RASTERIZATION (1:1 Architectural Typography Fidelity)
-        // CAVDAX bespoke letterforms bounding box: width: 954.4, height: 168.4, center: (499.1, 104.4)
-        const path = new Path2D(CAVDAX_WORDMARK_LETTERS_PATH);
-        const maxScaleW = (width * 0.88) / 954.4;
-        const maxScaleH = (height * 0.72) / 168.4;
-        const scale = Math.min(maxScaleW, maxScaleH);
-
-        const drawX = width / 2 - 499.1 * scale;
-        const drawY = height / 2 - 104.4 * scale;
-
-        offCtx.save();
-        offCtx.translate(drawX, drawY);
-        offCtx.scale(scale, scale);
-        offCtx.fillStyle = '#ffffff';
-        offCtx.fill(path, 'evenodd');
-        offCtx.restore();
-      } else {
-        // Fallback / Generic Text: Enforce Swiss Architectural Grotesk Typography
-        let fontSize = Math.floor(width / (text.length * 0.62));
-        fontSize = Math.max(36, Math.min(fontSize, 120));
-
-        offCtx.font = `900 ${fontSize}px "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-        offCtx.textAlign = 'center';
-        offCtx.textBaseline = 'middle';
-        offCtx.fillStyle = '#ffffff';
-        if ('letterSpacing' in offCtx) {
-          offCtx.letterSpacing = '0.04em';
-        }
-        offCtx.fillText(text, width / 2, height / 2);
+      if ('letterSpacing' in offCtx) {
+        offCtx.letterSpacing = '0.14em';
       }
 
+      const centerY = height / 2 - 8;
+      offCtx.fillText(text, width / 2, centerY);
+
+      // Architectural Directed Causal Underline (Matching CavdaxWordmark C-to-X Causal Edge)
+      const textMetrics = offCtx.measureText(text);
+      const textW = textMetrics.width || width * 0.72;
+      const underlineY = centerY + fontSize * 0.44;
+      const startX = width / 2 - textW * 0.48;
+      const endX = width / 2 + textW * 0.48;
+
+      offCtx.lineWidth = Math.max(2, fontSize * 0.024);
+      offCtx.strokeStyle = '#ffffff';
+      offCtx.beginPath();
+      offCtx.moveTo(startX, underlineY);
+      offCtx.lineTo(endX - 10, underlineY);
+      offCtx.stroke();
+
+      // Start circle node (Context ●)
+      offCtx.beginPath();
+      offCtx.arc(startX, underlineY, Math.max(3, fontSize * 0.045), 0, Math.PI * 2);
+      offCtx.fill();
+
+      // Middle circle node (Decision ●)
+      offCtx.beginPath();
+      offCtx.arc(width / 2, underlineY, Math.max(2.5, fontSize * 0.038), 0, Math.PI * 2);
+      offCtx.fill();
+
+      // Forward arrow tip at execution end (>)
+      offCtx.beginPath();
+      offCtx.moveTo(endX - 12, underlineY - 6);
+      offCtx.lineTo(endX, underlineY);
+      offCtx.lineTo(endX - 12, underlineY + 6);
+      offCtx.lineTo(endX - 8, underlineY);
+      offCtx.closePath();
+      offCtx.fill();
       const imgData = offCtx.getImageData(0, 0, width, height);
       const data = imgData.data;
       // High-performance sampling step: step of 5 yields ~1,400 crisp pointillist particles
@@ -271,6 +283,9 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
     };
 
     window.addEventListener('resize', resize);
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(resize);
+    }
     container.addEventListener('mousemove', handleMouseMove);
     container.addEventListener('mouseleave', handleMouseLeave);
 
@@ -312,7 +327,7 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
 
   return (
     <footer className="relative w-full border-t border-slate-300 dark:border-white/10 bg-[var(--bg-main)] pt-8 pb-8 overflow-visible select-none transition-colors duration-200">
-      {/* Scroll to Top Center Button (SAHNIRMAAN Signature Architectural Pattern) */}
+      {/* Scroll to Top Center Button (CAVDAX Signature Architectural Pattern) */}
       <button 
         type="button" 
         onClick={() => {
@@ -354,14 +369,54 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
         <canvas ref={canvasRef} className="block" />
       </div>
 
+      {/* Structured Footer Navigation Grid */}
+      <div className="max-w-7xl mx-auto px-6 mt-8 mb-8 grid grid-cols-2 sm:grid-cols-4 gap-8 text-xs font-mono">
+        <div>
+          <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Architecture</h4>
+          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+            <li><a href="#hero-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">Cache Rot Elimination</a></li>
+            <li><a href="#causal-loop-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">4-Step Causal Loop</a></li>
+            <li><a href="#radar-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">Provenance Radar</a></li>
+            <li><a href="#faq-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">Technical FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Developer Tools</h4>
+          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+            <li><a href="/console" className="hover:text-slate-950 dark:hover:text-white transition-colors">Interactive Console</a></li>
+            <li><a href="/mcp" className="hover:text-slate-950 dark:hover:text-white transition-colors">Connect MCP Agent</a></li>
+            <li><a href="/audit" className="hover:text-slate-950 dark:hover:text-white transition-colors">Audit Log Stream</a></li>
+            <li><a href="/profile" className="hover:text-slate-950 dark:hover:text-white transition-colors">Subscription Tiers</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Enclave & Security</h4>
+          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+            <li><a href="/team" className="hover:text-slate-950 dark:hover:text-white transition-colors">Core Architects</a></li>
+            <li><a href="/support" className="hover:text-slate-950 dark:hover:text-white transition-colors">Support Enclave</a></li>
+            <li><a href="/devteam" className="hover:text-slate-950 dark:hover:text-white transition-colors">Dev Console Gate</a></li>
+            <li><span className="text-slate-400 dark:text-slate-600">Zero-Trust Sandbox</span></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Ecosystem</h4>
+          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+            <li><a href="https://github.com/suneetchugh-dev" target="_blank" rel="noopener noreferrer" className="hover:text-slate-950 dark:hover:text-white transition-colors">GitHub Repository</a></li>
+            <li><a href="https://falkordb.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-950 dark:hover:text-white transition-colors">FalkorDB Graph Engine</a></li>
+            <li><a href="https://graphblas.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-950 dark:hover:text-white transition-colors">GraphBLAS Semirings</a></li>
+            <li><span className="text-slate-400 dark:text-slate-600">WeMakeDevs Hackathon</span></li>
+          </ul>
+        </div>
+      </div>
+
       {/* Footer Meta & Copyright */}
-      <div className="max-w-7xl mx-auto px-6 mt-6 pt-6 border-t border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 dark:text-slate-500 font-mono gap-3">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-950 dark:text-slate-200">CAVDAX</span>
+      <div className="max-w-7xl mx-auto px-6 pt-6 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-mono gap-3 text-center md:text-left">
+        <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+          <span className="font-bold text-slate-950 dark:text-white">CAVDAX</span>
           <span>•</span>
           <span>Contextual Action & Verified Decision Autonomous eXecution</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <span>WeMakeDevs × FalkorDB Graph Hacks</span>
           <span>•</span>
           <span>GNU GPL 3.0</span>

@@ -7,6 +7,18 @@
     <title>CAVDAX | Graph-Grounded Decision Execution for Coding Agents</title>
     <meta name="description" content="Contextual Action & Verified Decision Autonomous eXecution. Preventing coding agents from acting on stale retrieved documents via FalkorDB causal DAGs and enclosed MCP gates." />
     
+    <!-- Zero-Latency Theme Initialization -->
+    <script>
+      (function() {
+        const saved = localStorage.getItem('cavdax_theme');
+        if (saved === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+
     <!-- Preconnect and Architectural Fonts: Inter, JetBrains Mono, Space Grotesk -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
