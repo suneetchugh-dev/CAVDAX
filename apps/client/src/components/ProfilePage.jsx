@@ -338,9 +338,32 @@ export default function ProfilePage({
                   : 'bg-transparent border-slate-200/80 dark:border-white/10 opacity-70 hover:opacity-100 transition-opacity')
           }`}>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                Pro Autonomous
-              </span>
+              <div className="flex items-center gap-1.5">
+                {/* 45-Degree Tilted Premium Diamond SVG */}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 transform -rotate-45"
+                  aria-hidden="true"
+                >
+                  <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" fill="currentColor" fillOpacity="0.15" />
+                  <line x1="2" y1="9" x2="22" y2="9" />
+                  <line x1="6" y1="3" x2="10" y2="9" />
+                  <line x1="18" y1="3" x2="14" y2="9" />
+                  <line x1="10" y1="9" x2="12" y2="22" />
+                  <line x1="14" y1="9" x2="12" y2="22" />
+                  <circle cx="12" cy="22" r="1" fill="currentColor" />
+                  <circle cx="6" cy="3" r="0.8" fill="currentColor" />
+                  <circle cx="18" cy="3" r="0.8" fill="currentColor" />
+                </svg>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                  Pro Autonomous
+                </span>
+              </div>
               {isAuthorizedDev ? (
                 <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                   DEV ACCESS
@@ -432,9 +455,32 @@ export default function ProfilePage({
                   : 'bg-transparent border-slate-200/80 dark:border-white/10 opacity-70 hover:opacity-100 transition-opacity')
           }`}>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-400">
-                Enterprise Mesh
-              </span>
+              <div className="flex items-center gap-1.5">
+                {/* 45-Degree Tilted King Crown SVG */}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-3.5 h-3.5 text-purple-400 shrink-0 transform -rotate-45"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 18h18l-2-11-4.5 4.5L12 4l-2.5 7.5L5 7l-2 11z"
+                    fill="currentColor"
+                    fillOpacity="0.2"
+                  />
+                  <line x1="4" y1="20" x2="20" y2="20" strokeWidth="1.8" />
+                  <circle cx="12" cy="4" r="1.3" fill="currentColor" />
+                  <circle cx="5" cy="7" r="1.1" fill="currentColor" />
+                  <circle cx="19" cy="7" r="1.1" fill="currentColor" />
+                </svg>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-400">
+                  Enterprise Mesh
+                </span>
+              </div>
               {isAuthorizedDev ? (
                 <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
                   DEV ACCESS
