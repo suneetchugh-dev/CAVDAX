@@ -19,13 +19,14 @@ import {
   AlertTriangle, Play, RotateCcw, Download, Trash2,
   Radio, Layers, Flame, Users, Globe, EyeOff, Server,
   Cpu, Activity, Database, Key, Sliders, ArrowUpRight,
-  UserPlus, UserMinus, Shield
+  UserPlus, UserMinus, Shield, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   getActiveDevSession, verifyDevPasskey, devSignOut,
   getAllowedIps, getAuthorizedUsers, fetchClientIp,
   addAuthorizedUser, removeAuthorizedUser,
+  addWhitelistedIp, removeWhitelistedIp, getCustomWhitelistedIps,
   setDevTierOverride, getDevCurrentTier
 } from '../services/devAuth';
 import { playClick, playRejectBuzz, playApprovalChime } from '../utils/soundFx';
@@ -111,6 +112,49 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
   const [rosterList, setRosterList] = useState(() => getAuthorizedUsers());
   const [newDevHandle, setNewDevHandle] = useState('');
   const [rosterMsg, setRosterMsg] = useState(null);
+
+  const [ipList, setIpList] = useState(() => getAllowedIps());
+  const [newIpInput, setNewIpInput] = useState('');
+  const [ipMsg, setIpMsg] = useState(null);
+
+  const handleAddIp = (e) => {
+    e?.preventDefault();
+    if (!newIpInput.trim()) return;
+    const ok = addWhitelistedIp(newIpInput.trim());
+    if (ok) {
+      playApprovalChime();
+      setIpList(getAllowedIps());
+      setIpMsg(`IP ${newIpInput.trim()} added to whitelist.`);
+      setNewIpInput('');
+      setTimeout(() => setIpMsg(null), 3000);
+    } else {
+      playRejectBuzz();
+      setIpMsg('IP already whitelisted or invalid.');
+      setTimeout(() => setIpMsg(null), 3000);
+    }
+  };
+
+  const handleWhitelistCurrentIp = () => {
+    if (!clientIp || clientIp === 'Detecting...') return;
+    const ok = addWhitelistedIp(clientIp);
+    if (ok) {
+      playApprovalChime();
+      setIpList(getAllowedIps());
+      setIpMsg(`Current IP ${clientIp} whitelisted.`);
+      setTimeout(() => setIpMsg(null), 3000);
+    } else {
+      setIpMsg(`Current IP ${clientIp} is already whitelisted.`);
+      setTimeout(() => setIpMsg(null), 3000);
+    }
+  };
+
+  const handleRemoveIp = (ip) => {
+    removeWhitelistedIp(ip);
+    playClick();
+    setIpList(getAllowedIps());
+    setIpMsg(`Revoked IP ${ip}.`);
+    setTimeout(() => setIpMsg(null), 3000);
+  };
 
   // Scenario injection state
   const [activeScenarios, setActiveScenarios] = useState({});
@@ -281,8 +325,8 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             </span>
           </div>
 
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-mono leading-relaxed">
-            Restricted developer terminal. Hardware IP whitelist matched and authorized GitHub handle detected. Enter your Master Developer Passkey to unlock the causal intercept console.
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
+            Authorized session detected. Enter master passkey to unlock the causal console.
           </p>
 
           {/* Diagnostics info box */}
@@ -506,50 +550,50 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
         </div>
       )}
 
-      {/* ── TAB 2: AGENT DIAGNOSTICS & LIVE GRAPH MONITOR ── */}
+      {/* ── TAB 2: AGENT DIAGNOSTICS & SYSTEM STATUS ── */}
       {activeTab === 'diagnostics' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Agent Bridges</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">MCP Protocol Stream</span>
               <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
             </div>
-            <div className="text-2xl font-mono font-bold text-slate-900 dark:text-white">3 CONNECTED</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white">ENFORCING</div>
             <div className="text-[10px] font-mono text-slate-500 mt-2">
-              Cursor IDE • Claude Code • Windsurf
+              SSE Gateway • /api/mcp/sse
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">FalkorDB Vertices</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">FalkorDB Engine</span>
               <Database className="w-4 h-4 text-slate-400" />
             </div>
-            <div className="text-2xl font-mono font-bold text-slate-900 dark:text-white">1,482 NODES</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white">CONNECTED</div>
             <div className="text-[10px] font-mono text-slate-500 mt-2">
-              12 ADRs • 34 Decisions • 1,436 Code ASTs
+              RedisGraph Protocol • Port 6379
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">GraphBLAS Traversal</span>
-              <Activity className="w-4 h-4 text-slate-400" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Session Vault</span>
+              <Key className="w-4 h-4 text-slate-400" />
             </div>
-            <div className="text-2xl font-mono font-bold text-slate-900 dark:text-white">4.2 ms</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white">VERIFIED</div>
             <div className="text-[10px] font-mono text-slate-500 mt-2">
-              Sparse Matrix Multiplication Latency
+              SHA-256 Master Key Authenticated
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Quarantine Enclave</span>
-              <Server className="w-4 h-4 text-slate-400" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Hardware Gateway</span>
+              <Globe className="w-4 h-4 text-slate-400" />
             </div>
-            <div className="text-2xl font-mono font-bold text-slate-900 dark:text-white">0 BREACHES</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white">WHITELISTED</div>
             <div className="text-[10px] font-mono text-slate-500 mt-2">
-              Zero Unsigned Disk Writes Permitted
+              Client IP: {clientIp}
             </div>
           </div>
         </div>
@@ -677,28 +721,81 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                   Client IP Whitelist
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">Configured via .env</span>
+              <span className="text-[10px] font-mono text-slate-400">{ipList.length} Allowed</span>
             </div>
 
-            <div className="flex flex-col gap-2 font-mono text-xs">
-              {getAllowedIps().map((ip, idx) => (
-                <div key={ip} className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02]">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400">0{idx + 1}.</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">{ip}</span>
+            {ipMsg && (
+              <div className="p-2.5 rounded-xl border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/5 font-mono text-[11px] text-slate-900 dark:text-white">
+                {ipMsg}
+              </div>
+            )}
+
+            {/* Quick-whitelist current device button */}
+            {clientIp && clientIp !== 'Detecting...' && !ipList.includes(clientIp.toLowerCase()) && (
+              <button
+                type="button"
+                onClick={handleWhitelistCurrentIp}
+                className="w-full py-2 px-3 rounded-xl border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 font-mono text-xs font-semibold text-slate-900 dark:text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Plus size={13} />
+                <span>Whitelist Current IP ({clientIp})</span>
+              </button>
+            )}
+
+            {/* Authorize New IP Input Form */}
+            <form onSubmit={handleAddIp} className="flex gap-2">
+              <input
+                type="text"
+                value={newIpInput}
+                onChange={(e) => setNewIpInput(e.target.value)}
+                placeholder="IP Address (e.g. 192.168.1.5)"
+                className="flex-1 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-slate-950 dark:focus:border-white transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={!newIpInput.trim()}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-bold flex items-center gap-1.5 hover:opacity-90 active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+              >
+                <Plus size={13} />
+                <span>ADD IP</span>
+              </button>
+            </form>
+
+            <div className="flex flex-col gap-2 font-mono text-xs max-h-[220px] overflow-y-auto pr-1">
+              {ipList.map((ip, idx) => {
+                const isCustom = getCustomWhitelistedIps().includes(ip);
+                const isCurrent = ip === clientIp.toLowerCase() || (clientIp === '127.0.0.1' && ip === 'localhost');
+                return (
+                  <div key={ip} className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02]">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400">0{idx + 1}.</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{ip}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isCurrent ? (
+                        <span className="text-[9px] font-bold text-slate-900 dark:text-white uppercase px-2 py-0.5 rounded bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20">
+                          Current Device
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-slate-400 uppercase">Authorized</span>
+                      )}
+                      {isCustom && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveIp(ip)}
+                          className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                          title="Revoke Whitelist"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {ip === clientIp.toLowerCase() || (clientIp === '127.0.0.1' && ip === 'localhost') ? (
-                    <span className="text-[9px] font-bold text-slate-900 dark:text-white uppercase px-2 py-0.5 rounded bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/20">
-                      Current Device (Matched)
-                    </span>
-                  ) : (
-                    <span className="text-[9px] text-slate-400 uppercase">Authorized</span>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
             <p className="text-[10px] font-mono text-slate-500 leading-relaxed">
-              Traffic originating from non-whitelisted IPs receives a silent 404 response on /devteam with zero error traces.
+              Traffic originating from non-whitelisted IPs receives a silent 404 response on /devteam with zero reconnaissance traces.
             </p>
           </div>
 
@@ -855,8 +952,8 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                   CONFIRM EMERGENCY KILLSWITCH
                 </h3>
               </div>
-              <p className="text-xs font-mono text-slate-600 dark:text-slate-400 leading-relaxed">
-                This will immediately purge all cached dev session tokens, terminate active MCP bridge connections, and lock the enclave. You will be redirected to the public overview page.
+              <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
+                This clears active dev tokens, locks the enclave immediately, and returns to the home page.
               </p>
               <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
