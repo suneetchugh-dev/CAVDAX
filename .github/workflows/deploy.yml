@@ -17,6 +17,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           port: ${{ secrets.VM_PORT || 22 }}
+          command_timeout: 30m
           script: |
             set -e
             APP_DIR="${{ secrets.VM_APP_DIR || '/home/ec2-user/CAVDAX' }}"
@@ -26,13 +27,19 @@ jobs:
             echo "==> Pulling latest changes from origin/main..."
             git fetch origin main
             git reset --hard origin/main
-            echo "==> Building updated containers in background (zero-downtime rolling reload)..."
+            echo "==> Building updated containers sequentially (zero-downtime rolling reload)..."
             if docker compose version >/dev/null 2>&1; then
-              docker compose -f infra/docker-compose.prod.yml build client server
+              echo "==> Building server container..."
+              docker compose -f infra/docker-compose.prod.yml build server
+              echo "==> Building client container..."
+              docker compose -f infra/docker-compose.prod.yml build client
               echo "==> Performing rolling container recreation..."
               docker compose -f infra/docker-compose.prod.yml up -d --remove-orphans
             else
-              docker-compose -f infra/docker-compose.prod.yml build client server
+              echo "==> Building server container..."
+              docker-compose -f infra/docker-compose.prod.yml build server
+              echo "==> Building client container..."
+              docker-compose -f infra/docker-compose.prod.yml build client
               docker-compose -f infra/docker-compose.prod.yml up -d --remove-orphans
             fi
             echo "==> Pruning dangling docker images..."
