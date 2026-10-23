@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 /**
  * KineticRollingHeadline
- * Ported from SAHNIRMAAN with high-precision cubic-bezier physics.
+ * Ported from CAVDAX with high-precision cubic-bezier physics.
  * Smoothly rolls phrases vertically with blur and spring-like inertia.
  * Zero layout-shift grid locking and generous descender headroom (pb-2.5 leading-[1.3]).
  */

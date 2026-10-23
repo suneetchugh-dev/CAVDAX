@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * Modern Minimalist CurvyArrow with Mathematically Seamless Infinite Dash-March
- * Ported from SAHNIRMAAN
+ * Ported from CAVDAX
  * 
  * Dash Math for 100% Seamless Infinite Loop:
  * - Dash: 6px, Gap: 6px -> Total Cycle Period = 12px

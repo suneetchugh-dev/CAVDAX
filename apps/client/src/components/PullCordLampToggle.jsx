@@ -227,6 +227,15 @@ export default function PullCordLampToggle({
     e.preventDefault();
     e.stopPropagation();
 
+    // On touch devices, disable drag to prevent accidental pull-to-refresh & trigger spring click
+    const isTouch = typeof window !== 'undefined' && 
+      (window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || window.innerWidth < 768);
+
+    if (isTouch) {
+      handleClick(e);
+      return;
+    }
+
     const p = physicsRef.current;
     p.isDragging = true;
     setIsPulling(true);
@@ -303,7 +312,6 @@ export default function PullCordLampToggle({
       style={{
         position: 'fixed',
         top: 0,
-        right: '40px',
         width: '360px',
         height: '360px',
         zIndex: 40,
@@ -313,7 +321,7 @@ export default function PullCordLampToggle({
         pointerEvents: 'none',
         transition: 'opacity 0.25s ease, visibility 0.25s ease'
       }}
-      className={`fixed top-0 right-4 sm:right-10 z-40 select-none pointer-events-none flex flex-col items-center ${className}`}
+      className={`fixed top-0 left-1/2 -translate-x-1/2 sm:left-auto sm:right-10 sm:translate-x-0 z-40 select-none pointer-events-none flex flex-col items-center ${className}`}
     >
       {/* Ceiling Connection Stem */}
       <div className="w-[1.5px] h-3 bg-slate-400/80 dark:bg-amber-400/30" style={{ width: '1.5px', height: '12px' }} />

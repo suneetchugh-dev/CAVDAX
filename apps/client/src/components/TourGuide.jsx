@@ -31,7 +31,7 @@ const CONSOLE_TOUR_STEPS = [
   {
     id: 'terminal-view',
     target: '[data-tour="terminal-view"]',
-    title: 'Terminal Telemetry & Cognitive Mitosis HUD',
+    title: 'Terminal Metrics & Cognitive Mitosis HUD',
     badge: 'STEP 3 OF 4',
     description:
       'Watch real-time MCP tool invocations, Cypher query logs, and the CavdaxAgentStateIndicator tracking agent cognition (IDLE, REASONING, EXECUTING, VERIFIED, REJECTED).',

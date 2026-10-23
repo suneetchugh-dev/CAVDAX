@@ -351,7 +351,7 @@ export default function CausalProvenanceRadar() {
           </div>
         </motion.div>
 
-        {/* ── Subtext Telemetry Display STRICTLY BELOW the Radar (Shifted down with generous top breathing room) ── */}
+        {/* ── Subtext Metrics Display STRICTLY BELOW the Radar (Shifted down with generous top breathing room) ── */}
         <div className="absolute bottom-3 sm:bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 text-center pointer-events-none select-none z-30 h-10 flex items-center justify-center">
           <AnimatePresence mode="wait">
             {activeTarget && (

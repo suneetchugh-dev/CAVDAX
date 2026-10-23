@@ -7,7 +7,7 @@ import { playClick } from '../utils/soundFx';
  * 
  * Bespoke Causal Graph & MCP Protocol 404 Page:
  * - Theme-adaptive monochromatic Swiss styling (Obsidian / Porcelain).
- * - Architectural telemetry error box (ERR_CAUSAL_NODE_NOT_FOUND).
+ * - Architectural diagnostic error box (ERR_CAUSAL_NODE_NOT_FOUND).
  * - Disconnected broken graph node SVG visualization.
  * - Single-screen zero-overflow containment.
  * - Tactile action buttons to return home or launch verification console.
@@ -91,12 +91,12 @@ export default function NotFoundPage({ onNavigateHome, onLaunchConsole }) {
           The requested graph vertex or URL path does not exist in the active FalkorDB DAG. No causal dependency edge could be resolved.
         </p>
 
-        {/* 5. Monospace Telemetry Diagnostic Box */}
+        {/* 5. Monospace Metrics Diagnostic Box */}
         <div className="w-full p-3.5 rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 font-mono text-left text-xs space-y-1.5 mb-8 text-slate-600 dark:text-slate-400">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-1.5 text-slate-500 dark:text-slate-400 text-[10px]">
             <span className="flex items-center gap-1.5">
               <Terminal size={11} />
-              <span>CAVDAX KERNEL TELEMETRY</span>
+              <span>CAVDAX KERNEL DIAGNOSTICS</span>
             </span>
             <span>HTTP 404</span>
           </div>

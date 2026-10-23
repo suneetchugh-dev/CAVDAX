@@ -21,7 +21,7 @@ const SHORTCUT_GROUPS = [
       { key: "D", label: "Toggle Theme", icon: Sun, desc: "Switch between Dark and Light themes" },
       { key: "T", label: "Tour Guide", icon: Compass, desc: "Start / Resume interactive console walkthrough" },
       { key: "R", label: "Reset Demo", icon: RotateCcw, desc: "Reset knowledge graph & verification pipeline" },
-      { key: ",", label: "Preferences", icon: Settings, desc: "Open audio, telemetry & HUD preferences" },
+      { key: ",", label: "Preferences", icon: Settings, desc: "Open audio, metrics & HUD preferences" },
       { key: "?", label: "Shortcuts Help", icon: KeyboardIcon, desc: "Toggle this keyboard shortcuts panel" },
       { key: "Esc", label: "Close Overlay", icon: X, desc: "Dismiss active modal, guide or tooltip" },
     ]

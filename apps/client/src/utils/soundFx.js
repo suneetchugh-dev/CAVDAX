@@ -12,6 +12,25 @@ const clickAudioPool = [];
 const POOL_SIZE = 6;
 let poolIndex = 0;
 let isAudioPoolInitialized = false;
+let audioCtx = null;
+
+function getAudioContext() {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (!audioCtx) {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) {
+        audioCtx = new AudioCtxClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+  } catch {
+    return null;
+  }
+}
 
 export function isSoundEnabled() {
   if (typeof window === 'undefined') return false;
@@ -51,7 +70,7 @@ export function initGlobalClickSound() {
 }
 
 /**
- * Tactile micro-click sound copied directly from SAHNIRMAAN audio pool
+ * Tactile micro-click sound copied directly from CAVDAX audio pool
  */
 export function playClick() {
   if (!isSoundEnabled()) return;
@@ -75,7 +94,7 @@ export function playClick() {
 }
 
 /**
- * Loading screen ambient chime copied directly from SAHNIRMAAN
+ * Loading screen ambient chime copied directly from CAVDAX
  */
 export function playLoadingSound() {
   if (!isSoundEnabled()) return;

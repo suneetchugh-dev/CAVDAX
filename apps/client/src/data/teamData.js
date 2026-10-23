@@ -20,7 +20,7 @@ export const TEAM_MEMBERS = [
     role: 'Team Leader',
     title: 'Lead Architect & Systems Engineer',
     domain: 'Distributed Systems, GraphBLAS & Agentic MCP',
-    bio: 'Pioneered the FalkorDB GraphBLAS causal invalidation loop, enclosed MCP execution gate architecture, real-time telemetry HUD, and production web deployment.',
+    bio: 'Pioneered the FalkorDB GraphBLAS causal invalidation loop, enclosed MCP execution gate architecture, Real-Time Metrics HUD, and production web deployment.',
     avatar: '/avatars/suneet.webp',
     fallbackAvatar: 'https://github.com/suneetchugh-dev.png',
     github: 'https://github.com/suneetchugh-dev',
@@ -29,7 +29,7 @@ export const TEAM_MEMBERS = [
     highlights: [
       'Engineered sub-2ms Query 2 GraphBLAS invalidation cascade in FalkorDB',
       'Designed enclosed MCP protocol proxy intercepting in-flight agent write tools',
-      'Built hardware-accelerated monochromatic HUD and responsive telemetry'
+      'Built hardware-accelerated monochromatic HUD and responsive metrics'
     ]
   },
   {

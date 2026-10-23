@@ -15,43 +15,55 @@ const FULL_FORM_WORDS = [
 ];
 
 export default function SplashLoader({ isDarkTheme }) {
-  const hasSeenSplash = typeof window !== 'undefined' && sessionStorage.getItem('cavdax_splash_shown') === 'true';
-  const [isVisible, setIsVisible] = useState(!hasSeenSplash);
+  // CAVDAX Architecture: All visitors see the choreographed splash cycle on boot
+  // while the React tree mounts and warms behind it with zero layout flash.
+  const [isVisible, setIsVisible] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [progress, setProgress] = useState(hasSeenSplash ? 100 : 0);
-
-  if (hasSeenSplash) {
-    isInitialSplashFinished = true;
-  }
+  const [progress, setProgress] = useState(0);
 
   // Determine active theme with zero-latency fallback to localStorage
   const isDark = isDarkTheme !== undefined
     ? isDarkTheme
     : (typeof window !== 'undefined' ? localStorage.getItem('cavdax_theme') !== 'light' : true);
 
-  useEffect(() => {
-    if (hasSeenSplash) {
-      isInitialSplashFinished = true;
+  const isFirstTimeRef = React.useRef(
+    typeof window !== 'undefined' ? !sessionStorage.getItem('cavdax_splash_shown') : true
+  );
+  const isAnimationCompleteRef = React.useRef(false);
+
+  const handleDismiss = () => {
+    // First-time users MUST see the complete logo draw cycle and 100% progress bar.
+    // Early dismissal is strictly locked until the full choreography finishes.
+    if (isFirstTimeRef.current && !isAnimationCompleteRef.current) {
       return;
     }
+    setIsFadingOut(true);
+    isInitialSplashFinished = true;
+    try { sessionStorage.setItem('cavdax_splash_shown', 'true'); } catch {}
+  };
 
+  useEffect(() => {
     // Snappy, high-performance animation cycle (~1.8s) so page is interactive immediately
     const drawDuration = 1800;
     const fadeDuration = 500;
 
-    // Smooth telemetry progress tracking (0% to 100% across duration)
+    // Smooth progress tracking (0% to 100% across duration)
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const pct = Math.min(100, Math.round((elapsed / drawDuration) * 100));
       setProgress(pct);
-      if (pct >= 100) clearInterval(interval);
+      if (pct >= 100) {
+        isAnimationCompleteRef.current = true;
+        clearInterval(interval);
+      }
     }, 20);
 
     const fadeOutTimer = setTimeout(() => {
+      isAnimationCompleteRef.current = true;
       setIsFadingOut(true);
       isInitialSplashFinished = true;
-      sessionStorage.setItem('cavdax_splash_shown', 'true');
+      try { sessionStorage.setItem('cavdax_splash_shown', 'true'); } catch {}
       playLoadingSound();
     }, drawDuration);
 
@@ -60,9 +72,7 @@ export default function SplashLoader({ isDarkTheme }) {
     }, drawDuration + fadeDuration);
 
     const handleKeyDown = () => {
-      setIsFadingOut(true);
-      isInitialSplashFinished = true;
-      sessionStorage.setItem('cavdax_splash_shown', 'true');
+      handleDismiss();
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -72,16 +82,13 @@ export default function SplashLoader({ isDarkTheme }) {
       clearTimeout(unmountTimer);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [hasSeenSplash]);
+  }, []);
 
   if (!isVisible) return null;
 
   return (
     <div
-      onClick={() => {
-        setIsFadingOut(true);
-        isInitialSplashFinished = true;
-      }}
+      onClick={handleDismiss}
       className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center ${
         isDark ? 'bg-[#050608]' : 'bg-[#F8FAFC]'
       } select-none transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
@@ -143,11 +150,12 @@ export default function SplashLoader({ isDarkTheme }) {
           } blur-3xl pointer-events-none animate-[splashBrandGlow_4.2s_ease-in-out_infinite]`}
         />
 
-        {/* 1. Large Brand Logo */}
-        <div className="relative h-64 w-64 sm:h-72 sm:w-72 md:h-80 md:w-80 flex items-center justify-center pointer-events-none select-none">
+        {/* 1. Medium Minimalist Brand Logo (Sleek, Balanced & Thin Strokes) */}
+        <div className="relative h-32 w-32 sm:h-36 sm:w-36 flex items-center justify-center pointer-events-none select-none">
           <CavdaxBrandLoader 
-            size={260} 
-            strokeWidth={7.4} 
+            size={135} 
+            strokeWidth={3.0} 
+            hairlineWidth={1.0}
             colorClassName={isDark ? "text-white" : "text-slate-950"}
           />
         </div>
@@ -222,7 +230,7 @@ export default function SplashLoader({ isDarkTheme }) {
           </div>
         </div>
 
-        {/* 4. Telemetry Progress & Initialization Bar */}
+        {/* 4. progress & Initialization Bar */}
         <div className="mt-7 w-52 sm:w-72 flex flex-col items-center gap-2">
           <div className={`w-full h-[2px] ${isDark ? 'bg-white/10' : 'bg-slate-200'} rounded-full overflow-hidden`}>
             <div

@@ -24,22 +24,46 @@ export default function CavdaxAgentStateIndicator({
   strokeWidth = 3.8,
   hairlineWidth = 1.3,
   showLabel = false,
+  loopVerified = false,
   className = ""
 }) {
   const [verifiedPhase, setVerifiedPhase] = useState(1);
 
-  // Manage Verified 2-Phase evolution
+  // Manage Verified 2-Phase evolution (with optional looping for live showcase)
   useEffect(() => {
     if (status === "verified") {
-      setVerifiedPhase(1);
-      const timer = setTimeout(() => {
-        setVerifiedPhase(2); // Morph into checkmark after 700ms
-      }, 700);
-      return () => clearTimeout(timer);
+      if (loopVerified) {
+        let isMounted = true;
+        let t1, t2;
+        const cycle = () => {
+          if (!isMounted) return;
+          setVerifiedPhase(1);
+          t1 = setTimeout(() => {
+            if (!isMounted) return;
+            setVerifiedPhase(2); // Morph into checkmark
+            t2 = setTimeout(() => {
+              if (!isMounted) return;
+              cycle(); // Replay evolution
+            }, 2600);
+          }, 750);
+        };
+        cycle();
+        return () => {
+          isMounted = false;
+          clearTimeout(t1);
+          clearTimeout(t2);
+        };
+      } else {
+        setVerifiedPhase(1);
+        const timer = setTimeout(() => {
+          setVerifiedPhase(2); // Morph into checkmark after 700ms
+        }, 700);
+        return () => clearTimeout(timer);
+      }
     } else {
       setVerifiedPhase(1);
     }
-  }, [status]);
+  }, [status, loopVerified]);
 
   const isIdle = status === "idle";
   const isReasoning = status === "reasoning";
@@ -64,8 +88,8 @@ export default function CavdaxAgentStateIndicator({
     idle: "Agent Standing By",
     reasoning: "Traversing Causal Graph...",
     executing: "Evaluating MCP Action Gate...",
-    verified: isVerifiedCheckmark ? "Action Verified // Provenance Intact" : "Verifying Causal Chain...",
-    rejected: "Action Rejected // Gate Closed"
+    verified: isVerifiedCheckmark ? "Action Verified • Provenance Intact" : "Verifying Causal Chain...",
+    rejected: "Action Rejected • Gate Closed"
   };
 
   return (
