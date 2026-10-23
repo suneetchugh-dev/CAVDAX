@@ -24,17 +24,20 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pt-20 sm:pt-22 pb-16 px-4 sm:px-6 max-w-4xl mx-auto w-full select-none">
+    <div className="flex-1 min-h-0 overflow-y-auto pt-20 sm:pt-24 pb-20 px-4 sm:px-6 max-w-4xl mx-auto w-full select-none">
       
       {/* ── 1. Concise Header ── */}
-      <section className="text-center mb-8">
+      <section className="text-center mb-10 sm:mb-12">
         <h1 className="text-2xl sm:text-3xl font-mono font-bold text-slate-950 dark:text-white tracking-tight flex items-center justify-center gap-2.5">
           <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 fill-current shrink-0" />
           <span>Support CAVDAX</span>
+          <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 fill-current shrink-0" />
         </h1>
-        <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-sans max-w-sm mx-auto text-balance text-center leading-relaxed">
-          Direct community backing to fund open causal benchmarks.
-        </p>
+        <div className="mt-3 flex items-center justify-center overflow-x-auto py-1">
+          <p className="text-xs sm:text-sm font-sans tracking-wide whitespace-nowrap text-center bg-clip-text text-transparent bg-gradient-to-r from-slate-500 via-slate-950 to-slate-500 dark:from-slate-400 dark:via-white dark:to-slate-400">
+            Direct community backing to fund open causal benchmarks.
+          </p>
+        </div>
 
         {thankYouMsg && (
           <div
@@ -48,26 +51,29 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
       </section>
 
       {/* ── 2. Minimalist Sponsorship Tiers (Affordable Pricing) ── */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-10 sm:mb-12">
         
         {/* Tier 1: Single Coffee ($2) */}
-        <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between hover:border-slate-400 dark:hover:border-white/30 transition-all">
+        <div className="p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between hover:border-slate-400 dark:hover:border-white/30 transition-all">
           <div>
-            <div className="w-8 h-8 rounded-lg bg-slate-500/10 border border-slate-500/20 flex items-center justify-center text-slate-600 dark:text-slate-400 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-500/10 border border-slate-500/20 flex items-center justify-center text-slate-600 dark:text-slate-400 mb-3.5">
               <Coffee className="w-4 h-4" />
             </div>
-            <div className="text-lg font-bold font-mono text-slate-950 dark:text-white mb-1">
+            <div className="text-lg font-bold font-mono text-slate-950 dark:text-white mb-1.5">
               $2 <span className="text-[11px] font-normal text-slate-500 font-sans">/ coffee</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans mb-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans mb-5 leading-relaxed">
               Community supporter tier to fuel development.
             </p>
-            <ul className="text-xs font-mono space-y-1.5 text-slate-600 dark:text-slate-300 mb-5">
+            <ul className="text-xs font-mono space-y-2 text-slate-600 dark:text-slate-300 mb-6">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                 <span>README Backer badge</span>
               </li>
               <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                 <span>Community role</span>
+              </li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+                <span>Public backer directory</span>
               </li>
             </ul>
           </div>
@@ -113,7 +119,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
         </div>
 
         {/* Tier 2: 3 Coffees ($5) — Popular */}
-        <div className="p-5 rounded-2xl border border-slate-400 dark:border-white/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative overflow-hidden">
+        <div className="p-6 sm:p-7 rounded-2xl border border-slate-400 dark:border-white/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 px-2 py-0.5 bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-mono font-bold text-[9px] uppercase rounded-bl-md">
             Popular
           </div>
@@ -181,7 +187,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
         </div>
 
         {/* Tier 3: Core Supporter ($15) */}
-        <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between hover:border-slate-400 dark:hover:border-white/30 transition-all">
+        <div className="p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between hover:border-slate-400 dark:hover:border-white/30 transition-all">
           <div>
             <div className="w-8 h-8 rounded-lg bg-purple-950/20 border border-purple-800/40 flex items-center justify-center text-purple-400 mb-3">
               <Code2 className="w-4 h-4" />
@@ -248,13 +254,10 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
       </section>
 
       {/* ── 3. Concise Resource Stewardship (Clean Pills) ── */}
-      <section className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] mb-6">
-        <div className="flex items-center justify-between mb-3">
+      <section className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] mb-8">
+        <div className="mb-4">
           <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Fund Allocation
-          </span>
-          <span className="text-[10px] font-mono text-slate-500">
-            Open Infrastructure
           </span>
         </div>
         <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">

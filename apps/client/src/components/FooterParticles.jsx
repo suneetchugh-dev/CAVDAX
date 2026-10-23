@@ -55,7 +55,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
       const rect = container.getBoundingClientRect();
 
       width = Math.floor(rect.width) || window.innerWidth;
-      height = Math.max(140, Math.min(240, Math.floor(width * 0.18)));
+      height = Math.max(160, Math.min(280, Math.floor(width * 0.22)));
 
       canvas.width = width * dpr;
       canvas.height = height * dpr;
@@ -78,7 +78,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
       offscreen.height = height;
 
       // High-assurance Swiss Architectural Typography rasterization
-      const fontSize = Math.max(38, Math.min(136, Math.floor(width * 0.155)));
+      const fontSize = Math.max(46, Math.min(168, Math.floor(width * 0.19)));
       offCtx.font = `800 ${fontSize}px "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
@@ -358,7 +358,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
   }, [text]);
 
   return (
-    <footer className="relative w-full border-t border-slate-300 dark:border-white/10 bg-[var(--bg-main)] pt-8 pb-8 overflow-visible select-none transition-colors duration-200">
+    <footer className="relative w-full border-t border-slate-300 dark:border-white/30 bg-[var(--bg-main)] pt-8 pb-8 overflow-visible select-none transition-colors duration-200">
       {/* Scroll to Top Center Button (CAVDAX Signature Architectural Pattern) */}
       <button 
         type="button" 
@@ -403,7 +403,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
 
       {/* Architectural Hairline Divider separating the grand Particle Typography from Footer Navigation */}
       <div className="max-w-7xl mx-auto px-6 mt-16 sm:mt-20 mb-10">
-        <div className="w-full h-px bg-slate-300/80 dark:bg-white/10" />
+        <div className="w-full h-px bg-slate-300/80 dark:bg-white/20" />
       </div>
 
       {/* Structured Footer Navigation Grid */}
@@ -613,7 +613,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
       {/* Footer Meta & Copyright */}
       <div className="max-w-7xl mx-auto px-6 pt-6 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-mono gap-3 text-center md:text-left">
         <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-          <span className="font-bold text-slate-950 dark:text-white">CAVDAX</span>
+          <span className="font-mono font-black text-sm sm:text-base tracking-wider text-slate-950 dark:text-white">CAVDAX</span>
           <span>•</span>
           <span>Contextual Action & Verified Decision Autonomous eXecution</span>
         </div>
