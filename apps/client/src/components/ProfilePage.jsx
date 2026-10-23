@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User, CheckCircle2, Lock, Terminal,
-  ArrowRight, Key, HardDrive, RefreshCw, Heart, ExternalLink
+  ArrowRight, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
+import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
+import ShimmerImage from './ui/ShimmerImage';
 
 /**
  * ProfilePage.jsx — Developer Identity, Architecture Tiers & Quota Management
@@ -31,24 +33,77 @@ export default function ProfilePage({
   const [apiKeySuffix, setApiKeySuffix] = useState('a8f27e69');
   const [hoveredTierBtn, setHoveredTierBtn] = useState(null);
 
+  // Check if current user is an authorized devteam member or has active dev enclave session
+  const isAuthorizedDev = Boolean(
+    isUserAuthorized(user) || getActiveDevSession()
+  );
+
+  // Enforce Free Tier for non-dev users if they had a stale paid tier in localStorage
+  useEffect(() => {
+    if (!isAuthorizedDev && currentTier !== 'free') {
+      setCurrentTier('free');
+      try {
+        localStorage.setItem('cavdax_tier', 'free');
+        window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
+      } catch {}
+      if (onSelectTier) onSelectTier('free');
+    }
+  }, [isAuthorizedDev, currentTier, onSelectTier]);
+
   const showToast = (msg) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3200);
+    setTimeout(() => setToastMsg(null), 3500);
   };
 
   const handleTierSwitch = (newTier) => {
     playClick();
-    if (newTier !== 'free' && !user) {
-      showToast('Authentication required: Sign in with GitHub to access Pro tiers.');
+
+    if (newTier === 'free') {
+      setCurrentTier('free');
+      try {
+        localStorage.setItem('cavdax_tier', 'free');
+        window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
+      } catch {}
+      if (onSelectTier) onSelectTier('free');
+      showToast('Active Plan: COMMUNITY Tier');
       return;
     }
+
+    if (!user) {
+      showToast('Authentication required: Sign in with GitHub to view subscription tiers.');
+      return;
+    }
+
+    if (!isAuthorizedDev) {
+      const planName = newTier === 'pro' ? 'Pro Autonomous ($9/mo)' : 'Enterprise Mesh';
+      showToast(`${planName} requires an active subscription. Razorpay payment integration in progress.`);
+      return;
+    }
+
+    // Authorized developer bypass
     setCurrentTier(newTier);
     try {
       localStorage.setItem('cavdax_tier', newTier);
       window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: newTier } }));
     } catch {}
     if (onSelectTier) onSelectTier(newTier);
-    showToast(`Switched to ${newTier.toUpperCase()} Tier`);
+    showToast(`Switched to ${newTier.toUpperCase()} Tier (Dev Override)`);
+  };
+
+  const handleLogout = async () => {
+    playClick();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {}
+    try {
+      localStorage.removeItem('cavdax_user_session');
+      localStorage.setItem('cavdax_tier', 'free');
+    } catch {}
+    setCurrentTier('free');
+    window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+    window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
+    if (onSelectTier) onSelectTier('free');
+    showToast('Signed out of GitHub session.');
   };
 
   const handleCopyApiKey = () => {
@@ -86,9 +141,10 @@ export default function ProfilePage({
         {/* Concentric Tier-Enclosed Circular Avatar */}
         <div className={`h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${ROLE_RING[currentTier] || ROLE_RING.free}`}>
           {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
-            <img
+            <ShimmerImage
               src={user?.avatar_url || user?.avatarUrl || user?.avatar}
               alt={user.login || 'User Avatar'}
+              containerClassName="h-full w-full rounded-full"
               className="h-full w-full object-cover"
             />
           ) : (
@@ -172,6 +228,17 @@ export default function ProfilePage({
               Sponsor
             </span>
           </button>
+
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="h-[32px] sm:h-[34px] min-w-[120px] sm:min-w-[130px] px-4 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:border-rose-500/50 hover:bg-rose-500/10 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-mono font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer tactile-btn shadow-xs"
+              title="Sign out of current GitHub session"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
+            </button>
+          )}
         </div>
       </section>
 
@@ -257,7 +324,7 @@ export default function ProfilePage({
                 </div>
               )}
               <span className="relative z-10 transition-colors duration-300">
-                {currentTier === 'free' ? 'Active' : 'Switch'}
+                {currentTier === 'free' ? 'Active' : 'Switch to Free'}
               </span>
             </button>
           </div>
@@ -274,7 +341,13 @@ export default function ProfilePage({
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                 Pro Autonomous
               </span>
-              {!user && <Lock className="w-3 h-3 text-slate-400" />}
+              {isAuthorizedDev ? (
+                <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                  DEV ACCESS
+                </span>
+              ) : (
+                <Lock className="w-3 h-3 text-slate-400" />
+              )}
             </div>
             <div className="text-xl font-bold font-mono text-slate-950 dark:text-white mb-2">
               $9 <span className="text-[11px] font-normal text-slate-500 font-sans">/ mo</span>
@@ -338,8 +411,14 @@ export default function ProfilePage({
                 </div>
               )}
               <span className="relative z-10 transition-colors duration-300 flex items-center gap-1.5">
-                {!user && currentTier !== 'pro' && <Lock className="w-3 h-3" />}
-                <span>{currentTier === 'pro' ? 'Active' : (!user ? 'Sign In to Unlock' : 'Switch')}</span>
+                {!isAuthorizedDev && currentTier !== 'pro' && <Lock className="w-3 h-3" />}
+                <span>
+                  {currentTier === 'pro'
+                    ? 'Active'
+                    : (!user
+                        ? 'Sign In to Unlock'
+                        : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade ($9/mo)'))}
+                </span>
               </span>
             </button>
           </div>
@@ -356,7 +435,13 @@ export default function ProfilePage({
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-400">
                 Enterprise Mesh
               </span>
-              {!user && <Lock className="w-3 h-3 text-slate-400" />}
+              {isAuthorizedDev ? (
+                <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  DEV ACCESS
+                </span>
+              ) : (
+                <Lock className="w-3 h-3 text-slate-400" />
+              )}
             </div>
             <div className={`text-xl font-bold font-mono mb-2 ${
               currentTier === 'enterprise' ? 'text-white' : 'text-slate-950 dark:text-white'
@@ -426,8 +511,14 @@ export default function ProfilePage({
                 </div>
               )}
               <span className="relative z-10 transition-colors duration-300 flex items-center gap-1.5">
-                {!user && currentTier !== 'enterprise' && <Lock className="w-3 h-3" />}
-                <span>{currentTier === 'enterprise' ? 'Active' : (!user ? 'Sign In to Unlock' : 'Switch')}</span>
+                {!isAuthorizedDev && currentTier !== 'enterprise' && <Lock className="w-3 h-3" />}
+                <span>
+                  {currentTier === 'enterprise'
+                    ? 'Active'
+                    : (!user
+                        ? 'Sign In to Unlock'
+                        : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade (Custom)'))}
+                </span>
               </span>
             </button>
           </div>
