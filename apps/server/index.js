@@ -301,14 +301,25 @@ app.get('/api/health', (req, res) => {
 // 2. Real-time Server-Sent Events (SSE)
 app.get('/api/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
   sseClients.add(res);
   res.write(`data: ${JSON.stringify({ type: 'CONNECTED', message: 'CAVDAX SSE Stream Live' })}\n\n`);
 
+  // 15s keepalive heartbeat ping to prevent Cloudflare HTTP/3 (QUIC) idle stream termination
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch {
+      clearInterval(heartbeat);
+    }
+  }, 15000);
+
   req.on('close', () => {
+    clearInterval(heartbeat);
     sseClients.delete(res);
   });
 });
