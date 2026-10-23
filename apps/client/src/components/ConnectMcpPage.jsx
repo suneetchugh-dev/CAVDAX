@@ -126,6 +126,8 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
     return null;
   });
 
+  const [oauthMsg, setOauthMsg] = useState(null);
+
   useEffect(() => {
     // Check ?connected=1 or ?oauth_error= from callback redirect
     const params = new URLSearchParams(window.location.search);
