@@ -4,14 +4,7 @@
 cavdax.sahnirmaan.live, {$DOMAIN:localhost} {
     tls internal
 
-    # ── /dev production block (roadmap Access Control) ───────────────────
-    # /dev route is internal-only — block all non-loopback, non-RFC-1918 IPs.
-    # Locally (localhost:5173 or direct Caddy on 443) this is always bypassed.
-    @dev_block {
-        path /dev*
-        not remote_ip 127.0.0.1 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
-    }
-    respond @dev_block 403
+    # /devteam route access control is managed via multi-factor IP whitelist & passkey in DevTeamPanel
 
     # 1. Route API requests and real-time SSE streams to CAVDAX Backend Server
     handle /api/* {
