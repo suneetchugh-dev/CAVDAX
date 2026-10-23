@@ -104,23 +104,35 @@ export default function Header({
       setScrollY(y);
       setIsScrolled(y > 20);
 
-      // Hide navbar completely when user is inside the continuous radar theater section or causal solution theater
+            // Hide navbar completely when user is inside the continuous radar theater section or causal solution theater
       if (activeTab === 'landing') {
         const radarEl = document.getElementById('radar-section');
         const causalEl = document.getElementById('causal-loop-section');
+        const faqEl = document.getElementById('faq-section');
+        const ctaEl = document.getElementById('cta-section');
         let inTheater = false;
-        if (radarEl) {
-          const rect = radarEl.getBoundingClientRect();
-          if (rect.top <= window.innerHeight * 0.35 && rect.bottom >= window.innerHeight * 0.15) {
-            inTheater = true;
-          }
-        }
+
+        // 1. Causal Solution Scroller Theater:
+        // Keeps navbar hidden from entry into #causal-loop-section until #faq-section actually arrives at top of viewport.
+        // Guarantees navbar never appears early over Card 4's punchline ("Deterministic causal feedback...").
         if (causalEl) {
-          const rect = causalEl.getBoundingClientRect();
-          if (rect.top <= window.innerHeight * 0.35 && rect.bottom >= window.innerHeight * 0.15) {
+          const cRect = causalEl.getBoundingClientRect();
+          const fRect = faqEl ? faqEl.getBoundingClientRect() : null;
+          if (cRect.top <= 120 && (!fRect || fRect.top > 80)) {
             inTheater = true;
           }
         }
+
+        // 2. Continuous Provenance Radar Theater:
+        // Hides navbar strictly while inside radar and restores it immediately upon entering #cta-section or footer.
+        if (radarEl) {
+          const rRect = radarEl.getBoundingClientRect();
+          const ctaRect = ctaEl ? ctaEl.getBoundingClientRect() : null;
+          if (rRect.top <= window.innerHeight * 0.35 && (!ctaRect || ctaRect.top > window.innerHeight * 0.35)) {
+            inTheater = true;
+          }
+        }
+
         setIsRadarSection(inTheater);
       } else {
         setIsRadarSection(false);

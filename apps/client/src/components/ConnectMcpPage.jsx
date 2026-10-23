@@ -45,61 +45,45 @@ import { playClick } from '../utils/soundFx';
 
 
 // Container-Relative Slider Tracker Hook (Immune to scroll jumps, unmount morphs, and cross-screen Y-flying)
-
-function usePillTracker(activeKey, dependencies = []) {
-
+function usePillTracker(activeKey, extraDep = null) {
   const refs = useRef({});
-
   const [position, setPosition] = useState({ x: 0, y: 0, width: 0, height: 0, ready: false });
 
-
-
   useLayoutEffect(() => {
-
+    let rafId;
     const update = () => {
-
       const el = refs.current[activeKey];
-
       if (el) {
-
-        setPosition({
-
-          x: el.offsetLeft,
-
-          y: el.offsetTop,
-
-          width: el.offsetWidth,
-
-          height: el.offsetHeight,
-
-          ready: true,
-
+        const x = el.offsetLeft;
+        const y = el.offsetTop;
+        const width = el.offsetWidth;
+        const height = el.offsetHeight;
+        setPosition((prev) => {
+          if (
+            prev.ready &&
+            prev.x === x &&
+            prev.y === y &&
+            prev.width === width &&
+            prev.height === height
+          ) {
+            return prev;
+          }
+          return { x, y, width, height, ready: true };
         });
-
       }
-
     };
 
     update();
-
-    const rafId = requestAnimationFrame(update);
-
+    rafId = requestAnimationFrame(update);
     window.addEventListener('resize', update);
 
     return () => {
-
-      cancelAnimationFrame(rafId);
-
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', update);
-
     };
-
-  }, [activeKey, ...dependencies]);
-
-
+  }, [activeKey, extraDep]);
 
   return { refs, position };
-
 }
 
 
@@ -246,7 +230,7 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
   const transportPill = usePillTracker(transportMode);
 
-  const clientPill = usePillTracker(activeClient, [transportMode]);
+  const clientPill = usePillTracker(activeClient, transportMode);
 
   const cliTabPill = usePillTracker(activeCliTab);
 

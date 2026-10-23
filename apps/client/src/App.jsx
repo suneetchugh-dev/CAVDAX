@@ -954,6 +954,7 @@ export default function App() {
         <SubsystemErrorBoundary name="Landing Viewport">
           <LandingPage
             landingTarget={landingTarget}
+            onSelectTab={handleSelectTab}
             onLaunchConsole={() => handleSelectTab('console')}
             onOpenMcpPage={() => handleSelectTab('mcp')}
             onOpenMcpModal={() => setIsMcpModalOpen(true)}

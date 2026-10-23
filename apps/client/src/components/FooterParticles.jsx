@@ -15,7 +15,7 @@ import { playClick } from "../utils/soundFx";
  * 3. High-Fidelity Pointillism Step: Tuned grid sampling step (~1,400 crisp particles) preserving
  *    razor-sharp architectural letterforms with 60% lower memory & draw-call overhead.
  */
-export default function FooterParticles({ text = 'CAVDAX' }) {
+export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunchConsole }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const particlesRef = useRef([]);
@@ -91,19 +91,16 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
       const centerY = height / 2 - 8;
       offCtx.fillText(text, width / 2, centerY);
 
-      // Architectural Directed Causal Underline (Matching CavdaxWordmark C-to-X Causal Edge)
+      // Architectural Directed Causal Underline Geometry (Single-Dotted Line Standard)
       const textMetrics = offCtx.measureText(text);
       const textW = textMetrics.width || width * 0.72;
       const underlineY = centerY + fontSize * 0.44;
       const startX = width / 2 - textW * 0.48;
       const endX = width / 2 + textW * 0.48;
 
-      offCtx.lineWidth = Math.max(2, fontSize * 0.024);
-      offCtx.strokeStyle = '#ffffff';
-      offCtx.beginPath();
-      offCtx.moveTo(startX, underlineY);
-      offCtx.lineTo(endX - 10, underlineY);
-      offCtx.stroke();
+      // Note: We DO NOT draw a thick continuous stroke here to prevent raster antialiasing
+      // from generating a double-dotted sampling track. Instead, we generate a mathematical
+      // single row of stippled particles directly below.
 
       // Start circle node (Context ●)
       offCtx.beginPath();
@@ -168,6 +165,30 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
             });
           }
         }
+      }
+
+      // Architectural Single-Row Directed Underline Dots (Strictly 1 single line of stippled dots)
+      const dotSpacing = step * 1.5;
+      const roundedUnderlineY = Math.round(underlineY);
+      for (let x = startX + 8; x < endX - 14; x += dotSpacing) {
+        if (Math.abs(x - width / 2) < 8) continue; // preserve breathing room for center decision vertex
+        const yRatio = height > 0 ? Math.max(0, Math.min(1, roundedUnderlineY / height)) : 0.5;
+        const r = Math.round(251 - yRatio * 42);
+        const g = Math.round(191 - yRatio * 38);
+        const b = Math.round(36 + yRatio * 40);
+
+        newParticles.push({
+          origX: x,
+          origY: roundedUnderlineY,
+          x: x + (Math.random() - 0.5) * 6,
+          y: roundedUnderlineY + (Math.random() - 0.5) * 6,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          size: 1.4,
+          colorDark: `rgba(${r}, ${g}, ${b}, 0.85)`,
+          colorLight: 'rgba(2, 6, 23, 0.82)',
+          settled: false,
+        });
       }
 
       particlesRef.current = newParticles;
@@ -369,42 +390,211 @@ export default function FooterParticles({ text = 'CAVDAX' }) {
         <canvas ref={canvasRef} className="block" />
       </div>
 
+      {/* Architectural Hairline Divider separating the grand Particle Typography from Footer Navigation */}
+      <div className="max-w-7xl mx-auto px-6 mt-16 sm:mt-20 mb-10">
+        <div className="w-full h-px bg-slate-300/80 dark:bg-white/10" />
+      </div>
+
       {/* Structured Footer Navigation Grid */}
-      <div className="max-w-7xl mx-auto px-6 mt-8 mb-8 grid grid-cols-2 sm:grid-cols-4 gap-8 text-xs font-mono">
+      <div className="max-w-7xl mx-auto px-6 mb-12 grid grid-cols-2 sm:grid-cols-4 gap-8 text-xs font-mono">
         <div>
           <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Architecture</h4>
-          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
-            <li><a href="#hero-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">Cache Rot Elimination</a></li>
-            <li><a href="#causal-loop-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">4-Step Causal Loop</a></li>
-            <li><a href="#radar-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">Provenance Radar</a></li>
-            <li><a href="#faq-section" className="hover:text-slate-950 dark:hover:text-white transition-colors">Technical FAQ</a></li>
+          <ul className="space-y-2.5 text-slate-600 dark:text-slate-400">
+            <li>
+              <a
+                href="#hero-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  playClick();
+                  if (window.__lenis) window.__lenis.scrollTo('#hero-section', { offset: -60, duration: 1.2 });
+                  else document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Cache Rot Elimination
+              </a>
+            </li>
+            <li>
+              <a
+                href="#causal-loop-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  playClick();
+                  if (window.__lenis) window.__lenis.scrollTo('#causal-loop-section', { offset: -60, duration: 1.2 });
+                  else document.getElementById('causal-loop-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                4-Step Causal Loop
+              </a>
+            </li>
+            <li>
+              <a
+                href="#radar-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  playClick();
+                  if (window.__lenis) window.__lenis.scrollTo('#radar-section', { offset: -60, duration: 1.2 });
+                  else document.getElementById('radar-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Provenance Radar
+              </a>
+            </li>
+            <li>
+              <a
+                href="#faq-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  playClick();
+                  if (window.__lenis) window.__lenis.scrollTo('#faq-section', { offset: -60, duration: 1.2 });
+                  else document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Technical FAQ
+              </a>
+            </li>
           </ul>
         </div>
         <div>
           <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Developer Tools</h4>
-          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
-            <li><a href="/console" className="hover:text-slate-950 dark:hover:text-white transition-colors">Interactive Console</a></li>
-            <li><a href="/mcp" className="hover:text-slate-950 dark:hover:text-white transition-colors">Connect MCP Agent</a></li>
-            <li><a href="/audit" className="hover:text-slate-950 dark:hover:text-white transition-colors">Audit Log Stream</a></li>
-            <li><a href="/profile" className="hover:text-slate-950 dark:hover:text-white transition-colors">Subscription Tiers</a></li>
+          <ul className="space-y-2.5 text-slate-600 dark:text-slate-400">
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onSelectTab) onSelectTab('console');
+                  else if (onLaunchConsole) onLaunchConsole();
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                Interactive Console
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onSelectTab) onSelectTab('mcp');
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                Connect MCP Agent
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onSelectTab) onSelectTab('audit');
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                Audit Log Stream
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onSelectTab) onSelectTab('profile');
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                Subscription Tiers
+              </button>
+            </li>
           </ul>
         </div>
         <div>
           <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Enclave & Security</h4>
-          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
-            <li><a href="/team" className="hover:text-slate-950 dark:hover:text-white transition-colors">Core Architects</a></li>
-            <li><a href="/support" className="hover:text-slate-950 dark:hover:text-white transition-colors">Support Enclave</a></li>
-            <li><a href="/devteam" className="hover:text-slate-950 dark:hover:text-white transition-colors">Dev Console Gate</a></li>
-            <li><span className="text-slate-400 dark:text-slate-600">Zero-Trust Sandbox</span></li>
+          <ul className="space-y-2.5 text-slate-600 dark:text-slate-400">
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onSelectTab) onSelectTab('team');
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                Core Architects
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onSelectTab) onSelectTab('support');
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                Support Enclave
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  if (onSelectTab) onSelectTab('devteam');
+                }}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                Dev Console Gate
+              </button>
+            </li>
+            <li>
+              <span className="text-slate-400 dark:text-slate-600">Zero-Trust Sandbox</span>
+            </li>
           </ul>
         </div>
         <div>
           <h4 className="font-bold uppercase tracking-wider text-slate-950 dark:text-white mb-3">Ecosystem</h4>
-          <ul className="space-y-2 text-slate-600 dark:text-slate-400">
-            <li><a href="https://github.com/suneetchugh-dev" target="_blank" rel="noopener noreferrer" className="hover:text-slate-950 dark:hover:text-white transition-colors">GitHub Repository</a></li>
-            <li><a href="https://falkordb.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-950 dark:hover:text-white transition-colors">FalkorDB Graph Engine</a></li>
-            <li><a href="https://graphblas.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-950 dark:hover:text-white transition-colors">GraphBLAS Semirings</a></li>
-            <li><span className="text-slate-400 dark:text-slate-600">WeMakeDevs Hackathon</span></li>
+          <ul className="space-y-2.5 text-slate-600 dark:text-slate-400">
+            <li>
+              <a
+                href="https://github.com/suneetchugh-dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => playClick()}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors"
+              >
+                GitHub Repository
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://falkordb.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => playClick()}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors"
+              >
+                FalkorDB Graph Engine
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://graphblas.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => playClick()}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors"
+              >
+                GraphBLAS Semirings
+              </a>
+            </li>
+            <li>
+              <span className="text-slate-400 dark:text-slate-600">WeMakeDevs Hackathon</span>
+            </li>
           </ul>
         </div>
       </div>
