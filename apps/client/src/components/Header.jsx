@@ -263,7 +263,7 @@ export default function Header({
           className="flex items-center justify-end space-x-1.5 sm:space-x-2.5 min-w-0"
         >
           {/* Profile Button with Uniform 1px Outline & Distinct Tier Dot */}
-          <Tooltip content={`Profile & Account (${(tier || 'free').toUpperCase()} Tier)`} position="bottom">
+          <Tooltip content={user?.login ? `@${user.login} (${(tier || 'free').toUpperCase()} Tier)` : `Profile & Account (${(tier || 'free').toUpperCase()} Tier)`} position="bottom">
             <button
               onClick={() => {
                 playClick();

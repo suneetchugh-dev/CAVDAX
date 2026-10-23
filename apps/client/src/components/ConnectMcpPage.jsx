@@ -104,7 +104,7 @@ function usePillTracker(activeKey, dependencies = []) {
 
 
 
-export default function ConnectMcpPage({ onLaunchConsole }) {
+export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuthChange }) {
 
   const [activeClient, setActiveClient] = useState('cursor');
 
@@ -122,50 +122,97 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
 
   // ── GitHub OAuth state ────────────────────────────────────────────────────
 
-  // githubUser: null (not checked yet) | false (not authed) | { login, name, avatarUrl }
-
-  const [githubUser, setGithubUser] = useState(null);
-
-  const [oauthMsg, setOauthMsg] = useState(null); // success / error banner
-
-
+    // githubUser: null (not checked yet) | false (not authed) | { login, name, avatarUrl }
+  const [githubUser, setGithubUser] = useState(() => {
+    if (propUser) return propUser;
+    try {
+      const raw = localStorage.getItem('cavdax_user_session');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.username || parsed?.login) {
+          return {
+            login: parsed.username || parsed.login,
+            name: parsed.name || parsed.username || parsed.login,
+            avatarUrl: parsed.avatarUrl || parsed.avatar_url || parsed.avatar,
+            role: parsed.role || 'user'
+          };
+        }
+      }
+    } catch {}
+    return null;
+  });
 
   useEffect(() => {
-
     // Check ?connected=1 or ?oauth_error= from callback redirect
-
     const params = new URLSearchParams(window.location.search);
-
     if (params.get('connected') === '1') {
+      const login = params.get('login');
+      const name = params.get('name') || login;
+      const avatarUrl = params.get('avatar') || '';
+      const githubId = params.get('githubId') || '';
+
+      if (login) {
+        const userObj = { login, name, avatarUrl, githubId };
+        setGithubUser(userObj);
+        try {
+          localStorage.setItem('cavdax_user_session', JSON.stringify({
+            username: login,
+            name,
+            avatarUrl,
+            githubId,
+            connectedAt: new Date().toISOString()
+          }));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: userObj }));
+        if (onAuthChange) onAuthChange(userObj);
+      }
 
       setOauthMsg({ type: 'success', text: 'GitHub account connected successfully.' });
-
-      // Clean the query string without a page reload
-
+      setTimeout(() => setOauthMsg(null), 3500);
       window.history.replaceState({}, '', window.location.pathname);
-
     } else if (params.get('oauth_error')) {
-
       const errCode = params.get('oauth_error');
-
       setOauthMsg({ type: 'error', text: `GitHub OAuth failed: ${errCode}` });
-
+      setTimeout(() => setOauthMsg(null), 3500);
       window.history.replaceState({}, '', window.location.pathname);
-
     }
 
-
-
     // Fetch current session user
-
     fetch('/api/auth/me', { credentials: 'include' })
-
-      .then(r => r.json())
-
-      .then(d => setGithubUser(d.authenticated ? d.user : false))
-
-      .catch(() => setGithubUser(false));
-
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.authenticated && d?.user) {
+          const u = {
+            login: d.user.login,
+            name: d.user.name || d.user.login,
+            avatarUrl: d.user.avatarUrl || d.user.avatar_url,
+            githubId: d.user.githubId
+          };
+          setGithubUser(u);
+          try {
+            localStorage.setItem('cavdax_user_session', JSON.stringify({
+              username: u.login,
+              name: u.name,
+              avatarUrl: u.avatarUrl,
+              githubId: u.githubId,
+              connectedAt: new Date().toISOString()
+            }));
+          } catch {}
+          window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: u }));
+          if (onAuthChange) onAuthChange(u);
+        } else if (d && !d.authenticated) {
+          const currentParams = new URLSearchParams(window.location.search);
+          if (currentParams.get('connected') !== '1') {
+            setGithubUser(false);
+          }
+        }
+      })
+      .catch(() => {
+        const currentParams = new URLSearchParams(window.location.search);
+        if (currentParams.get('connected') !== '1') {
+          setGithubUser(false);
+        }
+      });
   }, []);
 
 
@@ -179,21 +226,18 @@ export default function ConnectMcpPage({ onLaunchConsole }) {
 
 
   const handleGithubDisconnect = async () => {
-
     try {
-
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-
       setGithubUser(false);
-
+      try { localStorage.removeItem('cavdax_user_session'); } catch {}
+      window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+      if (onAuthChange) onAuthChange(null);
       setOauthMsg({ type: 'success', text: 'GitHub account disconnected.' });
-
+      setTimeout(() => setOauthMsg(null), 3500);
     } catch {
-
       setOauthMsg({ type: 'error', text: 'Logout failed — please try again.' });
-
+      setTimeout(() => setOauthMsg(null), 3500);
     }
-
   };
 
 
@@ -704,30 +748,15 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
 
 
-      {/* 1b. OAuth message banner — success or error from callback */}
-
+      {/* 1b. Monochromatic Floating Toast for OAuth Connection State */}
       {oauthMsg && (
-
-        <section className="px-6 max-w-5xl mx-auto w-full -mt-4 mb-2">
-
-          <div className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border text-[11px] font-mono ${
-
-            oauthMsg.type === 'success'
-
-              ? 'border-emerald-400/30 bg-emerald-500/5 text-emerald-400'
-
-              : 'border-amber-400/30 bg-amber-500/5 text-amber-400'
-
-          }`}>
-
-            <span>{oauthMsg.text}</span>
-
-            <button onClick={() => setOauthMsg(null)} className="text-slate-500 hover:text-slate-300 transition-colors ml-2 shrink-0">✕</button>
-
-          </div>
-
-        </section>
-
+        <div
+          role="status"
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-semibold shadow-2xl border border-slate-800 dark:border-white/20 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3 pointer-events-none"
+        >
+          <Check className="w-3.5 h-3.5 text-current shrink-0" />
+          <span>{oauthMsg.text}</span>
+        </div>
       )}
 
 
@@ -742,7 +771,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
             <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-amber-500/[0.08] border border-slate-800 dark:border-amber-400/20 text-white flex items-center justify-center shrink-0 shadow-xs dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
 
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="text-amber-400" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="text-white dark:text-amber-400" aria-hidden="true">
 
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
 
@@ -956,7 +985,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
             <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-amber-500/[0.08] border border-slate-800 dark:border-amber-400/20 text-white flex items-center justify-center shrink-0 shadow-xs dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
 
-              <Package className="w-5 h-5 text-amber-400" />
+              <Package className="w-5 h-5 text-white dark:text-amber-400" />
 
             </div>
 
