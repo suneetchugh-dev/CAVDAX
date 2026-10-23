@@ -36,6 +36,12 @@ Operational constitution, architecture standards, and safety governance for AI c
 
 
 
+0d. **Concise UI Copy, Zero Wall-of-Text & Dev Integrity Standard**:
+   - **Banned Verbose Mechanical Paragraphs**: Never write bloated multi-sentence mechanical paragraphs in security gates, modal confirmations, or terminal prompts (e.g. strictly banning blocks like *"Restricted developer terminal. Hardware IP whitelist matched and authorized GitHub handle detected. Enter your Master Developer Passkey to unlock the causal intercept console."*).
+   - **Rule**: Keep security and modal prompts to a single concise, punchy sentence: e.g. *"Authorized session detected. Enter master passkey to unlock the causal console."* or *"This clears active dev tokens, locks the enclave immediately, and returns to the home page."*
+   - **Zero Public Leakage of Dev Endpoints**: Never link, hint at, or expose internal developer consoles (`/devteam`), private admin gates, or static placeholder labels in public footer navigation.
+   - **Zero Fake Metrics or Vanity Clutter**: Never display simulated hardcoded numbers (e.g. fake client counts, fake node tallies, simulated latencies). Keep all dev console diagnostics grounded strictly in genuine operational status (e.g. Gateway: ENFORCING, Database: CONNECTED, Session: VERIFIED, Device IP: WHITELISTED).
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:

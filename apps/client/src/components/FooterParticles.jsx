@@ -559,19 +559,15 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
               </button>
             </li>
             <li>
-              <button
-                type="button"
-                onClick={() => {
-                  playClick();
-                  if (onSelectTab) onSelectTab('devteam');
-                }}
-                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer text-left"
+              <a
+                href="https://github.com/suneetchugh-dev/CAVDAX/blob/main/LICENSE"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => playClick()}
+                className="hover:text-slate-950 dark:hover:text-white transition-colors"
               >
-                Dev Console Gate
-              </button>
-            </li>
-            <li>
-              <span className="text-slate-400 dark:text-slate-600">Zero-Trust Sandbox</span>
+                Security & License
+              </a>
             </li>
           </ul>
         </div>
@@ -611,9 +607,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
                 GraphBLAS Semirings
               </a>
             </li>
-            <li>
-              <span className="text-slate-400 dark:text-slate-600">WeMakeDevs Hackathon</span>
-            </li>
+
           </ul>
         </div>
       </div>
@@ -626,7 +620,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
           <span>Contextual Action & Verified Decision Autonomous eXecution</span>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span>WeMakeDevs × FalkorDB Graph Hacks</span>
+          <span>FalkorDB Graph Hacks</span>
           <span>•</span>
           <span>GNU GPL 3.0</span>
         </div>

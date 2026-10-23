@@ -12,6 +12,7 @@
 const SESSION_VAULT_KEY = 'cavdax_dev_vault_v1';
 const IP_CACHE_KEY = 'cavdax_detected_client_ip';
 const DYNAMIC_ROSTER_KEY = 'cavdax_authorized_dev_roster';
+const DYNAMIC_ALLOWED_IPS_KEY = 'cavdax_authorized_dev_ips';
 
 // Hardcoded authorized developer roster
 export const DEFAULT_AUTHORIZED_ROSTER = [
@@ -24,14 +25,59 @@ export const DEFAULT_AUTHORIZED_ROSTER = [
 // Never commits plaintext password to source
 const MASTER_PASSKEY_HASH = '44fc4515e924df63db607ff442569372836352e041b1daa45716032d858317cc';
 
-// Parse allowed IPs from env (supports comma-separated list, trims whitespace)
+// Parse allowed IPs from env + local persistent whitelist
 export function getAllowedIps() {
   const envIps = (import.meta.env.VITE_ALLOWED_DEV_IPS || '').trim();
-  if (!envIps) {
-    // In local development, default to local loopbacks if no env set
-    return import.meta.env.DEV ? ['127.0.0.1', 'localhost', '::1'] : [];
+  const parsedEnv = envIps
+    ? envIps.split(',').map((ip) => ip.trim().toLowerCase()).filter(Boolean)
+    : (import.meta.env.DEV ? ['127.0.0.1', 'localhost', '::1'] : []);
+
+  let dynamicIps = [];
+  try {
+    const raw = localStorage.getItem(DYNAMIC_ALLOWED_IPS_KEY);
+    if (raw) dynamicIps = JSON.parse(raw);
+  } catch {}
+
+  return Array.from(new Set([...parsedEnv, ...dynamicIps]));
+}
+
+// Get array of dynamically added custom whitelisted IPs
+export function getCustomWhitelistedIps() {
+  try {
+    const raw = localStorage.getItem(DYNAMIC_ALLOWED_IPS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+
+// Whitelist a new IP address (accessible from inside unlocked dev panel)
+export function addWhitelistedIp(ip) {
+  if (!ip) return false;
+  const clean = ip.trim().toLowerCase();
+  if (!clean) return false;
+
+  const current = getAllowedIps();
+  if (!current.includes(clean)) {
+    const custom = getCustomWhitelistedIps();
+    const updated = Array.from(new Set([...custom, clean]));
+    try {
+      localStorage.setItem(DYNAMIC_ALLOWED_IPS_KEY, JSON.stringify(updated));
+    } catch {}
+    return true;
   }
-  return envIps.split(',').map((ip) => ip.trim().toLowerCase()).filter(Boolean);
+  return false;
+}
+
+// Revoke a dynamically whitelisted IP address
+export function removeWhitelistedIp(ip) {
+  if (!ip) return false;
+  const clean = ip.trim().toLowerCase();
+  const custom = getCustomWhitelistedIps();
+  const updated = custom.filter((item) => item !== clean);
+  try {
+    localStorage.setItem(DYNAMIC_ALLOWED_IPS_KEY, JSON.stringify(updated));
+  } catch {}
+  return true;
 }
 
 // Parse authorized GitHub usernames from roster + env + local persistent roster

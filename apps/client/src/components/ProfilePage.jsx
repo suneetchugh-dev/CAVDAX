@@ -358,10 +358,16 @@ export default function ProfilePage({
               </span>
               {!user && <Lock className="w-3 h-3 text-slate-400" />}
             </div>
-            <div className="text-xl font-bold font-mono text-slate-950 dark:text-white mb-2">
-              Custom <span className="text-[11px] font-normal text-slate-500 font-sans">/ SLA</span>
+            <div className={`text-xl font-bold font-mono mb-2 ${
+              currentTier === 'enterprise' ? 'text-white' : 'text-slate-950 dark:text-white'
+            }`}>
+              Custom <span className={`text-[11px] font-normal font-sans ${
+                currentTier === 'enterprise' ? 'text-purple-200/80' : 'text-slate-500'
+              }`}>/ SLA</span>
             </div>
-            <ul className="text-xs font-mono space-y-1.5 mb-4 text-slate-600 dark:text-slate-300">
+            <ul className={`text-xs font-mono space-y-1.5 mb-4 ${
+              currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
+            }`}>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                 <span>Unlimited verifications</span>
