@@ -129,7 +129,7 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
       const cRect = container.getBoundingClientRect();
       const newObs = [];
 
-      // 1. Wordmark Actual SVG Letters
+      // 1. Wordmark SVG Letters
       const wmContainer = document.getElementById('wordmark-hero-container');
       const wmSvg = wmContainer?.querySelector('svg') || wmContainer;
       if (wmSvg) {
@@ -137,10 +137,25 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
         if (r.width > 0 && r.height > 0) {
           newObs.push({
             id: 'wordmark',
-            x: r.left - cRect.left + 6,
-            y: r.top - cRect.top + 6,
-            w: r.width - 12,
-            h: r.height - 12,
+            x: r.left - cRect.left - 8,
+            y: r.top - cRect.top - 6,
+            w: r.width + 16,
+            h: r.height + 12,
+          });
+        }
+      }
+
+      // 1b. Wordmark Subtext (Full form acronym and Explore phrase - STRICT EXCLUSION ZONE)
+      const wmSubtext = document.getElementById('wordmark-subtext-container');
+      if (wmSubtext) {
+        const r = wmSubtext.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          newObs.push({
+            id: 'wordmark-subtext',
+            x: r.left - cRect.left - 24,
+            y: r.top - cRect.top - 16,
+            w: r.width + 48,
+            h: r.height + 32,
           });
         }
       }
@@ -152,10 +167,10 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
         if (r.width > 0 && r.height > 0) {
           newObs.push({
             id: 'explore-btn',
-            x: r.left - cRect.left - 6,
-            y: r.top - cRect.top - 6,
-            w: r.width + 12,
-            h: r.height + 12,
+            x: r.left - cRect.left - 10,
+            y: r.top - cRect.top - 8,
+            w: r.width + 20,
+            h: r.height + 16,
           });
         }
       }
@@ -270,12 +285,15 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
     // ─── Graph Physics & Firefly Swarm Engine ────────────────────────────────
     const updateGraph = () => {
       frameCount++;
-      // Eliminated per-30-frame getBoundingClientRect() layout thrashing. Obstacles are scanned on resize & settled mount.
+      // Lightweight periodic rescan every 45 frames to guarantee real-time obstacle tracking without layout thrashing
+      if (frameCount % 45 === 0) {
+        updateObstacles();
+      }
 
       // ─── 1. Interval Swarm Focal Migration (Random Short & Long Intervals) ──
       const now = performance.now();
       if (now > swarmState.nextSwitchTime) {
-        const availableTargets = ['lamp', 'wordmark', 'explore-btn', 'scroll-prompt'];
+        const availableTargets = ['wordmark', 'explore-btn', 'scroll-prompt'];
         const otherTargets = availableTargets.filter(t => t !== swarmState.currentTargetId);
         swarmState.currentTargetId = otherTargets[Math.floor(Math.random() * otherTargets.length)];
 
@@ -500,6 +518,22 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
 
       const colors = getColors();
 
+      // Mathematical Obstacle Occlusion Guard: never draw lines, nodes, or text over wordmark, subtext, or buttons
+      const isInsideObstacle = (x, y, pad = 6) => {
+        for (let o = 0; o < obstacles.length; o++) {
+          const obs = obstacles[o];
+          if (
+            x >= obs.x - pad &&
+            x <= obs.x + obs.w + pad &&
+            y >= obs.y - pad &&
+            y <= obs.y + obs.h + pad
+          ) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       // 1. Draw Crisp, Clearly Visible Graph Edges
       ctx.lineWidth = 1.1;
       ctx.lineCap = 'round';
@@ -513,6 +547,23 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
           const distSq = dx * dx + dy * dy;
 
           if (distSq < MAX_EDGE_DIST_SQ) {
+            // Strict Exclusion: do not draw edges crossing into wordmark, subtext, button, OR lamp cluster
+            const isNearLamp = (x, y) => {
+              if (!lampPos.active || lampPos.x <= 0) return false;
+              const dX = x - lampPos.x;
+              const dY = y - lampPos.y;
+              return (dX * dX + dY * dY) < 14400; // 120px clean halo around lamp
+            };
+
+            if (
+              isNearLamp(nA.x, nA.y) ||
+              isNearLamp(nB.x, nB.y) ||
+              isInsideObstacle(nA.x, nA.y, 4) ||
+              isInsideObstacle(nB.x, nB.y, 4) ||
+              isInsideObstacle((nA.x + nB.x) * 0.5, (nA.y + nB.y) * 0.5, 4)
+            ) {
+              continue;
+            }
             const dist = Math.sqrt(distSq);
             // Crisp visibility in Dark Mode (up to 0.48 alpha) and Light Mode (0.36 alpha)
             const edgeAlpha = (1 - dist / MAX_EDGE_DIST) * (isDarkTheme ? 0.48 : 0.36);
@@ -598,6 +649,9 @@ export default function SpotlightDataRain({ isDarkTheme = true, opacity = 1 }) {
       // 3. Draw Firefly & Glow-Worm Graph Vertices
       for (let i = 0; i < NODE_COUNT; i++) {
         const n = nodes[i];
+        if (isInsideObstacle(n.x, n.y, 6)) {
+          continue; // Strict Exclusion: never render node on top of subtext or UI chrome
+        }
         const baseColor = colors[n.type];
 
         // Bioluminescent Firefly Breathing Halo

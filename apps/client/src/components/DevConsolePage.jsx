@@ -11,7 +11,7 @@
  *  - NO colored pulsing orbs — monospace text indicators
  *  - NO eyebrow pills above headings
  *  - Double-bezel card geometry
- *  - font-mono for all telemetry values
+ *  - font-mono for all metric values
  *  - Zero-overflow containment (h-full flex flex-col)
  */
 
@@ -41,7 +41,7 @@ function TierBadge({ tier }) {
   return <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${colour}`}>{t}</span>;
 }
 
-// ─── Telemetry row ────────────────────────────────────────────────────────────
+// ─── metrics row ────────────────────────────────────────────────────────────
 function TelRow({ label, value, mono = true }) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-1.5 border-b border-white/5 last:border-0">

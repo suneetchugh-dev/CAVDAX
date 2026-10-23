@@ -15,7 +15,7 @@ const TAB_SECTIONS = {
     { id: 'mcp-header', label: '01 · Protocol Gateway' },
     { id: 'mcp-config', label: '02 · Agent Configuration' },
     { id: 'mcp-architecture', label: '03 · Causal Interception' },
-    { id: 'mcp-telemetry', label: '04 · Protocol Telemetry' },
+    { id: 'mcp-metrics', label: '04 · Protocol Metrics' },
   ],
   project: [
     { id: 'project-overview', label: '01 · System Overview' },
@@ -27,6 +27,18 @@ const TAB_SECTIONS = {
     { id: 'team-intro', label: '01 · Team Contrarians' },
     { id: 'team-roster', label: '02 · Builders & Engineers' },
     { id: 'team-credits', label: '03 · System Credits' },
+  ],
+  profile: [
+    { id: '__top', label: '01 · Profile Identity', pct: 0 },
+    { id: '__mid_1', label: '02 · Tier & Quotas', pct: 33 },
+    { id: '__mid_2', label: '03 · Real-Time Metrics', pct: 66 },
+    { id: '__bot', label: '04 · API Credentials', pct: 100 },
+  ],
+  support: [
+    { id: '__top', label: '01 · Community Support', pct: 0 },
+    { id: '__mid_1', label: '02 · Sponsorship Tiers', pct: 33 },
+    { id: '__mid_2', label: '03 · Fund Stewardship', pct: 66 },
+    { id: '__bot', label: '04 · Prototype Notice', pct: 100 },
   ],
   default: [
     { id: '__top', label: '01 · Top Landmark', pct: 0 },

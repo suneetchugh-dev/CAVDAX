@@ -20,6 +20,10 @@ import ArchitecturalRailScrubber from './components/ArchitecturalRailScrubber.js
 import Tooltip from './components/Tooltip.jsx';
 import AuditPage from './components/AuditPage.jsx';
 import DevConsolePage from './components/DevConsolePage.jsx';
+import DevTeamPanel from './components/DevTeamPanel.jsx';
+import { fetchClientIp, isIpAuthorized, isUserAuthorized } from './services/devAuth.js';
+import ProfilePage from './components/ProfilePage.jsx';
+import SupportPage from './components/SupportPage.jsx';
 import SubsystemErrorBoundary from './components/SubsystemErrorBoundary.jsx';
 import { playClick, playRejectBuzz, playApprovalChime, initGlobalClickSound } from './utils/soundFx.js';
 
@@ -36,6 +40,9 @@ function resolveTabFromUrl() {
   if (rawPath === '/team') return 'team';
   if (rawPath === '/audit') return 'audit';
   if (rawPath === '/dev') return 'dev';
+  if (rawPath === '/devteam') return 'devteam';
+  if (rawPath === '/profile') return 'profile';
+  if (rawPath === '/support' || rawPath === '/sponsor') return 'support';
   if (rawPath === '/404') return '404';
 
   // 2. Hash routing fallback ONLY if on root '/'
@@ -45,6 +52,8 @@ function resolveTabFromUrl() {
     if (h === '#mcp') return 'mcp';
     if (h === '#project' || h === '#demo' || h === '#walkthrough') return 'project';
     if (h === '#team') return 'team';
+    if (h === '#profile') return 'profile';
+    if (h === '#support' || h === '#sponsor') return 'support';
     if (h === '#overview' || h === '' || h === '#') return 'landing';
     if (h === '#404') return '404';
   }
@@ -61,6 +70,9 @@ const TAB_TO_PATH = {
   team: '/team',
   audit: '/audit',
   dev: '/dev',
+  devteam: '/devteam',
+  profile: '/profile',
+  support: '/support',
   '404': '/404',
 };
 
@@ -87,6 +99,32 @@ export default function App() {
   // Theme class toggle on <html> element
   useEffect(() => {
     initGlobalClickSound();
+
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.authenticated && d.user) {
+          setGithubUser(d.user);
+          if (d.user.tier) setActiveTierKey(d.user.tier);
+        }
+      })
+      .catch(() => {
+        try {
+          const raw = localStorage.getItem('cavdax_user_session');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.username) {
+              setGithubUser({ login: parsed.username, name: parsed.username });
+            }
+          }
+        } catch {}
+      });
+
+    const handleTierChange = (e) => {
+      if (e.detail?.tier) setActiveTierKey(e.detail.tier);
+    };
+    window.addEventListener('cavdax:tier-changed', handleTierChange);
+    return () => window.removeEventListener('cavdax:tier-changed', handleTierChange);
   }, []);
 
   useEffect(() => {
@@ -426,7 +464,55 @@ export default function App() {
   const [activeVerdict, setActiveVerdict] = useState(null);
   const [latestLatency, setLatestLatency] = useState('1.84');
   const [falkorLive, setFalkorLive] = useState(false);
-  const [activeTierKey, setActiveTierKey] = useState('free'); // active tier key read from /api/health
+  const [activeTierKey, setActiveTierKey] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('cavdax_tier') || 'free';
+    }
+    return 'free';
+  });
+  const [githubUser, setGithubUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem('cavdax_user_session');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.username) {
+          return { login: parsed.username, name: parsed.username, role: parsed.role };
+        }
+      }
+    } catch {}
+    return null;
+  });
+  const [isDevAuthorized, setIsDevAuthorized] = useState(() => {
+    if (typeof window !== 'undefined' && import.meta.env.DEV) {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      return isLocal;
+    }
+    return false;
+  });
+  const [devAuthEvaluating, setDevAuthEvaluating] = useState(false);
+
+  // Evaluate dev access gate (/devteam) based on client IP & authorized GitHub user
+  useEffect(() => {
+    let isMounted = true;
+    async function checkDevAccess() {
+      try {
+        const ip = await fetchClientIp();
+        const ipOk = isIpAuthorized(ip);
+        const userOk = isUserAuthorized(githubUser);
+        if (isMounted) {
+          setIsDevAuthorized(ipOk && userOk);
+          setDevAuthEvaluating(false);
+        }
+      } catch {
+        if (isMounted) {
+          setIsDevAuthorized(false);
+          setDevAuthEvaluating(false);
+        }
+      }
+    }
+    checkDevAccess();
+    return () => { isMounted = false; };
+  }, [githubUser]);
 
   // Terminal & Action state
   const [terminalLogs, setTerminalLogs] = useState([
@@ -819,6 +905,7 @@ export default function App() {
         isDarkTheme={isDarkTheme}
         onToggleTheme={() => setIsDarkTheme((d) => !d)}
         tier={activeTierKey}
+        user={githubUser}
       />
 
       {/* 2. Main Viewport Switcher */}
@@ -849,7 +936,7 @@ export default function App() {
           onOpenMcpPage={() => handleSelectTab('mcp')}
         />
       ) : activeTab === 'team' ? (
-        /* Team Contrarians Presentation Page (SAHNIRMAAN Style) */
+        /* Team Contrarians Presentation Page (CAVDAX Style) */
         <TeamPage
           onLaunchConsole={() => handleSelectTab('console')}
         />
@@ -867,6 +954,42 @@ export default function App() {
             <DevConsolePage />
           </SubsystemErrorBoundary>
         </div>
+      ) : activeTab === 'devteam' ? (
+        /* Protected Dev Team Panel (/devteam) — Multi-Factor Gate + Silent 404 Cloaking */
+        !devAuthEvaluating && isDevAuthorized ? (
+          <SubsystemErrorBoundary name="Dev Enclave">
+            <DevTeamPanel
+              githubUser={githubUser}
+              onNavigateHome={() => handleSelectTab('landing')}
+            />
+          </SubsystemErrorBoundary>
+        ) : (
+          /* Silent 404 Cloaking — zero reconnaissance trace */
+          <NotFoundPage
+            onNavigateHome={() => handleSelectTab('landing')}
+            onLaunchConsole={() => handleSelectTab('console')}
+          />
+        )
+      ) : activeTab === 'profile' ? (
+        /* User Profile & Account Page */
+        <SubsystemErrorBoundary name="Profile & Account">
+          <ProfilePage
+            user={githubUser}
+            tier={activeTierKey}
+            onSelectTier={(newTier) => setActiveTierKey(newTier)}
+            onLaunchConsole={() => handleSelectTab('console')}
+            onOpenMcpPage={() => handleSelectTab('mcp')}
+            onOpenSupportPage={() => handleSelectTab('support')}
+          />
+        </SubsystemErrorBoundary>
+      ) : activeTab === 'support' ? (
+        /* Open Source Sponsorship & Support Page */
+        <SubsystemErrorBoundary name="Support & Sponsorship">
+          <SupportPage
+            onLaunchConsole={() => handleSelectTab('console')}
+            onNavigateHome={() => handleSelectTab('landing')}
+          />
+        </SubsystemErrorBoundary>
       ) : activeTab === '404' ? (
         /* Bespoke Error 404 Causal Node Not Found Page */
         <NotFoundPage
@@ -876,7 +999,7 @@ export default function App() {
       ) : (
         /* Operational Causal Verification Console View — Strict Zero-Overflow F11 & Desktop Containment (§Rule 14) */
         <div className="flex-1 min-h-0 flex flex-col pt-20 sm:pt-22 px-3 sm:px-6 max-w-[1600px] mx-auto w-full pb-3 overflow-hidden">
-          {/* Subheader Toolbar & Telemetry */}
+          {/* Subheader Toolbar & Metrics */}
           <div className="flex-shrink-0 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-300 dark:border-white/10">
             <div>
               <h1 className="text-sm sm:text-base font-bold text-slate-950 dark:text-white font-mono">
@@ -893,41 +1016,12 @@ export default function App() {
                 <button
                   onClick={() => {
                     playClick();
-                    setIsTourOpen(prev => !prev);
-                  }}
-                  className="group px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-[11px] font-mono text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white transition-all flex items-center gap-1.5 tactile-btn"
-                >
-                  <Compass className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform duration-300" />
-                  <span>Tour Guide</span>
-                </button>
-              </Tooltip>
-
-              {/* Reset Demo State */}
-              <Tooltip content="Reset Demo" shortcut="R" position="bottom">
-                <button
-                  onClick={() => {
-                    playClick();
-                    handleReset();
-                  }}
-                  disabled={isResetting}
-                  className="group px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-[11px] font-mono text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white transition-all flex items-center gap-1.5 disabled:opacity-50 tactile-btn"
-                >
-                  <RotateCcw className={`w-3.5 h-3.5 transition-transform duration-500 ${isResetting ? 'animate-spin' : 'group-hover:-rotate-180'}`} />
-                  <span>Reset Demo</span>
-                </button>
-              </Tooltip>
-
-              {/* Connect MCP Agent CTA */}
-              <Tooltip content="Connect MCP" position="bottom">
-                <button
-                  onClick={() => {
-                    playClick();
                     handleSelectTab('mcp');
                   }}
                   className="group px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 text-[11px] font-mono transition-all flex items-center gap-1.5 tactile-btn"
                 >
-                  <span>Connect MCP</span>
                   <McpCableConnectionSvg className="text-white dark:text-slate-950" />
+                  <span>Connect MCP</span>
                 </button>
               </Tooltip>
             </div>
@@ -978,7 +1072,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. System Preferences Modal (Ported from SAHNIRMAAN) */}
+      {/* 3. System Preferences Modal (Ported from CAVDAX) */}
       <PreferencesModal
         isOpen={isPreferencesOpen}
         onClose={() => setIsPreferencesOpen(false)}

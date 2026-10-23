@@ -7,10 +7,12 @@ import React from 'react';
  * Purpose: Global splash screen, route transition loader, and interactive hover navbar mark.
  * 
  * Features:
- * - animateOnHover=false (SplashLoader): Continuous 4.2s fluid cycle with nodes inception,
+ * - animateOnHover=false (SplashLoader): Continuous fluid cycle with nodes inception,
  *   outer letterforms, staggered DAG edges (spine, wings, bridge), and specular white lock flash.
+ *   Strictly scoped to .cavdax-fluid-loader.
  * - animateOnHover=true (Navbar): Crisp, static mark by default. When hovered, plays the full
- *   staggered draw trace and specular lock flash.
+ *   staggered draw trace and specular lock flash. Strictly scoped to .cavdax-interactive-hover.
+ * - isProcessing=true: When an active asynchronous operation is underway, pulses the fluid loop.
  */
 export default function CavdaxBrandLoader({
   size = 140,
@@ -20,9 +22,16 @@ export default function CavdaxBrandLoader({
   className = "",
   colorClassName = "text-current",
   animateOnHover = false,
+  isProcessing = false,
 }) {
+  const containerModeClass = isProcessing
+    ? "cavdax-processing"
+    : animateOnHover
+    ? "cavdax-interactive-hover group"
+    : "cavdax-fluid-loader";
+
   return (
-    <div className={`cavdax-brand-container flex items-center justify-center ${animateOnHover ? "cavdax-interactive-hover group" : ""} ${className}`}>
+    <div className={`cavdax-brand-container flex items-center justify-center ${containerModeClass} ${className}`}>
       <svg
         viewBox="0 0 100 100"
         width={size}
@@ -33,184 +42,211 @@ export default function CavdaxBrandLoader({
         aria-label="CAVDAX Logo"
       >
         <style>{`
-          /* === 1. HOVER-ONLY ANIMATION (For Navbar) === */
-          ${animateOnHover ? `
-            .cavdax-stroke-c,
-            .cavdax-stroke-v,
-            .dag-spine,
-            .dag-wing,
-            .dag-bridge {
-              stroke-dasharray: 72;
-              stroke-dashoffset: 0;
-              opacity: 1;
-              transition: stroke-dashoffset 0.4s ease, opacity 0.25s ease;
-            }
-            .cavdax-nodes-group {
-              opacity: 1;
-              transform: scale(1);
-              transform-origin: 46px 50px;
-              transition: transform 0.25s ease, opacity 0.25s ease;
-            }
-            .cavdax-lock-ping {
-              opacity: 0;
-              transform-origin: 74px 50px;
-            }
+          /* === 1. HOVER-ONLY & PROCESSING ANIMATION (Strictly Scoped for Navbar) === */
+          .cavdax-interactive-hover .cavdax-stroke-c,
+          .cavdax-interactive-hover .cavdax-stroke-v,
+          .cavdax-interactive-hover .dag-spine,
+          .cavdax-interactive-hover .dag-wing,
+          .cavdax-interactive-hover .dag-bridge {
+            stroke-dasharray: 72;
+            stroke-dashoffset: 0;
+            opacity: 1;
+            transition: stroke-dashoffset 0.4s ease, opacity 0.25s ease;
+          }
+          .cavdax-interactive-hover .cavdax-nodes-group {
+            opacity: 1;
+            transform: scale(1);
+            transform-origin: 46px 50px;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+          }
+          .cavdax-interactive-hover .cavdax-lock-ping {
+            opacity: 0;
+            transform-origin: 74px 50px;
+          }
 
-            .cavdax-interactive-hover:hover .cavdax-stroke-c,
-            .cavdax-interactive-hover.group:hover .cavdax-stroke-c {
-              animation: cavdaxHoverTraceC 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            .cavdax-interactive-hover:hover .cavdax-stroke-v,
-            .cavdax-interactive-hover.group:hover .cavdax-stroke-v {
-              animation: cavdaxHoverTraceV 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
-            }
-            .cavdax-interactive-hover:hover .dag-spine,
-            .cavdax-interactive-hover.group:hover .dag-spine {
-              animation: cavdaxHoverSpine 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.14s forwards;
-            }
-            .cavdax-interactive-hover:hover .dag-wing,
-            .cavdax-interactive-hover.group:hover .dag-wing {
-              animation: cavdaxHoverWing 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards;
-            }
-            .cavdax-interactive-hover:hover .dag-bridge,
-            .cavdax-interactive-hover.group:hover .dag-bridge {
-              animation: cavdaxHoverBridge 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.44s forwards;
-            }
-            .cavdax-interactive-hover:hover .cavdax-nodes-group,
-            .cavdax-interactive-hover.group:hover .cavdax-nodes-group {
-              animation: cavdaxHoverNodePulse 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            .cavdax-interactive-hover:hover .cavdax-lock-ping,
-            .cavdax-interactive-hover.group:hover .cavdax-lock-ping {
-              animation: cavdaxHoverLockPing 0.7s ease-in-out 0.58s forwards;
-            }
+          /* Hover triggers */
+          .cavdax-interactive-hover:hover .cavdax-stroke-c,
+          .cavdax-interactive-hover.group:hover .cavdax-stroke-c {
+            animation: cavdaxHoverTraceC 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          .cavdax-interactive-hover:hover .cavdax-stroke-v,
+          .cavdax-interactive-hover.group:hover .cavdax-stroke-v {
+            animation: cavdaxHoverTraceV 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+          }
+          .cavdax-interactive-hover:hover .dag-spine,
+          .cavdax-interactive-hover.group:hover .dag-spine {
+            animation: cavdaxHoverSpine 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.14s forwards;
+          }
+          .cavdax-interactive-hover:hover .dag-wing,
+          .cavdax-interactive-hover.group:hover .dag-wing {
+            animation: cavdaxHoverWing 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards;
+          }
+          .cavdax-interactive-hover:hover .dag-bridge,
+          .cavdax-interactive-hover.group:hover .dag-bridge {
+            animation: cavdaxHoverBridge 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.44s forwards;
+          }
+          .cavdax-interactive-hover:hover .cavdax-nodes-group,
+          .cavdax-interactive-hover.group:hover .cavdax-nodes-group {
+            animation: cavdaxHoverNodePulse 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          .cavdax-interactive-hover:hover .cavdax-lock-ping,
+          .cavdax-interactive-hover.group:hover .cavdax-lock-ping {
+            animation: cavdaxHoverLockPing 0.7s ease-in-out 0.58s forwards;
+          }
 
-            @keyframes cavdaxHoverTraceC {
-              0% { stroke-dashoffset: 72; opacity: 0.3; }
-              100% { stroke-dashoffset: 0; opacity: 1; }
-            }
-            @keyframes cavdaxHoverTraceV {
-              0% { stroke-dashoffset: 62; opacity: 0.3; }
-              100% { stroke-dashoffset: 0; opacity: 1; }
-            }
-            @keyframes cavdaxHoverSpine {
-              0% { stroke-dashoffset: 32; opacity: 0; }
-              100% { stroke-dashoffset: 0; opacity: 1; }
-            }
-            @keyframes cavdaxHoverWing {
-              0% { stroke-dashoffset: 20; opacity: 0; }
-              100% { stroke-dashoffset: 0; opacity: 1; }
-            }
-            @keyframes cavdaxHoverBridge {
-              0% { stroke-dashoffset: 16; opacity: 0; }
-              100% { stroke-dashoffset: 0; opacity: 1; }
-            }
-            @keyframes cavdaxHoverNodePulse {
-              0% { transform: scale(0.6); opacity: 0.4; }
-              50% { transform: scale(1.3); opacity: 1; }
-              100% { transform: scale(1); opacity: 1; }
-            }
-            @keyframes cavdaxHoverLockPing {
-              0% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
-              50% { opacity: 0.95; transform: scale(1.08); filter: drop-shadow(0 0 4px #ffffff); }
-              100% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
-            }
-          ` : `
-          /* === 2. CONTINUOUS FLUID CYCLE (4.8s Staggered & Overlapping Orchestration) === */
-            .cavdax-nodes-group {
-              transform-origin: 46px 50px;
-              animation: cavdaxNodesFluid 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-            }
+          /* Processing triggers (When asynchronous task is active) */
+          .cavdax-processing .cavdax-nodes-group {
+            transform-origin: 46px 50px;
+            animation: cavdaxNodesFluid 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
+          .cavdax-processing .cavdax-stroke-c {
+            stroke-dasharray: 72;
+            stroke-dashoffset: 72;
+            animation: cavdaxStrokeCFluid 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
+          .cavdax-processing .cavdax-stroke-v {
+            stroke-dasharray: 62;
+            stroke-dashoffset: 62;
+            animation: cavdaxStrokeVFluid 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
+          .cavdax-processing .dag-spine {
+            stroke-dasharray: 32;
+            stroke-dashoffset: 32;
+            animation: cavdaxSpineDraw 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
+          .cavdax-processing .dag-wing {
+            stroke-dasharray: 20;
+            stroke-dashoffset: 20;
+            animation: cavdaxWingDraw 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
+          .cavdax-processing .dag-bridge {
+            stroke-dasharray: 16;
+            stroke-dashoffset: 16;
+            animation: cavdaxBridgeDraw 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
+          .cavdax-processing .cavdax-lock-ping {
+            transform-origin: 74px 50px;
+            animation: cavdaxLockPingFluid 3.2s ease-in-out infinite;
+          }
 
-            .cavdax-stroke-c {
-              stroke-dasharray: 72;
-              stroke-dashoffset: 72;
-              animation: cavdaxStrokeCFluid 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-            }
+          @keyframes cavdaxHoverTraceC {
+            0% { stroke-dashoffset: 72; opacity: 0.3; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes cavdaxHoverTraceV {
+            0% { stroke-dashoffset: 62; opacity: 0.3; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes cavdaxHoverSpine {
+            0% { stroke-dashoffset: 32; opacity: 0; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes cavdaxHoverWing {
+            0% { stroke-dashoffset: 20; opacity: 0; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes cavdaxHoverBridge {
+            0% { stroke-dashoffset: 16; opacity: 0; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes cavdaxHoverNodePulse {
+            0% { transform: scale(0.6); opacity: 0.4; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes cavdaxHoverLockPing {
+            0% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
+            50% { opacity: 0.95; transform: scale(1.08); filter: drop-shadow(0 0 4px #ffffff); }
+            100% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
+          }
 
-            .cavdax-stroke-v {
-              stroke-dasharray: 62;
-              stroke-dashoffset: 62;
-              animation: cavdaxStrokeVFluid 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-            }
+          /* === 2. CONTINUOUS FLUID CYCLE (Strictly Scoped to .cavdax-fluid-loader) === */
+          .cavdax-fluid-loader .cavdax-nodes-group {
+            transform-origin: 46px 50px;
+            animation: cavdaxNodesFluid 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
 
-            .dag-spine {
-              stroke-dasharray: 32;
-              stroke-dashoffset: 32;
-              animation: cavdaxSpineDraw 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-            }
+          .cavdax-fluid-loader .cavdax-stroke-c {
+            stroke-dasharray: 72;
+            stroke-dashoffset: 72;
+            animation: cavdaxStrokeCFluid 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
 
-            .dag-wing {
-              stroke-dasharray: 20;
-              stroke-dashoffset: 20;
-              animation: cavdaxWingDraw 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-            }
+          .cavdax-fluid-loader .cavdax-stroke-v {
+            stroke-dasharray: 62;
+            stroke-dashoffset: 62;
+            animation: cavdaxStrokeVFluid 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
 
-            .dag-bridge {
-              stroke-dasharray: 16;
-              stroke-dashoffset: 16;
-              animation: cavdaxBridgeDraw 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-            }
+          .cavdax-fluid-loader .dag-spine {
+            stroke-dasharray: 32;
+            stroke-dashoffset: 32;
+            animation: cavdaxSpineDraw 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
 
-            .cavdax-lock-ping {
-              transform-origin: 74px 50px;
-              animation: cavdaxLockPingFluid 4.8s ease-in-out infinite;
-            }
+          .cavdax-fluid-loader .dag-wing {
+            stroke-dasharray: 20;
+            stroke-dashoffset: 20;
+            animation: cavdaxWingDraw 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
 
-            @keyframes cavdaxNodesFluid {
-              0%, 5% { opacity: 0; transform: scale(0.25); }
-              16%, 80% { opacity: 1; transform: scale(1); }
-              88%, 100% { opacity: 0; transform: scale(0.25); }
-            }
+          .cavdax-fluid-loader .dag-bridge {
+            stroke-dasharray: 16;
+            stroke-dashoffset: 16;
+            animation: cavdaxBridgeDraw 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          }
 
-            @keyframes cavdaxStrokeCFluid {
-              0%, 4% { stroke-dashoffset: 72; opacity: 0; }
-              10% { opacity: 1; }
-              28%, 78% { stroke-dashoffset: 0; opacity: 1; }
-              88%, 100% { stroke-dashoffset: 72; opacity: 0; }
-            }
+          .cavdax-fluid-loader .cavdax-lock-ping {
+            transform-origin: 74px 50px;
+            animation: cavdaxLockPingFluid 4.8s ease-in-out infinite;
+          }
 
-            @keyframes cavdaxStrokeVFluid {
-              0%, 6% { stroke-dashoffset: 62; opacity: 0; }
-              12% { opacity: 1; }
-              30%, 78% { stroke-dashoffset: 0; opacity: 1; }
-              88%, 100% { stroke-dashoffset: 62; opacity: 0; }
-            }
+          @keyframes cavdaxNodesFluid {
+            0%, 5% { opacity: 0; transform: scale(0.25); }
+            16%, 80% { opacity: 1; transform: scale(1); }
+            88%, 100% { opacity: 0; transform: scale(0.25); }
+          }
 
-            /* Stage 1: Spine draws seamlessly between nodes */
-            @keyframes cavdaxSpineDraw {
-              0%, 16% { stroke-dashoffset: 32; opacity: 0; }
-              22% { opacity: 1; }
-              38%, 78% { stroke-dashoffset: 0; opacity: 1; }
-              86%, 100% { stroke-dashoffset: 32; opacity: 0; }
-            }
+          @keyframes cavdaxStrokeCFluid {
+            0%, 4% { stroke-dashoffset: 72; opacity: 0; }
+            10% { opacity: 1; }
+            28%, 78% { stroke-dashoffset: 0; opacity: 1; }
+            88%, 100% { stroke-dashoffset: 72; opacity: 0; }
+          }
 
-            /* Stage 2: Symmetrical Wings glide outward from nodes into central junction (58, 50) */
-            @keyframes cavdaxWingDraw {
-              0%, 30% { stroke-dashoffset: 20; opacity: 0; }
-              36% { opacity: 1; }
-              50%, 78% { stroke-dashoffset: 0; opacity: 1; }
-              86%, 100% { stroke-dashoffset: 20; opacity: 0; }
-            }
+          @keyframes cavdaxStrokeVFluid {
+            0%, 10% { stroke-dashoffset: 62; opacity: 0; }
+            16% { opacity: 1; }
+            34%, 78% { stroke-dashoffset: 0; opacity: 1; }
+            88%, 100% { stroke-dashoffset: 62; opacity: 0; }
+          }
 
-            /* Stage 3: Forward Bridge shoots from junction into chevron apex */
-            @keyframes cavdaxBridgeDraw {
-              0%, 46% { stroke-dashoffset: 16; opacity: 0; }
-              52% { opacity: 1; }
-              64%, 78% { stroke-dashoffset: 0; opacity: 1; }
-              86%, 100% { stroke-dashoffset: 16; opacity: 0; }
-            }
+          @keyframes cavdaxSpineDraw {
+            0%, 20% { stroke-dashoffset: 32; opacity: 0; }
+            24% { opacity: 1; }
+            38%, 78% { stroke-dashoffset: 0; opacity: 1; }
+            86%, 100% { stroke-dashoffset: 32; opacity: 0; }
+          }
 
-            /* Specular White Lock Flash at 65% when graph completes verified circuit */
-            .cavdax-lock-ping {
-              transform-origin: 74px 50px;
-            }
-            @keyframes cavdaxLockPingFluid {
-              0%, 62% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
-              67% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 6px #ffffff); }
-              74%, 100% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
-            }
-          `}
+          @keyframes cavdaxWingDraw {
+            0%, 34% { stroke-dashoffset: 20; opacity: 0; }
+            38% { opacity: 1; }
+            52%, 78% { stroke-dashoffset: 0; opacity: 1; }
+            86%, 100% { stroke-dashoffset: 20; opacity: 0; }
+          }
+
+          @keyframes cavdaxBridgeDraw {
+            0%, 48% { stroke-dashoffset: 16; opacity: 0; }
+            52% { opacity: 1; }
+            64%, 78% { stroke-dashoffset: 0; opacity: 1; }
+            86%, 100% { stroke-dashoffset: 16; opacity: 0; }
+          }
+
+          @keyframes cavdaxLockPingFluid {
+            0%, 62% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
+            67% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 6px #ffffff); }
+            74%, 100% { opacity: 0; transform: scale(0.4); filter: drop-shadow(0 0 0px #ffffff); }
+          }
 
           @media (prefers-reduced-motion: reduce) {
             .cavdax-nodes-group,
