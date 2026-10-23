@@ -18,6 +18,11 @@ cavdax.sahnirmaan.live, {$DOMAIN:localhost} {
         reverse_proxy client:5173
     }
 
+    @sounds path /sounds/*
+    header @sounds {
+        Cache-Control "public, max-age=31536000, immutable"
+    }
+
     # Security Headers
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
