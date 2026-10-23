@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Coffee, CheckCircle2, ArrowRight, Heart } from 'lucide-react';
+import { Coffee, CheckCircle2, ArrowRight, Heart, HandHeart } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 /**
@@ -28,12 +28,12 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
       
       {/* ── 1. Concise Header ── */}
       <section className="text-center mb-10 sm:mb-12">
-        <h1 className="text-2xl sm:text-3xl font-mono font-bold text-slate-950 dark:text-white tracking-tight flex items-center justify-center gap-2.5">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-mono font-bold text-slate-950 dark:text-white tracking-tight flex items-center justify-center gap-2.5 sm:gap-3">
           <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 fill-current shrink-0" />
           <span>Support CAVDAX</span>
           <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 fill-current shrink-0" />
         </h1>
-        <div className="mt-3 flex items-center justify-center overflow-x-auto py-1">
+        <div className="mt-3.5 flex items-center justify-center overflow-x-auto py-1">
           <p className="text-xs sm:text-sm font-sans tracking-wide whitespace-nowrap text-center bg-clip-text text-transparent bg-gradient-to-r from-slate-500 via-slate-950 to-slate-500 dark:from-slate-400 dark:via-white dark:to-slate-400">
             Direct community backing to fund open causal benchmarks.
           </p>
@@ -119,7 +119,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
         </div>
 
         {/* Tier 2: 2 Coffees ($4) — Popular */}
-        <div className="p-6 sm:p-7 rounded-2xl border border-amber-400 dark:border-amber-400/90 ring-2 ring-amber-400/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative md:scale-[1.03] md:-translate-y-2 shadow-[0_14px_38px_rgba(245,158,11,0.20)] dark:shadow-[0_0_36px_rgba(245,158,11,0.16)] z-10">
+        <div className="p-6 sm:p-7 rounded-2xl border border-amber-400 dark:border-amber-400/90 ring-2 ring-amber-400/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative md:scale-[1.035] md:-translate-y-2.5 md:hover:-translate-y-4 transition-all duration-300 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] z-10">
           <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-400 text-slate-950 font-mono font-extrabold text-[9px] uppercase tracking-widest rounded-full shadow-md z-20">
             Popular
           </div>
@@ -272,25 +272,55 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
 
       </section>
 
-      {/* ── 3. Concise Resource Stewardship (Clean Pills) ── */}
-      <section className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] mb-8">
-        <div className="mb-4">
-          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            Fund Allocation
+      {/* ── 3. How Your Backing Fuels CAVDAX (Resource Stewardship) ── */}
+      <section className="mt-12 sm:mt-14 lg:mt-16 mb-8 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02]">
+        <div className="flex items-center gap-2 mb-2">
+          <HandHeart className="w-4 h-4 text-rose-500 shrink-0" />
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+            How Your Backing Fuels CAVDAX
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
-          <div className="p-2.5 rounded-xl border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02]">
-            <span className="text-sm font-bold text-slate-950 dark:text-white block">50%</span>
-            <span className="text-[10px] text-slate-500">Benchmark Nodes</span>
+        <p className="text-xs font-sans text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+          Direct community sponsorship subsidizes core maintainer hours, continuous causal benchmarks, and automated regression testing.
+        </p>
+        
+        {/* Segmented Capital Allocation Bar */}
+        <div className="w-full h-2 rounded-full overflow-hidden flex bg-slate-100 dark:bg-white/5 mb-4">
+          <div className="h-full bg-amber-400 transition-all duration-500" style={{ width: '40%' }} title="Core Maintainers: 40%" />
+          <div className="h-full bg-indigo-600/80 dark:bg-indigo-400/80 transition-all duration-500" style={{ width: '35%' }} title="Benchmark Nodes: 35%" />
+          <div className="h-full bg-slate-400 dark:bg-slate-500 transition-all duration-500" style={{ width: '25%' }} title="Automated CI & Reliability: 25%" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs font-mono">
+          <div className="p-3 rounded-xl border border-slate-200/70 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex items-center justify-between sm:flex-col sm:items-start gap-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+              <span className="text-[11px] text-slate-600 dark:text-slate-400">Core Maintainers</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base font-bold text-slate-950 dark:text-white">40%</span>
+              <span className="text-[10px] text-slate-500">Issue triage & security patches</span>
+            </div>
           </div>
-          <div className="p-2.5 rounded-xl border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02]">
-            <span className="text-sm font-bold text-slate-950 dark:text-white block">35%</span>
-            <span className="text-[10px] text-slate-500">CI Fuzzing</span>
+          <div className="p-3 rounded-xl border border-slate-200/70 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex items-center justify-between sm:flex-col sm:items-start gap-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-600/80 dark:bg-indigo-400/80 shrink-0" />
+              <span className="text-[11px] text-slate-600 dark:text-slate-400">Benchmark Nodes</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base font-bold text-slate-950 dark:text-white">35%</span>
+              <span className="text-[10px] text-slate-500">FalkorDB cloud graph clusters</span>
+            </div>
           </div>
-          <div className="p-2.5 rounded-xl border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02]">
-            <span className="text-sm font-bold text-slate-950 dark:text-white block">15%</span>
-            <span className="text-[10px] text-slate-500">NPM Infrastructure</span>
+          <div className="p-3 rounded-xl border border-slate-200/70 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex items-center justify-between sm:flex-col sm:items-start gap-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" />
+              <span className="text-[11px] text-slate-600 dark:text-slate-400">Automated CI</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base font-bold text-slate-950 dark:text-white">25%</span>
+              <span className="text-[10px] text-slate-500">Regression suites & fuzzing</span>
+            </div>
           </div>
         </div>
       </section>

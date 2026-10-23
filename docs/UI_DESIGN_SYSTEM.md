@@ -158,13 +158,13 @@ You must strictly incorporate and enforce every single one of the following 34 a
 
 
 
-11F. **STRICT BAN ON TAGS INSIDE CARD TITLES / CARD HEADERS (`VALID`, `SIMULATION`, `[LIVE]`)**:
+11F. **STRICT BAN ON TAGS, BADGES, OR METADATA INSIDE OR TO THE RIGHT OF CARD HEADERS (`VALID`, `SIMULATION`, `[LIVE]`, `STEWARDSHIP`)**:
 
-      - NEVER place status badges, verification chips, or tags (e.g. `<span class="...">VALID</span>`, `SIMULATION`, `ACTIVE`, `PENDING`) next to or inside card headers.
+      - NEVER place status badges, verification chips, metadata tags, or descriptive text (e.g. `<span class="...">VALID</span>`, `SIMULATION`, `ACTIVE`, `PENDING`, `100% Transparent Stewardship`) next to, inside, or to the right of card headers (`justify-between`).
 
-      - Card titles must remain pure, clean, and unencumbered by badge spam.
+      - Card titles must remain pure, clean, left-aligned, and unencumbered by badge spam or right-aligned labels.
 
-      - Status information must be conveyed through dedicated metric key-value rows, progress tracks, or footer status indicators.
+      - Status or descriptive context must be conveyed through dedicated metric key-value rows, progress tracks, or dedicated micro-copy paragraphs beneath the title.
 
 
 
