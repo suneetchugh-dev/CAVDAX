@@ -1187,7 +1187,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
  */
 app.get('/api/auth/me', (req, res) => {
   if (!req.session?.user) {
-    return res.status(401).json({ authenticated: false });
+    return res.status(200).json({ authenticated: false });
   }
   const { githubId, login, name, avatarUrl } = req.session.user;
   res.json({ authenticated: true, user: { githubId, login, name, avatarUrl } });
