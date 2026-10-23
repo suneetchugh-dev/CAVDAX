@@ -12,6 +12,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import CurvyArrow from './CurvyArrow';
+import ShimmerImage from './ui/ShimmerImage';
 import { TEAM_MEMBERS, TEAM_DETAILS, SYSTEM_CREDITS } from '../data/teamData';
 import { playClick } from '../utils/soundFx';
 
@@ -95,9 +96,10 @@ export default function TeamPage({ onLaunchConsole }) {
                 aria-hidden="true" 
                 className="absolute inset-x-2 top-0.5 h-1/3 rounded-t-full bg-gradient-to-b from-white/40 dark:from-white/20 to-transparent pointer-events-none z-10" 
               />
-              <img 
+              <ShimmerImage 
                 src={TEAM_DETAILS.logo} 
                 alt={TEAM_DETAILS.name} 
+                containerClassName="h-full w-full rounded-full"
                 className="h-full w-full object-cover rounded-full filter dark:brightness-105 select-none pointer-events-none transition-transform duration-500 group-hover/orb:scale-105"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -144,10 +146,11 @@ export default function TeamPage({ onLaunchConsole }) {
                       title={`View photo of ${member.name}`}
                       aria-label={`View photo of ${member.name}`}
                     >
-                      <img 
+                      <ShimmerImage 
                         src={member.avatar} 
                         alt={member.name}
                         loading="lazy"
+                        containerClassName="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src = member.fallbackAvatar;
@@ -336,9 +339,10 @@ export default function TeamPage({ onLaunchConsole }) {
                   className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(217,163,83,0.18),_transparent_70%)] pointer-events-none" 
                 />
               )}
-              <img
+              <ShimmerImage
                 src={lightboxMember.avatar}
                 alt={lightboxMember.name}
+                containerClassName="w-full h-full flex items-center justify-center"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = lightboxMember.fallbackAvatar;
