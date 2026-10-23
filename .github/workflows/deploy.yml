@@ -25,10 +25,11 @@ jobs:
             echo "==> Pulling latest changes from origin/main..."
             git fetch origin main
             git reset --hard origin/main
-            echo "==> Rebuilding and restarting production containers..."
+            echo "==> Rebuilding and restarting production containers with reverse proxy..."
+            docker rm -f cavdax-client cavdax-server cavdax-falkordb cavdax-caddy 2>/dev/null || true
             if docker compose version >/dev/null 2>&1; then
-              docker compose -f infra/docker-compose.prod.yml up -d --build client server
+              docker compose -f infra/docker-compose.prod.yml up -d --build --remove-orphans
             else
-              docker-compose -f infra/docker-compose.prod.yml up -d --build client server
+              docker-compose -f infra/docker-compose.prod.yml up -d --build --remove-orphans
             fi
             echo "==> Deployment successfully finished!"
