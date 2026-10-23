@@ -51,7 +51,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
       </section>
 
       {/* ── 2. Minimalist Sponsorship Tiers (Affordable Pricing) ── */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-10 sm:mb-12">
+      <section className="pt-3 grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-10 sm:mb-12">
         
         {/* Tier 1: Single Coffee ($2) */}
         <div className="p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between hover:border-slate-400 dark:hover:border-white/30 transition-all">
@@ -119,7 +119,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
         </div>
 
         {/* Tier 2: 2 Coffees ($4) — Popular */}
-        <div className="p-6 sm:p-7 rounded-2xl border border-amber-400 dark:border-amber-400/90 ring-2 ring-amber-400/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative overflow-hidden md:scale-[1.03] md:-translate-y-2 shadow-[0_14px_38px_rgba(245,158,11,0.20)] dark:shadow-[0_0_36px_rgba(245,158,11,0.16)] z-10">
+        <div className="p-6 sm:p-7 rounded-2xl border border-amber-400 dark:border-amber-400/90 ring-2 ring-amber-400/30 bg-slate-50 dark:bg-white/[0.04] flex flex-col justify-between relative md:scale-[1.03] md:-translate-y-2 shadow-[0_14px_38px_rgba(245,158,11,0.20)] dark:shadow-[0_0_36px_rgba(245,158,11,0.16)] z-10">
           <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-400 text-slate-950 font-mono font-extrabold text-[9px] uppercase tracking-widest rounded-full shadow-md z-20">
             Popular
           </div>

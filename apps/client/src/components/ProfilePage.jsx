@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, CheckCircle2, Lock, Terminal,
-  ArrowRight, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut, Github
+  SlidersHorizontal, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut, Github
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
@@ -27,6 +27,7 @@ export default function ProfilePage({
 }) {
   const [currentTier, setCurrentTier] = useState(tier);
   const [copiedKey, setCopiedKey] = useState(false);
+  const [isConsoleHovered, setIsConsoleHovered] = useState(false);
   const [isSponsorHovered, setIsSponsorHovered] = useState(false);
   const [isLogoutHovered, setIsLogoutHovered] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
@@ -170,10 +171,53 @@ export default function ProfilePage({
               playClick();
               if (onLaunchConsole) onLaunchConsole();
             }}
-            className="h-[32px] sm:h-[34px] min-w-[130px] sm:min-w-[144px] px-5 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer tactile-btn shadow-xs"
+            onMouseEnter={() => setIsConsoleHovered(true)}
+            onMouseLeave={() => setIsConsoleHovered(false)}
+            className={`relative overflow-hidden group h-[32px] sm:h-[34px] min-w-[130px] sm:min-w-[144px] px-5 flex items-center justify-center gap-2 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
+              isConsoleHovered
+                ? "border-slate-950 dark:border-white text-white dark:text-slate-950 shadow-slate-950/20 dark:shadow-white/20"
+                : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40"
+            }`}
           >
-            <span>Console</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            {/* Fluid Water Fill Layer (Monochrome Obsidian / Porcelain) */}
+            <div
+              aria-hidden="true"
+              style={{
+                transform: isConsoleHovered ? "translateY(0%)" : "translateY(105%)",
+                opacity: isConsoleHovered ? 1 : 0,
+                transition: isConsoleHovered
+                  ? "transform 1000ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out"
+                  : "opacity 250ms ease-out, transform 0s 250ms"
+              }}
+              className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+            >
+              <svg
+                viewBox="0 0 320 48"
+                preserveAspectRatio="none"
+                className="w-full h-6 shrink-0 text-slate-950 dark:text-white fill-current block"
+              >
+                <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                <circle cx="80" cy="20" r="4.5" />
+                <circle cx="120" cy="12" r="3.5" />
+                <circle cx="160" cy="15" r="5" />
+                <circle cx="200" cy="13" r="3.5" />
+                <circle cx="240" cy="22" r="4.5" />
+                <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+              </svg>
+              <div className="flex-1 w-full bg-slate-950 dark:bg-white" />
+            </div>
+
+            <SlidersHorizontal className={`w-3.5 h-3.5 relative z-10 transition-colors duration-500 ${
+              isConsoleHovered ? "text-white dark:text-slate-950" : "text-slate-700 dark:text-slate-300"
+            }`} />
+            <span className={`relative z-10 transition-colors duration-500 ${
+              isConsoleHovered ? "text-white dark:text-slate-950" : ""
+            }`}>
+              Console
+            </span>
           </button>
 
           <button
