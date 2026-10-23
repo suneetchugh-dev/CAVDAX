@@ -302,7 +302,7 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
             cavdax: {
 
-              url: "https://cavdax.live/api/mcp/sse"
+              url: "https://cavdax.sahnirmaan.live/api/mcp/sse"
 
             }
 
@@ -322,36 +322,25 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
         file: 'Terminal Command',
 
-        snippet: 'claude mcp add cavdax https://cavdax.live/api/mcp/sse',
+        snippet: 'claude mcp add cavdax https://cavdax.sahnirmaan.live/api/mcp/sse',
 
         notes: 'Run directly inside your git repository root before launching claude.'
 
       },
 
       claude: {
-
         name: 'Claude Desktop',
-
         desc: 'Official Anthropic Claude desktop client for macOS and Windows',
-
         file: 'claude_desktop_config.json',
-
         snippet: JSON.stringify({
-
           mcpServers: {
-
             cavdax: {
-
-              url: "https://cavdax.live/api/mcp/sse"
-
+              command: "npx",
+              args: ["-y", "mcp-proxy", "https://cavdax.sahnirmaan.live/api/mcp/sse"]
             }
-
           }
-
         }, null, 2),
-
-        notes: 'Located at ~/Library/Application Support/Claude/claude_desktop_config.json'
-
+        notes: 'Claude Desktop spawns stdio processes; mcp-proxy bridges to the live SSE stream. Or switch to the NPX (stdio) tab for local execution.'
       },
 
       windsurf: {
@@ -368,7 +357,7 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
             cavdax: {
 
-              serverUrl: "https://cavdax.live/api/mcp/sse"
+              serverUrl: "https://cavdax.sahnirmaan.live/api/mcp/sse"
 
             }
 
