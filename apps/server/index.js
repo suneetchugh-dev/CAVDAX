@@ -33,6 +33,9 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+
+// Trust reverse proxy (Caddy / Cloudflare) so secure session cookies and proto work properly
+app.set('trust proxy', 1);
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
@@ -1164,8 +1167,12 @@ app.get('/api/auth/github/callback', async (req, res) => {
 
     console.log(`[CAVDAX OAuth] User authenticated: ${userData.login} (id: ${userData.id})`);
 
-    // 4. Redirect back to the MCP page with a success flag
-    res.redirect('/mcp?connected=1');
+    // 4. Redirect back to the MCP page with user info & success flag
+    const redirectUrl = `/mcp?connected=1&login=${encodeURIComponent(userData.login)}&name=${encodeURIComponent(userData.name || userData.login)}&avatar=${encodeURIComponent(userData.avatar_url || '')}&githubId=${userData.id}`;
+    req.session.save((err) => {
+      if (err) console.error('[CAVDAX OAuth] Session save error:', err);
+      res.redirect(redirectUrl);
+    });
 
   } catch (err) {
     console.error('[CAVDAX OAuth] Callback error:', err.message);
