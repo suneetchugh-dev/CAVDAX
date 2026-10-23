@@ -25,6 +25,10 @@ services:
       - FALKORDB_HOST=falkordb
       - FALKORDB_PORT=6379
       - NODE_ENV=production
+      - GITHUB_CLIENT_ID=
+      - GITHUB_CLIENT_SECRET=
+      - GITHUB_CALLBACK_URL=
+      - SESSION_SECRET=
     depends_on:
       falkordb:
         condition: service_healthy
