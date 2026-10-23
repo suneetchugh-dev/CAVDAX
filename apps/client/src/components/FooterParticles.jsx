@@ -95,6 +95,9 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
       const textMetrics = offCtx.measureText(text);
       const textW = textMetrics.width || width * 0.72;
       const underlineY = centerY + fontSize * 0.44;
+      const textTop = centerY - fontSize * 0.52;
+      const textBottom = underlineY + 4;
+      const textHeight = Math.max(1, textBottom - textTop);
       const startX = width / 2 - textW * 0.48;
       const endX = width / 2 + textW * 0.48;
 
@@ -142,11 +145,25 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
             const b = Math.round(36 + yRatio * 40);
             const alphaMultiplier = size > 2.0 ? 1.0 : 0.92;
             const darkColor = `rgba(${r}, ${g}, ${b}, ${(rawAlpha * alphaMultiplier).toFixed(3)})`;
-            // Light mode: Deep, authoritative obsidian pitch-black (Premium Swiss architectural density)
+            // Light mode: Vertical gradient matching "Eliminating Silent Cache Rot"
+            // from-slate-950 (#020617) via-slate-900 (#0F172A) to-slate-700 (#334155)
+            const yGradRatio = Math.max(0, Math.min(1, (y - textTop) / textHeight));
+            let lr, lg, lb;
+            if (yGradRatio < 0.5) {
+              const t = yGradRatio / 0.5;
+              lr = Math.round(2 + (15 - 2) * t);
+              lg = Math.round(6 + (23 - 6) * t);
+              lb = Math.round(23 + (42 - 23) * t);
+            } else {
+              const t = (yGradRatio - 0.5) / 0.5;
+              lr = Math.round(15 + (51 - 15) * t);
+              lg = Math.round(23 + (65 - 23) * t);
+              lb = Math.round(42 + (85 - 42) * t);
+            }
             const lightAlpha = size > 2.0 
-              ? Math.min(1.0, 0.92 + (alpha / 255) * 0.08) 
-              : Math.min(1.0, 0.82 + (alpha / 255) * 0.16);
-            const lightColor = `rgba(2, 6, 23, ${lightAlpha.toFixed(3)})`;
+              ? Math.min(1.0, 0.94 + (alpha / 255) * 0.06) 
+              : Math.min(1.0, 0.84 + (alpha / 255) * 0.16);
+            const lightColor = `rgba(${lr}, ${lg}, ${lb}, ${lightAlpha.toFixed(3)})`;
 
             newParticles.push({
               x: x,
@@ -198,7 +215,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
           ashVx: 0,
           ashVy: 0,
           darkColor: `rgba(${r}, ${g}, ${b}, 0.85)`,
-          lightColor: 'rgba(2, 6, 23, 0.94)',
+          lightColor: 'rgba(51, 65, 85, 0.94)', // slate-700 gradient terminal
         });
       }
 
@@ -347,11 +364,17 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
 
     window.addEventListener('cavdax:dissolve-particles', handleDissolveEvent);
 
+    const themeObserver = new MutationObserver(() => {
+      wakeUp();
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
     return () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('cavdax:dissolve-particles', handleDissolveEvent);
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
+      themeObserver.disconnect();
       observer.disconnect();
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };

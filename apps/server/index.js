@@ -915,6 +915,61 @@ app.get('/api/dev/tier-check', (req, res) => {
   });
 });
 
+/**
+ * GET /api/user/quota
+ * Real plan tier limits, active graph node counts, and billing cycle calculations.
+ */
+app.get('/api/user/quota', async (req, res) => {
+  const tier = (req.query.tier || CAVDAX_TIER || 'free').toLowerCase();
+  const config = TIER_CONFIG[tier] || TIER_CONFIG.free;
+
+  let activeNodes = fallbackGraphState.nodes.length;
+  let userDecisions = 0;
+  try {
+    if (graph) {
+      const qRes = await graph.query('MATCH (n) RETURN count(n) AS cnt');
+      if (qRes && qRes.data && qRes.data.length > 0) {
+        const val = qRes.data[0].cnt;
+        activeNodes = typeof val === 'number' ? val : parseInt(val, 10) || fallbackGraphState.nodes.length;
+      }
+      // Count only real user-created decisions (strictly excluding the canonical 4-Act demo decisions)
+      const dRes = await graph.query("MATCH (d:Decision) WHERE NOT d.id IN ['DEC-101', 'DEC-102', 'DEC-103'] RETURN count(d) AS cnt");
+      if (dRes && dRes.data && dRes.data.length > 0) {
+        userDecisions = typeof dRes.data[0].cnt === 'number' ? dRes.data[0].cnt : parseInt(dRes.data[0].cnt, 10) || 0;
+      }
+    }
+  } catch {
+    // fallback in-memory count
+  }
+
+  const now = new Date();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const daysRemaining = Math.max(1, endOfMonth.getDate() - now.getDate());
+
+  res.json({
+    success: true,
+    tier,
+    tier_label: config.label,
+    limits: {
+      repositories: tier === 'free' ? 1 : (tier === 'pro' ? 10 : -1),
+      decisions: tier === 'free' ? 50 : (tier === 'pro' ? 1000 : -1),
+      nodes: config.node_limit,
+      rate_limit_per_min: config.rate_limit_per_min,
+      mcp_rate_limit_per_min: config.mcp_rate_limit_per_min
+    },
+    usage: {
+      user_decisions: userDecisions,
+      active_nodes: activeNodes,
+      mcp_sessions: mcpSessions.size,
+      sse_clients: sseClients.size
+    },
+    cycle: {
+      days_remaining: daysRemaining,
+      resets_on: new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+  });
+});
+
 // ---------------------------------------------------------------------------
 // OFFICIAL MCP SSE TRANSPORT (MCP spec 2024-11-05)
 // ---------------------------------------------------------------------------
