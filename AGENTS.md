@@ -36,6 +36,24 @@ Operational constitution, architecture standards, and safety governance for AI c
 
 
 
+0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
+
+   - **Mandatory Dockerfile Dependency Parity**:
+     - Whenever packages are added to pps/server/package.json or pps/client/package.json (e.g. xpress-session, xpress-rate-limit), the corresponding Dockerfile MUST install all production dependencies (
+pm install --omit=dev). Never hardcode a partial subset of packages that causes runtime ERR_MODULE_NOT_FOUND crashes in production containers.
+
+   - **Full-Stack Mesh & Reverse Proxy Liveness**:
+     - The production deployment workflow (.github/workflows/deploy.yml) must always launch the entire production mesh including the reverse proxy (caddy), which binds to ports 80 and 443 and terminates SSL for Cloudflare.
+     - Deployment workflows must pre-emptively remove stopped or conflicted containers (docker rm -f cavdax-client cavdax-server cavdax-falkordb cavdax-caddy 2>/dev/null || true) before invoking docker compose up -d --build --remove-orphans to guarantee zero daemon collisions.
+
+   - **OAuth & Environment Variable Forwarding**:
+     - infra/docker-compose.prod.yml must explicitly forward OAuth and authentication keys (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_CALLBACK_URL, SESSION_SECRET) into container services so OAuth flows redirect accurately instead of failing silently.
+
+   - **API Liveness Verification**:
+     - After any production update, verify that /api/* endpoints respond with standard application JSON/redirects and never proxy 502/503 bad gateway envelopes.
+
+
+
 
 1. **NEVER Commit Credentials, Secrets, or Sensitive Identifiers**:
 
