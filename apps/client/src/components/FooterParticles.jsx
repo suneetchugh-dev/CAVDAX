@@ -358,7 +358,15 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
   }, [text]);
 
   return (
-    <footer className="relative w-full border-t border-slate-300 dark:border-white/30 bg-[var(--bg-main)] pt-8 pb-8 overflow-visible select-none transition-colors duration-200">
+    <footer className="relative w-full bg-[var(--bg-main)] pt-8 pb-8 overflow-visible select-none transition-colors duration-200">
+      {/* Architectural Centered Button Wings (72vw with subtle gradient feathering into the void) */}
+      <div 
+        aria-hidden="true" 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[72vw] max-w-5xl h-px pointer-events-none z-10"
+      >
+        <div className="w-full h-full bg-gradient-to-r from-transparent via-slate-300 dark:via-white/35 to-transparent" />
+      </div>
+
       {/* Scroll to Top Center Button (CAVDAX Signature Architectural Pattern) */}
       <button 
         type="button" 
