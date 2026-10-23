@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import CavdaxAgentStateIndicator from './CavdaxAgentStateIndicator';
+import { playClick } from '../utils/soundFx';
 
 /* ─── 4 Causal Architecture Steps (Clean, Minimal, Zero Cyan in Light Mode) ─── */
 const SOLUTION_STEPS = [
