@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Lenis from 'lenis';
-import { Compass, RotateCcw, Cable, GitBranch, ChevronDown, Plus, Check, SlidersHorizontal } from 'lucide-react';
+import { Compass, RotateCcw, Cable, GitBranch, ChevronDown, Plus, Check, SlidersHorizontal, Trash2 } from 'lucide-react';
 import Header from './components/Header.jsx';
 import SplashLoader from './components/SplashLoader.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -128,6 +128,18 @@ export default function App() {
       return updated;
     });
     setSelectedConnectedRepo(updatedRepo);
+  };
+
+  const handleDisconnectRepo = (repoId) => {
+    setConnectedRepos(prev => {
+      const updated = prev.filter(r => String(r.id) !== String(repoId));
+      try { localStorage.setItem('cavdax_connected_repos', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    if (activeWorkspace === repoId || selectedConnectedRepo?.id === repoId) {
+      setActiveWorkspace("demo");
+      setSelectedConnectedRepo(null);
+    }
   };
 
   // Theme class toggle on <html> element
@@ -1152,31 +1164,48 @@ export default function App() {
                             Connected Repositories ({connectedRepos.length})
                           </div>
                           {connectedRepos.map((repo) => (
-                            <button
+                            <div
                               key={repo.id}
-                              onClick={() => {
-                                setActiveWorkspace(repo.id);
-                                setSelectedConnectedRepo(repo);
-                                setIsWorkspaceDropdownOpen(false);
-                                playClick();
-                              }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all cursor-pointer ${
+                              className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all ${
                                 activeWorkspace === repo.id
-                                  ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20"
+                                  ? "bg-slate-200/80 dark:bg-white/10 text-slate-950 dark:text-white font-bold border border-slate-300 dark:border-white/15"
                                   : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200"
                               }`}
                             >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <GitBranch className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveWorkspace(repo.id);
+                                  setSelectedConnectedRepo(repo);
+                                  setIsWorkspaceDropdownOpen(false);
+                                  playClick();
+                                }}
+                                className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
+                              >
+                                <GitBranch className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0" />
                                 <div className="truncate">
                                   <div className="text-xs truncate">{repo.full_name || repo.name}</div>
                                   <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400">
                                     {repo.default_branch || "main"} · {repo.hasAdrs ? "ADRs Active" : "Zero-ADR"}
                                   </div>
                                 </div>
+                              </button>
+                              <div className="flex items-center gap-1 shrink-0 ml-2">
+                                {activeWorkspace === repo.id && <Check className="w-3.5 h-3.5 text-slate-950 dark:text-white shrink-0" />}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    playClick();
+                                    handleDisconnectRepo(repo.id);
+                                  }}
+                                  title="Disconnect repository"
+                                  className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
                               </div>
-                              {activeWorkspace === repo.id && <Check className="w-3.5 h-3.5 text-purple-400 shrink-0 ml-2" />}
-                            </button>
+                            </div>
                           ))}
                         </div>
                       )}
@@ -1265,6 +1294,7 @@ export default function App() {
                 setSelectedConnectedRepo(null);
               }}
               onUpdateRepo={handleUpdateConnectedRepo}
+              onDisconnectRepo={handleDisconnectRepo}
             />
           )}
 
@@ -1320,6 +1350,7 @@ export default function App() {
         user={githubUser}
         onConnectRepo={handleConnectRepo}
         connectedRepoIds={connectedRepos.map(r => r.id)}
+        onDisconnectRepo={handleDisconnectRepo}
       />
     </div>
   );
