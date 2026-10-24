@@ -1284,7 +1284,7 @@ app.get('/api/github/repos', async (req, res) => {
   }
 
   try {
-    const ghRes = await fetch('https://api.github.com/user/repos?sort=updated&per_page=30&affiliation=owner,collaborator', {
+    const ghRes = await fetch('https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner,collaborator,organization_member', {
       headers: {
         Authorization: `Bearer ${req.session.user.accessToken}`,
         Accept: 'application/vnd.github+json',
