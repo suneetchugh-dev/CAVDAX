@@ -198,6 +198,41 @@ You must strictly incorporate and enforce every single one of the following 34 a
 
 
 
+11J. **MANDATORY INTEGRATION LIFECYCLE & REVERSIBLE STATE (DISCONNECT / UNBIND GUARD)**:
+
+      - Any connected third-party integration, repository, tenant workspace, OAuth account, or API key MUST have an explicit, easily accessible Disconnect / Unlink / Remove action.
+      - Never lock users into connected states without an intuitive, reversible teardown path.
+      - The disconnect action must cleanly purge local state, adjust quota meters, and smoothly transition the interface back to the default fallback or demo state.
+
+11K. **MONOCHROMATIC CONNECTED WORKSPACES & BAN ON FRAGMENTED THEME SHIFTS**:
+
+      - Connected tenant environments, repository headers, and status cards must strictly adhere to the system's calibrated monochromatic design palette (`slate`/`zinc`/`neutral`/`white`/`black`).
+      - NEVER inject arbitrary purple, amber, cyan, or custom accent colors under the assumption that tenant spaces should "stand out" with color.
+
+11L. **ZERO PROMOTIONAL DEMO CLUTTER IN AUTHENTIC USER WORKSPACES**:
+
+      - Once a user has connected their own repository or tenant project, never display promotional or redundant demo-mode action cards (such as "Run 4-Act Showcase" or "Evaluate Mock Sandbox").
+      - Empty states in authentic user workspaces must focus 100% on onboarding the user's own repository (scaffolding an architectural baseline or displaying CLI ingestion instructions).
+
+11M. **GITHUB OAUTH REPOSITORY INGESTION COMPLETENESS & ORGANIZATION ACCESS**:
+
+      - When querying user repositories via the GitHub API (`/user/repos`), always include `affiliation=owner,collaborator,organization_member` so organization-owned repositories are not silently filtered out.
+      - Never assume a user only owns personal repositories; support collaborative and organizational workflows out of the box.
+
+
+11N. **PRODUCTION DEVELOPER CONSOLE DIGNITY & BAN ON TOY/DETOUR PARADIGMS**:
+
+      - **Dignity of a True Production Console**: The platform must always look, feel, and function as an institutional, production-grade developer console (benchmarked against Datadog, AWS, Linear, Vercel, Supabase, Cloudflare).
+      - **Strict Ban on Toy or Detour Artifacts**:
+        - NEVER render buttons like "Return to 4-Act Showcase", "Back to Demo", or "Sample Project Detour" inside real user workspaces or tenant environments. Workspace switching belongs exclusively in the global top-level workspace switcher dropdown.
+        - Real user workspaces must be treated as serious, first-class production environments, never as a temporary playground or side-quest from a demo.
+      - **Initial/Empty States are Onboarding, Not System Incidents**:
+        - Having 0 ADRs or 0 connected repositories is a normal initial setup state, NOT a system warning, error, or incident.
+        - NEVER use amber/yellow warning badges, AlertCircle incident icons, or panic styling for empty onboarding states.
+        - Use calm, monochromatic neutral icons (FolderGit2, FileCode) encased in subtle slate framing (`bg-slate-200/80 dark:bg-white/10 border-slate-300 dark:border-white/15`).
+      - **One Monochromatic Primary Onboarding Action**:
+        - Never clutter empty states with multiple promotional sandbox cards or multi-button grids. Provide exactly one high-assurance, monochromatic primary CTA (e.g. `Initialize Architecture Baseline (ADR-001)`) paired with clear, surgical CLI instructions (`npx @cavdax/cli init`).
+
 11C. **STRICT BAN ON CARD CLUTTER, REDUNDANT LABELS & OVER-EXPLANATORY FLUFF**:
 
      - NEVER clutter cards, panels, or widgets with superfluous metadata, verbose self-explanatory prose, redundant category tags, or decorative badge spam (e.g. HOP 1 (ROOT), INACTIVE, PROVENANCE STALE, or redundant paragraphs explaining what the visual already clearly communicates).
