@@ -184,27 +184,35 @@ export default function ConnectRepoModal({
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => handleSelectRepo(repo)}
-                            disabled={isConnected}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                              isConnected
-                                ? 'bg-slate-200 dark:bg-white/10 text-slate-400 cursor-not-allowed'
-                                : 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 shadow-xs'
-                            }`}
-                          >
-                            {isConnected ? (
-                              <>
-                                <Check className="w-3 h-3 text-emerald-500" />
+                          {isConnected ? (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="px-2.5 py-1 rounded-md text-[11px] font-mono text-slate-600 dark:text-slate-400 flex items-center gap-1 bg-slate-200/60 dark:bg-white/10">
+                                <Check className="w-3 h-3 text-slate-800 dark:text-slate-200" />
                                 <span>Linked</span>
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="w-3 h-3" />
-                                <span>Connect</span>
-                              </>
-                            )}
-                          </button>
+                              </span>
+                              {onDisconnectRepo && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    playClick();
+                                    onDisconnectRepo(repo.id);
+                                  }}
+                                  className="px-2 py-1 rounded-md text-[11px] font-mono text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-300/80 dark:border-white/10 transition-colors cursor-pointer"
+                                  title="Disconnect repository"
+                                >
+                                  Disconnect
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleSelectRepo(repo)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer bg-slate-950 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 shadow-xs"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Connect</span>
+                            </button>
+                          )}
                         </div>
                       );
                     })
