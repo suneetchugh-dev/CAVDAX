@@ -39,6 +39,12 @@
   - Codified Rule 11K (Monochromatic Connected Workspaces & Theme Shift Ban).
   - Codified Rule 11L (Zero Promotional Demo Clutter in Authentic User Workspaces).
   - Codified Rule 11M (GitHub Organization OAuth Ingestion Completeness).
+- **Production Developer Console Dignity Codification (`docs/UI_DESIGN_SYSTEM.md`, `AGENTS.md`)**:
+  - Enshrined Rule 11N (Production Developer Console Dignity & Ban on Toy/Detour Paradigms) and Agent Standard 0f.
+  - Mandated elimination of toy detour buttons ("Return to Showcase") in live user environments.
+  - Codified calm monochromatic onboarding framing (replacing incident amber `AlertCircle` with neutral `FolderGit2`).
+  - Restricted empty state calls-to-action to a single high-assurance baseline initializer without promotional banner clutter.
+
 
 ## 1.0.8 Latest Session Achievements (October 24, 2026 - Production VM Recovery, Cloudflare Error 522 Resolution & 2GB Swap Memory Provisioning)
 

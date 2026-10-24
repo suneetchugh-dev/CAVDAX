@@ -59,6 +59,13 @@ Operational constitution, architecture standards, and safety governance for AI c
    - **GitHub Organization OAuth Ingestion Rule**:
      - When querying user repositories via the GitHub API (`/user/repos`), always include `affiliation=owner,collaborator,organization_member` so organization-owned repositories are not silently filtered out.
 
+
+0f. **Production Developer Console Dignity & Ban on Toy/Detour Paradigms**:
+   - **Console Dignity Standard**: The platform must always maintain the calm, rigorous authority of an enterprise infrastructure console. Decisions, copies, or architectural controls must never make the console feel like a temporary student toy, marketing detour, or toy sandbox.
+   - **Zero Demo Detour Buttons in Production Workspaces**: Never place buttons like "Return to Showcase" or "Back to Demo" inside connected tenant workspaces. Workspace switching belongs strictly in top-level navigation.
+   - **Onboarding vs Incident Framing**: Zero-state configurations (e.g. 0 ADRs detected) are normal onboarding lifecycle states, NOT incidents or system warnings. Never use amber warning icons (`AlertCircle`) for empty states; use monochromatic neutral glyphs (`FolderGit2`).
+   - **Single Monochromatic Onboarding CTA**: Ban multi-card promotional clutter in tenant empty states. Provide a single monochromatic setup action and terminal instructions.
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:
