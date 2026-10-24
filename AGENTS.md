@@ -45,6 +45,20 @@ Operational constitution, architecture standards, and safety governance for AI c
      - Access to /devteam must remain strictly restricted to direct URL navigation, hardware IP whitelisting, and authorized GitHub handles/passkeys without leaving breadcrumbs for public crawlers or visitors.
    - **Zero Fake Metrics or Vanity Clutter**: Never display simulated hardcoded numbers (e.g. fake client counts, fake node tallies, simulated latencies). Keep all dev console diagnostics grounded strictly in genuine operational status (e.g. Gateway: ENFORCING, Database: CONNECTED, Session: VERIFIED, Device IP: WHITELISTED).
 
+0e. **Integration Lifecycle, Connected Workspace Monochromy & Zero Clutter Guard**:
+   - **Mandatory Disconnect / Unlink Action (Reversible Lifecycle Guard)**:
+     - Every connected integration, third-party repository, OAuth session, or API key MUST have an explicit, easily accessible Disconnect / Unlink / Remove action.
+     - Never lock users into connected states without an intuitive, reversible teardown path.
+     - Unlinking must cleanly purge local state, adjust quota meters, and smoothly transition the interface back to the default fallback or demo state.
+   - **Monochromatic Connected Workspaces (No Fragmented Theme Shifts)**:
+     - Connected tenant environments, repository headers, and status cards must strictly adhere to the project's calibrated monochromatic design system (`slate`/`zinc`/`neutral`/`white`/`black`).
+     - Never introduce arbitrary purple, amber, cyan, or custom accent colors to distinguish tenant spaces.
+   - **Zero Promotional Demo Clutter in Real User Workspaces**:
+     - Once a user has connected their own repository or tenant project, never display promotional or redundant demo-mode action cards (such as "Run 4-Act Showcase" or "Evaluate Mock Sandbox").
+     - Empty states in authentic user workspaces must focus 100% on onboarding the user's own repository (scaffolding an architectural baseline or displaying CLI ingestion instructions).
+   - **GitHub Organization OAuth Ingestion Rule**:
+     - When querying user repositories via the GitHub API (`/user/repos`), always include `affiliation=owner,collaborator,organization_member` so organization-owned repositories are not silently filtered out.
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:
