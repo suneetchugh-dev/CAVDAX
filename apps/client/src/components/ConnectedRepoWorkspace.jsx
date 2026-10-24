@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   GitBranch, FolderGit2, FileCode, Plus, CheckCircle2,
   Sparkles, RefreshCw, Terminal, Layers, ArrowRight,
-  ShieldCheck, AlertCircle, Play, Database, Check
+  ShieldCheck, Play, Database, Check, Trash2
 } from 'lucide-react';
 import GraphCanvas from './GraphCanvas';
 import SubsystemErrorBoundary from './SubsystemErrorBoundary';
@@ -20,7 +20,8 @@ export default function ConnectedRepoWorkspace({
   repo,
   isDarkTheme,
   onSwitchToDemo,
-  onUpdateRepo
+  onUpdateRepo,
+  onDisconnectRepo
 }) {
   const [hasScaffolded, setHasScaffolded] = useState(repo.hasAdrs || false);
   const [isScaffolding, setIsScaffolding] = useState(false);
@@ -173,16 +174,6 @@ export default function ConnectedRepoWorkspace({
             </button>
           )}
 
-          <button
-            onClick={() => {
-              playClick();
-              onSwitchToDemo();
-            }}
-            className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-          >
-            <span>Return to 4-Act Showcase</span>
-          </button>
-
           {onDisconnectRepo && (
             <button
               onClick={() => {
@@ -205,7 +196,7 @@ export default function ConnectedRepoWorkspace({
         <div className="flex-1 min-h-0 flex items-center justify-center p-4">
           <div className="max-w-xl w-full p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] shadow-xl text-center space-y-5">
             <div className="w-12 h-12 rounded-2xl bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/15 text-slate-900 dark:text-white flex items-center justify-center mx-auto shadow-inner">
-              <AlertCircle className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+              <FolderGit2 className="w-6 h-6 text-slate-700 dark:text-slate-300" />
             </div>
 
             <div>

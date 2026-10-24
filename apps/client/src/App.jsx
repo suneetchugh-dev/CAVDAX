@@ -130,6 +130,18 @@ export default function App() {
     setSelectedConnectedRepo(updatedRepo);
   };
 
+  const handleDisconnectRepo = (repoId) => {
+    setConnectedRepos(prev => {
+      const updated = prev.filter(r => String(r.id) !== String(repoId));
+      try { localStorage.setItem('cavdax_connected_repos', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    if (activeWorkspace === repoId || selectedConnectedRepo?.id === repoId) {
+      setActiveWorkspace("demo");
+      setSelectedConnectedRepo(null);
+    }
+  };
+
   // Theme class toggle on <html> element
   useEffect(() => {
     initGlobalClickSound();
@@ -1282,6 +1294,7 @@ export default function App() {
                 setSelectedConnectedRepo(null);
               }}
               onUpdateRepo={handleUpdateConnectedRepo}
+              onDisconnectRepo={handleDisconnectRepo}
             />
           )}
 
@@ -1337,6 +1350,7 @@ export default function App() {
         user={githubUser}
         onConnectRepo={handleConnectRepo}
         connectedRepoIds={connectedRepos.map(r => r.id)}
+        onDisconnectRepo={handleDisconnectRepo}
       />
     </div>
   );

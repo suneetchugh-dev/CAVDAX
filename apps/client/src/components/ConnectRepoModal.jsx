@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Github, Search, Plus, Check,
-  X, RefreshCw, Lock, Globe
+  X, RefreshCw, Lock, Globe, ExternalLink
 } from 'lucide-react';
 import { playClick, playApprovalChime } from '../utils/soundFx';
 
@@ -221,6 +221,20 @@ export default function ConnectRepoModal({
                       {isLoading ? 'Loading repositories...' : 'No repositories found.'}
                     </div>
                   )}
+                </div>
+
+                {/* Organization Access Escape Hatch Link */}
+                <div className="pt-2 text-[11px] font-sans text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                  <span>Missing an organization repository?</span>
+                  <a
+                    href="https://github.com/settings/connections/applications"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white underline decoration-slate-400/50 hover:decoration-current transition-colors inline-flex items-center gap-1"
+                  >
+                    <span>Review GitHub organization access</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
                 </div>
               </div>
             </>
