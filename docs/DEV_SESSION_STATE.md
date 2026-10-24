@@ -33,6 +33,10 @@
   - Expanded host effective memory from 1 GiB to 3 GiB (913 MB physical RAM + 2047 MB swap), permanently immunizing future Docker builds from kernel OOM deadlocks.
   - Executed automated rolling zero-downtime container deployment in 11 seconds (GitHub Actions run `40053233590`).
 
+- **Cost Neutrality & AWS Budget Protection ($0.00 Added Operational Cost)**:
+  - Preserved the existing `t3.micro` instance tier without provisioning larger compute or upgrading to paid hardware tiers.
+  - 2GB swap space utilizes already-allocated root EBS disk space, resulting in exactly $0.00 in added AWS infrastructure charges and completely protecting the project's remaining balance.
+
 ## 1.0.7 Latest Session Achievements (October 24, 2026 - Profile & Support Interfaces Refinement, Dynamic Hover Elevation, Real Plan Quotas, Transparent Stewardship & Rule 11F)
 
 - **Profile Page Architecture & Elevation (`ProfilePage.jsx`, `apps/server/index.js`)**:
