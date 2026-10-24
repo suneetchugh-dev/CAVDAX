@@ -7,6 +7,38 @@ import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
 import ShimmerImage from './ui/ShimmerImage';
 
+// ProfilePage handles OAuth callback params if the user connected GitHub from
+// this page (server redirects back to /profile?connected=1 when returnTo=/profile).
+function consumeOAuthCallbackParams(onUserResolved) {
+  if (typeof window === 'undefined') return;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('connected') === '1') {
+    const login = params.get('login');
+    const name = params.get('name') || login;
+    const avatarUrl = params.get('avatar') || '';
+    const githubId = params.get('githubId') || '';
+    if (login) {
+      const userObj = { login, name, avatarUrl, githubId };
+      try {
+        localStorage.setItem('cavdax_user_session', JSON.stringify({
+          username: login, name, avatarUrl, githubId,
+          connectedAt: new Date().toISOString()
+        }));
+      } catch {}
+      window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: userObj }));
+      onUserResolved(userObj, { type: 'success', text: 'GitHub account connected successfully.' });
+    }
+    window.history.replaceState({}, '', '/profile');
+    return true;
+  } else if (params.get('oauth_error')) {
+    const errCode = params.get('oauth_error');
+    onUserResolved(null, { type: 'error', text: `GitHub OAuth failed: ${errCode}` });
+    window.history.replaceState({}, '', '/profile');
+    return true;
+  }
+  return false;
+}
+
 /**
  * ProfilePage.jsx — Developer Identity, Architecture Tiers & Quota Management
  * 
@@ -36,6 +68,19 @@ export default function ProfilePage({
   const [hoveredTierBtn, setHoveredTierBtn] = useState(null);
   const [quotaData, setQuotaData] = useState(null);
   const [connectedRepoCount, setConnectedRepoCount] = useState(0);
+
+  // Consume OAuth callback params on mount — handles ?connected=1 or ?oauth_error=
+  // when GitHub redirected back here after authentication initiated from this page.
+  useEffect(() => {
+    consumeOAuthCallbackParams((resolvedUser, msg) => {
+      if (msg) {
+        setToastMsg(msg.text);
+        setTimeout(() => setToastMsg(null), 3500);
+      }
+      // The cavdax:user-changed event already updates App.jsx's githubUser state;
+      // the `user` prop will re-render this component with the correct value.
+    });
+  }, []);
 
   // Load real user quota metrics and connected repository count
   useEffect(() => {
@@ -183,12 +228,12 @@ export default function ProfilePage({
   const mcpRateLimit = currentTier === 'free' ? '30 rpm' : (currentTier === 'pro' ? '100 rpm' : 'Unlimited');
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pt-16 sm:pt-20 pb-4 sm:pb-6 px-4 sm:px-8 max-w-6xl mx-auto w-full select-none">
+    <div className="flex-1 min-h-0 overflow-y-auto pt-14 sm:pt-16 lg:pt-20 pb-3 sm:pb-4 lg:pb-6 px-4 sm:px-8 max-w-6xl mx-auto w-full select-none">
       
       {/* ── 1. Identity Header Section (Frameless, Centered, Contained) ── */}
-      <section className="mt-4 sm:mt-6 mb-8 sm:mb-10 flex flex-col items-center text-center">
+      <section className="mt-2 sm:mt-4 lg:mt-6 mb-4 sm:mb-6 lg:mb-8 flex flex-col items-center text-center">
         {/* Concentric Tier-Enclosed Circular Avatar */}
-        <div className={`h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${ROLE_RING[currentTier] || ROLE_RING.free}`}>
+        <div className={`h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${ROLE_RING[currentTier] || ROLE_RING.free}`}>
           {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
             <ShimmerImage
               src={user?.avatar_url || user?.avatarUrl || user?.avatar}
@@ -212,7 +257,7 @@ export default function ProfilePage({
         </div>
 
         {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
-        <div className="mt-4 sm:mt-5 flex items-center justify-center gap-4 flex-wrap">
+        <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
           {/* Support Us Button with Rose Fluid Wave Fill */}
           <button
             onClick={() => {
@@ -326,7 +371,7 @@ export default function ProfilePage({
             <button
               onClick={() => {
                 playClick();
-                window.location.href = '/api/auth/github';
+                window.location.href = '/api/auth/github?returnTo=/profile';
               }}
               onMouseEnter={() => setIsGithubHovered(true)}
               onMouseLeave={() => setIsGithubHovered(false)}
@@ -500,7 +545,7 @@ export default function ProfilePage({
           </div>
 
           {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
-          <div className={`p-6 sm:p-7 rounded-2xl border transition-all duration-300 md:scale-[1.035] md:-translate-y-2.5 md:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
+          <div className={`p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
             currentTier === 'pro'
               ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
               : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
@@ -742,7 +787,7 @@ export default function ProfilePage({
       </section>
 
       {/* ── 3. Real-Time Metrics & API Credentials ── */}
-      <section className="mt-12 sm:mt-14 lg:mt-16 grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 mb-4 sm:mb-5">
+      <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
         {/* Plan Quota & Consumption */}
         <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>

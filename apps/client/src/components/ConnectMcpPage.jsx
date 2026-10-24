@@ -204,7 +204,12 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
         } else {
           const currentParams = new URLSearchParams(window.location.search);
           if (currentParams.get('connected') !== '1') {
+            // Session is gone (e.g. new deployment cleared server sessions).
+            // Clear stale localStorage so other pages (Profile) also reflect logout.
+            try { localStorage.removeItem('cavdax_user_session'); } catch {}
             setGithubUser(false);
+            window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+            if (onAuthChange) onAuthChange(null);
           }
         }
       })
