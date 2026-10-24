@@ -908,9 +908,9 @@ export default function LandingPage({
 
         <h1 className="max-w-6xl tracking-tight leading-[1.05] mb-8 sm:mb-12 flex flex-col items-center">
 
-          <span className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-[4.75rem] xl:text-[5.5rem] font-black tracking-tight leading-[1.1] sm:leading-[1.04] bg-clip-text text-transparent bg-gradient-to-b from-slate-950 via-slate-900 to-slate-700 dark:from-white dark:via-slate-100 dark:to-slate-400 block pb-2 sm:pb-3 px-2 max-w-full">
+          <span className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-[4.25rem] xl:text-[4.75rem] text-balance font-black tracking-tight leading-[1.1] sm:leading-[1.04] bg-clip-text text-transparent bg-gradient-to-b from-slate-950 via-slate-900 to-slate-700 dark:from-white dark:via-slate-100 dark:to-slate-400 block pb-2 sm:pb-3 px-2 max-w-full">
 
-            <span className="inline-block whitespace-normal sm:whitespace-nowrap break-words">Eliminating Silent Cache Rot</span>
+            <span className="inline-block whitespace-normal break-words">Eliminating Silent Cache Rot</span>
 
           </span>
 

@@ -1394,6 +1394,13 @@ if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
  *
  * Returns: { order_id, amount, currency, receipt }
  */
+app.get('/api/billing/config', (req, res) => {
+  res.json({
+    configured: Boolean(razorpayClient),
+    key_id: RAZORPAY_KEY_ID || null
+  });
+});
+
 app.post('/api/billing/create-order', async (req, res) => {
   if (!razorpayClient) {
     return res.status(503).json({
@@ -1428,7 +1435,8 @@ app.post('/api/billing/create-order', async (req, res) => {
       order_id: order.id,
       amount:   order.amount,
       currency: order.currency,
-      receipt:  order.receipt
+      receipt:  order.receipt,
+      key_id:   RAZORPAY_KEY_ID
     });
   } catch (err) {
     console.error('[CAVDAX Razorpay] create-order error:', err.message);
@@ -1457,7 +1465,7 @@ app.post('/api/billing/verify-payment', (req, res) => {
     });
   }
 
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, tier } = req.body;
 
   // Guard: all three fields are required
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -1484,11 +1492,18 @@ app.post('/api/billing/verify-payment', (req, res) => {
   console.log(`[CAVDAX Razorpay] Payment verified: ${razorpay_payment_id} for order ${razorpay_order_id}`);
 
   // Signature is valid — payment is genuine.
-  // TODO (feature/payment-gateway): activate Pro tier for req.session.user here.
+  if (req.session && tier) {
+    req.session.tier = tier;
+    if (req.session.user) {
+      req.session.user.tier = tier;
+    }
+  }
+
   res.json({
     success: true,
     payment_id: razorpay_payment_id,
-    order_id:   razorpay_order_id
+    order_id:   razorpay_order_id,
+    tier:       tier || 'pro'
   });
 });
 

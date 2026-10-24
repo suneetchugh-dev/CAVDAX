@@ -49,6 +49,18 @@ function consumeOAuthCallbackParams(onUserResolved) {
  * - Gated Pro & Enterprise tiers for unauthenticated sandbox users with auth toast.
  * - Zero emojis, no bracketed tags, clean typography.
  */
+// Dynamically loads Razorpay checkout.js script once
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.Razorpay) { resolve(true); return; }
+    const s = document.createElement('script');
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    s.onload  = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+}
+
 export default function ProfilePage({
   user,
   tier = 'free',
@@ -68,6 +80,100 @@ export default function ProfilePage({
   const [hoveredTierBtn, setHoveredTierBtn] = useState(null);
   const [quotaData, setQuotaData] = useState(null);
   const [connectedRepoCount, setConnectedRepoCount] = useState(0);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleRazorpayUpgrade = async () => {
+    if (isUpgrading) return;
+    setIsUpgrading(true);
+
+    try {
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        showToast('Could not load payment gateway. Check your connection.');
+        setIsUpgrading(false);
+        return;
+      }
+
+      const orderRes = await fetch('/api/billing/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          amount_paise: 33900, // ₹339 = $4/mo
+          receipt: `cavdax_pro_${Date.now()}`
+        })
+      });
+      const orderData = await orderRes.json();
+
+      if (!orderRes.ok || !orderData.success) {
+        showToast(orderData?.error?.message || 'Failed to create subscription order.');
+        setIsUpgrading(false);
+        return;
+      }
+
+      const keyId = orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+      if (!keyId) {
+        showToast('Payment gateway key is not configured.');
+        setIsUpgrading(false);
+        return;
+      }
+
+      const options = {
+        key: keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'CAVDAX',
+        description: 'Pro Autonomous Tier ($4/mo) — Causal Verification Engine',
+        order_id: orderData.order_id,
+        theme: { color: '#F59E0B' },
+        modal: {
+          ondismiss: () => setIsUpgrading(false)
+        },
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch('/api/billing/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                tier: 'pro'
+              })
+            });
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.success) {
+              setCurrentTier('pro');
+              try {
+                localStorage.setItem('cavdax_tier', 'pro');
+                window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'pro' } }));
+              } catch {}
+              if (onSelectTier) onSelectTier('pro');
+              showToast('Payment verified! Welcome to Pro Autonomous tier.');
+            } else {
+              showToast('Signature verification failed. Contact support with payment ID.');
+            }
+          } catch {
+            showToast('Verification request failed. Contact support.');
+          } finally {
+            setIsUpgrading(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (resp) {
+        showToast(`Payment failed: ${resp.error?.description || 'Transaction declined'}`);
+        setIsUpgrading(false);
+      });
+      rzp.open();
+    } catch (err) {
+      showToast('Payment initiation failed. Please try again.');
+      setIsUpgrading(false);
+    }
+  };
 
   // Consume OAuth callback params on mount — handles ?connected=1 or ?oauth_error=
   // when GitHub redirected back here after authentication initiated from this page.
@@ -151,8 +257,12 @@ export default function ProfilePage({
     }
 
     if (!isAuthorizedDev) {
-      const planName = newTier === 'pro' ? 'Pro Autonomous ($4/mo)' : 'Enterprise Mesh';
-      showToast(`${planName} requires an active subscription. Razorpay payment integration in progress.`);
+      if (newTier === 'pro') {
+        handleRazorpayUpgrade();
+        return;
+      }
+      const planName = 'Enterprise Mesh';
+      showToast(`${planName} requires custom contract deployment. Contact team@cavdax.org.`);
       return;
     }
 
@@ -228,36 +338,38 @@ export default function ProfilePage({
   const mcpRateLimit = currentTier === 'free' ? '30 rpm' : (currentTier === 'pro' ? '100 rpm' : 'Unlimited');
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pt-14 sm:pt-16 lg:pt-20 pb-3 sm:pb-4 lg:pb-6 px-4 sm:px-8 max-w-6xl mx-auto w-full select-none">
+    <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-2 sm:pb-3 px-3 sm:px-6 max-w-6xl mx-auto w-full select-none flex flex-col justify-between">
       
-      {/* ── 1. Identity Header Section (Frameless, Centered, Contained) ── */}
-      <section className="mt-2 sm:mt-4 lg:mt-6 mb-4 sm:mb-6 lg:mb-8 flex flex-col items-center text-center">
-        {/* Concentric Tier-Enclosed Circular Avatar */}
-        <div className={`h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${ROLE_RING[currentTier] || ROLE_RING.free}`}>
-          {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
-            <ShimmerImage
-              src={user?.avatar_url || user?.avatarUrl || user?.avatar}
-              alt={user.login || 'User Avatar'}
-              containerClassName="h-full w-full rounded-full"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-700 dark:text-slate-300" />
-          )}
+      {/* ── 1. Identity Header Section (Streamlined Horizontal Bar for Desktop/Laptop) ── */}
+      <section className="mt-1 sm:mt-1.5 mb-2 sm:mb-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left bg-slate-50/70 dark:bg-white/[0.02] p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 dark:border-white/10 shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Concentric Tier-Enclosed Circular Avatar */}
+          <div className={`h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden relative transition-all duration-300 shrink-0 ${ROLE_RING[currentTier] || ROLE_RING.free}`}>
+            {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
+              <ShimmerImage
+                src={user?.avatar_url || user?.avatarUrl || user?.avatar}
+                alt={user.login || 'User Avatar'}
+                containerClassName="h-full w-full rounded-full"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <User className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300" />
+            )}
+          </div>
+
+          {/* Identity & Verified Handle */}
+          <div>
+            <h1 className="text-xs sm:text-sm font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
+              {user?.name || user?.login || 'Local Contributor'}
+            </h1>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
+              {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
+            </p>
+          </div>
         </div>
 
-        {/* Identity & Verified Handle */}
-        <div className="mt-3.5 flex flex-col items-center">
-          <h1 className="text-base sm:text-lg font-bold font-mono tracking-tight text-slate-950 dark:text-white">
-            {user?.name || user?.login || 'Local Contributor'}
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
-            {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
-          </p>
-        </div>
-
-        {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
-        <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
+        {/* Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
+        <div className="flex items-center gap-2.5 flex-wrap justify-center sm:justify-end">
           {/* Support Us Button with Rose Fluid Wave Fill */}
           <button
             onClick={() => {
@@ -434,7 +546,7 @@ export default function ProfilePage({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 items-stretch">
           {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
           <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
             currentTier === 'free'
@@ -480,7 +592,7 @@ export default function ProfilePage({
             <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-3">
               $0 <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+            <ul className="text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
                 <span>1 Connected repository</span>
@@ -592,7 +704,7 @@ export default function ProfilePage({
             <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-3">
               $4 <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+            <ul className="text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Unlimited repositories</span>
@@ -655,9 +767,11 @@ export default function ProfilePage({
                 <span>
                   {currentTier === 'pro'
                     ? 'Active'
-                    : (!user
-                        ? 'Sign In to Unlock'
-                        : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade ($4/mo)'))}
+                    : (isUpgrading
+                        ? 'Connecting...'
+                        : (!user
+                            ? 'Sign In to Unlock'
+                            : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade ($4/mo)')))}
                 </span>
               </span>
             </button>
@@ -711,7 +825,7 @@ export default function ProfilePage({
                 currentTier === 'enterprise' ? 'text-purple-200/80' : 'text-slate-500'
               }`}>/ SLA</span>
             </div>
-            <ul className={`text-xs font-mono space-y-2 mb-6 ${
+            <ul className={`text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 ${
               currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
             }`}>
               <li className="flex items-center gap-2">
@@ -787,7 +901,7 @@ export default function ProfilePage({
       </section>
 
       {/* ── 3. Real-Time Metrics & API Credentials ── */}
-      <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
+      <section className="mt-2.5 sm:mt-3 lg:mt-3.5 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-1 sm:mb-2 shrink-0">
         {/* Plan Quota & Consumption */}
         <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>

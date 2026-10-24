@@ -202,23 +202,33 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
           window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: u }));
           if (onAuthChange) onAuthChange(u);
         } else {
-          const currentParams = new URLSearchParams(window.location.search);
-          if (currentParams.get('connected') !== '1') {
-            // Session is gone (e.g. new deployment cleared server sessions).
-            // Clear stale localStorage so other pages (Profile) also reflect logout.
-            try { localStorage.removeItem('cavdax_user_session'); } catch {}
-            setGithubUser(false);
-            window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
-            if (onAuthChange) onAuthChange(null);
-          }
+          // If server session is unauthenticated (e.g. after container restart), fall back to client session
+          try {
+            const raw = localStorage.getItem('cavdax_user_session');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (parsed?.username || parsed?.login) {
+                const u = {
+                  login: parsed.username || parsed.login,
+                  name: parsed.name || parsed.username || parsed.login,
+                  avatarUrl: parsed.avatarUrl || parsed.avatar_url || parsed.avatar || '',
+                  githubId: parsed.githubId
+                };
+                setGithubUser(u);
+                return;
+              }
+            }
+          } catch {}
+          setGithubUser(false);
         }
       })
       .catch(() => {
         if (isCancelled) return;
-        const currentParams = new URLSearchParams(window.location.search);
-        if (currentParams.get('connected') !== '1') {
-          setGithubUser(false);
-        }
+        try {
+          const raw = localStorage.getItem('cavdax_user_session');
+          if (raw) return;
+        } catch {}
+        setGithubUser(false);
       });
 
     // Fallback: Never let "Checking..." hang for more than 2000ms if server/network is slow
