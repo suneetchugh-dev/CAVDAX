@@ -14,6 +14,7 @@
     "express": "^4.21.0",
     "express-rate-limit": "^8.7.1",
     "express-session": "^1.19.0",
-    "falkordb": "^6.8.0"
+    "falkordb": "^6.8.0",
+    "razorpay": "^2.9.8"
   }
 }

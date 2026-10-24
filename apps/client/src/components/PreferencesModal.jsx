@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Settings, 
+  PauseCircle, 
   X, 
   Volume2, 
   VolumeX, 
@@ -308,7 +309,7 @@ export default function PreferencesModal({
               {/* Sound Sub 1: Tactile Button Clicks */}
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
-                  <MousePointer size={13} className="text-slate-600 dark:text-slate-400" />
+                  <MousePointer size={13} className={`transition-colors ${clickSoundActive && soundsActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
                   <span className="text-[11px] text-slate-700 dark:text-slate-300">Tactile Micro-Clicks</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -332,7 +333,7 @@ export default function PreferencesModal({
               {/* Sound Sub 2: Loading Splash Chime */}
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
-                  <Waves size={13} className="text-slate-600 dark:text-slate-400" />
+                  <Waves size={13} className={`transition-colors ${splashSoundActive && soundsActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
                   <span className="text-[11px] text-slate-700 dark:text-slate-300">Loading Splash Chime</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -359,7 +360,11 @@ export default function PreferencesModal({
           <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">
-                <Activity size={16} className="text-slate-900 dark:text-white flex-shrink-0" />
+                {motionActive ? (
+                  <Activity size={16} className="text-slate-900 dark:text-white flex-shrink-0" />
+                ) : (
+                  <PauseCircle size={16} className="text-slate-400 dark:text-slate-500 flex-shrink-0 opacity-60" />
+                )}
                 <div className="min-w-0">
                   <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug">
                     Motion &amp; Visual Kinetics
@@ -402,7 +407,7 @@ export default function PreferencesModal({
               {/* Motion Sub 1: Kinetic Rolling Headlines */}
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
-                  <Layers size={13} className="text-slate-600 dark:text-slate-400" />
+                  <Layers size={13} className={`transition-colors ${kineticActive && motionActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
                   <span className="text-[11px] text-slate-700 dark:text-slate-300">Kinetic Rolling Headlines</span>
                 </div>
                 <ToggleSwitch 
@@ -417,7 +422,7 @@ export default function PreferencesModal({
               {/* Motion Sub 2: Particle Typography */}
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
-                  <Sparkles size={13} className="text-slate-600 dark:text-slate-400" />
+                  <Sparkles size={13} className={`transition-colors ${particlesActive && motionActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
                   <span className="text-[11px] text-slate-700 dark:text-slate-300">Pointillism Particles</span>
                 </div>
                 <ToggleSwitch 
@@ -431,34 +436,7 @@ export default function PreferencesModal({
             </div>
           </div>
 
-                    {/* 5. Keyboard Shortcuts HUD */}
-          <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">
-                <KeyboardIcon size={16} className="text-slate-900 dark:text-white flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug">
-                    Keyboard Shortcuts Guide
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                    Universal keybindings for navigation, HUD controls &amp; workflow
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  playClick();
-                  if (onOpenShortcuts) onOpenShortcuts();
-                }}
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition shadow-xs flex-shrink-0 bg-slate-200/80 dark:bg-white/10 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-white/20 flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>View</span>
-                <kbd className="px-1 py-0.2 rounded bg-black/10 dark:bg-white/20 text-[10px]">?</kbd>
-              </button>
-            </div>
-          </div>
+          
         </div>
 
       </div>

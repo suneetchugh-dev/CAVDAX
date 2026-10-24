@@ -10,8 +10,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { randomUUID, randomBytes } from 'crypto';
+import { randomUUID, randomBytes, createHmac } from 'crypto';
 import { rateLimit } from 'express-rate-limit';
+import Razorpay from 'razorpay';
 
 import { getFalkorClient } from '../../core/graph/client.js';
 import {
@@ -24,10 +25,12 @@ import {
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Resolve .env path relative to this file so it works regardless of cwd.
+// This means `npm run dev` from repo root and from apps/server/ both work.
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 const REPO_ROOT = path.resolve(__dirname, '../../');
 
 const app = express();
@@ -1166,9 +1169,14 @@ app.get('/api/auth/github', (req, res) => {
     });
   }
 
-  // Generate CSRF state token and store it briefly
+  // Generate CSRF state token and store it briefly.
+  // Also persist the returnTo path so the callback can redirect back to the
+  // originating page (e.g. /profile) rather than always landing on /mcp.
   const state = randomBytes(20).toString('hex');
-  oauthStateStore.set(state, { createdAt: Date.now() });
+  const returnTo = req.query.returnTo || '/mcp';
+  // Only allow relative paths — strip any attempt to abuse this for open-redirect
+  const safeReturnTo = /^\/[a-zA-Z0-9\-_/?=&%]*$/.test(returnTo) ? returnTo : '/mcp';
+  oauthStateStore.set(state, { createdAt: Date.now(), returnTo: safeReturnTo });
 
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
@@ -1187,19 +1195,23 @@ app.get('/api/auth/github', (req, res) => {
 app.get('/api/auth/github/callback', async (req, res) => {
   const { code, state, error: ghError } = req.query;
 
+  // Recover the returnTo path stored at OAuth initiation (defaults to /mcp)
+  const stateEntry = oauthStateStore.get(state);
+  const returnTo = stateEntry?.returnTo || '/mcp';
+
   // User denied access or GitHub returned an error
   if (ghError) {
-    return res.redirect(`/mcp?oauth_error=${encodeURIComponent(ghError)}`);
+    return res.redirect(`${returnTo}?oauth_error=${encodeURIComponent(ghError)}`);
   }
 
   // CSRF state validation
-  if (!state || !oauthStateStore.has(state)) {
+  if (!state || !stateEntry) {
     return res.redirect('/mcp?oauth_error=invalid_state');
   }
   oauthStateStore.delete(state);
 
   if (!code) {
-    return res.redirect('/mcp?oauth_error=missing_code');
+    return res.redirect(`${returnTo}?oauth_error=missing_code`);
   }
 
   try {
@@ -1219,7 +1231,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
     if (tokenData.error || !tokenData.access_token) {
       console.error('[CAVDAX OAuth] Token exchange failed:', tokenData);
       const frontendBase = CLIENT_URL || '';
-      return res.redirect(`${frontendBase}/mcp?oauth_error=${encodeURIComponent(tokenData.error || 'token_exchange_failed')}`);
+      return res.redirect(`${frontendBase}${returnTo}?oauth_error=${encodeURIComponent(tokenData.error || 'token_exchange_failed')}`);
     }
 
     const accessToken = tokenData.access_token;
@@ -1237,7 +1249,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
     const frontendBase = CLIENT_URL || '';
 
     if (!userData.id) {
-      return res.redirect(`${frontendBase}/mcp?oauth_error=user_fetch_failed`);
+      return res.redirect(`${frontendBase}${returnTo}?oauth_error=user_fetch_failed`);
     }
 
     // 3. Persist user in session
@@ -1251,8 +1263,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
 
     console.log(`[CAVDAX OAuth] User authenticated: ${userData.login} (id: ${userData.id})`);
 
-    // 4. Redirect back to the MCP page with user info & success flag
-    const redirectUrl = `${frontendBase}/mcp?connected=1&login=${encodeURIComponent(userData.login)}&name=${encodeURIComponent(userData.name || userData.login)}&avatar=${encodeURIComponent(userData.avatar_url || '')}&githubId=${userData.id}`;
+    // 4. Redirect back to the originating page with user info & success flag
+    const redirectUrl = `${frontendBase}${returnTo}?connected=1&login=${encodeURIComponent(userData.login)}&name=${encodeURIComponent(userData.name || userData.login)}&avatar=${encodeURIComponent(userData.avatar_url || '')}&githubId=${userData.id}`;
     req.session.save((err) => {
       if (err) console.error('[CAVDAX OAuth] Session save error:', err);
       res.redirect(redirectUrl);
@@ -1261,7 +1273,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
   } catch (err) {
     const frontendBase = CLIENT_URL || '';
     console.error('[CAVDAX OAuth] Callback error:', err.message);
-    res.redirect(`${frontendBase}/mcp?oauth_error=${encodeURIComponent('server_error')}`);
+    res.redirect(`${frontendBase}${returnTo}?oauth_error=${encodeURIComponent('server_error')}`);
   }
 });
 
@@ -1339,6 +1351,227 @@ app.get('/api/github/repos', async (req, res) => {
     console.error('[CAVDAX Repos] Fetch error:', err.message);
     res.status(500).json({ authenticated: true, repos: [], error: err.message });
   }
+});
+
+// ---------------------------------------------------------------------------
+// RAZORPAY PAYMENT GATEWAY
+// ---------------------------------------------------------------------------
+// Three endpoints power the sponsor page and (future) Pro subscription flow:
+//
+//   POST /api/billing/create-order    — create a Razorpay order, return order_id
+//   POST /api/billing/verify-payment  — HMAC-SHA256 signature verification
+//   POST /api/billing/webhook         — Razorpay webhook (async payment events)
+//
+// Credentials are read from environment variables only — never hardcoded.
+// KEY_SECRET never leaves the server.
+//
+// Razorpay amounts are in the smallest currency unit (paise for INR).
+// ₹1 = 100 paise. Minimum order: 100 paise (₹1).
+
+const RAZORPAY_KEY_ID     = process.env.RAZORPAY_KEY_ID     || null;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || null;
+
+// Lazily initialise the Razorpay SDK only when credentials are present.
+// If env vars are missing the endpoints return a clear 503 (not a crash).
+let razorpayClient = null;
+if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
+  razorpayClient = new Razorpay({
+    key_id:     RAZORPAY_KEY_ID,
+    key_secret: RAZORPAY_KEY_SECRET
+  });
+  console.log('[CAVDAX Razorpay] Payment gateway initialised.');
+} else {
+  console.warn('[CAVDAX Razorpay] RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET not set — billing endpoints disabled.');
+}
+
+/**
+ * POST /api/billing/create-order
+ * Creates a Razorpay order and returns the order_id to the frontend.
+ *
+ * Body: { amount_paise: number, receipt?: string }
+ *   amount_paise — integer, minimum 100 (₹1)
+ *   receipt      — optional idempotency label (defaults to a UUID)
+ *
+ * Returns: { order_id, amount, currency, receipt }
+ */
+app.get('/api/billing/config', (req, res) => {
+  res.json({
+    configured: Boolean(razorpayClient),
+    key_id: RAZORPAY_KEY_ID || null
+  });
+});
+
+app.post('/api/billing/create-order', async (req, res) => {
+  if (!razorpayClient) {
+    return res.status(503).json({
+      success: false,
+      error: { code: 'RAZORPAY_NOT_CONFIGURED', message: 'Payment gateway is not configured on this server.' }
+    });
+  }
+
+  const { amount_paise, receipt } = req.body;
+
+  // Validate amount
+  const amount = parseInt(amount_paise, 10);
+  if (!amount || amount < 100) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'INVALID_AMOUNT', message: 'amount_paise must be an integer >= 100 (₹1 minimum).' }
+    });
+  }
+
+  try {
+    const order = await razorpayClient.orders.create({
+      amount,
+      currency: 'INR',
+      receipt:  receipt || `cavdax_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
+      payment_capture: 1  // auto-capture
+    });
+
+    console.log(`[CAVDAX Razorpay] Order created: ${order.id} | ₹${(amount / 100).toFixed(2)}`);
+
+    res.json({
+      success: true,
+      order_id: order.id,
+      amount:   order.amount,
+      currency: order.currency,
+      receipt:  order.receipt,
+      key_id:   RAZORPAY_KEY_ID
+    });
+  } catch (err) {
+    console.error('[CAVDAX Razorpay] create-order error:', err.message);
+    res.status(500).json({
+      success: false,
+      error: { code: 'ORDER_CREATION_FAILED', message: err.message }
+    });
+  }
+});
+
+/**
+ * POST /api/billing/verify-payment
+ * Verifies the Razorpay payment signature after the frontend checkout completes.
+ *
+ * Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+ *
+ * Algorithm: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
+ * Returns { success: true } only if signatures match.
+ * Returns 400 if signature is missing or invalid — NEVER mark as paid in this case.
+ */
+app.post('/api/billing/verify-payment', (req, res) => {
+  if (!razorpayClient) {
+    return res.status(503).json({
+      success: false,
+      error: { code: 'RAZORPAY_NOT_CONFIGURED', message: 'Payment gateway is not configured on this server.' }
+    });
+  }
+
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, tier } = req.body;
+
+  // Guard: all three fields are required
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'MISSING_FIELDS', message: 'razorpay_order_id, razorpay_payment_id, and razorpay_signature are all required.' }
+    });
+  }
+
+  // HMAC-SHA256 verification (Razorpay standard)
+  const payload  = `${razorpay_order_id}|${razorpay_payment_id}`;
+  const expected = createHmac('sha256', RAZORPAY_KEY_SECRET)
+    .update(payload)
+    .digest('hex');
+
+  if (expected !== razorpay_signature) {
+    console.warn(`[CAVDAX Razorpay] Signature mismatch for order ${razorpay_order_id}`);
+    return res.status(400).json({
+      success: false,
+      error: { code: 'SIGNATURE_MISMATCH', message: 'Payment signature verification failed. Do not grant access.' }
+    });
+  }
+
+  console.log(`[CAVDAX Razorpay] Payment verified: ${razorpay_payment_id} for order ${razorpay_order_id}`);
+
+  // Signature is valid — payment is genuine.
+  if (req.session && tier) {
+    req.session.tier = tier;
+    if (req.session.user) {
+      req.session.user.tier = tier;
+    }
+  }
+
+  res.json({
+    success: true,
+    payment_id: razorpay_payment_id,
+    order_id:   razorpay_order_id,
+    tier:       tier || 'pro'
+  });
+});
+
+/**
+ * POST /api/billing/webhook
+ * Receives asynchronous Razorpay events (payment.captured, payment.failed, etc.).
+ * Validates the X-Razorpay-Signature header before trusting the payload.
+ *
+ * Register this URL in the Razorpay Dashboard → Webhooks:
+ *   https://cavdax.sahnirmaan.live/api/billing/webhook
+ *
+ * Webhook secret: set RAZORPAY_WEBHOOK_SECRET in .env (separate from KEY_SECRET).
+ * If RAZORPAY_WEBHOOK_SECRET is not set, the endpoint logs but does not validate.
+ */
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  const signature     = req.headers['x-razorpay-signature'];
+
+  // Validate webhook signature if secret is configured
+  if (webhookSecret && signature) {
+    const body      = req.body;    // raw Buffer (express.raw middleware)
+    const expected  = createHmac('sha256', webhookSecret)
+      .update(body)
+      .digest('hex');
+
+    if (expected !== signature) {
+      console.warn('[CAVDAX Razorpay Webhook] Signature mismatch — ignoring.');
+      return res.status(400).json({ success: false, error: 'WEBHOOK_SIGNATURE_MISMATCH' });
+    }
+  } else if (!webhookSecret) {
+    console.warn('[CAVDAX Razorpay Webhook] RAZORPAY_WEBHOOK_SECRET not set — skipping signature validation.');
+  }
+
+  let event;
+  try {
+    event = JSON.parse(req.body.toString());
+  } catch {
+    return res.status(400).json({ success: false, error: 'INVALID_JSON' });
+  }
+
+  const eventType  = event?.event;
+  const paymentId  = event?.payload?.payment?.entity?.id;
+  const orderId    = event?.payload?.payment?.entity?.order_id;
+  const amountPaise = event?.payload?.payment?.entity?.amount;
+
+  console.log(`[CAVDAX Razorpay Webhook] Event: ${eventType} | payment: ${paymentId} | order: ${orderId}`);
+
+  switch (eventType) {
+    case 'payment.captured':
+      // TODO (feature/payment-gateway): activate Pro tier for the user linked to orderId
+      console.log(`[CAVDAX Razorpay Webhook] Payment captured ₹${(amountPaise / 100).toFixed(2)} — order ${orderId}`);
+      break;
+    case 'payment.failed':
+      console.warn(`[CAVDAX Razorpay Webhook] Payment failed for order ${orderId}`);
+      break;
+    case 'subscription.activated':
+      console.log(`[CAVDAX Razorpay Webhook] Subscription activated — ${event?.payload?.subscription?.entity?.id}`);
+      break;
+    case 'subscription.cancelled':
+      console.log(`[CAVDAX Razorpay Webhook] Subscription cancelled — ${event?.payload?.subscription?.entity?.id}`);
+      break;
+    default:
+      // Unhandled event — acknowledge and move on
+      break;
+  }
+
+  // Always return 200 quickly so Razorpay stops retrying
+  res.status(200).json({ success: true });
 });
 
 // ---------------------------------------------------------------------------
