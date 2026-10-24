@@ -18,6 +18,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.8 Latest Session Achievements (October 24, 2026 - Production VM Recovery, Cloudflare Error 522 Resolution & 2GB Swap Memory Provisioning)
+
+- **Root Cause Identification & Cloudflare Error 522 Resolution (`https://cavdax.sahnirmaan.live`)**:
+  - Diagnosed origin unreachability showing Cloudflare Error 522 and SSH `i/o timeout` on port 22.
+  - Corroborated with AWS EC2 instance check (`CAVDAX-Host`, `i-0fbcf8454472d6fd2`, `t3.micro`) showing `2/3 checks passed` (Instance Reachability Check Failed).
+  - Pinpointed Linux kernel Out-Of-Memory (OOM) deadlock caused by concurrent Vite and Node Docker builds on a 1 GiB RAM host with 0 swap.
+  - Successfully guided instance reboot, preserving public IPv4 `16.178.83.110` and restoring AWS check to `3/3 checks passed`.
+  - Re-established live connectivity on ports 22, 80, and 443 with Caddy gateway returning HTTP 200 OK.
+
+- **Automated Memory Hardening & 2GB Swapfile Provisioning (`.github/workflows/deploy.yml`, PR #35)**:
+  - Formulated and merged PR #35 introducing an automatic host memory inspection and swap provisioner.
+  - Dynamically provisions a persistent 2GB swapfile (`/swapfile`) in `/etc/fstab` if host swap space is under 1GB.
+  - Expanded host effective memory from 1 GiB to 3 GiB (913 MB physical RAM + 2047 MB swap), permanently immunizing future Docker builds from kernel OOM deadlocks.
+  - Executed automated rolling zero-downtime container deployment in 11 seconds (GitHub Actions run `40053233590`).
+
 ## 1.0.7 Latest Session Achievements (October 24, 2026 - Profile & Support Interfaces Refinement, Dynamic Hover Elevation, Real Plan Quotas, Transparent Stewardship & Rule 11F)
 
 - **Profile Page Architecture & Elevation (`ProfilePage.jsx`, `apps/server/index.js`)**:
