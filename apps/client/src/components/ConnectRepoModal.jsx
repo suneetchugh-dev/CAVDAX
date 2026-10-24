@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Github, Search, Plus, Check,
   X, RefreshCw, Lock, Globe, ExternalLink
@@ -25,6 +25,89 @@ export default function ConnectRepoModal({
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [customRepoUrl, setCustomRepoUrl] = useState('');
+
+  // Architectural Scroll Cue & Rail Scrubber (Enclosed MCP Terminal Parity)
+  const listContainerRef = useRef(null);
+  const trackRef = useRef(null);
+  const thumbRef = useRef(null);
+  const isHoldingRef = useRef(false);
+  const rafIdRef = useRef(null);
+  const [isHolding, setIsHolding] = useState(false);
+  const [hasScroll, setHasScroll] = useState(false);
+
+  const updateScrollProgress = () => {
+    if (!listContainerRef.current) return;
+    const el = listContainerRef.current;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    const canScroll = maxScroll > 8;
+    setHasScroll(canScroll);
+    if (!canScroll) return;
+    const ratio = Math.min(1, Math.max(0, el.scrollTop / maxScroll));
+    if (thumbRef.current && !isHoldingRef.current) {
+      thumbRef.current.style.top = `${Math.min(92, Math.max(8, ratio * 100))}%`;
+    }
+  };
+
+  const handleScroll = () => {
+    if (!isHoldingRef.current) {
+      updateScrollProgress();
+    }
+  };
+
+  const scrollToRatio = (ratio) => {
+    if (!listContainerRef.current) return;
+    const el = listContainerRef.current;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    el.scrollTop = ratio * maxScroll;
+    if (thumbRef.current) {
+      thumbRef.current.style.top = `${Math.min(92, Math.max(8, ratio * 100))}%`;
+    }
+  };
+
+  const handlePointerDown = (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (!trackRef.current) return;
+
+    isHoldingRef.current = true;
+    setIsHolding(true);
+
+    try {
+      trackRef.current.setPointerCapture(e.pointerId);
+    } catch {}
+
+    const rect = trackRef.current.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    scrollToRatio(ratio);
+
+    const onPointerMove = (moveEvent) => {
+      if (!isHoldingRef.current || !trackRef.current) return;
+      moveEvent.preventDefault();
+
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+
+      rafIdRef.current = requestAnimationFrame(() => {
+        if (!trackRef.current || !isHoldingRef.current) return;
+        const curRect = trackRef.current.getBoundingClientRect();
+        const curRatio = Math.min(1, Math.max(0, (moveEvent.clientY - curRect.top) / curRect.height));
+        scrollToRatio(curRatio);
+      });
+    };
+
+    const onPointerUp = (upEvent) => {
+      isHoldingRef.current = false;
+      setIsHolding(false);
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      try {
+        if (trackRef.current) trackRef.current.releasePointerCapture(upEvent.pointerId);
+      } catch {}
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      updateScrollProgress();
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -104,6 +187,13 @@ export default function ConnectRepoModal({
     r.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateScrollProgress();
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [filteredRepos.length, isOpen]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
       <div
@@ -159,8 +249,53 @@ export default function ConnectRepoModal({
                   {isLoading && <RefreshCw className="w-3 h-3 animate-spin text-slate-400" />}
                 </div>
 
-                <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-                  {filteredRepos.length > 0 ? (
+                <div className="relative">
+                  <style>{`
+                    /* Pure Mini Scroll Cue Only: Browser scrollbars completely suppressed */
+                    .repo-cue-only-scroll {
+                      scrollbar-width: none;
+                      -ms-overflow-style: none;
+                    }
+                    .repo-cue-only-scroll::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
+
+                  {/* Universal Architectural Scroll Cue & Rail Scrubber (Enclosed MCP Terminal Parity) */}
+                  {hasScroll && (
+                    <div
+                      ref={trackRef}
+                      onPointerDown={handlePointerDown}
+                      className={`absolute right-0.5 top-1 bottom-1 w-3 z-30 transition-all duration-200 select-none cursor-pointer flex justify-center ${
+                        isHolding
+                          ? 'opacity-100 bg-slate-900/10 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-full backdrop-blur-xs'
+                          : 'opacity-40 hover:opacity-90 bg-transparent'
+                      }`}
+                      title="Hold to scrub repository list"
+                      aria-label="Repository scroll cue and rail scrubber"
+                    >
+                      {/* Thumb / Cue Indicator:
+                          - In resting state: Discrete floating scroll cue pill (w-1.5 h-5 rounded-full bg-slate-500/60 dark:bg-white/40).
+                          - In holding state: Morphs smoothly into the architectural luminous draggable scrubber thumb.
+                      */}
+                      <div
+                        ref={thumbRef}
+                        className={`absolute left-1/2 -translate-x-1/2 transition-all pointer-events-none ${
+                          isHolding
+                            ? 'w-2 h-7 rounded-full bg-slate-950 dark:bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)] ring-1 ring-slate-400 dark:ring-white/80'
+                            : 'w-1.5 h-5 rounded-full bg-slate-500/60 dark:bg-white/40 shadow-xs'
+                        }`}
+                        style={{ top: '8%' }}
+                      />
+                    </div>
+                  )}
+
+                  <div
+                    ref={listContainerRef}
+                    onScroll={handleScroll}
+                    className={`space-y-1.5 max-h-60 overflow-y-auto repo-cue-only-scroll ${hasScroll ? 'pr-3.5' : 'pr-1'}`}
+                  >
+                    {filteredRepos.length > 0 ? (
                     filteredRepos.map((repo) => {
                       const isConnected = connectedRepoIds.includes(String(repo.id));
                       return (
@@ -221,6 +356,7 @@ export default function ConnectRepoModal({
                       {isLoading ? 'Loading repositories...' : 'No repositories found.'}
                     </div>
                   )}
+                  </div>
                 </div>
 
                 {/* Organization Access Escape Hatch Link */}
