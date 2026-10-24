@@ -39,6 +39,11 @@
   - Codified Rule 11K (Monochromatic Connected Workspaces & Theme Shift Ban).
   - Codified Rule 11L (Zero Promotional Demo Clutter in Authentic User Workspaces).
   - Codified Rule 11M (GitHub Organization OAuth Ingestion Completeness).
+- **Architectural Scroll Cue & Rail Scrubber for Connect Repository Modal (`ConnectRepoModal.jsx`)**:
+  - Implemented universal scroll cue pill and interactive draggable rail scrubber with 1:1 parity to `TerminalView.jsx`.
+  - Suppressed default browser scrollbars (`.repo-cue-only-scroll`).
+  - Added pointer capture, `requestAnimationFrame` drag scrubbing, and dynamic padding adjustment (`pr-3.5`) when scrollable.
+  - Mirrored architectural blueprint to master assets in `C:\(Lectures)\+[Dev-Assets]\#(AI-AGENTS)\#Prompts\#General-Main\UI-Components\##Dual-Mode-Workspace-Visualizer.md`.
 - **Production Developer Console Dignity Codification (`docs/UI_DESIGN_SYSTEM.md`, `AGENTS.md`)**:
   - Enshrined Rule 11N (Production Developer Console Dignity & Ban on Toy/Detour Paradigms) and Agent Standard 0f.
   - Mandated elimination of toy detour buttons ("Return to Showcase") in live user environments.
