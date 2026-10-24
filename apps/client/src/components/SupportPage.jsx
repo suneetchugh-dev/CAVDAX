@@ -88,10 +88,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
   const handleSponsor = useCallback(async (tier) => {
     playClick();
 
-    if (!RAZORPAY_KEY_ID) {
-      showToast(false, 'Payment gateway not configured. Contact the team.');
-      return;
-    }
+
 
     setLoadingTier(tier.id);
 
@@ -122,9 +119,16 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
         return;
       }
 
+      const keyId = orderData.key_id || RAZORPAY_KEY_ID;
+      if (!keyId) {
+        showToast(false, 'Payment gateway key not configured. Contact the team.');
+        setLoadingTier(null);
+        return;
+      }
+
       // 3. Open Razorpay modal
       const options = {
-        key:         RAZORPAY_KEY_ID,
+        key:         keyId,
         amount:      orderData.amount,
         currency:    orderData.currency,
         name:        'CAVDAX',
@@ -190,9 +194,6 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
         </h1>
         <p className="mt-3 text-xs font-sans text-slate-500 dark:text-slate-400">
           Direct community backing funds open causal benchmarks and maintainer hours.
-        </p>
-        <p className="mt-1.5 text-[11px] font-mono text-slate-400 dark:text-slate-500">
-          Secure · Razorpay · UPI · Cards · Net Banking
         </p>
       </section>
 

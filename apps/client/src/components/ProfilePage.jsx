@@ -338,38 +338,53 @@ export default function ProfilePage({
   const mcpRateLimit = currentTier === 'free' ? '30 rpm' : (currentTier === 'pro' ? '100 rpm' : 'Unlimited');
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-2 sm:pb-3 px-3 sm:px-6 max-w-6xl mx-auto w-full select-none flex flex-col justify-between">
+    <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none">
       
-      {/* ── 1. Identity Header Section (Streamlined Horizontal Bar for Desktop/Laptop) ── */}
-      <section className="mt-1 sm:mt-1.5 mb-2 sm:mb-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left bg-slate-50/70 dark:bg-white/[0.02] p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 dark:border-white/10 shrink-0">
-        <div className="flex items-center gap-3">
-          {/* Concentric Tier-Enclosed Circular Avatar */}
-          <div className={`h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden relative transition-all duration-300 shrink-0 ${ROLE_RING[currentTier] || ROLE_RING.free}`}>
-            {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
-              <ShimmerImage
-                src={user?.avatar_url || user?.avatarUrl || user?.avatar}
-                alt={user.login || 'User Avatar'}
-                containerClassName="h-full w-full rounded-full"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <User className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300" />
-            )}
-          </div>
+      {/* ── 1. Top Identity & Account State (Frameless, Spacious, Centered Elegance) ── */}
+      <section className="text-center pt-2 pb-4 sm:pt-4 sm:pb-6 relative flex flex-col items-center">
+        {/* Large Concentric Avatar (Centered, Frameless, Tier-Ring Halo) */}
+        <div className="relative mb-3 sm:mb-4 flex justify-center">
+          <div className="relative">
+            <div className={`w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden transition-all duration-500 bg-slate-100 dark:bg-white/5 ${tierRingStyles[currentTier] || tierRingStyles.free}`}>
+              {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
+                <ShimmerImage
+                  src={user?.avatar_url || user?.avatarUrl || user?.avatar}
+                  alt={user.login || 'User Avatar'}
+                  containerClassName="h-full w-full rounded-full"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center font-mono font-bold text-slate-400 text-2xl sm:text-3xl">
+                  {userInitial}
+                </div>
+              )}
+            </div>
 
-          {/* Identity & Verified Handle */}
-          <div>
-            <h1 className="text-xs sm:text-sm font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
-              {user?.name || user?.login || 'Local Contributor'}
-            </h1>
-            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
-              {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
-            </p>
+            {/* Micro Tier Badge Floating Over Bottom-Right of Avatar */}
+            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono">
+                {currentTier === 'enterprise' ? (
+                  <span className="text-purple-400 font-black">M</span>
+                ) : currentTier === 'pro' ? (
+                  <span className="text-amber-400 font-black">A</span>
+                ) : (
+                  <span className="text-slate-400 font-black">C</span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
-        <div className="flex items-center gap-2.5 flex-wrap justify-center sm:justify-end">
+        {/* Identity & Verified Handle */}
+        <h1 className="text-base sm:text-lg font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
+          {user?.name || user?.login || 'Local Contributor'}
+        </h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
+          {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
+        </p>
+
+        {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
+        <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
           {/* Support Us Button with Rose Fluid Wave Fill */}
           <button
             onClick={() => {
@@ -546,7 +561,7 @@ export default function ProfilePage({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
           {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
           <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
             currentTier === 'free'
@@ -592,7 +607,7 @@ export default function ProfilePage({
             <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-3">
               $0 <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <ul className="text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300">
+            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
                 <span>1 Connected repository</span>
@@ -704,7 +719,7 @@ export default function ProfilePage({
             <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-3">
               $4 <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <ul className="text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300">
+            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Unlimited repositories</span>
@@ -825,7 +840,7 @@ export default function ProfilePage({
                 currentTier === 'enterprise' ? 'text-purple-200/80' : 'text-slate-500'
               }`}>/ SLA</span>
             </div>
-            <ul className={`text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 ${
+            <ul className={`text-xs font-mono space-y-2 mb-6 ${
               currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
             }`}>
               <li className="flex items-center gap-2">
@@ -901,7 +916,7 @@ export default function ProfilePage({
       </section>
 
       {/* ── 3. Real-Time Metrics & API Credentials ── */}
-      <section className="mt-2.5 sm:mt-3 lg:mt-3.5 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-1 sm:mb-2 shrink-0">
+      <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
         {/* Plan Quota & Consumption */}
         <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
