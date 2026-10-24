@@ -283,6 +283,21 @@ async function checkNodeLimit(req, res, next) {
 // REST ENDPOINTS
 // ---------------------------------------------------------------------------
 
+// Helper to extract client IP safely
+function extractClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0];
+    if (ip) return ip;
+  }
+  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
+}
+
+// First-party client IP discovery (eliminates 3rd-party tracker dependencies and ERR_BLOCKED_BY_CLIENT)
+app.get('/api/client-ip', (req, res) => {
+  res.json({ ip: extractClientIp(req) });
+});
+
 // 1. Health & Connection Status
 app.get('/api/health', (req, res) => {
   // Exposes tier and tier_label so the Web HUD header badge can read the active
@@ -294,6 +309,7 @@ app.get('/api/health', (req, res) => {
     falkordb_connected: isFalkorConnected,
     tier: CAVDAX_TIER,
     tier_label: activeTier.label,
+    client_ip: extractClientIp(req),
     timestamp: new Date().toISOString()
   });
 });
@@ -1122,6 +1138,7 @@ app.post('/api/mcp/messages', requireAuth, async (req, res) => {
 
 const GITHUB_CLIENT_ID     = process.env.GITHUB_CLIENT_ID     || null;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || null;
+const CLIENT_URL           = process.env.CLIENT_URL           || null;
 const GITHUB_CALLBACK_URL  = process.env.GITHUB_CALLBACK_URL
   || `http://localhost:${PORT}/api/auth/github/callback`;
 
@@ -1201,7 +1218,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
 
     if (tokenData.error || !tokenData.access_token) {
       console.error('[CAVDAX OAuth] Token exchange failed:', tokenData);
-      return res.redirect(`/mcp?oauth_error=${encodeURIComponent(tokenData.error || 'token_exchange_failed')}`);
+      const frontendBase = CLIENT_URL || '';
+      return res.redirect(`${frontendBase}/mcp?oauth_error=${encodeURIComponent(tokenData.error || 'token_exchange_failed')}`);
     }
 
     const accessToken = tokenData.access_token;
@@ -1216,8 +1234,10 @@ app.get('/api/auth/github/callback', async (req, res) => {
     });
     const userData = await userRes.json();
 
+    const frontendBase = CLIENT_URL || '';
+
     if (!userData.id) {
-      return res.redirect('/mcp?oauth_error=user_fetch_failed');
+      return res.redirect(`${frontendBase}/mcp?oauth_error=user_fetch_failed`);
     }
 
     // 3. Persist user in session
@@ -1226,23 +1246,22 @@ app.get('/api/auth/github/callback', async (req, res) => {
       login:      userData.login,
       name:       userData.name || userData.login,
       avatarUrl:  userData.avatar_url,
-      // Store the token hashed or omit from session in production;
-      // here we keep it so the client can make authenticated GitHub API calls
       accessToken
     };
 
     console.log(`[CAVDAX OAuth] User authenticated: ${userData.login} (id: ${userData.id})`);
 
     // 4. Redirect back to the MCP page with user info & success flag
-    const redirectUrl = `/mcp?connected=1&login=${encodeURIComponent(userData.login)}&name=${encodeURIComponent(userData.name || userData.login)}&avatar=${encodeURIComponent(userData.avatar_url || '')}&githubId=${userData.id}`;
+    const redirectUrl = `${frontendBase}/mcp?connected=1&login=${encodeURIComponent(userData.login)}&name=${encodeURIComponent(userData.name || userData.login)}&avatar=${encodeURIComponent(userData.avatar_url || '')}&githubId=${userData.id}`;
     req.session.save((err) => {
       if (err) console.error('[CAVDAX OAuth] Session save error:', err);
       res.redirect(redirectUrl);
     });
 
   } catch (err) {
+    const frontendBase = CLIENT_URL || '';
     console.error('[CAVDAX OAuth] Callback error:', err.message);
-    res.redirect(`/mcp?oauth_error=${encodeURIComponent('server_error')}`);
+    res.redirect(`${frontendBase}/mcp?oauth_error=${encodeURIComponent('server_error')}`);
   }
 });
 

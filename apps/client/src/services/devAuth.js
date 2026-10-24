@@ -131,21 +131,26 @@ export function removeAuthorizedUser(username) {
   return true;
 }
 
-// Fetch client public IP with timeout and failover
+// Fetch client public IP with first-party discovery (zero 3rd-party tracking or adblocker blocks)
 export async function fetchClientIp() {
   try {
     const cached = sessionStorage.getItem(IP_CACHE_KEY);
     if (cached) return cached;
   } catch {}
 
-  const isLocalHost = typeof window !== 'undefined' && 
+  const isLocalHost = typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '[::1]');
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3500);
+  if (isLocalHost) {
+    try { sessionStorage.setItem(IP_CACHE_KEY, '127.0.0.1'); } catch {}
+    return '127.0.0.1';
+  }
 
+  // 1. First-party server IP detection endpoint
   try {
-    const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch('/api/client-ip', { signal: controller.signal });
     clearTimeout(timeoutId);
     if (res.ok) {
       const data = await res.json();
@@ -154,27 +159,24 @@ export async function fetchClientIp() {
         return data.ip;
       }
     }
-  } catch {
-    try {
-      const fbController = new AbortController();
-      const fbTimeoutId = setTimeout(() => fbController.abort(), 2500);
-      const fbRes = await fetch('https://api64.ipify.org?format=json', { signal: fbController.signal });
-      clearTimeout(fbTimeoutId);
-      if (fbRes.ok) {
-        const fbData = await fbRes.json();
-        if (fbData?.ip) {
-          try { sessionStorage.setItem(IP_CACHE_KEY, fbData.ip); } catch {}
-          return fbData.ip;
-        }
+  } catch {}
+
+  // 2. Fallback to /api/health
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch('/api/health', { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.client_ip) {
+        try { sessionStorage.setItem(IP_CACHE_KEY, data.client_ip); } catch {}
+        return data.client_ip;
       }
-    } catch {}
-  }
+    }
+  } catch {}
 
-  if (isLocalHost && import.meta.env.DEV) {
-    return '127.0.0.1';
-  }
-
-  return 'unknown';
+  return '127.0.0.1';
 }
 
 // Check whether an IP is in the allowed list

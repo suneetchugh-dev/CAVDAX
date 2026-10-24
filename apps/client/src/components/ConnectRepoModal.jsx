@@ -140,8 +140,6 @@ export default function ConnectRepoModal({
     }
   };
 
-  if (!isOpen) return null;
-
   const handleSelectRepo = (repo) => {
     playApprovalChime();
     onConnectRepo({
@@ -193,6 +191,8 @@ export default function ConnectRepoModal({
     }, 60);
     return () => clearTimeout(timer);
   }, [filteredRepos.length, isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
