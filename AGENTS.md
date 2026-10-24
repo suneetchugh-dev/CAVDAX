@@ -827,3 +827,9 @@ Every AI coding agent must treat the **6 Canonical Context Files** as the persis
 
   - Both local deployment scripts (`publish-graph-pages.ps1`, `publish-graph-pages.sh`) and CI/CD pipelines (`.github/workflows/deploy-graph-pages.yml`) execute `verify-graph-integrity.py` before git staging or deployment. If any check fails, publication is immediately halted with a fatal error.
 
+
+## 💳 Commercial & Payment UI Rules — Zero Marketing/Gateway Clutter
+
+- **Strict Ban on Gateway Badge Clutter**: Never include generic payment gateway badges, trust seals, or payment method enumerations (e.g., `Secure · Razorpay · UPI · Cards · Net Banking`, `Powered by Stripe`, or similar badge lists).
+- **Production Developer Aesthetics**: All payment interfaces (Sponsor and Tier Cards) must strictly maintain high-end, uncluttered, monochromatic developer console aesthetics.
+- **Dynamic Key Resolution**: Never hardcode or statically inline fallback Test Mode keys in production builds. Always resolve payment keys dynamically from backend orders or verified production environment configurations.
