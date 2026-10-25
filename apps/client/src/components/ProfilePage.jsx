@@ -418,7 +418,7 @@ export default function ProfilePage({
   const mcpRateLimit = currentTier === 'free' ? '30 rpm' : (currentTier === 'pro' ? '100 rpm' : 'Unlimited');
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none">
+    <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       
       {/* ── 1. Top Identity & Account State (Frameless, Spacious, Centered Elegance) ── */}
       <section className="text-center mt-6 sm:mt-8 md:mt-10 pt-4 pb-4 sm:pb-6 relative flex flex-col items-center">
