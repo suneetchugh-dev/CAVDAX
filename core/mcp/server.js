@@ -6,7 +6,12 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { verifyActionGate, revalidateDecision } from '../graph/queries.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, '../../');
 
 export class CavdaxMcpServer {
   constructor(graph) {
@@ -130,7 +135,20 @@ export class CavdaxMcpServer {
 
     // 3. ENFORCEMENT BRANCH B: APPROVED (WRITE TO DISK)
     console.log(`[MCP Gate] ✅ GATE APPROVED: Causal provenance verified in ${checkResult.latency_ms}ms.`);
-    const resolvedPath = path.resolve(file_path);
+
+    // Security Confinement: Prevent path traversal (OWASP A01/A03 Hardening)
+    const resolvedRepo = path.resolve(REPO_ROOT);
+    const resolvedPath = path.resolve(resolvedRepo, file_path);
+    if (!resolvedPath.startsWith(resolvedRepo + path.sep) && resolvedPath !== resolvedRepo) {
+      console.warn(`[MCP Gate] ⛔ PATH TRAVERSAL ATTEMPT BLOCKED: '${file_path}' attempts to escape repo root.`);
+      return {
+        isError: true,
+        gate_verdict: 'BLOCKED_PATH_TRAVERSAL',
+        decision_id,
+        error: 'Access denied: Target file path must reside within the repository root.'
+      };
+    }
+
     const dir = path.dirname(resolvedPath);
 
     if (!fs.existsSync(dir)) {
