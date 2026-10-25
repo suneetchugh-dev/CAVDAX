@@ -242,6 +242,7 @@ app.use('/api/mcp/', mcpLimiter);      // tighter limit on MCP routes (overrides
 // Raw keys follow format: cvdx_live_<login>_<48-hex-entropy> (192 bits of entropy)
 const API_TOKEN = process.env.MCP_API_TOKEN || null;
 const userApiKeyRegistry = new Map();
+let globalKeyRevocationEpoch = 0;
 
 function hashApiKey(rawKey) {
   if (!rawKey || typeof rawKey !== 'string') return '';
@@ -279,7 +280,7 @@ function requireAuth(req, res, next) {
   if (token && token.startsWith('cvdx_live_')) {
     const keyHash = hashApiKey(token);
     const keyRecord = userApiKeyRegistry.get(keyHash);
-    if (keyRecord) {
+    if (keyRecord && (keyRecord.createdAt || 0) >= globalKeyRevocationEpoch) {
       keyRecord.lastUsedAt = Date.now();
       req.authUser = {
         userId: keyRecord.userId,
@@ -553,6 +554,53 @@ app.post('/api/system/hackathon-mode', requireDevAuth, (req, res) => {
     success: true,
     enabled: globalHackathonMode,
     active_tier: globalHackathonMode ? 'enterprise' : CAVDAX_TIER
+  });
+});
+
+/**
+ * POST /api/system/revoke-all-keys
+ * Emergency Credential Invalidation & Kill Switch (Protected by requireDevAuth)
+ * Instantly invalidates all active user-scoped API keys across all tiers.
+ */
+app.post('/api/system/revoke-all-keys', requireDevAuth, (req, res) => {
+  const actor = req.session?.user?.login || req.authUser?.login || 'dev_administrator';
+  const reason = (typeof req.body?.reason === 'string' && req.body.reason.trim())
+    ? req.body.reason.trim().slice(0, 200)
+    : 'Emergency security revocation: credential exposure containment';
+
+  const revokedCount = userApiKeyRegistry.size;
+  globalKeyRevocationEpoch = Date.now();
+  userApiKeyRegistry.clear();
+
+  const auditRecord = {
+    action: 'EMERGENCY_GLOBAL_KEY_REVOCATION',
+    actor: `@${actor.replace(/^@/, '')}`,
+    reason,
+    keys_revoked: revokedCount,
+    revocation_epoch: globalKeyRevocationEpoch,
+    timestamp: new Date().toISOString(),
+    severity: 'CRITICAL'
+  };
+
+  const actionId = `act-revocation-${Date.now()}`;
+  fallbackGraphState.nodes.push({
+    id: actionId,
+    label: 'AgentAction',
+    target_file: 'SECURITY_CREDENTIAL_PURGE',
+    status: 'GLOBAL_KEYS_REVOKED',
+    timestamp: Date.now()
+  });
+
+  console.warn(`[CAVDAX Security] 🚨 EMERGENCY GLOBAL KEY REVOCATION: ${revokedCount} keys invalidated by @${actor}`);
+
+  broadcastEvent('GLOBAL_KEYS_REVOKED', auditRecord);
+
+  res.json({
+    success: true,
+    keys_revoked: revokedCount,
+    epoch: globalKeyRevocationEpoch,
+    message: `Emergency revocation complete. ${revokedCount} API key(s) purged from active memory.`,
+    audit: auditRecord
   });
 });
 
@@ -1588,6 +1636,19 @@ app.get('/api/user/api-key', (req, res) => {
 
   // If user already has an active key in session
   if (req.session?.apiKey && req.session?.keyHash) {
+    const sessionKeyCreatedAt = req.session.keyCreatedAt || 0;
+    if (sessionKeyCreatedAt < globalKeyRevocationEpoch) {
+      console.log(`[CAVDAX Auth] Purging revoked session key for ${login} (issued before revocation epoch)`);
+      req.session.apiKey = null;
+      req.session.keyHash = null;
+      req.session.keyCreatedAt = null;
+      return res.status(401).json({
+        success: false,
+        authenticated: true,
+        revoked: true,
+        error: 'Security Notice: Your previous API key was invalidated during an emergency credential revocation. Please rotate your key to issue a fresh credential.'
+      });
+    }
     // SEC-KEY-03: Re-hydrate in-memory registry if server restarted or worker scaled
     if (!userApiKeyRegistry.has(req.session.keyHash)) {
       userApiKeyRegistry.set(req.session.keyHash, {
@@ -1617,6 +1678,7 @@ app.get('/api/user/api-key', (req, res) => {
   }
 
   // Generate initial cryptographic key with 192-bit CSPRNG entropy
+  const now = Date.now();
   const newKey = generateSecureApiKey(login);
   const keyHash = hashApiKey(newKey);
 
@@ -1624,13 +1686,14 @@ app.get('/api/user/api-key', (req, res) => {
     userId,
     login,
     tier,
-    createdAt: Date.now(),
+    createdAt: now,
     lastUsedAt: null
   });
 
   if (req.session) {
     req.session.apiKey = newKey;
     req.session.keyHash = keyHash;
+    req.session.keyCreatedAt = now;
   }
 
   res.json({
@@ -1674,6 +1737,7 @@ app.post('/api/user/rotate-api-key', keyRotateLimiter, (req, res) => {
   }
 
   // Generate new cryptographic key with 192 bits of entropy
+  const now = Date.now();
   const newKey = generateSecureApiKey(login);
   const newHash = hashApiKey(newKey);
 
@@ -1681,13 +1745,14 @@ app.post('/api/user/rotate-api-key', keyRotateLimiter, (req, res) => {
     userId,
     login,
     tier,
-    createdAt: Date.now(),
+    createdAt: now,
     lastUsedAt: null
   });
 
   if (req.session) {
     req.session.apiKey = newKey;
     req.session.keyHash = newHash;
+    req.session.keyCreatedAt = now;
   }
 
   console.log(`[CAVDAX Auth] Cryptographic API key rotated for: ${login}`);
