@@ -309,24 +309,38 @@ export default function ProfilePage({
   // Full unrestricted access granted for core developers or global Hackathon Evaluation Mode
   const hasEvaluationPass = Boolean(isAuthorizedDev || isHackathonMode);
 
-  // Set default flagship tier (Enterprise) when Hackathon Mode is active, or Free for standard visitors
+  // Set default flagship tier (Enterprise) when Hackathon Mode transitions, allowing free tier exploration
+  const prevHackathonModeRef = React.useRef(isHackathonMode);
+
   useEffect(() => {
-    if (isHackathonMode) {
-      if (!currentTier || currentTier === 'free') {
-        setCurrentTier('enterprise');
-        if (onSelectTier) onSelectTier('enterprise');
-      }
-      return;
-    }
-    if (!isAuthorizedDev && currentTier !== 'free') {
-      setCurrentTier('free');
+    // When Hackathon Mode transitions from OFF -> ON, elevate to Enterprise so judges start with flagship tier
+    if (isHackathonMode && !prevHackathonModeRef.current) {
+      setCurrentTier('enterprise');
       try {
-        localStorage.setItem('cavdax_tier', 'free');
-        window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
+        localStorage.setItem('cavdax_tier', 'enterprise');
+        window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'enterprise' } }));
       } catch {}
-      if (onSelectTier) onSelectTier('free');
+      if (onSelectTier) onSelectTier('enterprise');
+    } else if (!isHackathonMode && prevHackathonModeRef.current) {
+      // When Hackathon Mode is disengaged, revert standard visitors back to Community tier
+      if (!isAuthorizedDev) {
+        setCurrentTier('free');
+        try {
+          localStorage.setItem('cavdax_tier', 'free');
+          window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
+        } catch {}
+        if (onSelectTier) onSelectTier('free');
+      }
     }
-  }, [isHackathonMode, isAuthorizedDev, currentTier, onSelectTier]);
+    prevHackathonModeRef.current = isHackathonMode;
+  }, [isHackathonMode, isAuthorizedDev, onSelectTier]);
+
+  // Sync external tier prop changes into local state
+  useEffect(() => {
+    if (tier && tier !== currentTier) {
+      setCurrentTier(tier);
+    }
+  }, [tier]);
 
   const showToast = (msg, duration = 3500) => {
     setToastMsg(msg);
@@ -355,34 +369,35 @@ export default function ProfilePage({
       return;
     }
 
+    // Authorized developer or Hackathon Evaluation Pass bypass (allows switching to any tier without payment)
+    if (hasEvaluationPass) {
+      setCurrentTier(newTier);
+      try {
+        localStorage.setItem('cavdax_tier', newTier);
+        window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: newTier } }));
+      } catch {}
+      if (onSelectTier) onSelectTier(newTier);
+      showToast(
+        isHackathonMode
+          ? `Activated ${newTier.toUpperCase()} Tier (Evaluation Pass)`
+          : `Switched to ${newTier.toUpperCase()} Tier (Dev Override)`
+      );
+      return;
+    }
+
     if (!user) {
       playClick();
       window.location.href = '/api/auth/github?returnTo=/profile';
       return;
     }
 
-    if (!hasEvaluationPass) {
-      if (newTier === 'pro') {
-        handleRazorpayUpgrade();
-        return;
-      }
-      const planName = 'Enterprise Mesh';
-      showToast(`${planName} requires custom contract deployment. Contact sales at contact@sahnirmaan.live`);
+    if (newTier === 'pro') {
+      handleRazorpayUpgrade();
       return;
     }
-
-    // Authorized developer or Hackathon Evaluation Pass bypass
-    setCurrentTier(newTier);
-    try {
-      localStorage.setItem('cavdax_tier', newTier);
-      window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: newTier } }));
-    } catch {}
-    if (onSelectTier) onSelectTier(newTier);
-    showToast(
-      isHackathonMode
-        ? `Activated ${newTier.toUpperCase()} Tier (Evaluation Pass)`
-        : `Switched to ${newTier.toUpperCase()} Tier (Dev Override)`
-    );
+    const planName = 'Enterprise Mesh';
+    showToast(`${planName} requires custom contract deployment. Contact sales at contact@cavdax.live`);
+    return;
   };
 
   const handleLogout = async () => {
@@ -851,7 +866,7 @@ export default function ProfilePage({
                 </div>
               )}
               <span className="relative z-10 transition-colors duration-300">
-                {currentTier === 'free' ? 'Current Plan' : 'Switch to Free'}
+                {currentTier === 'free' ? 'Current Plan' : (hasEvaluationPass ? (isHackathonMode ? 'Switch to Community' : 'Switch (Dev)') : 'Switch to Community')}
               </span>
             </button>
           </div>
@@ -969,7 +984,7 @@ export default function ProfilePage({
                 {!hasEvaluationPass && currentTier !== 'pro' && <Lock className="w-3 h-3" />}
                 <span>
                   {currentTier === 'pro'
-                    ? 'Active'
+                    ? 'Current Plan'
                     : (isUpgrading
                         ? 'Connecting...'
                         : (hasEvaluationPass
@@ -1103,11 +1118,11 @@ export default function ProfilePage({
                 {!hasEvaluationPass && currentTier !== 'enterprise' && <Lock className="w-3 h-3" />}
                 <span>
                   {currentTier === 'enterprise'
-                    ? 'Active'
-                    : (!user
-                        ? 'Sign In to Unlock'
-                        : (hasEvaluationPass
-                            ? (isHackathonMode ? 'Switch to Enterprise' : 'Switch (Dev)')
+                    ? 'Current Plan'
+                    : (hasEvaluationPass
+                        ? (isHackathonMode ? 'Switch to Enterprise' : 'Switch (Dev)')
+                        : (!user
+                            ? 'Sign In to Unlock'
                             : 'Upgrade (Custom)'))}
                 </span>
               </span>
