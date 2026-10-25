@@ -1128,16 +1128,14 @@ export default function ProfilePage({
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 MCP Agent API Key
               </span>
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
-                <span>Rotation: 90d</span>
-                <span>·</span>
+              <div className="flex items-center text-[10px] font-mono text-slate-500">
                 <button
                   onClick={handleRotateKey}
                   className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
                   title="Rotate API Key"
                 >
                   <RefreshCw className={`w-2.5 h-2.5 ${isRotating ? 'animate-spin' : ''}`} />
-                  <span>Rotate</span>
+                  <span>Rotate Key</span>
                 </button>
               </div>
             </div>
