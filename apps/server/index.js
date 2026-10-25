@@ -10,7 +10,16 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { randomUUID, randomBytes, createHmac, createHash } from 'crypto';
+import { randomUUID, randomBytes, createHmac, createHash, timingSafeEqual } from 'crypto';
+// Constant-time string equality helper to defend against timing side-channel attacks (OWASP A02)
+function timingSafeStringEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 import { rateLimit } from 'express-rate-limit';
 import Razorpay from 'razorpay';
 
@@ -135,15 +144,15 @@ const activeTier = TIER_CONFIG[CAVDAX_TIER] || TIER_CONFIG.free;
 // Helper to extract client IP safely with reverse-proxy trust validation (OWASP A07 Hardening)
 function extractClientIp(req) {
   const socketIp = (req.socket?.remoteAddress || '').replace(/^.*:/, '').toLowerCase();
-  const isDirectLoopback = socketIp === '127.0.0.1' || socketIp === '1' || socketIp === 'localhost';
+  const isDirectLoopback = socketIp === '127.0.0.1' || socketIp === '1' || socketIp === 'localhost' || socketIp === '::1';
 
-  // Only inspect forwarding headers if request arrives through a local reverse proxy or explicit trust proxy mode
+  // Only inspect forwarding headers if request arrives through a reverse proxy or explicit trust proxy mode
   if (isDirectLoopback || process.env.NODE_ENV === 'production' || process.env.TRUST_PROXY === 'true') {
     const cfIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'];
     if (cfIp) {
       const clean = (typeof cfIp === 'string' ? cfIp.trim() : cfIp[0]).toLowerCase();
-      // Block remote attackers from spoofing localhost via headers
-      if (!isDirectLoopback && (clean === '127.0.0.1' || clean === '::1' || clean === 'localhost')) {
+      // Forwarded headers must NEVER be trusted to claim loopback/localhost status
+      if (clean === '127.0.0.1' || clean === '::1' || clean === 'localhost') {
         return socketIp || 'unknown';
       }
       return clean;
@@ -151,13 +160,13 @@ function extractClientIp(req) {
     const forwarded = req.headers['x-forwarded-for'];
     if (forwarded) {
       const first = (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0]).toLowerCase();
-      if (!isDirectLoopback && (first === '127.0.0.1' || first === '::1' || first === 'localhost')) {
+      if (first === '127.0.0.1' || first === '::1' || first === 'localhost') {
         return socketIp || 'unknown';
       }
       if (first) return first;
     }
   }
-  return req.ip || socketIp || '127.0.0.1';
+  return req.ip || socketIp || 'unknown';
 }
 
 // Global Whitelisted Developer IPs (stored in server state)
@@ -248,8 +257,8 @@ function requireAuth(req, res, next) {
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
 
-  // 1. Root / CI Token Check
-  if (API_TOKEN && token === API_TOKEN) {
+  // 1. Root / CI Token Check (Constant-time comparison)
+  if (API_TOKEN && timingSafeStringEqual(token, API_TOKEN)) {
     req.authUser = { login: 'system', tier: 'enterprise', role: 'admin' };
     return next();
   }
@@ -270,8 +279,8 @@ function requireAuth(req, res, next) {
     }
   }
 
-  // 3. Transparent local dev fallback if no tokens configured anywhere
-  if (!API_TOKEN && userApiKeyRegistry.size === 0) {
+  // 3. Transparent local dev fallback strictly in non-production environments
+  if (process.env.NODE_ENV !== 'production' && !API_TOKEN && userApiKeyRegistry.size === 0) {
     return next();
   }
 
@@ -415,10 +424,10 @@ let globalDevRoster = Array.from(new Set([
 
 // Middleware enforcing developer authorization on administrative endpoints (OWASP A01 Hardening)
 function requireDevAuth(req, res, next) {
-  // 1. Bearer API token
+  // 1. Bearer API token (Constant-time comparison)
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (API_TOKEN && token === API_TOKEN) {
+  if (API_TOKEN && timingSafeStringEqual(token, API_TOKEN)) {
     return next();
   }
 
@@ -431,9 +440,10 @@ function requireDevAuth(req, res, next) {
   // 3. Localhost loopback access or local development environment
   const clientIp = extractClientIp(req).toLowerCase();
   const socketIp = (req.socket?.remoteAddress || '').replace(/^.*:/, '').toLowerCase();
-  const isDirectLoopback = socketIp === '127.0.0.1' || socketIp === '1' || socketIp === 'localhost' || clientIp === '127.0.0.1';
+  const isDirectLoopback = socketIp === '127.0.0.1' || socketIp === '1' || socketIp === 'localhost' || socketIp === '::1';
 
-  if (isDirectLoopback || process.env.NODE_ENV !== 'production' || process.env.ALLOW_LOCAL_DEV_AUTH === 'true') {
+  // Physical socket must be verified loopback AND clientIp must not be spoofed
+  if (isDirectLoopback && (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === 'localhost') && (process.env.NODE_ENV !== 'production' || process.env.ALLOW_LOCAL_DEV_AUTH === 'true')) {
     return next();
   }
 
@@ -1558,7 +1568,27 @@ app.get('/api/user/api-key', (req, res) => {
   const tier = sessionUser?.tier || req.session?.tier || 'free';
 
   // If user already has an active key in session
-  if (req.session?.apiKey) {
+  if (req.session?.apiKey && req.session?.keyHash) {
+    // SEC-KEY-03: Re-hydrate in-memory registry if server restarted or worker scaled
+    if (!userApiKeyRegistry.has(req.session.keyHash)) {
+      userApiKeyRegistry.set(req.session.keyHash, {
+        userId,
+        login,
+        tier,
+        createdAt: Date.now(),
+        lastUsedAt: null
+      });
+      console.log(`[CAVDAX Auth] Re-registered active session key in registry for: ${login}`);
+    } else {
+      // Sync user profile if user authenticated with GitHub after key was initially issued
+      const existingRecord = userApiKeyRegistry.get(req.session.keyHash);
+      if (sessionUser && existingRecord && existingRecord.userId !== sessionUser.githubId) {
+        existingRecord.userId = sessionUser.githubId;
+        existingRecord.login = sessionUser.login;
+        existingRecord.tier = sessionUser.tier || tier;
+      }
+    }
+
     return res.json({
       success: true,
       authenticated: Boolean(sessionUser),
@@ -1596,7 +1626,17 @@ app.get('/api/user/api-key', (req, res) => {
  * POST /api/user/rotate-api-key
  * Cryptographically rotates the user's API key, invalidating the previous hash.
  */
-app.post('/api/user/rotate-api-key', (req, res) => {
+
+// Strict limiter — Cryptographic API Key Rotation (OWASP API4 Resource Exhaustion Defense)
+const keyRotateLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 5,                  // max 5 key rotations per 5 minutes per IP/session
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many key rotation requests. Limit is 5 rotations per 5 minutes.' }
+});
+
+app.post('/api/user/rotate-api-key', keyRotateLimiter, (req, res) => {
   const sessionUser = req.session?.user;
   const login = sessionUser?.login || (req.sessionID ? `guest_${req.sessionID.slice(0, 8)}` : 'contributor');
   const userId = sessionUser?.githubId || req.sessionID || 'anonymous';
@@ -1842,7 +1882,7 @@ app.post('/api/billing/verify-payment', (req, res) => {
     .update(payload)
     .digest('hex');
 
-  if (expected !== razorpay_signature) {
+  if (!timingSafeStringEqual(expected, razorpay_signature)) {
     console.warn(`[CAVDAX Razorpay] Signature mismatch for order ${razorpay_order_id}`);
     return res.status(400).json({
       success: false,
@@ -1853,9 +1893,9 @@ app.post('/api/billing/verify-payment', (req, res) => {
   console.log(`[CAVDAX Razorpay] Payment verified: ${razorpay_payment_id} for order ${razorpay_order_id}`);
 
   // Signature is valid — payment is genuine.
-  // Secure Tier Assignment: use server-recorded order tier rather than untrusted client body
+  // Secure Tier Assignment: use server-recorded order tier; if expired/purged, default to 'pro' and never trust client input
   const recordedOrder = pendingBillingOrders.get(razorpay_order_id);
-  const authorizedTier = recordedOrder?.tier || (tier === 'enterprise' ? 'enterprise' : 'pro');
+  const authorizedTier = recordedOrder?.tier || 'pro';
   if (recordedOrder) {
     pendingBillingOrders.delete(razorpay_order_id);
   }
@@ -1897,7 +1937,7 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), (req
       .update(body)
       .digest('hex');
 
-    if (expected !== signature) {
+    if (!timingSafeStringEqual(expected, signature)) {
       console.warn('[CAVDAX Razorpay Webhook] Signature mismatch — ignoring.');
       return res.status(400).json({ success: false, error: 'WEBHOOK_SIGNATURE_MISMATCH' });
     }
