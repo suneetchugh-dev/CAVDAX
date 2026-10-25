@@ -176,7 +176,8 @@ export async function fetchClientIp() {
     }
   } catch {}
 
-  return '127.0.0.1';
+  // Secure Fallback: only localhost can default to 127.0.0.1; remote clients default to unknown
+  return isLocalHost ? '127.0.0.1' : 'unknown';
 }
 
 // Check whether an IP is in the allowed list
@@ -355,6 +356,7 @@ export async function setGlobalHackathonMode(enabled) {
     const res = await fetch('/api/system/hackathon-mode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ enabled: boolVal })
     });
     if (res.ok) {
@@ -382,7 +384,7 @@ export async function setGlobalHackathonMode(enabled) {
 // Server-Backed Global IP Whitelist Sync
 export async function fetchGlobalWhitelistedIps() {
   try {
-    const res = await fetch('/api/system/dev-ips');
+    const res = await fetch('/api/system/dev-ips', { credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.ips)) {
@@ -406,6 +408,7 @@ export async function addGlobalWhitelistedIp(ip) {
     const res = await fetch('/api/system/dev-ips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ ip: clean, action: 'add' })
     });
     if (res.ok) {
@@ -430,6 +433,7 @@ export async function removeGlobalWhitelistedIp(ip) {
     const res = await fetch('/api/system/dev-ips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ ip: clean, action: 'remove' })
     });
     if (res.ok) {
@@ -449,7 +453,7 @@ export async function removeGlobalWhitelistedIp(ip) {
 // Global Authorized Developer GitHub Roster Service (Server-backed + SSE synchronized)
 export async function fetchGlobalDevRoster() {
   try {
-    const res = await fetch('/api/system/dev-roster');
+    const res = await fetch('/api/system/dev-roster', { credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.roster)) {
@@ -472,6 +476,7 @@ export async function addGlobalAuthorizedUser(username) {
     const res = await fetch('/api/system/dev-roster', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ username: clean, action: 'add' })
     });
     if (res.ok) {
@@ -496,6 +501,7 @@ export async function removeGlobalAuthorizedUser(username) {
     const res = await fetch('/api/system/dev-roster', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ username: clean, action: 'remove' })
     });
     if (res.ok) {

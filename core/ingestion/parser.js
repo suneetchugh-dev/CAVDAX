@@ -85,6 +85,12 @@ export async function ingestAdrFile(graph, filePath) {
   console.log(`[Ingestion] Reading ADR file: ${filePath}`);
   const absolutePath = path.resolve(filePath);
 
+  // Security Confinement: Prevent path traversal outside allowed project root
+  const allowedRoot = path.resolve(process.cwd());
+  if (!absolutePath.startsWith(allowedRoot + path.sep) && absolutePath !== allowedRoot) {
+    throw new Error(`Security Violation: Path traversal attempt outside project workspace: ${absolutePath}`);
+  }
+
   if (!fs.existsSync(absolutePath)) {
     throw new Error(`ADR file not found at path: ${absolutePath}`);
   }

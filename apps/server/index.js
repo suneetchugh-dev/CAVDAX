@@ -39,7 +39,36 @@ const PORT = process.env.PORT || 3000;
 
 // Trust reverse proxy (Caddy / Cloudflare) so secure session cookies and proto work properly
 app.set('trust proxy', 1);
-app.use(cors({ origin: true, credentials: true }));
+
+// Security Headers Middleware (OWASP A05 Hardening)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+  next();
+});
+
+// Explicit CORS Origin Allowlist (Blocks arbitrary cross-site credential theft)
+const allowedOrigins = [
+  'https://cavdax.sahnirmaan.live',
+  ...(process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. mobile apps, local cURL, MCP stdio clients)
+    if (!origin) return callback(null, true);
+    // Allow any localhost / 127.0.0.1 development port (Vite 5173, preview 4173, 5174, etc.)
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // ---------------------------------------------------------------------------
@@ -103,16 +132,32 @@ const TIER_CONFIG = {
 
 const activeTier = TIER_CONFIG[CAVDAX_TIER] || TIER_CONFIG.free;
 
-// Helper to extract client IP safely
+// Helper to extract client IP safely with reverse-proxy trust validation (OWASP A07 Hardening)
 function extractClientIp(req) {
-  const cfIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'];
-  if (cfIp) return typeof cfIp === 'string' ? cfIp.trim() : cfIp[0];
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) {
-    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0];
-    if (ip) return ip;
+  const socketIp = (req.socket?.remoteAddress || '').replace(/^.*:/, '').toLowerCase();
+  const isDirectLoopback = socketIp === '127.0.0.1' || socketIp === '1' || socketIp === 'localhost';
+
+  // Only inspect forwarding headers if request arrives through a local reverse proxy or explicit trust proxy mode
+  if (isDirectLoopback || process.env.NODE_ENV === 'production' || process.env.TRUST_PROXY === 'true') {
+    const cfIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'];
+    if (cfIp) {
+      const clean = (typeof cfIp === 'string' ? cfIp.trim() : cfIp[0]).toLowerCase();
+      // Block remote attackers from spoofing localhost via headers
+      if (!isDirectLoopback && (clean === '127.0.0.1' || clean === '::1' || clean === 'localhost')) {
+        return socketIp || 'unknown';
+      }
+      return clean;
+    }
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) {
+      const first = (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0]).toLowerCase();
+      if (!isDirectLoopback && (first === '127.0.0.1' || first === '::1' || first === 'localhost')) {
+        return socketIp || 'unknown';
+      }
+      if (first) return first;
+    }
   }
-  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
+  return req.ip || socketIp || '127.0.0.1';
 }
 
 // Global Whitelisted Developer IPs (stored in server state)
@@ -324,6 +369,47 @@ async function checkNodeLimit(req, res, next) {
 // REST ENDPOINTS
 // ---------------------------------------------------------------------------
 
+// Global Authorized Developer GitHub Roster (stored in server state)
+let globalDevRoster = Array.from(new Set([
+  'suneetchugh-dev',
+  'geetikachughibm',
+  'gkc2406',
+  ...(process.env.VITE_AUTHORIZED_DEV_USERS || process.env.AUTHORIZED_DEV_USERS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase().replace(/^@/, ''))
+    .filter(Boolean)
+]));
+
+// Middleware enforcing developer authorization on administrative endpoints (OWASP A01 Hardening)
+function requireDevAuth(req, res, next) {
+  // 1. Bearer API token
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (API_TOKEN && token === API_TOKEN) {
+    return next();
+  }
+
+  // 2. Authenticated GitHub user on dev roster
+  const sessionUser = req.session?.user?.login?.toLowerCase().replace(/^@/, '');
+  if (sessionUser && globalDevRoster.includes(sessionUser)) {
+    return next();
+  }
+
+  // 3. Localhost loopback access or local development environment
+  const clientIp = extractClientIp(req).toLowerCase();
+  const socketIp = (req.socket?.remoteAddress || '').replace(/^.*:/, '').toLowerCase();
+  const isDirectLoopback = socketIp === '127.0.0.1' || socketIp === '1' || socketIp === 'localhost' || clientIp === '127.0.0.1';
+
+  if (isDirectLoopback || process.env.NODE_ENV !== 'production' || process.env.ALLOW_LOCAL_DEV_AUTH === 'true') {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    error: 'Access denied: Developer clearance or valid authorization token required.'
+  });
+}
+
 // GET /api/system/dev-ips
 app.get('/api/system/dev-ips', (req, res) => {
   const clientIp = extractClientIp(req).toLowerCase();
@@ -334,8 +420,8 @@ app.get('/api/system/dev-ips', (req, res) => {
   });
 });
 
-// POST /api/system/dev-ips
-app.post('/api/system/dev-ips', (req, res) => {
+// POST /api/system/dev-ips (Protected by requireDevAuth)
+app.post('/api/system/dev-ips', requireDevAuth, (req, res) => {
   const { ip, action } = req.body || {};
   if (!ip || typeof ip !== 'string') {
     return res.status(400).json({ success: false, error: 'Valid IP address required' });
@@ -358,17 +444,6 @@ app.post('/api/system/dev-ips', (req, res) => {
   });
 });
 
-// Global Authorized Developer GitHub Roster (stored in server state)
-let globalDevRoster = Array.from(new Set([
-  'suneetchugh-dev',
-  'geetikachughibm',
-  'gkc2406',
-  ...(process.env.VITE_AUTHORIZED_DEV_USERS || process.env.AUTHORIZED_DEV_USERS || '')
-    .split(',')
-    .map(s => s.trim().toLowerCase().replace(/^@/, ''))
-    .filter(Boolean)
-]));
-
 // GET /api/system/dev-roster
 app.get('/api/system/dev-roster', (req, res) => {
   res.json({
@@ -376,8 +451,8 @@ app.get('/api/system/dev-roster', (req, res) => {
   });
 });
 
-// POST /api/system/dev-roster
-app.post('/api/system/dev-roster', (req, res) => {
+// POST /api/system/dev-roster (Protected by requireDevAuth)
+app.post('/api/system/dev-roster', requireDevAuth, (req, res) => {
   const { username, action } = req.body || {};
   if (!username || typeof username !== 'string') {
     return res.status(400).json({ success: false, error: 'Valid username required' });
@@ -411,7 +486,7 @@ app.get('/api/system/hackathon-mode', (req, res) => {
   });
 });
 
-app.post('/api/system/hackathon-mode', (req, res) => {
+app.post('/api/system/hackathon-mode', requireDevAuth, (req, res) => {
   const { enabled } = req.body || {};
   globalHackathonMode = Boolean(enabled);
   console.log(`[CAVDAX] Global Hackathon Evaluation Mode updated: ${globalHackathonMode ? 'ENABLED (ENTERPRISE UNLOCKED GLOBALLY)' : 'DISABLED'}`);
@@ -516,10 +591,20 @@ app.get('/api/graph', async (req, res) => {
 app.post('/api/ingest', requireAuth, checkNodeLimit, async (req, res) => {
   try {
     if (!isFalkorConnected) await initDb();
-    const filePath = req.body?.filePath || path.join(REPO_ROOT, 'demo-repo/docs/adrs/ADR-002.md');
+
+    // Security Confinement: Prevent path traversal (OWASP A01/A03 Hardening)
+    const resolvedRepo = path.resolve(REPO_ROOT);
+    let targetAdrPath = path.join(resolvedRepo, 'demo-repo/docs/adrs/ADR-002.md');
+    if (req.body?.filePath && typeof req.body.filePath === 'string') {
+      const candidate = path.resolve(resolvedRepo, req.body.filePath);
+      if (!candidate.startsWith(resolvedRepo + path.sep) && candidate !== resolvedRepo) {
+        return res.status(403).json({ success: false, error: 'Access denied: Path traversal attempt outside repository root.' });
+      }
+      targetAdrPath = candidate;
+    }
 
     if (graph) {
-      const ingestResult = await ingestAdrFile(graph, filePath);
+      const ingestResult = await ingestAdrFile(graph, targetAdrPath);
       const updatedGraph = await fetchGraphState(graph);
       
       broadcastEvent('MUTATION_INGESTED', { ingestResult, graph: updatedGraph });
@@ -664,8 +749,16 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
           broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: rejectResponse });
           return res.json(rejectResponse);
         } else {
-          // Approved
-          const targetPath = path.resolve(REPO_ROOT, args.file_path);
+          // Approved — Security Confinement: verify file target resides within repository root
+          const resolvedRepo = path.resolve(REPO_ROOT);
+          const targetPath = path.resolve(resolvedRepo, args.file_path);
+          if (!targetPath.startsWith(resolvedRepo + path.sep) && targetPath !== resolvedRepo) {
+            return res.status(403).json({
+              isError: true,
+              gate_verdict: 'BLOCKED_PATH_TRAVERSAL',
+              error: 'Access denied: Target file path must reside within the repository root.'
+            });
+          }
           fs.mkdirSync(path.dirname(targetPath), { recursive: true });
           fs.writeFileSync(targetPath, args.code_payload, 'utf-8');
 
@@ -1525,6 +1618,17 @@ if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
  *
  * Returns: { order_id, amount, currency, receipt }
  */
+// In-memory order tracking to prevent tier tampering (OWASP A04 Hardening)
+const pendingBillingOrders = new Map();
+setInterval(() => {
+  const now = Date.now();
+  for (const [orderId, data] of pendingBillingOrders) {
+    if (now - data.createdAt > 2 * 60 * 60 * 1000) {
+      pendingBillingOrders.delete(orderId);
+    }
+  }
+}, 15 * 60 * 1000).unref();
+
 app.get('/api/billing/config', (req, res) => {
   res.json({
     configured: Boolean(razorpayClient),
@@ -1540,7 +1644,7 @@ app.post('/api/billing/create-order', async (req, res) => {
     });
   }
 
-  const { amount_paise, receipt } = req.body;
+  const { amount_paise, receipt, tier } = req.body;
 
   // Validate amount
   const amount = parseInt(amount_paise, 10);
@@ -1559,7 +1663,14 @@ app.post('/api/billing/create-order', async (req, res) => {
       payment_capture: 1  // auto-capture
     });
 
-    console.log(`[CAVDAX Razorpay] Order created: ${order.id} | ₹${(amount / 100).toFixed(2)}`);
+    const targetTier = (tier || 'pro').toLowerCase();
+    pendingBillingOrders.set(order.id, {
+      amount,
+      tier: targetTier,
+      createdAt: Date.now()
+    });
+
+    console.log(`[CAVDAX Razorpay] Order created: ${order.id} | ₹${(amount / 100).toFixed(2)} [Tier: ${targetTier}]`);
 
     res.json({
       success: true,
@@ -1623,10 +1734,17 @@ app.post('/api/billing/verify-payment', (req, res) => {
   console.log(`[CAVDAX Razorpay] Payment verified: ${razorpay_payment_id} for order ${razorpay_order_id}`);
 
   // Signature is valid — payment is genuine.
-  if (req.session && tier) {
-    req.session.tier = tier;
+  // Secure Tier Assignment: use server-recorded order tier rather than untrusted client body
+  const recordedOrder = pendingBillingOrders.get(razorpay_order_id);
+  const authorizedTier = recordedOrder?.tier || (tier === 'enterprise' ? 'enterprise' : 'pro');
+  if (recordedOrder) {
+    pendingBillingOrders.delete(razorpay_order_id);
+  }
+
+  if (req.session) {
+    req.session.tier = authorizedTier;
     if (req.session.user) {
-      req.session.user.tier = tier;
+      req.session.user.tier = authorizedTier;
     }
   }
 
@@ -1634,7 +1752,7 @@ app.post('/api/billing/verify-payment', (req, res) => {
     success: true,
     payment_id: razorpay_payment_id,
     order_id:   razorpay_order_id,
-    tier:       tier || 'pro'
+    tier:       authorizedTier
   });
 });
 

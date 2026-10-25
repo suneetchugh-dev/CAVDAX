@@ -120,6 +120,13 @@ async function ingestCommit(options, graph, dryRun) {
     process.exit(1);
   }
 
+  // Strict SHA validation prevents OS command injection
+  const cleanSha = String(options.sha).trim();
+  if (!/^[0-9a-fA-F]{4,40}$/.test(cleanSha)) {
+    console.error('   Error: Invalid commit SHA format. Must be a 4-40 hexadecimal string.');
+    process.exit(1);
+  }
+
   const sources = await loadSources();
   if (!sources) {
     console.error('   sources.js not found — run inside the CAVDAX monorepo');
@@ -130,8 +137,8 @@ async function ingestCommit(options, graph, dryRun) {
   let message = options.message;
   if (!message) {
     try {
-      const { execSync } = await import('child_process');
-      message = execSync(`git log --format=%B -n 1 ${options.sha}`, {
+      const { execFileSync } = await import('child_process');
+      message = execFileSync('git', ['log', '--format=%B', '-n', '1', cleanSha], {
         cwd: path.resolve(options.repo),
         encoding: 'utf-8'
       }).trim();
@@ -146,7 +153,7 @@ async function ingestCommit(options, graph, dryRun) {
   }
 
   const result = await sources.ingestGitCommit(graph, {
-    sha: options.sha,
+    sha: cleanSha,
     message,
     author: options.author,
     repoRoot: path.resolve(options.repo)

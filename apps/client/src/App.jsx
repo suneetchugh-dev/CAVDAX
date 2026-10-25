@@ -617,7 +617,10 @@ export default function App() {
 
     // Re-evaluate clearance from cached state without initiating recursive server fetches
     const handleSyncUpdate = () => {
-      const ip = (typeof window !== 'undefined' && sessionStorage.getItem('cavdax_detected_client_ip')) || '127.0.0.1';
+      const isLocal = typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '[::1]');
+      const fallbackIp = isLocal ? '127.0.0.1' : 'unknown';
+      const ip = (typeof window !== 'undefined' && sessionStorage.getItem('cavdax_detected_client_ip')) || fallbackIp;
       const ipOk = isIpAuthorized(ip);
       const userOk = isUserAuthorized(githubUser);
       const sessionOk = Boolean(getActiveDevSession());
