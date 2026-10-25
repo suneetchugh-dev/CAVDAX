@@ -214,6 +214,14 @@ export default function LandingPage({
 
   const [isBtnHovered, setIsBtnHovered] = useState(false);
 
+  // Staggered Ambient Atmosphere Reveal: Allow wordmark vector typography to claim focus on frame 0,
+  // gracefully fading in the heavy canvas firefly rain after typography anchors.
+  const [ambientRainActive, setAmbientRainActive] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setAmbientRainActive(true), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
 
 
   // Track window scroll and resize metrics for butter-smooth 60fps transform physics
@@ -670,7 +678,7 @@ export default function LandingPage({
 
           {/* Interactive Causal Provenance Spotlight Data Rain (Cursor-revealed discovery mask) */}
 
-          <SpotlightDataRain isDarkTheme={isDarkTheme} opacity={wordmarkOpacity} />
+          <SpotlightDataRain isDarkTheme={isDarkTheme} opacity={ambientRainActive ? wordmarkOpacity : 0} />
 
           {/* Soft Monochromatic Ambient Radial Halo */}
 

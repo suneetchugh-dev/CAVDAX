@@ -2761,3 +2761,19 @@ The **Elevated Feature Callout Banner** achieves tangible depth and executive pr
 
 ```
 
+
+
+---
+
+## 35. Settings Panel Ergonomics & Clean Copy Standard
+
+1. **Zero Raw Hex Code Leakage**:
+   - Never display raw CSS hexadecimal color codes (e.g., `#060709`, `#F8FAFC`, `#0F172A`) in user-facing settings, descriptions, or subtext.
+   - Use clean, evocative human-readable terms: `Deep Obsidian Dark`, `Porcelain Light Minimalist`.
+
+2. **Zero Debug Audition Buttons Next to Toggles**:
+   - Settings rows must maintain a pure, uncluttered two-column alignment: `[Leading Icon + Label + Subtext] ------- [Animated SVG ToggleSwitch]`.
+   - Never cram intermediate `Test` or `Audition` buttons into the row. The toggle itself must produce immediate tactile and auditory feedback upon interaction.
+
+3. **Animated SVG Toggle Knob Transitions**:
+   - Toggle switches must feature a spring-eased knob (`cubic-bezier(0.34, 1.56, 0.64, 1)`) with an embedded SVG micro-indicator (such as a morphing checkmark) that scales, rotates, and fades into view when active.

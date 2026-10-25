@@ -103,6 +103,29 @@ const TIER_CONFIG = {
 
 const activeTier = TIER_CONFIG[CAVDAX_TIER] || TIER_CONFIG.free;
 
+// Helper to extract client IP safely
+function extractClientIp(req) {
+  const cfIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'];
+  if (cfIp) return typeof cfIp === 'string' ? cfIp.trim() : cfIp[0];
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0];
+    if (ip) return ip;
+  }
+  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
+}
+
+// Global Whitelisted Developer IPs (stored in server state)
+let globalWhitelistedIps = Array.from(new Set([
+  '127.0.0.1',
+  'localhost',
+  '::1',
+  ...(process.env.VITE_ALLOWED_DEV_IPS || process.env.ALLOWED_DEV_IPS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+]));
+
 // -1 means unlimited — pass a very large max so express-rate-limit is effectively off
 const apiMax = activeTier.rate_limit_per_min === -1 ? 1_000_000 : activeTier.rate_limit_per_min;
 const mcpMax = activeTier.mcp_rate_limit_per_min === -1 ? 1_000_000 : activeTier.mcp_rate_limit_per_min;
@@ -111,20 +134,34 @@ console.log(`[CAVDAX] Tier: ${activeTier.label} — API limit: ${activeTier.rate
 
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: apiMax,
+  // During Hackathon Evaluation Mode, provide an elevated ceiling (1,200 req/min = 20 req/sec)
+  // so judges enjoy zero throttling, while still shielding the server from external DoS/bot attacks.
+  max: (req) => (globalHackathonMode ? 1200 : apiMax),
+  skip: (req) => {
+    const clientIp = extractClientIp(req).toLowerCase();
+    // Trusted developer IPs skip rate limiting completely
+    if (globalWhitelistedIps.includes(clientIp)) return true;
+    return false;
+  },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: 'Too many requests', message: `Rate limit exceeded (${apiMax} req/min). Please retry in 60 seconds.` }
+  message: { error: 'Too many requests', message: 'Rate limit exceeded. Please retry in 60 seconds.' }
 });
 
 // Strict limiter — MCP tool execution endpoints
 // Prevents runaway agent loops from hammering FalkorDB with tool calls.
 const mcpLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: mcpMax,
+  // 600 req/min = 10 tool calls/sec during evaluation mode
+  max: (req) => (globalHackathonMode ? 600 : mcpMax),
+  skip: (req) => {
+    const clientIp = extractClientIp(req).toLowerCase();
+    if (globalWhitelistedIps.includes(clientIp)) return true;
+    return false;
+  },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: 'Too many MCP requests', message: `MCP rate limit exceeded (${mcpMax} req/min). Check for agent loops.` }
+  message: { error: 'Too many MCP requests', message: 'MCP rate limit exceeded. Check for agent loops.' }
 });
 
 app.use('/api/', apiLimiter);          // applies to all /api/* routes
@@ -286,31 +323,6 @@ async function checkNodeLimit(req, res, next) {
 // ---------------------------------------------------------------------------
 // REST ENDPOINTS
 // ---------------------------------------------------------------------------
-
-// Helper to extract client IP safely
-function extractClientIp(req) {
-  const cfIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'];
-  if (cfIp) return typeof cfIp === 'string' ? cfIp.trim() : cfIp[0];
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) {
-    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0];
-    if (ip) return ip;
-  }
-  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
-}
-
-// First-party client IP discovery (eliminates 3rd-party tracker dependencies and ERR_BLOCKED_BY_CLIENT)
-
-// Global Whitelisted Developer IPs (stored in server state)
-let globalWhitelistedIps = Array.from(new Set([
-  '127.0.0.1',
-  'localhost',
-  '::1',
-  ...(process.env.VITE_ALLOWED_DEV_IPS || process.env.ALLOWED_DEV_IPS || '')
-    .split(',')
-    .map(s => s.trim().toLowerCase())
-    .filter(Boolean)
-]));
 
 // GET /api/system/dev-ips
 app.get('/api/system/dev-ips', (req, res) => {

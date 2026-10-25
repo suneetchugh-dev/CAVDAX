@@ -682,27 +682,27 @@ function WidescreenVisualRevalidation() {
           </text>
         </g>
 
-        {/* Connecting Arrow 1 & Animated Flow Packet (Generous 28px gap before center core) */}
+        {/* Connecting Arrow 1 & Animated Flow Packet */}
         <motion.line
-          x1="282" y1="110" x2="362" y2="110"
+          x1="282" y1="110" x2="364" y2="110"
           className="stroke-slate-400 dark:stroke-zinc-500"
           strokeWidth="2.5"
           strokeDasharray="6 4"
           animate={{ strokeDashoffset: [0, -20] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
         />
-        <polygon points="362,110 352,104 352,116" className="fill-slate-500 dark:fill-zinc-400"/>
+        <polygon points="364,110 354,104 354,116" className="fill-slate-500 dark:fill-zinc-400"/>
         <motion.circle
           r="4"
           className="fill-slate-500 dark:fill-zinc-300"
-          animate={{ cx: [282, 362], opacity: [0, 1, 0] }}
+          animate={{ cx: [282, 364], opacity: [0, 1, 0] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
           cy="110"
         />
 
-        {/* ── CENTER: SELF-HEALING RE-SYNTHESIS CORE (ENLARGED APPROVED SVG WITH AIR GAPS) ── */}
-        <g transform="translate(448, 110)">
-          {/* Rotating Dashed Calibration Ring (Radius 55 = bounds [393, 503], leaving 31px gap to Arrow 1 and 31px gap to Arrow 2) */}
+        {/* ── CENTER: SELF-HEALING RE-SYNTHESIS CORE (BALANCED AT X=450 WITH OPTICALLY CENTERED TICK) ── */}
+        <g transform="translate(450, 110)">
+          {/* Rotating Dashed Calibration Ring (Radius 55 = bounds [395, 505], leaving symmetric 31px gaps to arrows) */}
           <motion.circle
             r="55"
             className="fill-white dark:fill-[#121214] stroke-slate-300 dark:stroke-white/25"
@@ -713,8 +713,8 @@ function WidescreenVisualRevalidation() {
           />
           <circle r="45" className="fill-slate-50 dark:fill-[#18181b] stroke-slate-300 dark:stroke-zinc-600" strokeWidth="1.5"/>
           
-          {/* Console Act 4 Revalidation Approved Indicator Proudly Enlarged inside core */}
-          <foreignObject x="-44" y="-44" width="88" height="88" className="overflow-visible pointer-events-none">
+          {/* Console Act 4 Revalidation Approved Indicator Proudly Enlarged inside core with optically centered tick */}
+          <foreignObject x="-41" y="-44" width="88" height="88" className="overflow-visible pointer-events-none">
             <div className="w-full h-full flex items-center justify-center">
               <CavdaxAgentStateIndicator status="verified" loopVerified={true} size={86} strokeWidth={3.8} />
             </div>
@@ -728,26 +728,26 @@ function WidescreenVisualRevalidation() {
           </text>
         </g>
 
-        {/* Connecting Arrow 2 & Animated Flow Packet (Starts at 534, leaving 31px clear gap from core ring) */}
+        {/* Connecting Arrow 2 & Animated Flow Packet (Starts at 536, leaving symmetric 31px clear gap from core ring) */}
         <motion.line
-          x1="534" y1="110" x2="614" y2="110"
+          x1="536" y1="110" x2="618" y2="110"
           className="stroke-slate-400 dark:stroke-zinc-500"
           strokeWidth="2.5"
           strokeDasharray="6 4"
           animate={{ strokeDashoffset: [0, -20] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
         />
-        <polygon points="614,110 604,104 604,116" className="fill-slate-500 dark:fill-zinc-400"/>
+        <polygon points="618,110 608,104 608,116" className="fill-slate-500 dark:fill-zinc-400"/>
         <motion.circle
           r="4"
           className="fill-slate-500 dark:fill-zinc-300"
-          animate={{ cx: [534, 614], opacity: [0, 1, 0] }}
+          animate={{ cx: [536, 618], opacity: [0, 1, 0] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: 'linear', delay: 0.8 }}
           cy="110"
         />
 
-        {/* ── RIGHT: APPROVED 200 OK & SIGNED AUDIT LOG (CLEAN UNBOXED GREEN STATUS TEXT) ── */}
-        <g transform="translate(634, 40)">
+        {/* ── RIGHT: APPROVED 200 OK & SIGNED AUDIT LOG (CLEAN BALANCED AT X=636) ── */}
+        <g transform="translate(636, 40)">
           <rect x="0" y="0" width="200" height="140" rx="10" className="fill-white dark:fill-[#121214] stroke-slate-300 dark:stroke-white/25" strokeWidth="1.5"/>
           
           {/* Clean Unboxed Bold Emerald Green 200 OK Monospace Typography */}

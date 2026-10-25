@@ -49,6 +49,10 @@ This document provides a technical anatomy, geometric breakdown, and design just
 | **Classic 02** | Extended Geometric Tech Sans | Space Grotesk Bold, PP Neue Montreal Extended | [`wordmark-classic-02-extended-geometric-sans.jpg`](./wordmark-classic-02-extended-geometric-sans.jpg) |
 | **Classic 03** | Chiseled Precision Modernist | Stripe Press, Pentagram, Mathematical angles | [`wordmark-classic-03-chiseled-precision-modernist.jpg`](./wordmark-classic-03-chiseled-precision-modernist.jpg) |
 | **Classic 04** | Institutional Minimalist Monoline | Apple Pro Display, Helvetica Now Black | [`wordmark-classic-04-institutional-minimalist-monoline.jpg`](./wordmark-classic-04-institutional-minimalist-monoline.jpg) |
+| **Classic 05** | Micro-Node Precision Vector | Linear / Vercel calibrated micro-nodes (50% reduction) | [`wordmark-classic-05-micro-node-precision.jpg`](./-Semi-Selected-/wordmark-classic-05-micro-node-precision.jpg) |
+| **Classic 06** | Hollow Reticle Aperture | Verification rings, zero-knowledge targeting aperture gates | [`wordmark-classic-06-hollow-reticle-aperture.jpg`](./-Semi-Selected-/wordmark-classic-06-hollow-reticle-aperture.jpg) |
+| **Classic 07** | Minimal Vector Hairline | Stripe Press / Pentagram extreme typographic-to-hairline contrast | [`wordmark-classic-07-minimal-vector-hairline.jpg`](./-Semi-Selected-/wordmark-classic-07-minimal-vector-hairline.jpg) |
+| **Classic 08** | Tri-Vertex Causal DAG | 3-stage milestone proof (Context -> Decision -> Execution) | [`wordmark-classic-08-tri-vertex-causal-dag.jpg`](./-Semi-Selected-/wordmark-classic-08-tri-vertex-causal-dag.jpg) |
 
 ---
 
@@ -571,3 +575,97 @@ This document provides a technical anatomy, geometric breakdown, and design just
   - Wide tracking (`letter-spacing: 0.20em`) for calm, institutional confidence.
 * **Causal Underline**: Minimalist directed line with subtle nodes under `C` and `D` terminating in an arrow under `X`.
 * **Resonance**: Timeless institutional trust, bank-grade governance, and durability.
+
+---
+
+### Classic 05: Micro-Node Precision Vector
+* **Asset**: [`wordmark-classic-05-micro-node-precision.jpg`](./-Semi-Selected-/wordmark-classic-05-micro-node-precision.jpg)
+* **Inspiration**: Linear, Vercel, Figma - surgical Swiss Neo-Grotesk micro-calibration.
+* **Glyph Anatomy**:
+  - Monumental Swiss Neo-Grotesk architecture (`font-weight: 700`, `letter-spacing: 0.125em`).
+  - Pristine circular geometry on `C` and `D` with razor-sharp mitered vertices on `A`, `V`, `X`.
+* **Causal Underline**:
+  - Micro-nodes scaled to ~50% visual mass (`r = 11px` on a `6px` baseline stroke) centered precisely under `C` (Context) and `D` (Decision).
+  - Open 55° geometric chevron terminating directly beneath the right flank of `X` (Execution).
+* **Resonance**: Eliminates visual clutter beneath the letters; allows the brand wordmark to command maximum primary focus while preserving the causal graph lineage.
+
+---
+
+### Classic 06: Hollow Reticle Aperture
+* **Asset**: [`wordmark-classic-06-hollow-reticle-aperture.jpg`](./-Semi-Selected-/wordmark-classic-06-hollow-reticle-aperture.jpg)
+* **Inspiration**: Zero-Knowledge proof verification gates, GraphBLAS sparse matrix coordinates, precision optical target reticles.
+* **Glyph Anatomy**:
+  - Identical authoritative Swiss Neo-Grotesk monumental letterforms.
+* **Causal Underline**:
+  - Hollow ring vertices (concentric aperture gates with `stroke: 3.8px` and transparent core) under `C` and `D`.
+  - Lightens baseline optical weight and establishes a high-assurance cryptographic verification aesthetic.
+* **Resonance**: Uncompromising security, formal verification, and zero-knowledge mathematical dignity.
+
+---
+
+### Classic 07: Minimal Vector Hairline
+* **Asset**: [`wordmark-classic-07-minimal-vector-hairline.jpg`](./-Semi-Selected-/wordmark-classic-07-minimal-vector-hairline.jpg)
+* **Inspiration**: Stripe Press, Pentagram, luxury technical monographs.
+* **Glyph Anatomy**:
+  - Unaltered monumental Swiss Neo-Grotesk bold letterforms.
+* **Causal Underline**:
+  - Ultra-fine `3.2px` hairline vector with delicate `7.5px` micro-pin coordinate stops.
+  - Maximum optical contrast between heavyweight typography and whispering mathematical vector lines.
+* **Resonance**: Peak editorial modernism; whispers extreme technical capability without decorative bulk.
+
+---
+
+### Classic 08: Tri-Vertex Causal DAG
+* **Asset**: [`wordmark-classic-08-tri-vertex-causal-dag.jpg`](./-Semi-Selected-/wordmark-classic-08-tri-vertex-causal-dag.jpg)
+* **Inspiration**: Complete 3-stage milestone DAG provenance (Context Root -> Decision State -> Execution Output).
+* **Glyph Anatomy**:
+  - Authoritative Swiss Neo-Grotesk architecture.
+* **Causal Underline**:
+  - 3 calibrated micro-nodes: `C` (Cause / Context Root at `x=335`), `D` (Decision Fork at `x=665`), and `X` (Execution Gate at `x=925`), terminating into a sharp chevron at `x=960`.
+* **Resonance**: Full end-to-end formal audit provenance represented in a balanced tri-vertex causal edge.
+
+
+---
+
+## 4. Iron Man Aerospace & Stark Arc Reactor Archetypes
+
+### Iron Man 01: Mark VII Hot-Rod Crimson & Gold Titanium Armor Chassis
+* **Asset**: [`wordmark-ironman-01-stark-mark-armor-chassis.jpg`](./wordmark-ironman-01-stark-mark-armor-chassis.jpg)
+* **Inspiration**: Tony Stark Mark VII / Mark 85 armor plating, aerospace titanium-gold alloy, Stark Industries military-spec R&D enclaves.
+* **Glyph Anatomy**:
+  - Aggressive 14-degree forward aerodynamic rake (`skewX(-14deg)`) expressing hyper-velocity causal computation.
+  - Monumental heavy geometric sans geometry with high crossbars and 45-degree corner chamfers on all stems.
+  - Multi-tier dual-metallic finish: Deep Stark hot-rod crimson extrusion shadow bevel (`#8B0000` to `#1A0103`) topped by a burnished gold-titanium specular face (`#FFF5B8` to `#D4AF37`).
+  - Interlocking armor plate seams etched with horizontal hairline separation cuts revealing internal cyan arc energy glow.
+* **Causal Underline**:
+  - Multi-layer dual-rail directed conduit: 2.6px burnished gold titanium track paired with a high-intensity 1.4px cyan Arc Reactor energy line.
+  - Micro Arc Reactor core node beneath `C` (Context Ingestion), intermediate causal pivot reticle beneath `V` (Causal Gate), and precision micro-pin beneath `D`.
+  - Aerodynamic terminal repulsor chevron pointing directly into the execution termination of `X`.
+* **Resonance**: Extreme computational horsepower, aerospace-grade armor resilience, and uncompromising technical authority.
+
+---
+
+### Iron Man 02: Stealth Ops Titanium & Ice-Blue Arc Reactor
+* **Asset**: [`wordmark-ironman-02-stealth-palladium-reactor.jpg`](./wordmark-ironman-02-stealth-palladium-reactor.jpg)
+* **Inspiration**: Mark XV Sneaky, Mark XVI Nightclub tactical stealth armor, War Machine tactical obsidian matte chassis, palladium-core containment.
+* **Glyph Anatomy**:
+  - Monochromatic brushed tungsten & aerospace titanium gradient (`#FFFFFF` to `#94A3B8` to `#1E293B`).
+  - 15-degree tactical forward rake with laser-etched cyan perimeter halo (`#00F0FF`).
+  - Precision stencil laser cuts dividing the letter stems into modular flight-surface panels.
+* **Causal Underline**:
+  - 2.4px hairline conduit track with glowing ice-blue core filament.
+  - 5.2px micro-reactor origin node beneath `C`, 45-degree diamond causal gate beneath `V`, and dual-concentric verification node beneath `D`.
+  - Aerodynamic white/cyan hyper-velocity terminal chevron beneath `X`.
+* **Resonance**: Covert high-assurance security, silent causal interception, and zero-compromise architectural defense.
+
+---
+
+### Iron Man 03: Master System & Executive Presentation Board
+* **Asset**: [`wordmark-ironman-03-master-system-board.jpg`](./wordmark-ironman-03-master-system-board.jpg)
+* **Inspiration**: Stark Industries executive presentation dossiers, DARPA advanced technology briefing boards.
+* **Glyph Anatomy**:
+  - Side-by-side comparative architectural breakdown of both Mark VII Armor and Stealth Ops wordmarks.
+  - Technical engineering color swatches (Ti Gold `#D4AF37`, Stark Crimson `#8B0000`, Arc Cyan `#00F0FF`, Titanium `#E2E8F0`, Obsidian `#08090C`).
+  - Cross-referencing the Arc Reactor Causal DAG emblem with exact typographic dimensions.
+* **Causal Underline**: Displays the unified causal vector edge standard across all chassis variants.
+* **Resonance**: Comprehensive brand architecture ready for enterprise presentation and defense-grade collateral.

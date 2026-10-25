@@ -46,13 +46,6 @@ export default function PullCordLampToggle({
     y: REST_LENGTH,
     vx: 0,
     vy: 0,
-    // Intermediate rope nodes for spline curve
-    nodes: Array.from({ length: NUM_SEGMENTS }, (_, i) => ({
-      x: ANCHOR_X,
-      y: ANCHOR_Y + ((REST_LENGTH - ANCHOR_Y) / (NUM_SEGMENTS - 1)) * i,
-      vx: 0,
-      vy: 0
-    })),
     // Drag tracking
     isDragging: false,
     dragStartY: 0,
@@ -60,10 +53,9 @@ export default function PullCordLampToggle({
     initialBobX: ANCHOR_X,
     initialBobY: REST_LENGTH,
     hasFlippedThemeInPull: false,
-    // Spring physics parameters
-    stiffness: 0.12,
+    // Spring physics parameters (Hooke's law with tuned damping for crisp recoil)
+    stiffness: 0.14,
     damping: 0.88,
-    gravity: 0.45,
     breezeTime: 0,
     // Click impulse animation
     isAutoPulling: false,
@@ -132,12 +124,13 @@ export default function PullCordLampToggle({
       }
 
       if (!p.isDragging && !p.isAutoPulling) {
-        // True spring pendulum physics towards rest position
+        // True spring pendulum physics towards rest position (Hooke's law: F = -k * displacement)
+        // Equilibrium is at (targetX, targetY). Zero phantom gravity kick at rest!
         const dx = targetX - p.x;
         const dy = targetY - p.y;
 
         const fx = dx * p.stiffness;
-        const fy = dy * p.stiffness + p.gravity;
+        const fy = dy * p.stiffness;
 
         p.vx = (p.vx + fx * dt) * Math.pow(p.damping, dt);
         p.vy = (p.vy + fy * dt) * Math.pow(p.damping, dt);
@@ -146,50 +139,23 @@ export default function PullCordLampToggle({
         p.y += p.vy * dt;
       }
 
-      // 3. Relax intermediate rope nodes along dynamic catenary / bezier spine
-      const nodes = p.nodes;
-      nodes[0].x = ANCHOR_X;
-      nodes[0].y = ANCHOR_Y;
-      nodes[NUM_SEGMENTS - 1].x = p.x;
-      nodes[NUM_SEGMENTS - 1].y = p.y;
-
+      // 3. Construct unified smooth catenary / cubic Bézier curve from anchor to bob
+      // Completely eliminates node vibration, alternating velocity overshoots, and initial zigzagging
       const currentDist = Math.hypot(p.x - ANCHOR_X, p.y - ANCHOR_Y);
       const restChord = REST_LENGTH - ANCHOR_Y;
       const slack = Math.max(0, restChord - currentDist);
 
-      for (let i = 1; i < NUM_SEGMENTS - 1; i++) {
-        const ratio = i / (NUM_SEGMENTS - 1);
-        const idealX = ANCHOR_X + (p.x - ANCHOR_X) * ratio;
-        // String sag: if distance is less than rest length, give natural catenary curve
-        const sag = Math.sin(ratio * Math.PI) * slack * 0.45;
-        const idealY = ANCHOR_Y + (p.y - ANCHOR_Y) * ratio + sag;
+      // Tangent-aligned cubic control points: straight line at rest, gentle catenary curve when slack
+      const cp1X = ANCHOR_X + (p.x - ANCHOR_X) * 0.25;
+      const cp1Y = ANCHOR_Y + (p.y - ANCHOR_Y) * 0.45 + slack * 0.35;
+      const cp2X = ANCHOR_X + (p.x - ANCHOR_X) * 0.75;
+      const cp2Y = ANCHOR_Y + (p.y - ANCHOR_Y) * 0.75 + slack * 0.45;
 
-        const nx = nodes[i];
-        const ndx = idealX - nx.x;
-        const ndy = idealY - nx.y;
+      const d = `M ${ANCHOR_X} ${ANCHOR_Y} C ${cp1X.toFixed(1)} ${cp1Y.toFixed(1)}, ${cp2X.toFixed(1)} ${cp2Y.toFixed(1)}, ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
 
-        nx.vx = (nx.vx + ndx * 0.35 * dt) * Math.pow(0.80, dt);
-        nx.vy = (nx.vy + ndy * 0.35 * dt) * Math.pow(0.80, dt);
-
-        nx.x += nx.vx * dt;
-        nx.y += nx.vy * dt;
-      }
-
-      // 4. Construct smooth SVG cubic Bézier path through nodes
-      let d = `M ${nodes[0].x.toFixed(1)} ${nodes[0].y.toFixed(1)}`;
-      for (let i = 1; i < NUM_SEGMENTS; i++) {
-        const prev = nodes[i - 1];
-        const curr = nodes[i];
-        const midX = ((prev.x + curr.x) / 2).toFixed(1);
-        const midY = ((prev.y + curr.y) / 2).toFixed(1);
-        d += ` Q ${prev.x.toFixed(1)} ${prev.y.toFixed(1)}, ${midX} ${midY}`;
-      }
-      d += ` L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
-
-      // 5. Unrestricted natural rotation aligned with tangent of the cord
-      const lastNode = nodes[NUM_SEGMENTS - 2];
-      const segDx = p.x - lastNode.x;
-      const segDy = p.y - lastNode.y;
+      // 4. Natural bob rotation tangent to the incoming cord segment
+      const segDx = p.x - cp2X;
+      const segDy = p.y - cp2Y;
       const rawAngle = Math.atan2(segDx, segDy) * (180 / Math.PI);
 
       // Direct DOM updates: 0 React re-renders per second!

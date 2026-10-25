@@ -79,6 +79,14 @@ Codebase/docs/brand_explorations/
 
 ---
 
+
+### D. Iron Man Aerospace & Stark Arc Reactor Archetypes (New)
+- [`wordmark-ironman-01-stark-mark-armor-chassis.jpg`](./wordmarks/wordmark-ironman-01-stark-mark-armor-chassis.jpg) — **Iron Man Mark VII Armor Wordmark** (Stark hot-rod crimson & gold-titanium chiseled armor typography with arc energy baseline)
+- [`wordmark-ironman-02-stealth-palladium-reactor.jpg`](./wordmarks/wordmark-ironman-02-stealth-palladium-reactor.jpg) — **Stealth Ops Titanium Wordmark** (Brushed palladium steel, laser-etched stencil cuts, and ice-blue arc conduit)
+- [`wordmark-ironman-03-master-system-board.jpg`](./wordmarks/wordmark-ironman-03-master-system-board.jpg) — **Iron Man Aerospace Master Executive Board** (Complete architectural comparative showcase with color swatches and DAG emblem)
+
+---
+
 ## 2. Logos Directory ([`logos/`](./logos/))
 - [`logo-monogram-cv-negative-space-v1.jpg`](./logos/logo-monogram-cv-negative-space-v1.jpg) — Pure negative space C-V mark (v1)
 - [`logo-monogram-cv-negative-space-v2.jpg`](./logos/logo-monogram-cv-negative-space-v2.jpg) — Pure negative space C-V mark (v2)
@@ -92,6 +100,10 @@ Codebase/docs/brand_explorations/
 - [`logo-cx-interlocking-gate-v2.jpg`](./logos/logo-cx-interlocking-gate-v2.jpg) — C-X Interlocking Gate logo (v2)
 - [`logo-cx-interlocking-gate-v3.jpg`](./logos/logo-cx-interlocking-gate-v3.jpg) — C-X Interlocking Gate logo (v3)
 - [`logo-presentation-board-vector.jpg`](./logos/logo-presentation-board-vector.jpg) — Flat 2D vector logo presentation board
+
+---
+
+- [`logo-ironman-01-arc-reactor-causal-dag.jpg`](./logos/logo-ironman-01-arc-reactor-causal-dag.jpg) — **Arc Reactor Causal DAG Emblem Mark** (Mark VI / Mark 85 Arc Reactor containment ring with inverted triangular 3-vertex causal graph core)
 
 ---
 

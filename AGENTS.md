@@ -76,6 +76,28 @@ Operational constitution, architecture standards, and safety governance for AI c
      - All developer panels, controls, and notices must strictly use the project's obsidian, slate, zinc, porcelain, and monochrome scale (`border-slate-300 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02]`).
      - Ban all uncalibrated color fills (purple, cyan, yellow, pink) unless signifying strict, verified semantic operational states (e.g. green for cryptographic verification pass, red for blocked security denial).
 
+0h. **Settings Panel Ergonomics, Subtext Cleanliness & Anti-Debug Scaffolding Standard**:
+   - **Strict Ban on Leaking Code Implementation Details in End-User Copy**:
+     - Never display internal hexadecimal color codes (e.g. `(#060709)`, `(#F8FAFC)`), CSS class names, regex patterns, or raw token identifiers in user-facing settings, modal subtexts, or UI cards.
+     - Always use clean, human-readable semantic naming (e.g. `Deep Obsidian Dark`, `Porcelain Light Minimalist`).
+   - **Strict Ban on "Test" / Audition Scaffolding Buttons Crammed Next to Toggles**:
+     - Never insert clunky rectangular "Test" or "Audition" button pills into settings rows next to toggle switches.
+     - Toggling or interacting with the control itself must provide immediate sensory/auditory feedback.
+     - Maintain a strict, unbroken two-column rhythm: `[Icon + Label + Optional Subtext] -------------- [Control/Toggle]`.
+   - **Strict Ban on Fake / Unowned Domains in Production Code and Error Prompts**:
+     - Never reference unowned placeholder domains (e.g. `team@cavdax.org`, `support@xyz.fake`). Use the real verified production domain (e.g. `contact@sahnirmaan.live`) or a dedicated team mailbox.
+   - **Pricing Cleanliness, Currency Localization & Anti-Combobox Standard**:
+     - Enterprise tiers must remain clean and authoritative: `Custom / SLA` with a "Contact" CTA. Never introduce messy multi-comboboxes or feature calculation sliders inside public pricing cards.
+     - Never show simultaneous dual currencies (`$4 / ₹320`) in primary pricing card headings. Detect geo-location (INR for India, USD globally) and provide a subtle, non-displacing currency switcher in the section header.
+     - Free tiers must be perpetual community tiers with clear resource ceilings; time-limited trials belong as explicit trial windows on paid tiers (e.g. "Includes 7-Day Free Pro Trial").
+
+0i. **Hackathon Evaluation Mode & Real-Time Tier Unlocking Architecture**:
+   - **Developer Enclave Master Control**: The secure Developer Enclave (`/devteam`) must provide an executive `Hackathon Evaluation Mode [ OFF / ON ]` toggle that sets global server state and broadcasts updates via Server-Sent Events (`/api/events`).
+   - **Evaluation Pass Capabilities**: When ON, all visitors receive an Evaluation Pass granting full Enterprise Mesh capabilities (unlimited repositories, causal graph inspection, unthrottled quotas). Tier locks are lifted, displaying `EVALUATION PASS` badges and allowing frictionless switching.
+   - **Commercial Display Integrity**: Tier cards remain visible with real pricing to prove commercial viability to judges.
+   - **Elevated Rate Ceiling**: Expands per-IP rate limits to 1,200 req/min (20 req/sec) to guarantee zero throttling during evaluation, while avoiding `skip: true` to keep the server shielded against bots.
+   - **Instant Reversion**: Toggling OFF instantly restores standard production enforcement across all clients without redeployment.
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:

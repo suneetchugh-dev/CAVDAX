@@ -615,17 +615,24 @@ export default function App() {
     }
     checkDevAccess();
 
-    const handleRosterUpdate = () => { checkDevAccess(); };
-    const handleIpUpdate = () => { checkDevAccess(); };
-    window.addEventListener('cavdax:dev-roster-updated', handleRosterUpdate);
-    window.addEventListener('cavdax:dev-ips-updated', handleIpUpdate);
+    // Re-evaluate clearance from cached state without initiating recursive server fetches
+    const handleSyncUpdate = () => {
+      const ip = (typeof window !== 'undefined' && sessionStorage.getItem('cavdax_detected_client_ip')) || '127.0.0.1';
+      const ipOk = isIpAuthorized(ip);
+      const userOk = isUserAuthorized(githubUser);
+      const sessionOk = Boolean(getActiveDevSession());
+      setIsDevAuthorized(userOk || ipOk || sessionOk);
+    };
+
+    window.addEventListener('cavdax:dev-roster-updated', handleSyncUpdate);
+    window.addEventListener('cavdax:dev-ips-updated', handleSyncUpdate);
 
     return () => {
       isMounted = false;
-      window.removeEventListener('cavdax:dev-roster-updated', handleRosterUpdate);
-      window.removeEventListener('cavdax:dev-ips-updated', handleIpUpdate);
+      window.removeEventListener('cavdax:dev-roster-updated', handleSyncUpdate);
+      window.removeEventListener('cavdax:dev-ips-updated', handleSyncUpdate);
     };
-  }, [githubUser]);
+  }, [githubUser?.login]);
 
   // Terminal & Action state
   const [terminalLogs, setTerminalLogs] = useState([

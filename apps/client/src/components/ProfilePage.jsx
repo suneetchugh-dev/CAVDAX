@@ -102,6 +102,25 @@ export default function ProfilePage({
   const [quotaData, setQuotaData] = useState(null);
   const [connectedRepoCount, setConnectedRepoCount] = useState(0);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [currency, setCurrency] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cavdax_currency');
+      if (saved === 'USD' || saved === 'INR') return saved;
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      const lang = navigator.language || '';
+      if (tz.includes('Calcutta') || tz.includes('Kolkata') || lang.includes('en-IN') || lang.includes('hi')) {
+        return 'INR';
+      }
+    } catch {}
+    return 'USD';
+  });
+
+  const toggleCurrency = (newCurr) => {
+    setCurrency(newCurr);
+    try {
+      localStorage.setItem('cavdax_currency', newCurr);
+    } catch {}
+  };
 
   const handleRazorpayUpgrade = async () => {
     if (!user) {
@@ -245,11 +264,13 @@ export default function ProfilePage({
   const isAuthorizedDev = Boolean(
     isUserAuthorized(user) || getActiveDevSession()
   );
+  // Full unrestricted access granted for core developers or global Hackathon Evaluation Mode
+  const hasEvaluationPass = Boolean(isAuthorizedDev || isHackathonMode);
 
-  // Enforce Free Tier for non-dev users if they had a stale paid tier in localStorage
+  // Set default flagship tier (Enterprise) when Hackathon Mode is active, or Free for standard visitors
   useEffect(() => {
     if (isHackathonMode) {
-      if (currentTier !== 'enterprise') {
+      if (!currentTier || currentTier === 'free') {
         setCurrentTier('enterprise');
         if (onSelectTier) onSelectTier('enterprise');
       }
@@ -297,24 +318,28 @@ export default function ProfilePage({
       return;
     }
 
-    if (!isAuthorizedDev) {
+    if (!hasEvaluationPass) {
       if (newTier === 'pro') {
         handleRazorpayUpgrade();
         return;
       }
       const planName = 'Enterprise Mesh';
-      showToast(`${planName} requires custom contract deployment. Contact team@cavdax.org.`);
+      showToast(`${planName} requires custom contract deployment. Contact sales at contact@sahnirmaan.live`);
       return;
     }
 
-    // Authorized developer bypass
+    // Authorized developer or Hackathon Evaluation Pass bypass
     setCurrentTier(newTier);
     try {
       localStorage.setItem('cavdax_tier', newTier);
       window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: newTier } }));
     } catch {}
     if (onSelectTier) onSelectTier(newTier);
-    showToast(`Switched to ${newTier.toUpperCase()} Tier (Dev Override)`);
+    showToast(
+      isHackathonMode
+        ? `Activated ${newTier.toUpperCase()} Tier (Evaluation Pass)`
+        : `Switched to ${newTier.toUpperCase()} Tier (Dev Override)`
+    );
   };
 
   const handleLogout = async () => {
@@ -633,6 +658,32 @@ export default function ProfilePage({
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Subscription Tiers
           </span>
+
+          {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
+          <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-[10px] font-mono">
+            <button
+              type="button"
+              onClick={() => toggleCurrency('USD')}
+              className={`px-2 py-0.5 rounded-md transition-all ${
+                currency === 'USD'
+                  ? 'bg-white dark:bg-white/15 text-slate-950 dark:text-white font-bold shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              USD ($)
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleCurrency('INR')}
+              className={`px-2 py-0.5 rounded-md transition-all ${
+                currency === 'INR'
+                  ? 'bg-white dark:bg-white/15 text-slate-950 dark:text-white font-bold shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              INR (₹)
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
@@ -678,8 +729,11 @@ export default function ProfilePage({
                 </span>
               )}
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-3">
-              $0 <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
+            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+              {currency === 'INR' ? '₹0' : '$0'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
+            </div>
+            <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-medium mb-3">
+              Free Forever · No Credit Card
             </div>
             <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
@@ -688,15 +742,15 @@ export default function ProfilePage({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
-                <span>50 Decisions (Local memory)</span>
+                <span>50 Causal verifications / mo</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                <span>Read-only graph inspector</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
                 <span>Standard stdio MCP protocol gate</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
-                <span>Manual IDE agent verification</span>
               </li>
             </ul>
             <button
@@ -782,33 +836,36 @@ export default function ProfilePage({
                   Pro Autonomous
                 </span>
               </div>
-              {isAuthorizedDev ? (
+              {hasEvaluationPass ? (
                 <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-600/40 dark:border-amber-500/30">
-                  DEV ACCESS
+                  {isHackathonMode ? 'EVALUATION PASS' : 'DEV ACCESS'}
                 </span>
               ) : (
                 <Lock className="w-3 h-3 text-slate-400" />
               )}
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-3">
-              $4 <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
+            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+              {currency === 'INR' ? '₹320' : '$4'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
+            </div>
+            <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold mb-3">
+              Includes 7-Day Free Pro Trial
             </div>
             <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Unlimited repositories</span>
+                <span>10 Connected repositories</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>1,000 Decisions (Cloud persistent)</span>
+                <span>1,000 Causal verifications / mo</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Remote SSE MCP &amp; live webhooks</span>
+                <span>CI/CD intercept &amp; pre-commit scanners</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>GitHub Actions CI/CD PR gate</span>
+                <span>Autonomous mutation loops</span>
               </li>
             </ul>
             <button
@@ -852,15 +909,17 @@ export default function ProfilePage({
                 </div>
               )}
               <span className="relative z-10 transition-colors duration-300 flex items-center gap-1.5">
-                {!isAuthorizedDev && currentTier !== 'pro' && <Lock className="w-3 h-3" />}
+                {!hasEvaluationPass && currentTier !== 'pro' && <Lock className="w-3 h-3" />}
                 <span>
                   {currentTier === 'pro'
                     ? 'Active'
                     : (isUpgrading
                         ? 'Connecting...'
-                        : (!user
-                            ? 'Sign In to Unlock'
-                            : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade ($4/mo)')))}
+                        : (hasEvaluationPass
+                            ? (isHackathonMode ? 'Switch to Pro' : 'Switch (Dev)')
+                            : (!user
+                                ? 'Sign In to Unlock'
+                                : `Upgrade (${currency === 'INR' ? '₹320' : '$4'}/mo)`)))}
                 </span>
               </span>
             </button>
@@ -899,35 +958,40 @@ export default function ProfilePage({
                   Enterprise Mesh
                 </span>
               </div>
-              {isAuthorizedDev ? (
+              {hasEvaluationPass ? (
                 <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
                   currentTier === 'enterprise'
                     ? 'bg-purple-500/25 text-purple-200 border-purple-400/40'
                     : 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/40 dark:border-purple-500/30'
                 }`}>
-                  DEV ACCESS
+                  {isHackathonMode ? 'EVALUATION PASS' : 'DEV ACCESS'}
                 </span>
               ) : (
                 <Lock className="w-3 h-3 text-slate-400" />
               )}
             </div>
-            <div className={`text-2xl font-bold font-mono mb-3 ${
+            <div className={`text-2xl font-bold font-mono mb-1 ${
               currentTier === 'enterprise' ? 'text-white' : 'text-slate-950 dark:text-white'
             }`}>
               Custom <span className={`text-xs font-normal font-sans ${
                 currentTier === 'enterprise' ? 'text-purple-200/80' : 'text-slate-500'
               }`}>/ SLA</span>
             </div>
+            <div className={`text-[10px] font-mono font-medium mb-3 ${
+              currentTier === 'enterprise' ? 'text-purple-200/70' : 'text-purple-500 dark:text-purple-400'
+            }`}>
+              Tailored Infrastructure &amp; Dedicated VPC
+            </div>
             <ul className={`text-xs font-mono space-y-2 mb-6 ${
               currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
             }`}>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>Dedicated multi-tenant cluster</span>
+                <span>Unlimited connected repositories</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>Unlimited decisions &amp; custom rules</span>
+                <span>Dedicated causal graph cluster</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
@@ -979,13 +1043,15 @@ export default function ProfilePage({
                 </div>
               )}
               <span className="relative z-10 transition-colors duration-300 flex items-center gap-1.5">
-                {!isAuthorizedDev && currentTier !== 'enterprise' && <Lock className="w-3 h-3" />}
+                {!hasEvaluationPass && currentTier !== 'enterprise' && <Lock className="w-3 h-3" />}
                 <span>
                   {currentTier === 'enterprise'
                     ? 'Active'
                     : (!user
                         ? 'Sign In to Unlock'
-                        : (isAuthorizedDev ? 'Switch (Dev)' : 'Upgrade (Custom)'))}
+                        : (hasEvaluationPass
+                            ? (isHackathonMode ? 'Switch to Enterprise' : 'Switch (Dev)')
+                            : 'Upgrade (Custom)'))}
                 </span>
               </span>
             </button>

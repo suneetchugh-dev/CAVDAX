@@ -46,19 +46,34 @@ function ToggleSwitch({ checked, onChange, disabled = false, size = 'md', ariaLa
       } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
     >
       <span
-        className={`inline-block rounded-full transition-transform duration-300 shadow-xs pointer-events-none border border-transparent ${
+        className={`inline-flex items-center justify-center rounded-full pointer-events-none shadow-xs border border-transparent transition-all duration-300 ${
           isSmall ? 'w-4 h-4' : 'w-5 h-5'
         } ${
           checked 
-            ? 'bg-white dark:bg-black' 
-            : 'bg-white dark:bg-neutral-300'
+            ? 'bg-white dark:bg-black text-slate-950 dark:text-white' 
+            : 'bg-white dark:bg-neutral-300 text-slate-400 dark:text-neutral-600'
         }`}
         style={{
           transform: checked 
             ? (isSmall ? 'translateX(16px)' : 'translateX(20px)') 
-            : 'translateX(0px)'
+            : 'translateX(0px)',
+          transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
         }}
-      />
+      >
+        <svg
+          viewBox="0 0 12 12"
+          className={`w-2.5 h-2.5 transition-all duration-300 transform ${
+            checked ? 'scale-100 rotate-0 opacity-100' : 'scale-50 -rotate-45 opacity-0'
+          }`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M2.5 6.5L4.5 8.5L9.5 3.5" />
+        </svg>
+      </span>
     </button>
   );
 }
@@ -216,7 +231,7 @@ export default function PreferencesModal({
             </h2>
           </div>
           <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 ml-7 leading-snug">
-            Configure signal channels, sensory audio feedback, visual kinetics, and platform state.
+            Sensory feedback, kinetics, and system controls.
           </p>
         </div>
 
@@ -237,7 +252,7 @@ export default function PreferencesModal({
                     Display Appearance
                   </div>
                   <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                    {isDarkTheme ? 'Deep Obsidian Void (#060709)' : 'Porcelain Light Minimalist (#F8FAFC)'}
+                    {isDarkTheme ? 'Deep Obsidian Dark' : 'Porcelain Light Minimalist'}
                   </div>
                 </div>
               </div>
@@ -312,22 +327,13 @@ export default function PreferencesModal({
                   <MousePointer size={13} className={`transition-colors ${clickSoundActive && soundsActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
                   <span className="text-[11px] text-slate-700 dark:text-slate-300">Tactile Micro-Clicks</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => playClick()}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/20 transition"
-                  >
-                    Test
-                  </button>
-                  <ToggleSwitch 
-                    checked={clickSoundActive} 
-                    onChange={handleClickSoundToggle} 
-                    size="sm"
-                    disabled={!soundsActive}
-                    ariaLabel="Toggle button click sound"
-                  />
-                </div>
+                <ToggleSwitch 
+                  checked={clickSoundActive} 
+                  onChange={handleClickSoundToggle} 
+                  size="sm"
+                  disabled={!soundsActive}
+                  ariaLabel="Toggle button click sound"
+                />
               </div>
 
               {/* Sound Sub 2: Loading Splash Chime */}
@@ -336,22 +342,13 @@ export default function PreferencesModal({
                   <Waves size={13} className={`transition-colors ${splashSoundActive && soundsActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
                   <span className="text-[11px] text-slate-700 dark:text-slate-300">Loading Splash Chime</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => playLoadingSound()}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/20 transition"
-                  >
-                    Test
-                  </button>
-                  <ToggleSwitch 
-                    checked={splashSoundActive} 
-                    onChange={handleSplashSoundToggle} 
-                    size="sm"
-                    disabled={!soundsActive}
-                    ariaLabel="Toggle loading sound"
-                  />
-                </div>
+                <ToggleSwitch 
+                  checked={splashSoundActive} 
+                  onChange={handleSplashSoundToggle} 
+                  size="sm"
+                  disabled={!soundsActive}
+                  ariaLabel="Toggle loading sound"
+                />
               </div>
             </div>
           </div>
