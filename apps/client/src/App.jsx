@@ -513,7 +513,7 @@ export default function App() {
   const [activeTierKey, setActiveTierKey] = useState(() => {
     if (typeof window !== 'undefined') {
       if (localStorage.getItem('cavdax_hackathon_mode') === 'true') {
-        return 'enterprise';
+        return localStorage.getItem('cavdax_tier') || 'enterprise';
       }
       return localStorage.getItem('cavdax_tier') || 'free';
     }
