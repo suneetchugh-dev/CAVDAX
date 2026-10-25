@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  User, CheckCircle2, Lock, Terminal,
+  User, Copy, Check, CheckCircle2, Lock, Terminal,
   SlidersHorizontal, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut, Github
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
@@ -119,8 +119,20 @@ export default function ProfilePage({
     setCurrency(newCurr);
     try {
       localStorage.setItem('cavdax_currency', newCurr);
+      window.dispatchEvent(new CustomEvent('cavdax:currency-changed', { detail: { currency: newCurr } }));
     } catch {}
   };
+
+  useEffect(() => {
+    const handleCurrencyChange = (e) => {
+      const next = e.detail?.currency || localStorage.getItem('cavdax_currency');
+      if (next && (next === 'USD' || next === 'INR')) {
+        setCurrency(next);
+      }
+    };
+    window.addEventListener('cavdax:currency-changed', handleCurrencyChange);
+    return () => window.removeEventListener('cavdax:currency-changed', handleCurrencyChange);
+  }, []);
 
   const handleRazorpayUpgrade = async () => {
     if (!user) {
@@ -1134,13 +1146,29 @@ export default function ProfilePage({
             </p>
           </div>
 
-          <div className="py-1.5 sm:py-2 px-3 rounded-lg bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 font-mono text-xs flex items-center justify-between gap-2.5 overflow-hidden text-slate-800 dark:text-slate-200">
-            <code className="truncate text-[11px]">cvdx_live_{user?.login ? user.login.toLowerCase() : 'contributor'}_{apiKeySuffix}</code>
+          <div className="py-2.5 px-3.5 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <span className="text-slate-500 select-none text-[11px] font-mono">$</span>
+              <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
+                cvdx_live_{user?.login ? user.login.toLowerCase() : 'contributor'}_{apiKeySuffix}
+              </code>
+            </div>
             <button
               onClick={handleCopyApiKey}
-              className="px-2.5 py-0.5 rounded bg-white dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-[9px] font-bold text-slate-900 dark:text-white border border-slate-300 dark:border-white/20 shrink-0 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white text-[10px] font-mono font-bold transition-all cursor-pointer shrink-0"
+              title="Copy API Key"
             >
-              {copiedKey ? 'COPIED' : 'COPY'}
+              {copiedKey ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-400" />
+                  <span className="text-emerald-400">COPIED</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3 text-slate-400" />
+                  <span>COPY</span>
+                </>
+              )}
             </button>
           </div>
         </div>

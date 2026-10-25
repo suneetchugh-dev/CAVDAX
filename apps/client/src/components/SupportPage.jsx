@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Coffee, CheckCircle2, Heart, HandHeart, Loader2 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
@@ -29,37 +29,43 @@ const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
 // Sponsor tiers: amounts in paise (₹1 = 100 paise)
 const TIERS = [
   {
-    id:      1,
-    price:   '$2',
-    sub:     '/ coffee',
-    inr:     '₹169',
-    paise:   16900,
-    desc:    'One coffee to fuel development.',
-    perks:   ['README Backer badge', 'Community role', 'Public backer directory'],
-    amber:   false,
-    popular: false,
+    id:       1,
+    usdPrice: '$2',
+    inrPrice: '₹169',
+    sub:      '/ coffee',
+    usdSub:   'approx ₹169 INR',
+    inrSub:   'approx $2 USD',
+    paise:    16900,
+    desc:     'One coffee to fuel development.',
+    perks:    ['README Backer badge', 'Community role', 'Public backer directory'],
+    amber:    false,
+    popular:  false,
   },
   {
-    id:      2,
-    price:   '$4',
-    sub:     '/ 2 cups',
-    inr:     '₹339',
-    paise:   33900,
-    desc:    'Powers automated graph fuzzing and regression passes.',
-    perks:   ['Everything in $2 tier', 'Priority issue triage', 'Early MCP plugin access'],
-    amber:   true,
-    popular: true,
+    id:       2,
+    usdPrice: '$4',
+    inrPrice: '₹339',
+    sub:      '/ 2 cups',
+    usdSub:   'approx ₹339 INR',
+    inrSub:   'approx $4 USD',
+    paise:    33900,
+    desc:     'Powers automated graph fuzzing and regression passes.',
+    perks:    ['Everything in $2 tier', 'Priority issue triage', 'Early MCP plugin access'],
+    amber:    true,
+    popular:  true,
   },
   {
-    id:      3,
-    price:   '$10',
-    sub:     '/ core',
-    inr:     '₹849',
-    paise:   84900,
-    desc:    'Funds FalkorDB benchmark instances and continuous graph validation.',
-    perks:   ['Backers Wall listing', 'Direct RFC discussion', 'GitHub Sponsor badge'],
-    amber:   true,
-    popular: false,
+    id:       3,
+    usdPrice: '$10',
+    inrPrice: '₹849',
+    sub:      '/ core',
+    usdSub:   'approx ₹849 INR',
+    inrSub:   'approx $10 USD',
+    paise:    84900,
+    desc:     'Funds FalkorDB benchmark instances and continuous graph validation.',
+    perks:    ['Backers Wall listing', 'Direct RFC discussion', 'GitHub Sponsor badge'],
+    amber:    true,
+    popular:  false,
   },
 ];
 
@@ -79,6 +85,39 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
   const [hoveredTier, setHoveredTier] = useState(null);
   const [loadingTier, setLoadingTier] = useState(null);
   const [toast, setToast]             = useState(null); // { ok: bool, text: string }
+
+  const [currency, setCurrency] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cavdax_currency');
+      if (saved === 'USD' || saved === 'INR') return saved;
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      const lang = navigator.language || '';
+      if (tz.includes('Calcutta') || tz.includes('Kolkata') || lang.includes('en-IN') || lang.includes('hi')) {
+        return 'INR';
+      }
+    } catch {}
+    return 'USD';
+  });
+
+  const toggleCurrency = (newCurr) => {
+    playClick();
+    setCurrency(newCurr);
+    try {
+      localStorage.setItem('cavdax_currency', newCurr);
+      window.dispatchEvent(new CustomEvent('cavdax:currency-changed', { detail: { currency: newCurr } }));
+    } catch {}
+  };
+
+  useEffect(() => {
+    const handleCurrencyChange = (e) => {
+      const next = e.detail?.currency || localStorage.getItem('cavdax_currency');
+      if (next && (next === 'USD' || next === 'INR')) {
+        setCurrency(next);
+      }
+    };
+    window.addEventListener('cavdax:currency-changed', handleCurrencyChange);
+    return () => window.removeEventListener('cavdax:currency-changed', handleCurrencyChange);
+  }, []);
 
   const showToast = (ok, text) => {
     setToast({ ok, text });
@@ -132,7 +171,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
         amount:      orderData.amount,
         currency:    orderData.currency,
         name:        'CAVDAX',
-        description: `${tier.price} Sponsor — Open-source causal AI gate`,
+        description: `${currency === 'INR' ? tier.inrPrice : tier.usdPrice} Sponsor — Open-source causal AI gate`,
         image:       `${window.location.origin}/cavdax-brand-logo.jpg`,
         order_id:    orderData.order_id,
         theme:       { color: '#F59E0B' }, // amber-500 — CAVDAX accent
@@ -198,8 +237,40 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
         </p>
       </section>
 
-      {/* ── 2. Sponsorship Tiers ── */}
-      <section className="pt-3 grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-10 sm:mb-12">
+      {/* ── 2. Sponsorship Tiers & Currency Switcher ── */}
+      <div className="flex items-center justify-between mb-3.5 sm:mb-4">
+        <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          Sponsorship Tiers
+        </span>
+
+        {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
+        <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-[10px] font-mono">
+          <button
+            type="button"
+            onClick={() => toggleCurrency('USD')}
+            className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+              currency === 'USD'
+                ? 'bg-white dark:bg-white/15 text-slate-950 dark:text-white font-bold shadow-xs'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            USD ($)
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleCurrency('INR')}
+            className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+              currency === 'INR'
+                ? 'bg-white dark:bg-white/15 text-slate-950 dark:text-white font-bold shadow-xs'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            INR (₹)
+          </button>
+        </div>
+      </div>
+
+      <section className="pt-0 grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-10 sm:mb-12">
         {TIERS.map((tier) => {
           const isLoading = loadingTier === tier.id;
           const isHovered = hoveredTier === tier.id;
@@ -230,11 +301,13 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
                 </div>
 
                 {/* Price */}
-                <div className="text-lg font-bold font-mono text-slate-950 dark:text-white">
-                  {tier.price}
+                <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white tracking-tight">
+                  {currency === 'INR' ? tier.inrPrice : tier.usdPrice}
                   <span className="text-[11px] font-normal text-slate-500 font-sans ml-1">{tier.sub}</span>
                 </div>
-                <div className="text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-0.5 mb-3">{tier.inr} INR</div>
+                <div className="text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-0.5 mb-3">
+                  {currency === 'INR' ? tier.inrSub : tier.usdSub}
+                </div>
 
                 {/* Desc */}
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-sans mb-4 leading-relaxed">{tier.desc}</p>
@@ -289,7 +362,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
                 <span className="relative z-10 flex items-center gap-1.5 transition-colors duration-300">
                   {isLoading
                     ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Processing...</>
-                    : <><Coffee className="w-3 h-3 shrink-0" />Sponsor ({tier.inr})</>
+                    : <><Coffee className="w-3 h-3 shrink-0" />Sponsor ({currency === 'INR' ? tier.inrPrice : tier.usdPrice})</>
                   }
                 </span>
               </button>
