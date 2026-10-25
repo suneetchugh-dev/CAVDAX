@@ -1,5 +1,5 @@
 # CAVDAX Knowledge Graph Architecture & Topological Atlas
-*Generated via Graphify knowledge graph engine for WeMakeDevs x FalkorDB Hackathon (SIH26043)*
+*Generated via Graphify knowledge graph engine for WeMakeDevs x FalkorDB Graph Hacks*
 
 ---
 

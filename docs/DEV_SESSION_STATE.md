@@ -260,13 +260,13 @@
 
 
 
-- **Complete Scrub of SIH26043 / SAHNIRMAAN from Client (`SupportPage.jsx`, `ConnectMcpPage.jsx`, and Codebase)**:
+- **Complete Scrub of External Prototype Identifiers from Client (SupportPage.jsx, ConnectMcpPage.jsx, and Codebase)**:
 
-  - Removed the `Student research prototype for SIH26043 & GraphHacks. Simulation test mode.` footer notice from `SupportPage.jsx`.
+  - Removed the `Student research prototype for GraphHacks. Simulation test mode.` footer notice from `SupportPage.jsx`.
 
   - Replaced `https://cavdax.sahnirmaan.live` with `https://cavdax.live` across all documentation and MCP configuration snippets.
 
-  - Scrubbed all occurrences of `SAHNIRMAAN`, `SIH26043`, and `Smart India Hackathon` across all client comments, styles, and templates (13 files updated).
+  - Scrubbed all occurrences of legacy project and prototype identifiers across all client comments, styles, and templates (13 files updated).
 
 
 

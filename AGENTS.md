@@ -349,7 +349,7 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 
 3e. **Strict Ban on External Prototype / Student References**:
 
-    - Never include mentions of `SIH26043`, `SIH`, `Smart India Hackathon`, or `SAHNIRMAAN` in the client application. The platform presents itself cleanly as CAVDAX.
+    - Never include mentions of external hackathon identifiers or legacy project names like SAHNIRMAAN in the client application. The platform presents itself cleanly as CAVDAX.
 
 3f. **Persistent Interaction Fills for Action Buttons**:
 
