@@ -133,7 +133,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
         currency:    orderData.currency,
         name:        'CAVDAX',
         description: `${tier.price} Sponsor — Open-source causal AI gate`,
-        image:       `${window.location.origin}/cavdax-logo.svg`,
+        image:       `${window.location.origin}/cavdax-brand-logo.jpg`,
         order_id:    orderData.order_id,
         theme:       { color: '#F59E0B' }, // amber-500 — CAVDAX accent
         modal: {
