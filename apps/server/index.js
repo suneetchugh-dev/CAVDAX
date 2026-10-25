@@ -10,7 +10,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { randomUUID, randomBytes, createHmac } from 'crypto';
+import { randomUUID, randomBytes, createHmac, createHash } from 'crypto';
 import { rateLimit } from 'express-rate-limit';
 import Razorpay from 'razorpay';
 
@@ -213,39 +213,72 @@ app.use('/api/', apiLimiter);          // applies to all /api/* routes
 app.use('/api/mcp/', mcpLimiter);      // tighter limit on MCP routes (overrides above)
 
 // ---------------------------------------------------------------------------
-// AUTH MIDDLEWARE
+// AUTH MIDDLEWARE & CRYPTOGRAPHIC USER KEY REGISTRY
 // ---------------------------------------------------------------------------
-// Reads MCP_API_TOKEN from environment. If the variable is not set (e.g. local
-// dev without a .env), auth is skipped and a warning is printed once on boot.
-// When set, every protected write endpoint requires:
-//   Authorization: Bearer <token>
+// Reads MCP_API_TOKEN from environment for root / CI access.
+// Also maintains an in-memory SHA-256 hashed registry of user-scoped API keys:
+//   keyHashHex -> { userId, login, tier, createdAt, lastUsedAt }
+// Raw keys follow format: cvdx_live_<login>_<48-hex-entropy> (192 bits of entropy)
 const API_TOKEN = process.env.MCP_API_TOKEN || null;
+const userApiKeyRegistry = new Map();
+
+function hashApiKey(rawKey) {
+  if (!rawKey || typeof rawKey !== 'string') return '';
+  return createHash('sha256').update(rawKey.trim()).digest('hex');
+}
+
+function generateSecureApiKey(login) {
+  const sanitizedLogin = (login || 'contributor').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 32);
+  const entropy = randomBytes(24).toString('hex'); // 192 bits of cryptographic CSPRNG randomness
+  return `cvdx_live_${sanitizedLogin}_${entropy}`;
+}
 
 if (!API_TOKEN) {
   console.warn(
-    '[CAVDAX Auth] ⚠️  MCP_API_TOKEN is not set — write endpoints are unprotected. ' +
-    'Set MCP_API_TOKEN in your .env file before deploying to production.'
+    '[CAVDAX Auth] ⚠️  MCP_API_TOKEN is not set — write endpoints fallback to user API key verification.'
   );
 }
 
 /**
  * Express middleware that enforces Bearer token auth on write endpoints.
- * Skipped transparently when MCP_API_TOKEN env var is absent (local dev mode).
+ * Validates against both root MCP_API_TOKEN and user-scoped cryptographic keys.
+ * Skipped transparently when no tokens or keys are configured in local dev mode.
  */
 function requireAuth(req, res, next) {
-  if (!API_TOKEN) return next(); // dev mode — no token configured, skip
-
   const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
 
-  if (!token || token !== API_TOKEN) {
-    return res.status(401).json({
-      error: 'Unauthorized',
-      message: 'A valid Bearer token is required. Set Authorization: Bearer <MCP_API_TOKEN>.'
-    });
+  // 1. Root / CI Token Check
+  if (API_TOKEN && token === API_TOKEN) {
+    req.authUser = { login: 'system', tier: 'enterprise', role: 'admin' };
+    return next();
   }
 
-  next();
+  // 2. Cryptographic User Key Check
+  if (token && token.startsWith('cvdx_live_')) {
+    const keyHash = hashApiKey(token);
+    const keyRecord = userApiKeyRegistry.get(keyHash);
+    if (keyRecord) {
+      keyRecord.lastUsedAt = Date.now();
+      req.authUser = {
+        userId: keyRecord.userId,
+        login: keyRecord.login,
+        tier: keyRecord.tier || 'free',
+        role: 'user'
+      };
+      return next();
+    }
+  }
+
+  // 3. Transparent local dev fallback if no tokens configured anywhere
+  if (!API_TOKEN && userApiKeyRegistry.size === 0) {
+    return next();
+  }
+
+  return res.status(401).json({
+    error: 'Unauthorized',
+    message: 'A valid Bearer token is required. Use Authorization: Bearer <API_KEY>.'
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1512,6 +1545,92 @@ app.get('/api/auth/me', (req, res) => {
   }
   const { githubId, login, name, avatarUrl } = req.session.user;
   res.json({ authenticated: true, user: { githubId, login, name, avatarUrl } });
+});
+
+/**
+ * GET /api/user/api-key
+ * Returns the active cryptographic API key for the authenticated user or session.
+ */
+app.get('/api/user/api-key', (req, res) => {
+  const sessionUser = req.session?.user;
+  const login = sessionUser?.login || (req.sessionID ? `guest_${req.sessionID.slice(0, 8)}` : 'contributor');
+  const userId = sessionUser?.githubId || req.sessionID || 'anonymous';
+  const tier = sessionUser?.tier || req.session?.tier || 'free';
+
+  // If user already has an active key in session
+  if (req.session?.apiKey) {
+    return res.json({
+      success: true,
+      authenticated: Boolean(sessionUser),
+      apiKey: req.session.apiKey,
+      masked: `${req.session.apiKey.slice(0, 16)}...${req.session.apiKey.slice(-4)}`
+    });
+  }
+
+  // Generate initial cryptographic key with 192-bit CSPRNG entropy
+  const newKey = generateSecureApiKey(login);
+  const keyHash = hashApiKey(newKey);
+
+  userApiKeyRegistry.set(keyHash, {
+    userId,
+    login,
+    tier,
+    createdAt: Date.now(),
+    lastUsedAt: null
+  });
+
+  if (req.session) {
+    req.session.apiKey = newKey;
+    req.session.keyHash = keyHash;
+  }
+
+  res.json({
+    success: true,
+    authenticated: Boolean(sessionUser),
+    apiKey: newKey,
+    masked: `${newKey.slice(0, 16)}...${newKey.slice(-4)}`
+  });
+});
+
+/**
+ * POST /api/user/rotate-api-key
+ * Cryptographically rotates the user's API key, invalidating the previous hash.
+ */
+app.post('/api/user/rotate-api-key', (req, res) => {
+  const sessionUser = req.session?.user;
+  const login = sessionUser?.login || (req.sessionID ? `guest_${req.sessionID.slice(0, 8)}` : 'contributor');
+  const userId = sessionUser?.githubId || req.sessionID || 'anonymous';
+  const tier = sessionUser?.tier || req.session?.tier || 'free';
+
+  // Invalidate old key hash if present
+  if (req.session?.keyHash) {
+    userApiKeyRegistry.delete(req.session.keyHash);
+  }
+
+  // Generate new cryptographic key with 192 bits of entropy
+  const newKey = generateSecureApiKey(login);
+  const newHash = hashApiKey(newKey);
+
+  userApiKeyRegistry.set(newHash, {
+    userId,
+    login,
+    tier,
+    createdAt: Date.now(),
+    lastUsedAt: null
+  });
+
+  if (req.session) {
+    req.session.apiKey = newKey;
+    req.session.keyHash = newHash;
+  }
+
+  console.log(`[CAVDAX Auth] Cryptographic API key rotated for: ${login}`);
+
+  res.json({
+    success: true,
+    apiKey: newKey,
+    masked: `${newKey.slice(0, 16)}...${newKey.slice(-4)}`
+  });
 });
 
 /**
