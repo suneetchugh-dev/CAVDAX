@@ -587,17 +587,23 @@ export default function App() {
   });
   const [devAuthEvaluating, setDevAuthEvaluating] = useState(true);
 
-  // Evaluate dev access gate (/devteam) based on client IP & authorized GitHub user
+  // Evaluate dev access gate (/devteam) with Multi-Factor Pre-Challenge Cloaking
   useEffect(() => {
     let isMounted = true;
     async function checkDevAccess() {
       setDevAuthEvaluating(true);
       try {
+        await fetchGlobalWhitelistedIps();
         const ip = await fetchClientIp();
         const ipOk = isIpAuthorized(ip);
-        const userOk = isUserAuthorized(githubUser) || Boolean(getActiveDevSession());
+        const userOk = isUserAuthorized(githubUser);
+        const sessionOk = Boolean(getActiveDevSession());
+
+        // Clearance requires: Authorized Team GitHub Handle OR Whitelisted Client IP OR Active Vault Session
+        const clearance = userOk || ipOk || sessionOk;
+
         if (isMounted) {
-          setIsDevAuthorized(ipOk && userOk);
+          setIsDevAuthorized(clearance);
           setDevAuthEvaluating(false);
         }
       } catch {
@@ -1055,13 +1061,28 @@ export default function App() {
           </SubsystemErrorBoundary>
         </div>
       ) : activeTab === 'devteam' ? (
-        /* Protected Dev Team Panel (/devteam) — Zero-Knowledge Cryptographic Passkey Enclave */
-        <SubsystemErrorBoundary name="Dev Enclave">
-          <DevTeamPanel
-            githubUser={githubUser}
+        /* Protected Dev Team Panel (/devteam) — Multi-Factor Pre-Challenge Cloaking */
+        devAuthEvaluating ? (
+          <div className="flex-1 min-h-[60vh] flex items-center justify-center select-none">
+            <div className="flex items-center gap-2 font-mono text-xs text-slate-500">
+              <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" />
+              <span>Verifying Security Clearance...</span>
+            </div>
+          </div>
+        ) : isDevAuthorized ? (
+          <SubsystemErrorBoundary name="Dev Enclave">
+            <DevTeamPanel
+              githubUser={githubUser}
+              onNavigateHome={() => handleSelectTab('landing')}
+            />
+          </SubsystemErrorBoundary>
+        ) : (
+          /* Silent 404 Cloaking — unauthorized accounts & non-whitelisted IPs receive 404 */
+          <NotFoundPage
             onNavigateHome={() => handleSelectTab('landing')}
+            onLaunchConsole={() => handleSelectTab('console')}
           />
-        </SubsystemErrorBoundary>
+        )
       ) : activeTab === 'profile' ? (
         /* User Profile & Account Page */
         <SubsystemErrorBoundary name="Profile & Account">

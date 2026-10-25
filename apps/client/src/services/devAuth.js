@@ -378,3 +378,70 @@ export async function setGlobalHackathonMode(enabled) {
   setHackathonEvaluationMode(boolVal);
   return { success: true, enabled: boolVal };
 }
+
+// Server-Backed Global IP Whitelist Sync
+export async function fetchGlobalWhitelistedIps() {
+  try {
+    const res = await fetch('/api/system/dev-ips');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.ips)) {
+        const ips = data.ips.map(s => s.trim().toLowerCase());
+        try {
+          localStorage.setItem(DYNAMIC_ALLOWED_IPS_KEY, JSON.stringify(ips));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:dev-ips-updated', { detail: { ips } }));
+        return ips;
+      }
+    }
+  } catch {}
+  return getAllowedIps();
+}
+
+export async function addGlobalWhitelistedIp(ip) {
+  if (!ip) return false;
+  const clean = ip.trim().toLowerCase();
+  addWhitelistedIp(clean);
+  try {
+    const res = await fetch('/api/system/dev-ips', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip: clean, action: 'add' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.ips)) {
+        try {
+          localStorage.setItem(DYNAMIC_ALLOWED_IPS_KEY, JSON.stringify(data.ips));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:dev-ips-updated', { detail: { ips: data.ips } }));
+      }
+      return true;
+    }
+  } catch {}
+  return true;
+}
+
+export async function removeGlobalWhitelistedIp(ip) {
+  if (!ip) return false;
+  const clean = ip.trim().toLowerCase();
+  removeWhitelistedIp(clean);
+  try {
+    const res = await fetch('/api/system/dev-ips', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip: clean, action: 'remove' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.ips)) {
+        try {
+          localStorage.setItem(DYNAMIC_ALLOWED_IPS_KEY, JSON.stringify(data.ips));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:dev-ips-updated', { detail: { ips: data.ips } }));
+      }
+      return true;
+    }
+  } catch {}
+  return true;
+}

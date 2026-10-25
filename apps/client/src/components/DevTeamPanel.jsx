@@ -26,7 +26,7 @@ import {
   getActiveDevSession, verifyDevPasskey, devSignOut,
   getAllowedIps, getAuthorizedUsers, fetchClientIp,
   addAuthorizedUser, removeAuthorizedUser,
-  addWhitelistedIp, removeWhitelistedIp, getCustomWhitelistedIps,
+  addWhitelistedIp, removeWhitelistedIp, getCustomWhitelistedIps, fetchGlobalWhitelistedIps, addGlobalWhitelistedIp, removeGlobalWhitelistedIp,
   setDevTierOverride, getDevCurrentTier, isHackathonEvaluationMode, setHackathonEvaluationMode, setGlobalHackathonMode, fetchGlobalHackathonMode
 } from '../services/devAuth';
 import { playClick, playRejectBuzz, playApprovalChime } from '../utils/soundFx';
@@ -112,6 +112,9 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     fetchGlobalHackathonMode().then((enabled) => {
       setIsHackathonMode(enabled);
       if (enabled) setActiveDevTier('enterprise');
+    });
+    fetchGlobalWhitelistedIps().then((ips) => {
+      if (Array.isArray(ips)) setIpList(ips);
     });
   }, []);
 

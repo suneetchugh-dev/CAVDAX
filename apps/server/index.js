@@ -300,6 +300,52 @@ function extractClientIp(req) {
 }
 
 // First-party client IP discovery (eliminates 3rd-party tracker dependencies and ERR_BLOCKED_BY_CLIENT)
+
+// Global Whitelisted Developer IPs (stored in server state)
+let globalWhitelistedIps = Array.from(new Set([
+  '127.0.0.1',
+  'localhost',
+  '::1',
+  ...(process.env.VITE_ALLOWED_DEV_IPS || process.env.ALLOWED_DEV_IPS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+]));
+
+// GET /api/system/dev-ips
+app.get('/api/system/dev-ips', (req, res) => {
+  const clientIp = extractClientIp(req).toLowerCase();
+  res.json({
+    ips: globalWhitelistedIps,
+    client_ip: clientIp,
+    client_authorized: globalWhitelistedIps.includes(clientIp)
+  });
+});
+
+// POST /api/system/dev-ips
+app.post('/api/system/dev-ips', (req, res) => {
+  const { ip, action } = req.body || {};
+  if (!ip || typeof ip !== 'string') {
+    return res.status(400).json({ success: false, error: 'Valid IP address required' });
+  }
+  const cleanIp = ip.trim().toLowerCase();
+  if (action === 'remove') {
+    globalWhitelistedIps = globalWhitelistedIps.filter(item => item !== cleanIp);
+    console.log(`[CAVDAX] Revoked global IP authorization: ${cleanIp}`);
+  } else {
+    if (!globalWhitelistedIps.includes(cleanIp)) {
+      globalWhitelistedIps.push(cleanIp);
+      console.log(`[CAVDAX] Granted global IP authorization: ${cleanIp}`);
+    }
+  }
+
+  broadcastEvent('DEV_IPS_UPDATED', { ips: globalWhitelistedIps });
+  res.json({
+    success: true,
+    ips: globalWhitelistedIps
+  });
+});
+
 // Global Hackathon Evaluation Mode REST Endpoints
 app.get('/api/system/hackathon-mode', (req, res) => {
   res.json({
