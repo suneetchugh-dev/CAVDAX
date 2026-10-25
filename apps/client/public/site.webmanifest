@@ -1,0 +1,33 @@
+{
+  "name": "CAVDAX — Graph-Grounded Decision Execution for Coding Agents",
+  "short_name": "CAVDAX",
+  "description": "Prevent autonomous coding agents from hallucinating or executing on stale architectural decisions via FalkorDB causal DAGs and enclosed MCP gates.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0D12",
+  "theme_color": "#0A0D12",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/cavdax-logo.svg",
+      "sizes": "100x100",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/og-image.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg"
+    }
+  ],
+  "categories": [
+    "developer",
+    "productivity",
+    "utilities"
+  ]
+}

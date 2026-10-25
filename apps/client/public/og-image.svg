@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@700;800&amp;display=swap');
+      .brand-title { font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 38px; font-weight: 800; letter-spacing: -1px; fill: #FFFFFF; }
+      .headline { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 46px; font-weight: 600; letter-spacing: -1.2px; fill: #F8FAFC; }
+      .subline { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 20px; font-weight: 400; line-height: 1.55; fill: #94A3B8; }
+      .mono-specs { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; fill: #64748B; letter-spacing: 0.8px; }
+      .mono-badge { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; fill: #94A3B8; letter-spacing: 1.5px; text-transform: uppercase; }
+    </style>
+  </defs>
+
+  <!-- Deep Obsidian Outer Canvas -->
+  <rect width="1200" height="630" fill="#0A0D12" />
+
+  <!-- Inner Architectural Card Container -->
+  <g transform="translate(40, 40)">
+    <rect width="1120" height="550" rx="20" fill="#08090C" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1.5" />
+
+    <!-- Top Section: Brand Emblem + Wordmark -->
+    <g transform="translate(76, 68)">
+      <!-- Official CAVDAX Monochromatic Emblem (60x60) -->
+      <g>
+        <rect width="60" height="60" rx="14" fill="#0E1217" stroke="#1E293B" stroke-width="1.5" />
+        <!-- C-Arc (Causal Conscience) -->
+        <path d="M 28 17 A 14 14 0 0 0 28 43" stroke="#FFFFFF" stroke-width="3.2" fill="none" stroke-linecap="butt" />
+        <!-- Graph Pivot Node -->
+        <circle cx="28" cy="30" r="2" fill="#FFFFFF" />
+        <!-- Forward Action Vector -->
+        <path d="M 32 17 L 46 30 L 32 43" stroke="#FFFFFF" stroke-width="3.2" fill="none" stroke-linecap="butt" />
+      </g>
+      <text x="80" y="44" class="brand-title">CAVDAX</text>
+
+      <!-- Main Architectural Headline -->
+      <text x="0" y="128" class="headline">Causal Decision Governance for Autonomous Coding Agents</text>
+
+      <!-- Concise Technical Value Proposition -->
+      <text x="0" y="196" class="subline">
+        <tspan x="0" dy="0">An enclosed Model Context Protocol gate powered by FalkorDB GraphBLAS, preventing</tspan>
+        <tspan x="0" dy="32">autonomous software engineering agents from executing on stale or superseded architectural decisions.</tspan>
+      </text>
+    </g>
+
+    <!-- Bottom Structural Footer Row -->
+    <g transform="translate(76, 470)">
+      <line x1="0" y1="0" x2="968" y2="0" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="1" />
+      <text x="0" y="32" class="mono-specs">FALKORDB GRAPHBLAS • ENCLOSED MCP GATE • ZERO STALE WRITES</text>
+      <text x="968" y="32" text-anchor="end" class="mono-badge">OPEN SOURCE INFRASTRUCTURE</text>
+    </g>
+  </g>
+</svg>

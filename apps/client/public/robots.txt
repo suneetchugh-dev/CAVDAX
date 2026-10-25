@@ -1,0 +1,25 @@
+# CAVDAX Search Engine Robot Directives
+# https://cavdax.sahnirmaan.live/
+
+User-agent: *
+Allow: /
+Allow: /overview
+Allow: /console
+Allow: /mcp
+Allow: /walkthrough
+Allow: /team
+Allow: /audit
+Allow: /profile
+Allow: /support
+
+# Internal administrative routes & API sockets
+Disallow: /api/
+Disallow: /devteam
+Disallow: /dev
+Disallow: /cdn-cgi/
+
+# Polite crawl pacing
+Crawl-delay: 1
+
+# Authoritative XML Sitemap
+Sitemap: https://cavdax.sahnirmaan.live/sitemap.xml
