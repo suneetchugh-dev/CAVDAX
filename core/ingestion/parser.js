@@ -5,7 +5,12 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { cascadeInvalidation } from '../graph/queries.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, '../../');
 
 /**
  * Lightweight deterministic YAML frontmatter extractor (Zero-dependency fallback)
@@ -85,8 +90,8 @@ export async function ingestAdrFile(graph, filePath) {
   console.log(`[Ingestion] Reading ADR file: ${filePath}`);
   const absolutePath = path.resolve(filePath);
 
-  // Security Confinement: Prevent path traversal outside allowed project root
-  const allowedRoot = path.resolve(process.cwd());
+  // Security Confinement: Prevent path traversal outside repository root (OWASP A01/A03)
+  const allowedRoot = path.resolve(REPO_ROOT);
   if (!absolutePath.startsWith(allowedRoot + path.sep) && absolutePath !== allowedRoot) {
     throw new Error(`Security Violation: Path traversal attempt outside project workspace: ${absolutePath}`);
   }
