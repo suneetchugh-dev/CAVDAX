@@ -117,6 +117,48 @@ CAVDAX models engineering knowledge and agent actions using a formal 4-tier Caus
 
 ---
 
+## 📸 Production Interface Showcase (Light Mode)
+
+Captured directly from our live production deployment at [https://cavdax.sahnirmaan.live/](https://cavdax.sahnirmaan.live/):
+
+### 1. Causal Graph & Temporal DAG Canvas (`/overview`)
+> Visualizes live FalkorDB Directed Acyclic Graph (DAG) state, active vs. superseded architectural sources, and real-time graph invalidation.
+
+<div align="center">
+  <img src="./assets/screenshots/01_causal_graph_overview.png" alt="CAVDAX Causal Graph Overview" width="950" />
+</div>
+
+### 2. Connected Repository Developer Workspace (`/console`)
+> Real-time developer workspace with connected repository lifecycle controls, branch tracking, and instant architecture baseline initialization (`ADR-001`).
+
+<div align="center">
+  <img src="./assets/screenshots/02_developer_console.png" alt="CAVDAX Developer Console" width="950" />
+</div>
+
+### 3. Interactive MCP Action Playground (`/mcp`)
+> Pre-flight causal verification simulator featuring live Cypher query generation, traversal depth controls (`1..4` hops), and sub-millisecond GraphBLAS latency display.
+
+<div align="center">
+  <img src="./assets/screenshots/03_mcp_action_playground.png" alt="CAVDAX MCP Action Playground" width="950" />
+</div>
+
+### 4. Immutable Compliance Audit Ledger (`/audit`)
+> Tamper-evident operational ledger recording every tool execution, verdict, target file path, and grounding decision ID.
+
+<div align="center">
+  <img src="./assets/screenshots/04_compliance_audit_ledger.png" alt="CAVDAX Compliance Audit Ledger" width="950" />
+</div>
+
+### 5. Developer Profile, Plan Quotas & Active MCP Keys (`/profile`)
+> Real-time subscription tier management, plan quota consumption metrics, and secure MCP API key provisioning.
+
+<div align="center">
+  <img src="./assets/screenshots/05_developer_profile_quota.png" alt="CAVDAX Developer Profile and Quotas" width="950" />
+</div>
+
+
+---
+
 ## 🔬 Core Cypher Queries (FalkorDB GraphBLAS)
 
 CAVDAX leverages FalkorDB's linear-algebraic matrix engine to run deep multi-hop traversals in sub-millisecond timeframes.
@@ -245,25 +287,45 @@ CAVDAX is deployed and running live in production:
 
 ---
 
-## 🖥️ Interactive Web HUD & Verification Suite
+## 🖥️ Web HUD Multi-Route Topology (9 Operational Views)
 
-The CAVDAX Web HUD provides a world-class, industrial-brutalist / porcelain-dark operational interface:
+The CAVDAX Web HUD provides a world-class, industrial-brutalist / porcelain operational interface spanning 9 specialized views:
 
-1. **Interactive Causal Verification Console (`McpActionPlayground`):**
-   * Pre-flight causal verification simulator for engineers and evaluators.
-   * Dynamic sliders for adjusting graph traversal depth (`1..4` hops) and threshold constraints.
-   * Real-time Cypher query generator and execution engine displaying sub-millisecond execution times.
-   * Multi-scenario testing: evaluate ADR migrations, CVE deprecations, and CODEOWNERS governance shifts on the fly.
-2. **Interactive Guided Tour Engine (`TourGuide`):**
-   * Multi-step contextual onboarding walkthrough.
-   * Features dynamic viewport collision avoidance ensuring tour cards never obstruct active graph vertices or terminal logs.
-3. **FalkorDB Temporal Causal Graph Canvas (`GraphCanvas`):**
-   * Cytoscape.js-powered Directed Acyclic Graph (DAG) with real-time status pulses (`ACTIVE`, `SUPERSEDED`, `INVALIDATED_NEEDS_REVALIDATION`, `REPLACED_ARCHIVED`).
-   * **Fullscreen Mode:** Full-viewport interactive graph inspection with responsive pan/zoom, live node type filters (Sources, Facts, Decisions), and dual-boundary scroll isolation.
-4. **Accessible System Preferences & Keyboard Hotkeys (`PreferencesModal`):**
-   * Comprehensive shortcut engine (press `?` anywhere to reveal).
-   * Contextual, theme-aware custom tooltips with keyboard badge accessibility.
-   * High-contrast mode, reduced motion compliance, and cybernetic audio feedback toggles.
+1. **Architectural Overview (`/overview` or `/`)**: Value proposition, Causal Invalidation Radar, and interactive Cytoscape.js Directed Acyclic Graph canvas.
+2. **Connected Repository Developer Workspace (`/console`)**: Multi-tenant workspace for linking GitHub repositories, tracking active branch mutations, and managing architecture baselines.
+3. **MCP Action Playground (`/mcp`)**: Interactive pre-flight verification console with dynamic traversal depth sliders (`1..4` hops), live Cypher inspection, and sub-millisecond execution timing metrics.
+4. **4-Act Storyline Stepper (`/walkthrough`)**: Interactive demonstration stepper guiding evaluators through baseline validity, upstream commit mutation, enclosed MCP gate rejection, and Act IV revalidation.
+5. **Immutable Compliance Audit Ledger (`/audit`)**: Tamper-evident ledger providing full provenance and execution verification history across all agent actions.
+6. **Core Maintainers & Attribution (`/team`)**: Project research attribution, engineering background, and architecture credits.
+7. **Developer Profile & Plan Quotas (`/profile`)**: Live plan quota consumption monitoring, capability tiers, and secure MCP key generation.
+8. **Community Stewardship & Operational Backing (`/support`)**: Transparent operational resource breakdown and community sponsorship integration.
+9. **Zero-Trust Administrative Enclave (`/devteam`)**: Protected diagnostic console, developer IP whitelisting gate, and system status roster.
+
+---
+
+## 🔒 Enterprise Security Hardening & Zero-Trust Architecture
+
+CAVDAX implements comprehensive defense-in-depth security across both API and runtime layers:
+
+* **Strict Administrative Authorization (`requireDevAuth`)**: Critical administrative endpoints (`POST /api/system/dev-ips`, `/api/system/dev-roster`, `/api/system/hackathon-mode`) enforce cryptographically hashed developer credentials and remote IP whitelisting.
+* **Path Traversal Defenses**: All file modification operations (`apply_code_change`, `/api/ingest`) validate target paths against project root boundaries to prevent arbitrary file access outside the sandbox.
+* **Client IP Spoofing Mitigation**: The gateway inspects proxy socket addresses rather than untrusted `X-Forwarded-For` headers to prevent spoofed IP bypasses.
+* **Production Security Headers**: All responses include strict HTTP security directives:
+  * `X-Content-Type-Options: nosniff` (MIME sniffing prevention)
+  * `X-Frame-Options: DENY` (Clickjacking defense)
+  * `Strict-Transport-Security: max-age=31536000; includeSubDomains` (Enforced HTTPS)
+* **Cryptographic Billing Plan Validation**: Razorpay order IDs are cryptographically linked to target subscription tiers in server memory (`pendingBillingOrders`), preventing client-side parameter tampering.
+
+---
+
+## 🌐 Production SEO & Structured Metadata Suite
+
+The client application includes an enterprise-grade SEO and search discovery infrastructure:
+
+* **Schema.org JSON-LD Structured Data**: Embedded semantic graph declarations for `SoftwareApplication`, `Organization`, `WebSite`, and dynamic `BreadcrumbList` across all views.
+* **Route-Aware Dynamic Metadata (`SEOHead.jsx`)**: Automatically synchronizes document title, description, canonical link, OpenGraph (`og:*`), and Twitter Card (`twitter:*`) tags upon client-side navigation.
+* **Branded OpenGraph Preview Cards**: High-definition 1200×630px social cards (`og-image.jpg`, `og-image.png`, `og-image.svg`) featuring the official CAVDAX emblem and geometric Space Grotesk wordmark.
+* **Search Engine Crawl Directives**: Validated `robots.txt` disallowing internal debug routes, paired with an XML index (`sitemap.xml`) featuring explicit priority and change frequency ratings.
 
 ---
 

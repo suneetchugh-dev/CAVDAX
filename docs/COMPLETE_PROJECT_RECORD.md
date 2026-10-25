@@ -737,4 +737,47 @@ The implementation was verified through real-time script evaluation and event di
 - **Build Status**: Verified with `npm run build` (Exit code `0`, 0 errors).
 
 ---
+
+---
+
+## 12. Enterprise Security Hardening & Zero-Trust Perimeter
+
+### 12.1 Background & Threat Model
+As an autonomous decision execution engine, CAVDAX requires strict operational boundaries to prevent malicious prompt injections, arbitrary file modifications, and administrative spoofing in production environments.
+
+### 12.2 Implementation Details
+1. **Administrative Endpoint Authorization (`apps/server/index.js`)**:
+   - Enforced `requireDevAuth` middleware across `POST /api/system/dev-ips`, `/api/system/dev-roster`, and `/api/system/hackathon-mode`.
+   - Validates developer tokens against cryptographically salted environment secrets and verifies incoming request origins against an IP whitelist.
+2. **Path Traversal Confinement**:
+   - Both `apply_code_change` and `/api/ingest` enforce strict filesystem sandboxing. Target paths are resolved against `PROJECT_ROOT` using `path.resolve`, immediately rejecting attempts to write or read outside the repository boundaries.
+3. **Client IP Spoofing Protections**:
+   - Replaced unvalidated proxy header reads (`x-forwarded-for`) with direct remote socket address inspection, mitigating header injection attacks.
+4. **Transport Security Headers**:
+   - Configured Express security middleware to set `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Strict-Transport-Security: max-age=31536000; includeSubDomains`.
+5. **Cryptographic Order Tier Binding**:
+   - Payment order creation records order ID to tier bindings in server memory (`pendingBillingOrders`), ensuring client verification requests cannot elevate privileges.
+
+---
+
+## 13. Company-Grade Production SEO & Light-Mode Documentation Showcase
+
+### 13.1 Dynamic Route-Aware SEO Infrastructure
+1. **Dynamic Metadata Management (`SEOHead.jsx`)**:
+   - React component mounted at root level synchronizing page titles, descriptions, canonical URLs, and OpenGraph/Twitter Card metadata across all 9 views upon route transitions.
+2. **Semantic Graph JSON-LD**:
+   - Embedded structured data adhering to Schema.org standards for `SoftwareApplication`, `Organization`, `WebSite`, and dynamic `BreadcrumbList`.
+3. **Crawler Manifests**:
+   - Standard `robots.txt` disallowing internal development consoles while providing sitemap pointers.
+   - Sitemaps.org 0.9 XML index (`sitemap.xml`) indexing all 9 production routes with priority and change frequency metadata.
+
+### 13.2 Light-Mode UI Showcase Suite (`assets/screenshots/`)
+Captured 5 high-resolution (1440×900 @ 2x DPR) screenshots directly from the live deployment (`https://cavdax.sahnirmaan.live/`) in porcelain Light Mode:
+1. `01_causal_graph_overview.png`: Causal Graph & Temporal DAG Canvas.
+2. `02_developer_console.png`: Connected Repository Developer Workspace.
+3. `03_mcp_action_playground.png`: Interactive MCP Action Playground.
+4. `04_compliance_audit_ledger.png`: Immutable Compliance Audit Ledger.
+5. `05_developer_profile_quota.png`: Developer Profile, Plan Quotas & Active Keys.
+
+---
 *End of Complete Master Technical Record.*
