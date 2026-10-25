@@ -348,7 +348,8 @@ export default function ProfilePage({
     }
 
     if (!user) {
-      showToast('Authentication required: Sign in with GitHub to view subscription tiers.');
+      playClick();
+      window.location.href = '/api/auth/github?returnTo=/profile';
       return;
     }
 

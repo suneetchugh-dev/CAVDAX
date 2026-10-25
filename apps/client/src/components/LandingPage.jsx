@@ -946,7 +946,10 @@ export default function LandingPage({
 
         </h1>
 
-
+        {/* Architectural Positioning Subtitle */}
+        <p className="max-w-2xl text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 font-sans font-normal tracking-tight mb-8 sm:mb-10 text-balance">
+          Immunize Your Codebase Against Architectural Rot
+        </p>
 
         {/* Symmetrical Dual Action CTA Buttons (Section 15 Standard, Optical Right Icons) */}
 
