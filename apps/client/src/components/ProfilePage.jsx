@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, Copy, Check, CheckCircle2, Lock, Terminal,
-  SlidersHorizontal, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut, Github
+  SlidersHorizontal, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut, Github, Eye, EyeOff
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
@@ -99,6 +99,7 @@ export default function ProfilePage({
   const [toastMsg, setToastMsg] = useState(null);
   const [apiKey, setApiKey] = useState('');
   const [isLoadingKey, setIsLoadingKey] = useState(true);
+  const [isKeyRevealed, setIsKeyRevealed] = useState(false);
   const [hoveredTierBtn, setHoveredTierBtn] = useState(null);
   const [quotaData, setQuotaData] = useState(null);
   const [connectedRepoCount, setConnectedRepoCount] = useState(0);
@@ -138,6 +139,13 @@ export default function ProfilePage({
   useEffect(() => {
     let isMounted = true;
     async function fetchApiKey() {
+      if (!user) {
+        if (isMounted) {
+          setApiKey('');
+          setIsLoadingKey(false);
+        }
+        return;
+      }
       try {
         setIsLoadingKey(true);
         const res = await fetch('/api/user/api-key', { credentials: 'include' });
@@ -395,8 +403,11 @@ export default function ProfilePage({
 
   const handleCopyApiKey = () => {
     playClick();
-    const keyToCopy = apiKey || ('cvdx_live_' + (user?.login ? user.login.toLowerCase() : 'contributor') + '_a8f27e69');
-    navigator.clipboard.writeText(keyToCopy);
+    if (!user || !apiKey) {
+      showToast('Authentication required: Sign in with GitHub to copy your API key.');
+      return;
+    }
+    navigator.clipboard.writeText(apiKey);
     setCopiedKey(true);
     showToast('Cryptographic API Key copied to clipboard.');
     setTimeout(() => setCopiedKey(false), 2000);
@@ -1162,47 +1173,89 @@ export default function ProfilePage({
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 MCP Agent API Key
               </span>
-              <div className="flex items-center text-[10px] font-mono text-slate-500">
-                <button
-                  onClick={handleRotateKey}
-                  className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
-                  title="Rotate API Key"
-                >
-                  <RefreshCw className={`w-2.5 h-2.5 ${isRotating ? 'animate-spin' : ''}`} />
-                  <span>Rotate Key</span>
-                </button>
-              </div>
+              {user && (
+                <div className="flex items-center text-[10px] font-mono text-slate-500">
+                  <button
+                    onClick={handleRotateKey}
+                    className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                    title="Rotate API Key"
+                  >
+                    <RefreshCw className={`w-2.5 h-2.5 ${isRotating ? 'animate-spin' : ''}`} />
+                    <span>Rotate Key</span>
+                  </button>
+                </div>
+              )}
             </div>
             <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-sans mb-2.5 sm:mb-3 truncate">
               Bearer authentication key for Cursor, Claude Code, and Windsurf MCP connections.
             </p>
           </div>
 
-          <div className="py-2.5 px-3.5 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <span className="text-slate-500 select-none text-[11px] font-mono">$</span>
-              <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
-                {isLoadingKey ? 'Retrieving cryptographic key...' : (apiKey || `cvdx_live_${user?.login ? user.login.toLowerCase() : 'contributor'}_a8f27e69`)}
-              </code>
+          {!user ? (
+            <div className="py-2.5 px-3.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-dashed border-slate-300 dark:border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 truncate">
+                  Authentication required to generate MCP credentials
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  playClick();
+                  window.location.href = '/api/auth/github?returnTo=/profile';
+                }}
+                className="h-7 px-3 rounded-lg bg-slate-950 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 text-[10px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 tactile-btn shadow-xs"
+              >
+                <Github className="w-3 h-3" />
+                <span>Connect GitHub</span>
+              </button>
             </div>
-            <button
-              onClick={handleCopyApiKey}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white text-[10px] font-mono font-bold transition-all cursor-pointer shrink-0"
-              title="Copy API Key"
-            >
-              {copiedKey ? (
-                <>
-                  <Check className="w-3 h-3 text-emerald-400" />
-                  <span className="text-emerald-400">COPIED</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3 text-slate-400" />
-                  <span>COPY</span>
-                </>
-              )}
-            </button>
-          </div>
+          ) : (
+            <div className="py-2.5 px-3.5 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <span className="text-slate-500 select-none text-[11px] font-mono">$</span>
+                <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
+                  {isLoadingKey
+                    ? 'Retrieving cryptographic key...'
+                    : (isKeyRevealed
+                        ? apiKey
+                        : (apiKey ? `${apiKey.slice(0, 16)}••••••••••••••••${apiKey.slice(-4)}` : 'No key generated'))}
+                </code>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {apiKey && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playClick();
+                      setIsKeyRevealed(!isKeyRevealed);
+                    }}
+                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    title={isKeyRevealed ? "Mask Key" : "Reveal Key"}
+                  >
+                    {isKeyRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+                <button
+                  onClick={handleCopyApiKey}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white text-[10px] font-mono font-bold transition-all cursor-pointer shrink-0"
+                  title="Copy API Key"
+                >
+                  {copiedKey ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-400">COPIED</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3 text-slate-400" />
+                      <span>COPY</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
