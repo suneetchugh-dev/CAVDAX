@@ -273,7 +273,8 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
   };
 
   // If page does NOT have vertical scroll, do not show scroll cues
-  if (!hasScroll) return null;
+  // Hide scroll cues if no scroll room or if on Profile page
+  if (!hasScroll || activeTab === 'profile') return null;
 
   // Hide exclusively on Wordmark Intro section, reveal on other pages & sections with smooth subtle fade
   const isWordmarkIntro = activeTab === 'landing' && scrollY < (typeof window !== 'undefined' ? window.innerHeight * 0.52 : 420);
