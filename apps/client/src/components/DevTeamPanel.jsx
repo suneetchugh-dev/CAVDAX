@@ -27,7 +27,7 @@ import {
   getAllowedIps, getAuthorizedUsers, fetchClientIp,
   addAuthorizedUser, removeAuthorizedUser,
   addWhitelistedIp, removeWhitelistedIp, getCustomWhitelistedIps,
-  setDevTierOverride, getDevCurrentTier, isHackathonEvaluationMode, setHackathonEvaluationMode
+  setDevTierOverride, getDevCurrentTier, isHackathonEvaluationMode, setHackathonEvaluationMode, setGlobalHackathonMode, fetchGlobalHackathonMode
 } from '../services/devAuth';
 import { playClick, playRejectBuzz, playApprovalChime } from '../utils/soundFx';
 
@@ -108,16 +108,24 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
   const [activeDevTier, setActiveDevTier] = useState(() => getDevCurrentTier());
   const [isHackathonMode, setIsHackathonMode] = useState(() => isHackathonEvaluationMode());
 
-  const handleToggleHackathonMode = () => {
+  useEffect(() => {
+    fetchGlobalHackathonMode().then((enabled) => {
+      setIsHackathonMode(enabled);
+      if (enabled) setActiveDevTier('enterprise');
+    });
+  }, []);
+
+  const handleToggleHackathonMode = async () => {
     playClick();
     const nextState = !isHackathonMode;
     setIsHackathonMode(nextState);
-    setHackathonEvaluationMode(nextState);
-    setActiveDevTier(nextState ? 'enterprise' : 'free');
+    const res = await setGlobalHackathonMode(nextState);
+    const finalState = res.enabled;
+    setActiveDevTier(finalState ? 'enterprise' : 'free');
     setTierToast(
-      nextState
-        ? 'Hackathon Evaluation Mode ENGAGED: Enterprise tier granted to all visitors.'
-        : 'Hackathon Evaluation Mode DISENGAGED: Reverted to standard Free tier enforcement.'
+      finalState
+        ? 'Global Hackathon Mode ENGAGED: Enterprise tier granted to all visitors worldwide.'
+        : 'Global Hackathon Mode DISENGAGED: Reverted to standard Free tier enforcement.'
     );
     setTimeout(() => setTierToast(null), 3500);
   };

@@ -69,6 +69,7 @@ app.use(session({
 // now both read from the same source of truth.
 
 const CAVDAX_TIER = (process.env.CAVDAX_TIER || 'free').toLowerCase();
+let globalHackathonMode = process.env.HACKATHON_MODE === 'true';
 
 const TIER_CONFIG = {
   free: {
@@ -299,6 +300,30 @@ function extractClientIp(req) {
 }
 
 // First-party client IP discovery (eliminates 3rd-party tracker dependencies and ERR_BLOCKED_BY_CLIENT)
+// Global Hackathon Evaluation Mode REST Endpoints
+app.get('/api/system/hackathon-mode', (req, res) => {
+  res.json({
+    enabled: globalHackathonMode,
+    active_tier: globalHackathonMode ? 'enterprise' : CAVDAX_TIER,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/system/hackathon-mode', (req, res) => {
+  const { enabled } = req.body || {};
+  globalHackathonMode = Boolean(enabled);
+  console.log(`[CAVDAX] Global Hackathon Evaluation Mode updated: ${globalHackathonMode ? 'ENABLED (ENTERPRISE UNLOCKED GLOBALLY)' : 'DISABLED'}`);
+  broadcastEvent('HACKATHON_MODE_CHANGED', {
+    enabled: globalHackathonMode,
+    tier: globalHackathonMode ? 'enterprise' : CAVDAX_TIER
+  });
+  res.json({
+    success: true,
+    enabled: globalHackathonMode,
+    active_tier: globalHackathonMode ? 'enterprise' : CAVDAX_TIER
+  });
+});
+
 app.get('/api/client-ip', (req, res) => {
   res.json({ ip: extractClientIp(req) });
 });
@@ -312,8 +337,9 @@ app.get('/api/health', (req, res) => {
     product: 'CAVDAX',
     expansion: 'Contextual Action & Verified Decision Autonomous eXecution',
     falkordb_connected: isFalkorConnected,
-    tier: CAVDAX_TIER,
-    tier_label: activeTier.label,
+    tier: globalHackathonMode ? 'enterprise' : CAVDAX_TIER,
+    tier_label: globalHackathonMode ? 'Enterprise' : activeTier.label,
+    hackathon_mode: globalHackathonMode,
     client_ip: extractClientIp(req),
     timestamp: new Date().toISOString()
   });
@@ -941,7 +967,8 @@ app.get('/api/dev/tier-check', (req, res) => {
  * Real plan tier limits, active graph node counts, and billing cycle calculations.
  */
 app.get('/api/user/quota', async (req, res) => {
-  const tier = (req.query.tier || CAVDAX_TIER || 'free').toLowerCase();
+  const effectiveTier = globalHackathonMode ? 'enterprise' : (req.query.tier || CAVDAX_TIER || 'free').toLowerCase();
+  const tier = effectiveTier;
   const config = TIER_CONFIG[tier] || TIER_CONFIG.free;
 
   let activeNodes = fallbackGraphState.nodes.length;

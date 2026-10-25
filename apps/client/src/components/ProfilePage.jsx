@@ -84,6 +84,16 @@ export default function ProfilePage({
       setIsHackathonMode(Boolean(e.detail?.enabled));
     };
     window.addEventListener('cavdax:hackathon-mode-changed', handleMode);
+
+    fetch('/api/system/hackathon-mode')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.enabled === 'boolean') {
+          setIsHackathonMode(data.enabled);
+        }
+      })
+      .catch(() => {});
+
     return () => window.removeEventListener('cavdax:hackathon-mode-changed', handleMode);
   }, []);
   const [toastMsg, setToastMsg] = useState(null);

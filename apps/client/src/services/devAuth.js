@@ -324,3 +324,57 @@ export function setHackathonEvaluationMode(enabled) {
     window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
   }
 }
+
+// Fetch global Hackathon Evaluation Mode from server
+export async function fetchGlobalHackathonMode() {
+  try {
+    const res = await fetch('/api/system/hackathon-mode');
+    if (res.ok) {
+      const data = await res.json();
+      const isEnabled = Boolean(data?.enabled);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cavdax_hackathon_mode', isEnabled ? 'true' : 'false');
+        if (isEnabled) {
+          localStorage.setItem('cavdax_tier', 'enterprise');
+        }
+        window.dispatchEvent(new CustomEvent('cavdax:hackathon-mode-changed', { detail: { enabled: isEnabled } }));
+        if (isEnabled) {
+          window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'enterprise' } }));
+        }
+      }
+      return isEnabled;
+    }
+  } catch {}
+  return isHackathonEvaluationMode();
+}
+
+// Toggle global Hackathon Evaluation Mode on server
+export async function setGlobalHackathonMode(enabled) {
+  const boolVal = Boolean(enabled);
+  try {
+    const res = await fetch('/api/system/hackathon-mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: boolVal })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const serverEnabled = Boolean(data?.enabled);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cavdax_hackathon_mode', serverEnabled ? 'true' : 'false');
+        if (serverEnabled) {
+          localStorage.setItem('cavdax_tier', 'enterprise');
+        } else {
+          localStorage.setItem('cavdax_tier', 'free');
+        }
+        window.dispatchEvent(new CustomEvent('cavdax:hackathon-mode-changed', { detail: { enabled: serverEnabled } }));
+        window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: serverEnabled ? 'enterprise' : 'free' } }));
+      }
+      return { success: true, enabled: serverEnabled };
+    }
+  } catch (err) {
+    console.error('Failed to update server hackathon mode:', err);
+  }
+  setHackathonEvaluationMode(boolVal);
+  return { success: true, enabled: boolVal };
+}
