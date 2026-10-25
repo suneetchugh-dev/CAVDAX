@@ -80,6 +80,7 @@ CAVDAX's core value scales directly with FalkorDB graph richness — more source
 | Audit log | Unlimited + SIEM export (Splunk / Datadog / CloudWatch) |
 | API rate limit | Custom per-org |
 | Auth | SSO / SAML + per-team scoped tokens |
+| Key Lifecycle Governance | Configurable expiration policies (30d / 60d / 90d / Custom), automated revocation triggers, and webhook audit notifications |
 | FalkorDB hosting | Dedicated instance or self-hosted with SLA |
 | `npx cavdax doctor` | Full health dashboard in Web HUD `/dev` console |
 | Support | Dedicated Slack channel + SLA |
