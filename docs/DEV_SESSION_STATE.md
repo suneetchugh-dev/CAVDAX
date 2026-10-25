@@ -18,6 +18,27 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.13 Latest Session Achievements (October 25, 2026 - Cryptographic MCP Key Generation, Dynamic Currency Switching & Profile Polish)
+
+- **Cryptographic User API Key Infrastructure (`apps/server/index.js`)**:
+  - Implemented 192-bit CSPRNG randomness (`crypto.randomBytes(24).toString('hex')`) formatted as `cvdx_live_<login>_<48hex>`.
+  - Stored SHA-256 key hashes in `userApiKeyRegistry` memory map linked to GitHub identities/sessions.
+  - Upgraded `requireAuth` middleware to dual-authenticate both static `MCP_API_TOKEN` and user-scoped cryptographic bearer tokens.
+  - Added `GET /api/user/api-key` and `POST /api/user/rotate-api-key` endpoints.
+- **Frontend Profile Key Integration & Visual Hierarchy (`ProfilePage.jsx`)**:
+  - Replaced legacy client-side `Math.random()` simulation with real backend endpoints.
+  - Elevated MCP Agent API Key container to match Universal CLI Suite terminal styling (`bg-slate-900 border-slate-800 text-amber-300 font-mono`) with `$ ` terminal prompt prefix.
+  - Streamlined header to clean immediate "Rotate Key" button, removing misleading `Rotation: 90d` badges.
+- **Native Scrolling Preserved & Scrubber Cue Suppressed (`ArchitecturalRailScrubber.jsx`, `ProfilePage.jsx`)**:
+  - Universal rail scrubber bypass (`if (!hasScroll || activeTab === 'profile') return null;`) prevents floating cue overlays on `/profile`.
+  - Suppressed default browser scrollbars with utility classes while keeping 100% native trackpad/wheel vertical scroll active.
+- **Dynamic Localized Currency Switching (`SupportPage.jsx`, `ProfilePage.jsx`)**:
+  - Auto-detected Indian timezones (`Calcutta`/`Kolkata`) defaulting to `INR (₹)`, with explicit segmented toggle for `USD ($)`.
+  - Added dual price mappings and dynamic button labels (`Sponsor (₹339)` vs `Sponsor ($4)`).
+  - Wired bidirectional `cavdax:currency-changed` window events keeping Profile and Support pages synchronized.
+- **Enterprise Key Governance Architecture (`docs/FUTURE_ROADMAP.md`)**:
+  - Documented enterprise-tier automated rotation policies (30/60/90-day intervals, grace periods, webhook alerts).
+
 ## 1.0.12 Latest Session Achievements (October 25, 2026 - Production Light Mode Documentation Showcase & README Expansion)
 
 - **High-DPI Light Mode Screenshot Suite (`assets/screenshots/`)**:
