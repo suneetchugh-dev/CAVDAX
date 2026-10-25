@@ -75,7 +75,7 @@ function loadRazorpayScript() {
   });
 }
 
-export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
+export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
   const [hoveredTier, setHoveredTier] = useState(null);
   const [loadingTier, setLoadingTier] = useState(null);
   const [toast, setToast]             = useState(null); // { ok: bool, text: string }
@@ -133,6 +133,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome }) {
         currency:    orderData.currency,
         name:        'CAVDAX',
         description: `${tier.price} Sponsor — Open-source causal AI gate`,
+        image:       `${window.location.origin}/cavdax-logo.svg`,
         order_id:    orderData.order_id,
         theme:       { color: '#F59E0B' }, // amber-500 — CAVDAX accent
         modal: {

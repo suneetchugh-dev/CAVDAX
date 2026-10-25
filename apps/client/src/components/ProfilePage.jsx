@@ -83,6 +83,10 @@ export default function ProfilePage({
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   const handleRazorpayUpgrade = async () => {
+    if (!user) {
+      showToast("Please connect your GitHub account to proceed — we’ll bind your tier to your verified identity.");
+      return;
+    }
     if (isUpgrading) return;
     setIsUpgrading(true);
 
@@ -124,6 +128,7 @@ export default function ProfilePage({
         currency: orderData.currency,
         name: 'CAVDAX',
         description: 'Pro Autonomous Tier ($4/mo) — Causal Verification Engine',
+        image: `${window.location.origin}/cavdax-logo.svg`,
         order_id: orderData.order_id,
         theme: { color: '#F59E0B' },
         modal: {
@@ -342,7 +347,7 @@ export default function ProfilePage({
     <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none">
       
       {/* ── 1. Top Identity & Account State (Frameless, Spacious, Centered Elegance) ── */}
-      <section className="text-center pt-2 pb-4 sm:pt-4 sm:pb-6 relative flex flex-col items-center">
+      <section className="text-center mt-6 sm:mt-8 md:mt-10 pt-4 pb-4 sm:pb-6 relative flex flex-col items-center">
         {/* Large Concentric Avatar (Centered, Frameless, Tier-Ring Halo) */}
         <div className="relative mb-3 sm:mb-4 flex justify-center">
           <div className="relative">
@@ -361,15 +366,28 @@ export default function ProfilePage({
               )}
             </div>
 
-            {/* Micro Tier Badge Floating Over Bottom-Right of Avatar */}
-            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm">
-              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono">
+            {/* Micro Tier Badge Floating Over Bottom-Right of Avatar (Authentic Tier SVGs) */}
+            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm border border-slate-200/80 dark:border-white/10">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center">
                 {currentTier === 'enterprise' ? (
-                  <span className="text-purple-400 font-black">M</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-purple-500 dark:text-purple-400 shrink-0 transform -rotate-45" aria-hidden="true">
+                    <path d="M3 18h18l-2-11-4.5 4.5L12 4l-2.5 7.5L5 7l-2 11z" fill="currentColor" fillOpacity="0.25" />
+                    <line x1="4" y1="20" x2="20" y2="20" strokeWidth="1.8" />
+                    <circle cx="12" cy="4" r="1.3" fill="currentColor" />
+                  </svg>
                 ) : currentTier === 'pro' ? (
-                  <span className="text-amber-400 font-black">A</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-amber-500 dark:text-amber-400 shrink-0 transform -rotate-45" aria-hidden="true">
+                    <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" fill="currentColor" fillOpacity="0.25" />
+                    <line x1="2" y1="9" x2="22" y2="9" />
+                    <line x1="10" y1="9" x2="12" y2="22" />
+                    <line x1="14" y1="9" x2="12" y2="22" />
+                  </svg>
                 ) : (
-                  <span className="text-slate-400 font-black">C</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-500 dark:text-slate-400 shrink-0" aria-hidden="true">
+                    <path d="M7 8h10" />
+                    <circle cx="12" cy="7" r="2.5" />
+                    <path d="M8 17c0-2 1.8-3 4-3s4 1 4 3" />
+                  </svg>
                 )}
               </div>
             </div>

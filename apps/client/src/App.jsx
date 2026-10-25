@@ -1075,6 +1075,7 @@ export default function App() {
         /* Open Source Sponsorship & Support Page */
         <SubsystemErrorBoundary name="Support & Sponsorship">
           <SupportPage
+            user={githubUser}
             onLaunchConsole={() => handleSelectTab('console')}
             onNavigateHome={() => handleSelectTab('landing')}
           />
