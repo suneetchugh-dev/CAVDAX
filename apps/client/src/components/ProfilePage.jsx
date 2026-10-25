@@ -324,6 +324,7 @@ export default function ProfilePage({
     enterprise: 'ring-2 ring-purple-600/90 shadow-[0_0_12px_rgba(147,51,234,0.35)]',
   };
   const tierRingStyles = ROLE_RING;
+  const userInitial = (user?.name || user?.login || 'C').replace(/^@/, '').trim().charAt(0).toUpperCase() || 'C';
 
   // Calculate dynamic quota metrics based on active tier and real server/local state
   const now = new Date();
