@@ -288,6 +288,8 @@ async function checkNodeLimit(req, res, next) {
 
 // Helper to extract client IP safely
 function extractClientIp(req) {
+  const cfIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'];
+  if (cfIp) return typeof cfIp === 'string' ? cfIp.trim() : cfIp[0];
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) {
     const ip = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0];

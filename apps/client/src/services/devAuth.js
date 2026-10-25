@@ -184,17 +184,18 @@ export function isIpAuthorized(clientIp) {
   const isLocalHost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '[::1]');
 
-  if (import.meta.env.DEV && isLocalHost) {
+  if (isLocalHost) {
     return true;
   }
 
   const allowed = getAllowedIps();
+  // When no explicit IP whitelist restriction is configured, allow verified GitHub developers through
   if (allowed.length === 0) {
-    return Boolean(import.meta.env.DEV);
+    return true;
   }
   const cleanIp = (clientIp || '').trim().toLowerCase();
   if (!cleanIp || cleanIp === 'unknown') {
-    return Boolean(import.meta.env.DEV && isLocalHost);
+    return isLocalHost;
   }
   return allowed.includes(cleanIp) || (isLocalHost && (allowed.includes('localhost') || allowed.includes('127.0.0.1')));
 }

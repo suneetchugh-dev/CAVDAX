@@ -575,16 +575,17 @@ export default function App() {
     }
     return false;
   });
-  const [devAuthEvaluating, setDevAuthEvaluating] = useState(false);
+  const [devAuthEvaluating, setDevAuthEvaluating] = useState(true);
 
   // Evaluate dev access gate (/devteam) based on client IP & authorized GitHub user
   useEffect(() => {
     let isMounted = true;
     async function checkDevAccess() {
+      setDevAuthEvaluating(true);
       try {
         const ip = await fetchClientIp();
         const ipOk = isIpAuthorized(ip);
-        const userOk = isUserAuthorized(githubUser);
+        const userOk = isUserAuthorized(githubUser) || Boolean(getActiveDevSession());
         if (isMounted) {
           setIsDevAuthorized(ipOk && userOk);
           setDevAuthEvaluating(false);
@@ -1045,7 +1046,14 @@ export default function App() {
         </div>
       ) : activeTab === 'devteam' ? (
         /* Protected Dev Team Panel (/devteam) — Multi-Factor Gate + Silent 404 Cloaking */
-        !devAuthEvaluating && isDevAuthorized ? (
+        devAuthEvaluating ? (
+          <div className="flex-1 min-h-[60vh] flex items-center justify-center select-none">
+            <div className="flex items-center gap-2 font-mono text-xs text-slate-500">
+              <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" />
+              <span>Verifying Security Clearance...</span>
+            </div>
+          </div>
+        ) : isDevAuthorized ? (
           <SubsystemErrorBoundary name="Dev Enclave">
             <DevTeamPanel
               githubUser={githubUser}
