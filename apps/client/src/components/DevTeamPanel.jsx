@@ -145,6 +145,15 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     };
   }, []);
 
+  // Unified Non-Displacing Viewport Toast State (CLS = 0)
+  const [panelToast, setPanelToast] = useState(null);
+  const showPanelToast = (msg, duration = 3000) => {
+    setPanelToast(msg);
+    setTimeout(() => {
+      setPanelToast((prev) => (prev === msg ? null : prev));
+    }, duration);
+  };
+
   const handleToggleHackathonMode = async () => {
     playClick();
     const nextState = !isHackathonMode;
@@ -152,23 +161,19 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     const res = await setGlobalHackathonMode(nextState);
     const finalState = res.enabled;
     setActiveDevTier(finalState ? 'enterprise' : 'free');
-    setTierToast(
+    showPanelToast(
       finalState
-        ? 'Global Hackathon Mode ENGAGED: Enterprise tier granted to all visitors worldwide.'
-        : 'Global Hackathon Mode DISENGAGED: Reverted to standard Free tier enforcement.'
+        ? 'Global Hackathon Mode Engaged: Enterprise tier unlocked globally'
+        : 'Global Hackathon Mode Disengaged: Standard tier restored'
     );
-    setTimeout(() => setTierToast(null), 3500);
   };
-  const [tierToast, setTierToast] = useState(null);
 
   // Dynamic user management state
   const [rosterList, setRosterList] = useState(() => getAuthorizedUsers());
   const [newDevHandle, setNewDevHandle] = useState('');
-  const [rosterMsg, setRosterMsg] = useState(null);
 
   const [ipList, setIpList] = useState(() => getAllowedIps());
   const [newIpInput, setNewIpInput] = useState('');
-  const [ipMsg, setIpMsg] = useState(null);
 
   const handleAddIp = async (e) => {
     e?.preventDefault();
@@ -179,13 +184,11 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
       playApprovalChime();
       const updated = await fetchGlobalWhitelistedIps();
       setIpList(updated);
-      setIpMsg(`IP ${clean} whitelisted globally.`);
+      showPanelToast(`IP ${clean} whitelisted globally`);
       setNewIpInput('');
-      setTimeout(() => setIpMsg(null), 3000);
     } else {
       playRejectBuzz();
-      setIpMsg('IP already whitelisted or invalid.');
-      setTimeout(() => setIpMsg(null), 3000);
+      showPanelToast('IP already whitelisted or invalid');
     }
   };
 
@@ -196,11 +199,9 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
       playApprovalChime();
       const updated = await fetchGlobalWhitelistedIps();
       setIpList(updated);
-      setIpMsg(`Current IP ${clientIp} whitelisted globally.`);
-      setTimeout(() => setIpMsg(null), 3000);
+      showPanelToast(`Current IP ${clientIp} whitelisted globally`);
     } else {
-      setIpMsg(`Current IP ${clientIp} is already whitelisted.`);
-      setTimeout(() => setIpMsg(null), 3000);
+      showPanelToast(`Current IP ${clientIp} is already whitelisted`);
     }
   };
 
@@ -209,8 +210,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     playClick();
     const updated = await fetchGlobalWhitelistedIps();
     setIpList(updated);
-    setIpMsg(`Revoked IP ${ip} globally.`);
-    setTimeout(() => setIpMsg(null), 3000);
+    showPanelToast(`Revoked IP ${ip} globally`);
   };
 
   // Scenario injection state
@@ -277,8 +277,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     playClick();
     setDevTierOverride(tierKey);
     setActiveDevTier(tierKey);
-    setTierToast(`Developer Override Activated: ${tierKey.toUpperCase()} Tier`);
-    setTimeout(() => setTierToast(null), 3000);
+    showPanelToast(`Developer override activated: ${tierKey.toUpperCase()} Tier`);
     setInjectionLogs((prev) => [
       {
         id: `log-${Date.now()}`,
@@ -299,12 +298,11 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     if (ok) {
       const updated = await fetchGlobalDevRoster();
       setRosterList(updated);
-      setRosterMsg(`Authorized developer @${clean} globally.`);
+      showPanelToast(`Authorized developer @${clean} globally`);
       setNewDevHandle('');
     } else {
-      setRosterMsg(`Handle already present or invalid.`);
+      showPanelToast('Handle already present or invalid');
     }
-    setTimeout(() => setRosterMsg(null), 3000);
   };
 
   const handleRemoveMember = async (u) => {
@@ -312,8 +310,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     await removeGlobalAuthorizedUser(u);
     const updated = await fetchGlobalDevRoster();
     setRosterList(updated);
-    setRosterMsg(`Revoked authorization for @${u} globally.`);
-    setTimeout(() => setRosterMsg(null), 3000);
+    showPanelToast(`Revoked authorization for @${u} globally`);
   };
 
   const handleTriggerScenario = (scen) => {
@@ -326,6 +323,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
         delete next[scen.id];
         return next;
       });
+      showPanelToast(`Reverted scenario: ${scen.name}`);
       setInjectionLogs((prev) => [
         {
           id: `log-${Date.now()}`,
@@ -343,6 +341,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
           details: scen.payload,
         },
       }));
+      showPanelToast(`Injected scenario: ${scen.name}`);
       setInjectionLogs((prev) => [
         {
           id: `log-${Date.now()}`,
@@ -683,13 +682,6 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             </div>
           </div>
 
-          {tierToast && (
-            <div className="p-3 rounded-xl border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white font-mono text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-slate-900 dark:text-white" />
-              <span>{tierToast}</span>
-            </div>
-          )}
-
           {/* Hackathon Evaluation Master Switch — Strictly Monochromatic */}
           <div className="rounded-xl border border-slate-300 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
@@ -812,12 +804,6 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               <span className="text-[10px] font-mono text-slate-400">{ipList.length} Allowed</span>
             </div>
 
-            {ipMsg && (
-              <div className="p-2.5 rounded-xl border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/5 font-mono text-[11px] text-slate-900 dark:text-white">
-                {ipMsg}
-              </div>
-            )}
-
             {/* Quick-whitelist current device button */}
             {clientIp && clientIp !== 'Detecting...' && !ipList.includes(clientIp.toLowerCase()) && (
               <button
@@ -898,12 +884,6 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               </div>
               <span className="text-[10px] font-mono text-slate-400">{rosterList.length} Authorized</span>
             </div>
-
-            {rosterMsg && (
-              <div className="p-2.5 rounded-xl border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/5 font-mono text-[11px] text-slate-900 dark:text-white">
-                {rosterMsg}
-              </div>
-            )}
 
             {/* Authorize New Member Input */}
             <form onSubmit={handleAddMember} className="flex gap-2">
@@ -1058,6 +1038,23 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Monochromatic Non-Displacing Viewport Toast (Zero Layout Displacement / CLS = 0) */}
+      <AnimatePresence>
+        {panelToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            role="status"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-semibold shadow-2xl border border-slate-800 dark:border-white/20 pointer-events-none"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            <span>{panelToast}</span>
           </motion.div>
         )}
       </AnimatePresence>

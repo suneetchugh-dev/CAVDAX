@@ -66,6 +66,16 @@ Operational constitution, architecture standards, and safety governance for AI c
    - **Onboarding vs Incident Framing**: Zero-state configurations (e.g. 0 ADRs detected) are normal onboarding lifecycle states, NOT incidents or system warnings. Never use amber warning icons (`AlertCircle`) for empty states; use monochromatic neutral glyphs (`FolderGit2`).
    - **Single Monochromatic Onboarding CTA**: Ban multi-card promotional clutter in tenant empty states. Provide a single monochromatic setup action and terminal instructions.
 
+0g. **Mandatory UI Design System MD Enforcement & Zero Displacement Toast Architecture**:
+   - **Mandatory Consultation of `docs/UI_DESIGN_SYSTEM.md`**:
+     Whenever creating, editing, removing, adding, or modifying ANY UI component, panel, modal, badge, button, or layout (specifically including the Developer Enclave `/devteam`, Profile Page, HUD consoles, and tier testing panels), agents MUST first read and dedicatedly adhere to `docs/UI_DESIGN_SYSTEM.md`. No exceptions.
+   - **Strict Ban on In-Panel Displacing Banners and Toasts (Zero CLS Guarantee)**:
+     - Never render confirmation banners, error notices, or dynamic toasts inline inside cards, above lists, or within grid containers where their appearance or disappearance causes vertical layout displacement, jumping, or layout shifts (CLS > 0) of sibling panels, input fields, or buttons.
+     - All operation feedback (e.g. tier toggles, IP whitelisting, roster changes, scenario injection) MUST use non-displacing viewport-fixed overlays (`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none`) or dedicated pre-allocated zero-shift status indicators.
+   - **Monochromatic Purity Standard**:
+     - All developer panels, controls, and notices must strictly use the project's obsidian, slate, zinc, porcelain, and monochrome scale (`border-slate-300 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02]`).
+     - Ban all uncalibrated color fills (purple, cyan, yellow, pink) unless signifying strict, verified semantic operational states (e.g. green for cryptographic verification pass, red for blocked security denial).
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:
