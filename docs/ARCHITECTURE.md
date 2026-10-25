@@ -234,3 +234,33 @@ If the FalkorDB Docker container is offline during a local developer evaluation 
 - `apps/server/falkor_driver.js` automatically catches connection timeouts.
 - Switches instantaneously to the internal `InMemGraphBLAS` engine.
 - Emulates the exact GraphBLAS matrix invalidation and gate returns with identical Cypher responses, guaranteeing **zero runtime crashes or demo blockers**.
+
+
+---
+
+## 7. Enterprise Security Perimeter & Web HUD Multi-Route Topology
+
+### 7.1 Multi-Layer Defense-in-Depth Security
+CAVDAX implements layered security across client, gateway, and kernel boundaries:
+1. **Administrative IP Whitelisting & Dev Authentication (`requireDevAuth`)**:
+   - Administrative endpoints (`POST /api/system/dev-ips`, `/api/system/dev-roster`, `/api/system/hackathon-mode`) are guarded by SHA-256 token verification and IP allowlists.
+2. **Path Traversal Confinement**:
+   - Gated file operations (`apply_code_change`, `/api/ingest`) resolve target paths with `path.resolve` and verify that the target starts with `PROJECT_ROOT`, preventing arbitrary directory access.
+3. **Client IP Spoofing Mitigation**:
+   - Uses remote socket address inspection to prevent proxy header tampering.
+4. **Transport Security Headers**:
+   - Injects `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Strict-Transport-Security`.
+5. **Cryptographic Order Tier Binding**:
+   - Razorpay order creation binds subscription tier attributes in server memory (`pendingBillingOrders`), rejecting mismatched confirmation payloads.
+
+### 7.2 Web HUD Route Topology (9 Operational Surfaces)
+The client application provides 9 dedicated routes:
+- `/` or `/overview`: Architectural Overview, Causal Invalidation Radar, Cytoscape DAG.
+- `/console`: Connected Repository Workspace, git branch mutations, baseline initialization.
+- `/mcp`: Live Model Context Protocol Action Playground and sub-millisecond Cypher query simulator.
+- `/walkthrough`: 4-Act Storyline Stepper guiding evaluators through baseline, commit mutation, enclosed MCP rejection, and revalidation.
+- `/audit`: Immutable compliance ledger displaying all tool execution events.
+- `/team`: Engineering credits and research attribution.
+- `/profile`: Developer quota tracking, plan capability matrix, and active MCP key provisioning.
+- `/support`: Community sponsorship tiers and transparent operational backing breakdown.
+- `/devteam`: Zero-trust administrative diagnostics, dev IP roster, and node state inspection.
