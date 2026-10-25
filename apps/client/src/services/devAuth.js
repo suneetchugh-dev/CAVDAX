@@ -304,3 +304,23 @@ export function devSignOut() {
     sessionStorage.removeItem(SESSION_VAULT_KEY);
   } catch {}
 }
+
+// Hackathon Evaluation Mode Helpers
+export function isHackathonEvaluationMode() {
+  return typeof window !== 'undefined' && localStorage.getItem('cavdax_hackathon_mode') === 'true';
+}
+
+export function setHackathonEvaluationMode(enabled) {
+  if (typeof window === 'undefined') return;
+  if (enabled) {
+    localStorage.setItem('cavdax_hackathon_mode', 'true');
+    localStorage.setItem('cavdax_tier', 'enterprise');
+    window.dispatchEvent(new CustomEvent('cavdax:hackathon-mode-changed', { detail: { enabled: true } }));
+    window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'enterprise' } }));
+  } else {
+    localStorage.removeItem('cavdax_hackathon_mode');
+    localStorage.setItem('cavdax_tier', 'free');
+    window.dispatchEvent(new CustomEvent('cavdax:hackathon-mode-changed', { detail: { enabled: false } }));
+    window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
+  }
+}

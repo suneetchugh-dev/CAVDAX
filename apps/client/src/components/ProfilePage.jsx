@@ -75,6 +75,17 @@ export default function ProfilePage({
   const [isLogoutHovered, setIsLogoutHovered] = useState(false);
   const [isGithubHovered, setIsGithubHovered] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
+  const [isHackathonMode, setIsHackathonMode] = useState(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('cavdax_hackathon_mode') === 'true';
+  });
+
+  useEffect(() => {
+    const handleMode = (e) => {
+      setIsHackathonMode(Boolean(e.detail?.enabled));
+    };
+    window.addEventListener('cavdax:hackathon-mode-changed', handleMode);
+    return () => window.removeEventListener('cavdax:hackathon-mode-changed', handleMode);
+  }, []);
   const [toastMsg, setToastMsg] = useState(null);
   const [apiKeySuffix, setApiKeySuffix] = useState('a8f27e69');
   const [hoveredTierBtn, setHoveredTierBtn] = useState(null);
@@ -227,6 +238,13 @@ export default function ProfilePage({
 
   // Enforce Free Tier for non-dev users if they had a stale paid tier in localStorage
   useEffect(() => {
+    if (isHackathonMode) {
+      if (currentTier !== 'enterprise') {
+        setCurrentTier('enterprise');
+        if (onSelectTier) onSelectTier('enterprise');
+      }
+      return;
+    }
     if (!isAuthorizedDev && currentTier !== 'free') {
       setCurrentTier('free');
       try {
@@ -235,7 +253,7 @@ export default function ProfilePage({
       } catch {}
       if (onSelectTier) onSelectTier('free');
     }
-  }, [isAuthorizedDev, currentTier, onSelectTier]);
+  }, [isHackathonMode, isAuthorizedDev, currentTier, onSelectTier]);
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -593,6 +611,21 @@ export default function ProfilePage({
 
       {/* ── 2. Architecture Tiers & Quotas (Exact 4 Benefits per Tier) ── */}
       <section className="mt-0 mb-0">
+        {/* Hackathon Evaluation Mode Notice Banner */}
+        {isHackathonMode && (
+          <div className="mb-4 p-3.5 sm:p-4 rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-900 dark:text-purple-200 flex items-center justify-between gap-3 text-xs font-mono shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shrink-0" />
+              <span className="font-semibold">
+                Hackathon Evaluation Window Active · Enterprise Capabilities Unlocked for Hackathon Review
+              </span>
+            </div>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 shrink-0">
+              Judges Pass
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-3.5 sm:mb-4">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Subscription Tiers

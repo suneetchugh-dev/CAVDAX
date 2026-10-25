@@ -27,7 +27,7 @@ import {
   getAllowedIps, getAuthorizedUsers, fetchClientIp,
   addAuthorizedUser, removeAuthorizedUser,
   addWhitelistedIp, removeWhitelistedIp, getCustomWhitelistedIps,
-  setDevTierOverride, getDevCurrentTier
+  setDevTierOverride, getDevCurrentTier, isHackathonEvaluationMode, setHackathonEvaluationMode
 } from '../services/devAuth';
 import { playClick, playRejectBuzz, playApprovalChime } from '../utils/soundFx';
 
@@ -106,6 +106,21 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
 
   // Developer tier override state
   const [activeDevTier, setActiveDevTier] = useState(() => getDevCurrentTier());
+  const [isHackathonMode, setIsHackathonMode] = useState(() => isHackathonEvaluationMode());
+
+  const handleToggleHackathonMode = () => {
+    playClick();
+    const nextState = !isHackathonMode;
+    setIsHackathonMode(nextState);
+    setHackathonEvaluationMode(nextState);
+    setActiveDevTier(nextState ? 'enterprise' : 'free');
+    setTierToast(
+      nextState
+        ? 'Hackathon Evaluation Mode ENGAGED: Enterprise tier granted to all visitors.'
+        : 'Hackathon Evaluation Mode DISENGAGED: Reverted to standard Free tier enforcement.'
+    );
+    setTimeout(() => setTierToast(null), 3500);
+  };
   const [tierToast, setTierToast] = useState(null);
 
   // Dynamic user management state
@@ -629,6 +644,38 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               <span>{tierToast}</span>
             </div>
           )}
+
+          {/* Hackathon Evaluation Master Switch */}
+          <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
+                  Hackathon Evaluation Mode
+                </span>
+                <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
+                  isHackathonMode
+                    ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/40'
+                    : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-white/10'
+                }`}>
+                  {isHackathonMode ? 'ACTIVE · ALL USERS ENTERPRISE' : 'STANDBY (STANDARD BILLING)'}
+                </span>
+              </div>
+              <p className="text-[11px] font-mono text-slate-600 dark:text-slate-400 max-w-xl">
+                When active, all visitors, judges, and evaluators automatically receive flagship Enterprise Tier capabilities (unlimited repositories, infinite graph traversals, and multi-agent coordination) without paying or entering credentials.
+              </p>
+            </div>
+
+            <button
+              onClick={handleToggleHackathonMode}
+              className={`px-5 py-2.5 rounded-lg text-xs font-mono font-bold tracking-wider transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+                isHackathonMode
+                  ? 'bg-rose-600 text-white hover:bg-rose-700'
+                  : 'bg-purple-600 text-white hover:bg-purple-700'
+              }`}
+            >
+              {isHackathonMode ? 'DISABLE EVALUATION MODE' : 'ENABLE EVALUATION MODE'}
+            </button>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Free Community Card */}

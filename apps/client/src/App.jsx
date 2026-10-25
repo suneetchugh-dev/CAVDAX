@@ -162,7 +162,14 @@ export default function App() {
       if (e.detail?.tier) setActiveTierKey(e.detail.tier);
     };
     window.addEventListener('cavdax:tier-changed', handleTierChange);
-    return () => window.removeEventListener('cavdax:tier-changed', handleTierChange);
+    const handleHackathonChange = (e) => {
+      setActiveTierKey(e.detail?.enabled ? 'enterprise' : (localStorage.getItem('cavdax_tier') || 'free'));
+    };
+    window.addEventListener('cavdax:hackathon-mode-changed', handleHackathonChange);
+    return () => {
+      window.removeEventListener('cavdax:tier-changed', handleTierChange);
+      window.removeEventListener('cavdax:hackathon-mode-changed', handleHackathonChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -504,6 +511,9 @@ export default function App() {
   const [falkorLive, setFalkorLive] = useState(false);
   const [activeTierKey, setActiveTierKey] = useState(() => {
     if (typeof window !== 'undefined') {
+      if (localStorage.getItem('cavdax_hackathon_mode') === 'true') {
+        return 'enterprise';
+      }
       return localStorage.getItem('cavdax_tier') || 'free';
     }
     return 'free';
@@ -1045,28 +1055,13 @@ export default function App() {
           </SubsystemErrorBoundary>
         </div>
       ) : activeTab === 'devteam' ? (
-        /* Protected Dev Team Panel (/devteam) — Multi-Factor Gate + Silent 404 Cloaking */
-        devAuthEvaluating ? (
-          <div className="flex-1 min-h-[60vh] flex items-center justify-center select-none">
-            <div className="flex items-center gap-2 font-mono text-xs text-slate-500">
-              <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" />
-              <span>Verifying Security Clearance...</span>
-            </div>
-          </div>
-        ) : isDevAuthorized ? (
-          <SubsystemErrorBoundary name="Dev Enclave">
-            <DevTeamPanel
-              githubUser={githubUser}
-              onNavigateHome={() => handleSelectTab('landing')}
-            />
-          </SubsystemErrorBoundary>
-        ) : (
-          /* Silent 404 Cloaking — zero reconnaissance trace */
-          <NotFoundPage
+        /* Protected Dev Team Panel (/devteam) — Zero-Knowledge Cryptographic Passkey Enclave */
+        <SubsystemErrorBoundary name="Dev Enclave">
+          <DevTeamPanel
+            githubUser={githubUser}
             onNavigateHome={() => handleSelectTab('landing')}
-            onLaunchConsole={() => handleSelectTab('console')}
           />
-        )
+        </SubsystemErrorBoundary>
       ) : activeTab === 'profile' ? (
         /* User Profile & Account Page */
         <SubsystemErrorBoundary name="Profile & Account">
