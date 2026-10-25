@@ -49,12 +49,24 @@ const PORT = process.env.PORT || 3000;
 // Trust reverse proxy (Caddy / Cloudflare) so secure session cookies and proto work properly
 app.set('trust proxy', 1);
 
-// Security Headers Middleware (OWASP A05 Hardening)
+// Security Headers Middleware (OWASP A05 & Cloudflare Edge Zero-Trust Hardening)
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com data:; " +
+    "img-src 'self' data: https: blob:; " +
+    "connect-src 'self' https://api.github.com https://lumberjack.razorpay.com https://api.razorpay.com wss: ws:; " +
+    "frame-src https://api.razorpay.com; " +
+    "object-src 'none'; " +
+    "base-uri 'self';"
+  );
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
@@ -78,7 +90,7 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 // ---------------------------------------------------------------------------
 // SESSION MIDDLEWARE
@@ -1440,9 +1452,9 @@ app.get('/api/auth/github', (req, res) => {
   // Also persist the returnTo path so the callback can redirect back to the
   // originating page (e.g. /profile) rather than always landing on /mcp.
   const state = randomBytes(20).toString('hex');
-  const returnTo = req.query.returnTo || '/mcp';
-  // Only allow relative paths — strip any attempt to abuse this for open-redirect
-  const safeReturnTo = /^\/[a-zA-Z0-9\-_/?=&%]*$/.test(returnTo) ? returnTo : '/mcp';
+  const VALID_RETURN_ROUTES = ['/overview', '/console', '/mcp', '/walkthrough', '/audit', '/team', '/profile', '/support', '/devteam'];
+  const candidatePath = (typeof req.query.returnTo === 'string' ? req.query.returnTo.split('?')[0] : '/mcp');
+  const safeReturnTo = VALID_RETURN_ROUTES.includes(candidatePath) ? req.query.returnTo : '/mcp';
   oauthStateStore.set(state, { createdAt: Date.now(), returnTo: safeReturnTo });
 
   const params = new URLSearchParams({
