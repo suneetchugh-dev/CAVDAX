@@ -1575,9 +1575,16 @@ app.get('/api/auth/me', (req, res) => {
  */
 app.get('/api/user/api-key', (req, res) => {
   const sessionUser = req.session?.user;
-  const login = sessionUser?.login || (req.sessionID ? `guest_${req.sessionID.slice(0, 8)}` : 'contributor');
-  const userId = sessionUser?.githubId || req.sessionID || 'anonymous';
-  const tier = sessionUser?.tier || req.session?.tier || 'free';
+  if (!sessionUser) {
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      error: 'Authentication required: Sign in with GitHub to generate and manage API keys'
+    });
+  }
+  const login = sessionUser.login;
+  const userId = sessionUser.githubId;
+  const tier = sessionUser.tier || req.session?.tier || 'free';
 
   // If user already has an active key in session
   if (req.session?.apiKey && req.session?.keyHash) {
@@ -1650,9 +1657,16 @@ const keyRotateLimiter = rateLimit({
 
 app.post('/api/user/rotate-api-key', keyRotateLimiter, (req, res) => {
   const sessionUser = req.session?.user;
-  const login = sessionUser?.login || (req.sessionID ? `guest_${req.sessionID.slice(0, 8)}` : 'contributor');
-  const userId = sessionUser?.githubId || req.sessionID || 'anonymous';
-  const tier = sessionUser?.tier || req.session?.tier || 'free';
+  if (!sessionUser) {
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      error: 'Authentication required: Sign in with GitHub to rotate API keys'
+    });
+  }
+  const login = sessionUser.login;
+  const userId = sessionUser.githubId;
+  const tier = sessionUser.tier || req.session?.tier || 'free';
 
   // Invalidate old key hash if present
   if (req.session?.keyHash) {
