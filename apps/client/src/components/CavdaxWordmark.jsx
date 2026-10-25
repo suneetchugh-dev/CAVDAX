@@ -97,99 +97,139 @@ export default function CavdaxWordmark({
             100% { opacity: 1; transform: scale(1) translateX(0); }
           }
 
-          /* Synchronized 9.0s Line Pulse & Staggered Word-by-Word Cycle */
+          /* Synchronized Line Pulse across all 3 phases (every 4.5s = 3x in 13.5s cycle) */
           .wm-causal-pulse {
             stroke-dasharray: 80 730;
-            animation: wmPulseLoop 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.4s infinite;
+            animation: wmPulseLoop 4.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite;
           }
           @keyframes wmPulseLoop {
-            0%, 10% { stroke-dashoffset: 730; opacity: 0; }
-            20% { opacity: 0.95; filter: drop-shadow(0 0 6px currentColor); }
+            0%, 5% { stroke-dashoffset: 730; opacity: 0; }
+            15% { opacity: 0.95; filter: drop-shadow(0 0 6px currentColor); }
             45% { opacity: 0.95; stroke-dashoffset: 0; filter: drop-shadow(0 0 6px currentColor); }
             55%, 100% { stroke-dashoffset: -80; opacity: 0; }
           }
 
-          /* Staggered Word-by-Word Reveal:
-             Phase 1 (0% - 48%): CAVDAX Full-Form Acronym words appear sequentially, hold together, then exit.
-             Phase 2 (52% - 92%): Explore phrase appears in the exact same container, holds, then exits.
-             Phase 3 (92% - 100%): Breath pause before clean infinite loop restart.
+          /* Staggered Word-by-Word Reveal (13.5s Cycle):
+             Phase 1 (0% - 31%): CAVDAX Full-Form Acronym words appear sequentially, hold, exit.
+             Phase 2 (33% - 64%): Explore the CAVDAX Causal Engine appears sequentially, holds, exits.
+             Phase 3 (66% - 96%): Immunize Your Codebase Against Architectural Rot appears sequentially, holds, exits.
+             Breath Pause (96% - 100%): Subtle breath pause before clean loop restart.
           */
           @keyframes wmWord_0 {
             0% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            4%, 44% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            48%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            3%, 27% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            31%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmWord_1 {
-            0%, 5% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            9%, 44% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            48%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 3% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            6%, 27% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            31%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmWord_2 {
-            0%, 10% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            14%, 44% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            48%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 6% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            9%, 27% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            31%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmWord_3 {
-            0%, 15% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            19%, 44% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            48%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 9% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            12%, 27% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            31%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmWord_4 {
-            0%, 20% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            24%, 44% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            48%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 12% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            15%, 27% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            31%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmWord_5 {
-            0%, 25% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            29%, 44% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            48%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 15% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            18%, 27% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            31%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmWord_6 {
-            0%, 30% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            35%, 44% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            48%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 18% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            22%, 27% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            31%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
 
-          /* Phase 2: Explore the CAVDAX Causal Engine (sequentially appears in the same span container) */
+          /* Phase 2: Explore the CAVDAX Causal Engine */
           @keyframes wmExp_0 {
-            0%, 51% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            55%, 86% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            91%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 33% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            36%, 60% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            64%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmExp_1 {
-            0%, 55% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            59%, 86% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            91%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 36% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            39%, 60% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            64%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmExp_2 {
-            0%, 59% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            64%, 86% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            91%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 39% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            43%, 60% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            64%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmExp_3 {
-            0%, 64% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            69%, 86% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            91%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 43% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            47%, 60% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            64%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
           @keyframes wmExp_4 {
-            0%, 69% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
-            74%, 86% { opacity: 1; transform: translateY(0); filter: blur(0px); }
-            91%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+            0%, 47% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            51%, 60% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            64%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
           }
 
-          .wm-word-0 { opacity: 0; animation: wmWord_0 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-word-1 { opacity: 0; animation: wmWord_1 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-word-2 { opacity: 0; animation: wmWord_2 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-word-3 { opacity: 0; animation: wmWord_3 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-word-4 { opacity: 0; animation: wmWord_4 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-word-5 { opacity: 0; animation: wmWord_5 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-word-6 { opacity: 0; animation: wmWord_6 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          /* Phase 3: Immunize Your Codebase Against Architectural Rot */
+          @keyframes wmImm_0 {
+            0%, 66% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            69%, 92% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            96%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+          }
+          @keyframes wmImm_1 {
+            0%, 69% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            72%, 92% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            96%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+          }
+          @keyframes wmImm_2 {
+            0%, 72% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            76%, 92% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            96%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+          }
+          @keyframes wmImm_3 {
+            0%, 76% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            79%, 92% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            96%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+          }
+          @keyframes wmImm_4 {
+            0%, 79% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            83%, 92% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            96%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+          }
+          @keyframes wmImm_5 {
+            0%, 83% { opacity: 0; transform: translateY(4px); filter: blur(3px); }
+            87%, 92% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            96%, 100% { opacity: 0; transform: translateY(-4px); filter: blur(3px); }
+          }
 
-          .wm-exp-0 { opacity: 0; animation: wmExp_0 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-exp-1 { opacity: 0; animation: wmExp_1 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-exp-2 { opacity: 0; animation: wmExp_2 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-exp-3 { opacity: 0; animation: wmExp_3 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
-          .wm-exp-4 { opacity: 0; animation: wmExp_4 9.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-word-0 { opacity: 0; animation: wmWord_0 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-word-1 { opacity: 0; animation: wmWord_1 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-word-2 { opacity: 0; animation: wmWord_2 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-word-3 { opacity: 0; animation: wmWord_3 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-word-4 { opacity: 0; animation: wmWord_4 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-word-5 { opacity: 0; animation: wmWord_5 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-word-6 { opacity: 0; animation: wmWord_6 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+
+          .wm-exp-0 { opacity: 0; animation: wmExp_0 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-exp-1 { opacity: 0; animation: wmExp_1 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-exp-2 { opacity: 0; animation: wmExp_2 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-exp-3 { opacity: 0; animation: wmExp_3 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-exp-4 { opacity: 0; animation: wmExp_4 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+
+          .wm-imm-0 { opacity: 0; animation: wmImm_0 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-imm-1 { opacity: 0; animation: wmImm_1 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-imm-2 { opacity: 0; animation: wmImm_2 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-imm-3 { opacity: 0; animation: wmImm_3 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-imm-4 { opacity: 0; animation: wmImm_4 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
+          .wm-imm-5 { opacity: 0; animation: wmImm_5 13.5s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite both; }
         `}</style>
 
         {/* 1. CAVDAX Bespoke Architectural Wordmark Typography */}
@@ -274,13 +314,13 @@ export default function CavdaxWordmark({
         </g>
       </svg>
 
-      {/* 3. Staggered Word-by-Word Full-Form Acronym & Sequential Explore Phrase (In the EXACT SAME container) */}
+      {/* 3. Staggered Word-by-Word Subheading Carousel (3 Symmetrical Phases) */}
       <div
         id="wordmark-subtext-container"
-        aria-label="Contextual Action & Verified Decision Autonomous eXecution — Explore the CAVDAX Causal Engine"
+        aria-label="Contextual Action & Verified Decision Autonomous eXecution — Explore the CAVDAX Causal Engine — Immunize Your Codebase Against Architectural Rot"
         className="mt-3 sm:mt-4 relative min-h-[26px] sm:min-h-[28px] w-full flex items-center justify-center font-mono text-[11px] sm:text-xs md:text-[13px] tracking-[0.16em] uppercase select-none pointer-events-none"
       >
-        {/* Phase 1: CAVDAX Acronym Words */}
+        {/* Phase 1: Contextual Action & Verified Decision Autonomous eXecution */}
         <div className="absolute inset-0 flex items-center justify-center gap-x-2 gap-y-1 flex-wrap text-center">
           <span className="wm-word-0 inline-block">
             <span className="font-extrabold text-slate-900 dark:text-white">C</span>
@@ -312,7 +352,7 @@ export default function CavdaxWordmark({
           </span>
         </div>
 
-        {/* Phase 2: Explore the CAVDAX Causal Engine (Appears sequentially in the same span container) */}
+        {/* Phase 2: Explore the CAVDAX Causal Engine */}
         <div className="absolute inset-0 flex items-center justify-center gap-x-2 gap-y-1 flex-wrap text-center">
           <span className="wm-exp-0 inline-block text-slate-600 dark:text-slate-400 font-medium">
             Explore
@@ -328,6 +368,28 @@ export default function CavdaxWordmark({
           </span>
           <span className="wm-exp-4 inline-block text-slate-600 dark:text-slate-400 font-medium">
             Engine
+          </span>
+        </div>
+
+        {/* Phase 3: Immunize Your Codebase Against Architectural Rot */}
+        <div className="absolute inset-0 flex items-center justify-center gap-x-2 gap-y-1 flex-wrap text-center">
+          <span className="wm-imm-0 inline-block font-extrabold text-slate-900 dark:text-white">
+            Immunize
+          </span>
+          <span className="wm-imm-1 inline-block text-slate-600 dark:text-slate-400 font-medium">
+            Your
+          </span>
+          <span className="wm-imm-2 inline-block font-extrabold text-slate-900 dark:text-white">
+            Codebase
+          </span>
+          <span className="wm-imm-3 inline-block text-slate-600 dark:text-slate-400 font-medium">
+            Against
+          </span>
+          <span className="wm-imm-4 inline-block text-slate-600 dark:text-slate-400 font-medium">
+            Architectural
+          </span>
+          <span className="wm-imm-5 inline-block font-extrabold text-slate-900 dark:text-white">
+            Rot
           </span>
         </div>
       </div>

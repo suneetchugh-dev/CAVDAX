@@ -1195,8 +1195,8 @@ export default function App() {
                   )}
                   <span className="font-semibold truncate max-w-[150px] sm:max-w-[210px]">
                     {activeWorkspace === "demo"
-                      ? "Demo: TokenAuth v1 → OAuth2"
-                      : (selectedConnectedRepo?.name || "Connected Repo")}
+                      ? "Workspace: Demo Sandbox"
+                      : (`Repo: ${selectedConnectedRepo?.name || "Connected"}`)}
                   </span>
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isWorkspaceDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -1308,19 +1308,18 @@ export default function App() {
                 )}
               </div>
 
-              {/* Guided Tour Launcher */}
-              <Tooltip content="Tour Guide" shortcut="T" position="bottom">
-                <button
-                  onClick={() => {
-                    playClick();
-                    handleSelectTab("mcp");
-                  }}
-                  className="group px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 text-[11px] font-mono transition-all flex items-center gap-1.5 tactile-btn"
-                >
-                  <McpCableConnectionSvg className="text-white dark:text-slate-950" />
-                  <span>Connect MCP</span>
-                </button>
-              </Tooltip>
+              {/* Upfront Connect Repo Action (Eliminating Mystery Meat Navigation) */}
+              <button
+                onClick={() => {
+                  playClick();
+                  setIsConnectRepoModalOpen(true);
+                }}
+                className="h-7 px-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 text-xs font-mono font-medium flex items-center gap-1.5 transition-all cursor-pointer shadow-xs tactile-btn"
+                title="Connect a live GitHub repository"
+              >
+                <Plus className="w-3.5 h-3.5 text-white dark:text-slate-950 shrink-0" />
+                <span>Connect Repo</span>
+              </button>
             </div>
           </div>
 

@@ -947,7 +947,6 @@ export default function LandingPage({
         </h1>
 
 
-
         {/* Symmetrical Dual Action CTA Buttons (Section 15 Standard, Optical Right Icons) */}
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 sm:mb-14">
