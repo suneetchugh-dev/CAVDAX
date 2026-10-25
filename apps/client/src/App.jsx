@@ -27,6 +27,7 @@ import SupportPage from './components/SupportPage.jsx';
 import SubsystemErrorBoundary from './components/SubsystemErrorBoundary.jsx';
 import ConnectRepoModal from './components/ConnectRepoModal.jsx';
 import ConnectedRepoWorkspace from './components/ConnectedRepoWorkspace.jsx';
+import SEOHead from './components/SEOHead.jsx';
 import { playClick, playRejectBuzz, playApprovalChime, initGlobalClickSound } from './utils/soundFx.js';
 
 // Helper function to resolve tab from clean URL path with fallback to hash
@@ -1045,6 +1046,9 @@ export default function App() {
     <div className={`w-full flex flex-col bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-200 select-none ${
       activeTab === 'console' ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
+      {/* Dynamic Company-Grade SEO Metadata Manager */}
+      <SEOHead activeTab={activeTab} />
+
       {/* 0. Silky Smooth Kinetic Splash Loader */}
       <SplashLoader isDarkTheme={isDarkTheme} />
 
