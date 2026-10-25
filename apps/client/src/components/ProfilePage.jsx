@@ -709,7 +709,7 @@ export default function ProfilePage({
           </div>
 
           {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
-          <div className={`p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-3.5 xl:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
+          <div className={`p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
             currentTier === 'pro'
               ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
               : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
@@ -863,7 +863,11 @@ export default function ProfilePage({
                 </span>
               </div>
               {isAuthorizedDev ? (
-                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-800 dark:text-purple-300 border border-purple-500/40 dark:border-purple-500/30">
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                  currentTier === 'enterprise'
+                    ? 'bg-purple-500/25 text-purple-200 border-purple-400/40'
+                    : 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/40 dark:border-purple-500/30'
+                }`}>
                   DEV ACCESS
                 </span>
               ) : (
