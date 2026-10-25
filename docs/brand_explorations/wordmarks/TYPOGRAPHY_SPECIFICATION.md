@@ -10,45 +10,45 @@ This document provides a technical anatomy, geometric breakdown, and design just
 
 | Archetype ID | Classification | Visual Philosophy / Inspiration | Key Filename |
 | :--- | :--- | :--- | :--- |
-| **Tech 01** | Cyber-Architectural Squircle | SpaceX, Microgramma, Aerospace HUD telemetry | [`wordmark-tech-01-squircle-aerospace.jpg`](./wordmark-tech-01-squircle-aerospace.jpg) |
-| **Tech 02** | Developer Terminal Monospace | JetBrains Mono, Berkeley Mono, Hacker IDE | [`wordmark-tech-02-terminal-monospace.jpg`](./wordmark-tech-02-terminal-monospace.jpg) |
-| **Tech 03** | Chamfered Cryptographic Hardware | Hardware Security Modules (HSM), Quantum Crypto | [`wordmark-tech-03-chamfered-cryptographic.jpg`](./wordmark-tech-03-chamfered-cryptographic.jpg) |
-| **Tech 04** | Stencil Graph Matrix | Modular compiler AST, Silicon micro-circuitry | [`wordmark-tech-04-stencil-graph-matrix.jpg`](./wordmark-tech-04-stencil-graph-matrix.jpg) |
-| **Tech 05** | Silicon PCB Micro-Trace | Semiconductor lithography, Integrated circuits | [`wordmark-tech-05-silicon-pcb-microtrace.jpg`](./wordmark-tech-05-silicon-pcb-microtrace.jpg) |
-| **Tech 06** | Crypto Verification Monospace | Zero-Knowledge proofs, Signal protocol, Immutable log | [`wordmark-tech-06-crypto-verification-monospace.jpg`](./wordmark-tech-06-crypto-verification-monospace.jpg) |
-| **Tech 07** | Quantum Vector Lattice | GraphBLAS sparse linear algebra, Quantum states | [`wordmark-tech-07-quantum-vector-lattice.jpg`](./wordmark-tech-07-quantum-vector-lattice.jpg) |
-| **Tech 08** | Military-Grade Telemetry HUD | Defense telemetry, Target lock reticle, Flight compute | [`wordmark-tech-08-telemetry-hud.jpg`](./wordmark-tech-08-telemetry-hud.jpg) |
-| **Tech 09** | Brutalist Matrix Monolith | Teenage Engineering OP-1, Dieter Rams Braun hardware | [`wordmark-tech-09-matrix-monolith.jpg`](./wordmark-tech-09-matrix-monolith.jpg) |
-| **Tech 10** | Deep AST Compiler Syntax Token | Rust AST, LLVM IR, Formal lambda verification | [`wordmark-tech-10-compiler-ast-syntax.jpg`](./wordmark-tech-10-compiler-ast-syntax.jpg) |
-| **Tech 11** | Laser-Etched Silicon Dual-Rail | Apple Silicon Neural Engine, Nanometer tracks | [`wordmark-tech-11-laser-etched-monolith.jpg`](./wordmark-tech-11-laser-etched-monolith.jpg) |
-| **Tech 12** | Cypherpunk Bytecode Kernel | Linux kernel headers, GDB disassembler, Hex dumps | [`wordmark-tech-12-cypherpunk-kernel.jpg`](./wordmark-tech-12-cypherpunk-kernel.jpg) |
-| **Tech 13** | Radar Vector Oscilloscope | Naval sonar, Radar sweep azimuth, Active range lock | [`wordmark-tech-13-radar-oscilloscope.jpg`](./wordmark-tech-13-radar-oscilloscope.jpg) |
-| **Tech 14** | Quantum Phase-Gate Circuit | Topological quantum computing, Hadamard/Phase gates | [`wordmark-tech-14-quantum-phase-gate.jpg`](./wordmark-tech-14-quantum-phase-gate.jpg) |
-| **Tech 15** | Cyber-Chassis Server Blade | 1U rack-mount datacenter accelerator, Cooling voids | [`wordmark-tech-15-cyber-chassis-blade.jpg`](./wordmark-tech-15-cyber-chassis-blade.jpg) |
-| **Tech 16** | RISC-V Micro-Op Architecture | Out-of-order CPU pipeline, instruction register latches | [`wordmark-tech-16-riscv-micro-op.jpg`](./wordmark-tech-16-riscv-micro-op.jpg) |
-| **Tech 17** | Silicon Photonics Waveguide | Integrated Mach-Zehnder optical bus, low-loss bends | [`wordmark-tech-17-photonics-waveguide.jpg`](./wordmark-tech-17-photonics-waveguide.jpg) |
-| **Tech 18** | Spacecraft Inertial Telemetry | NASA/JPL 3-axis gyroscope, RCS thruster vectors | [`wordmark-tech-18-spacecraft-inertial-gyro.jpg`](./wordmark-tech-18-spacecraft-inertial-gyro.jpg) |
-| **Tech 19** | Cryptographic Merkle-DAG Block | Block hashes, Merkle tree root verification chain | [`wordmark-tech-19-merkle-dag-matrix.jpg`](./wordmark-tech-19-merkle-dag-matrix.jpg) |
-| **Tech 20** | Neuromorphic Spiking Mesh | SNN integrate-and-fire action potential spike train | [`wordmark-tech-20-neuromorphic-spiking-mesh.jpg`](./wordmark-tech-20-neuromorphic-spiking-mesh.jpg) |
-| **Tech 21** | Precision Monoline Apex | Linear, Vercel, Figma - surgical Swiss architectural grotesk | [`wordmark-tech-21-linear-precision-apex.jpg`](./wordmark-tech-21-linear-precision-apex.jpg) |
-| **Tech 22** | Monolithic Chiseled Chamfer | Palantir, Anduril - sovereign defense chiseled tungsten geometry | [`wordmark-tech-22-palantir-chiseled-chamfer.jpg`](./wordmark-tech-22-palantir-chiseled-chamfer.jpg) |
-| **Tech 23** | Extended Horizon Geometry | DeepMind, OpenAI - expansive 120% horizontal foundation gravity | [`wordmark-tech-23-deepmind-extended-horizon.jpg`](./wordmark-tech-23-deepmind-extended-horizon.jpg) |
-| **Tech 24** | Iconic Continuous Monoline | NASA Worm, Teenage Engineering - unforgettable continuous tubular flow | [`wordmark-tech-24-nasa-worm-continuous-monoline.jpg`](./wordmark-tech-24-nasa-worm-continuous-monoline.jpg) |
-| **Tech 25** | Grounded Chiseled Modernist | Stripe Press, Supabase - monumental flat apex trapezoid authority | [`wordmark-tech-25-stripe-grounded-modernist.jpg`](./wordmark-tech-25-stripe-grounded-modernist.jpg) |
-| **Tech 26** | Anisotropic Laser-Hatched Titanium | Milled aerospace titanium, 45° optical grating laser hatch pattern | [`wordmark-tech-26-anisotropic-hatch-monolith.jpg`](./wordmark-tech-26-anisotropic-hatch-monolith.jpg) |
-| **Tech 27** | Voronoi Topological Graph Shards | Computational geometry, faceted Voronoi polygon shards, zero slime | [`wordmark-tech-27-voronoi-graph-shards.jpg`](./wordmark-tech-27-voronoi-graph-shards.jpg) |
-| **Tech 28** | Geometric Chevron Guilloché | Structural concrete mass with internal forward chevron optical acceleration | [`wordmark-tech-28-chevron-guilloche-matrix.jpg`](./wordmark-tech-28-chevron-guilloche-matrix.jpg) |
-| **Tech 29** | Hexagonal Honeycomb Exoskeleton | Aerospace beryllium bulkhead, 60°/120° isometric core weight voids | [`wordmark-tech-29-hex-honeycomb-monolith.jpg`](./wordmark-tech-29-hex-honeycomb-monolith.jpg) |
-| **Tech 30** | Stepped Brutalist Ziggurat | Tectonic data fortress, 90° stepped orthogonal terraces, pure brutalism | [`wordmark-tech-30-stepped-brutalist-ziggurat.jpg`](./wordmark-tech-30-stepped-brutalist-ziggurat.jpg) |
-| **Tech 31** | Kinetico-Moiré Interference Lattice | Optical moiré wave fringes, 45°/15° dual-raster laser grating, completely solid | [`wordmark-tech-31-moire-interference-lattice.jpg`](./wordmark-tech-31-moire-interference-lattice.jpg) |
-| **Tech 32** | Topographical Causal Iso-Contour Monolith | Geodesic LiDAR elevation isobars, 5-axis CNC contour milling, dense monolithic slabs | [`wordmark-tech-32-topographic-isocontour-monolith.jpg`](./wordmark-tech-32-topographic-isocontour-monolith.jpg) |
-| **Tech 33** | Guilloché Banknote Security Weave | Sovereign currency mathematical sine-rosettes, unforgeable passport security threads | [`wordmark-tech-33-guilloche-banknote-security-weave.jpg`](./wordmark-tech-33-guilloche-banknote-security-weave.jpg) |
-| **Tech 34** | Quantum Braided Anyon Topological Braid | Non-Abelian anyon world-line multi-rail braids, topological knot proof, unbreakable | [`wordmark-tech-34-quantum-braided-anyon-topology.jpg`](./wordmark-tech-34-quantum-braided-anyon-topology.jpg) |
-| **Tech 35** | Brutalist Architectural Rebar Truss | Industrial Pratt/Warren truss web, high-tensile steel rebar matrix, riveted gusset joints | [`wordmark-tech-35-brutalist-rebar-truss.jpg`](./wordmark-tech-35-brutalist-rebar-truss.jpg) |
-| **Classic 01** | Swiss Neo-Grotesk Architectural | Söhne, Neue Haas Grotesk, Linear & OpenAI standard | [`wordmark-classic-01-swiss-neo-grotesk.jpg`](./wordmark-classic-01-swiss-neo-grotesk.jpg) |
-| **Classic 02** | Extended Geometric Tech Sans | Space Grotesk Bold, PP Neue Montreal Extended | [`wordmark-classic-02-extended-geometric-sans.jpg`](./wordmark-classic-02-extended-geometric-sans.jpg) |
-| **Classic 03** | Chiseled Precision Modernist | Stripe Press, Pentagram, Mathematical angles | [`wordmark-classic-03-chiseled-precision-modernist.jpg`](./wordmark-classic-03-chiseled-precision-modernist.jpg) |
-| **Classic 04** | Institutional Minimalist Monoline | Apple Pro Display, Helvetica Now Black | [`wordmark-classic-04-institutional-minimalist-monoline.jpg`](./wordmark-classic-04-institutional-minimalist-monoline.jpg) |
+| **Tech 01** | Cyber-Architectural Squircle | SpaceX, Microgramma, Aerospace HUD telemetry | [`wordmark-tech-01-squircle-aerospace.jpg`](./tech-developer/wordmark-tech-01-squircle-aerospace.jpg) |
+| **Tech 02** | Developer Terminal Monospace | JetBrains Mono, Berkeley Mono, Hacker IDE | [`wordmark-tech-02-terminal-monospace.jpg`](./tech-developer/wordmark-tech-02-terminal-monospace.jpg) |
+| **Tech 03** | Chamfered Cryptographic Hardware | Hardware Security Modules (HSM), Quantum Crypto | [`wordmark-tech-03-chamfered-cryptographic.jpg`](./tech-developer/wordmark-tech-03-chamfered-cryptographic.jpg) |
+| **Tech 04** | Stencil Graph Matrix | Modular compiler AST, Silicon micro-circuitry | [`wordmark-tech-04-stencil-graph-matrix.jpg`](./tech-developer/wordmark-tech-04-stencil-graph-matrix.jpg) |
+| **Tech 05** | Silicon PCB Micro-Trace | Semiconductor lithography, Integrated circuits | [`wordmark-tech-05-silicon-pcb-microtrace.jpg`](./tech-developer/wordmark-tech-05-silicon-pcb-microtrace.jpg) |
+| **Tech 06** | Crypto Verification Monospace | Zero-Knowledge proofs, Signal protocol, Immutable log | [`wordmark-tech-06-crypto-verification-monospace.jpg`](./tech-developer/wordmark-tech-06-crypto-verification-monospace.jpg) |
+| **Tech 07** | Quantum Vector Lattice | GraphBLAS sparse linear algebra, Quantum states | [`wordmark-tech-07-quantum-vector-lattice.jpg`](./tech-developer/wordmark-tech-07-quantum-vector-lattice.jpg) |
+| **Tech 08** | Military-Grade Telemetry HUD | Defense telemetry, Target lock reticle, Flight compute | [`wordmark-tech-08-telemetry-hud.jpg`](./tech-developer/wordmark-tech-08-telemetry-hud.jpg) |
+| **Tech 09** | Brutalist Matrix Monolith | Teenage Engineering OP-1, Dieter Rams Braun hardware | [`wordmark-tech-09-matrix-monolith.jpg`](./tech-developer/wordmark-tech-09-matrix-monolith.jpg) |
+| **Tech 10** | Deep AST Compiler Syntax Token | Rust AST, LLVM IR, Formal lambda verification | [`wordmark-tech-10-compiler-ast-syntax.jpg`](./tech-developer/wordmark-tech-10-compiler-ast-syntax.jpg) |
+| **Tech 11** | Laser-Etched Silicon Dual-Rail | Apple Silicon Neural Engine, Nanometer tracks | [`wordmark-tech-11-laser-etched-monolith.jpg`](./tech-developer/wordmark-tech-11-laser-etched-monolith.jpg) |
+| **Tech 12** | Cypherpunk Bytecode Kernel | Linux kernel headers, GDB disassembler, Hex dumps | [`wordmark-tech-12-cypherpunk-kernel.jpg`](./tech-developer/wordmark-tech-12-cypherpunk-kernel.jpg) |
+| **Tech 13** | Radar Vector Oscilloscope | Naval sonar, Radar sweep azimuth, Active range lock | [`wordmark-tech-13-radar-oscilloscope.jpg`](./tech-developer/wordmark-tech-13-radar-oscilloscope.jpg) |
+| **Tech 14** | Quantum Phase-Gate Circuit | Topological quantum computing, Hadamard/Phase gates | [`wordmark-tech-14-quantum-phase-gate.jpg`](./tech-developer/wordmark-tech-14-quantum-phase-gate.jpg) |
+| **Tech 15** | Cyber-Chassis Server Blade | 1U rack-mount datacenter accelerator, Cooling voids | [`wordmark-tech-15-cyber-chassis-blade.jpg`](./tech-developer/wordmark-tech-15-cyber-chassis-blade.jpg) |
+| **Tech 16** | RISC-V Micro-Op Architecture | Out-of-order CPU pipeline, instruction register latches | [`wordmark-tech-16-riscv-micro-op.jpg`](./tech-developer/wordmark-tech-16-riscv-micro-op.jpg) |
+| **Tech 17** | Silicon Photonics Waveguide | Integrated Mach-Zehnder optical bus, low-loss bends | [`wordmark-tech-17-photonics-waveguide.jpg`](./tech-developer/wordmark-tech-17-photonics-waveguide.jpg) |
+| **Tech 18** | Spacecraft Inertial Telemetry | NASA/JPL 3-axis gyroscope, RCS thruster vectors | [`wordmark-tech-18-spacecraft-inertial-gyro.jpg`](./tech-developer/wordmark-tech-18-spacecraft-inertial-gyro.jpg) |
+| **Tech 19** | Cryptographic Merkle-DAG Block | Block hashes, Merkle tree root verification chain | [`wordmark-tech-19-merkle-dag-matrix.jpg`](./tech-developer/wordmark-tech-19-merkle-dag-matrix.jpg) |
+| **Tech 20** | Neuromorphic Spiking Mesh | SNN integrate-and-fire action potential spike train | [`wordmark-tech-20-neuromorphic-spiking-mesh.jpg`](./tech-developer/wordmark-tech-20-neuromorphic-spiking-mesh.jpg) |
+| **Tech 21** | Precision Monoline Apex | Linear, Vercel, Figma - surgical Swiss architectural grotesk | [`wordmark-tech-21-linear-precision-apex.jpg`](./tech-developer/wordmark-tech-21-linear-precision-apex.jpg) |
+| **Tech 22** | Monolithic Chiseled Chamfer | Palantir, Anduril - sovereign defense chiseled tungsten geometry | [`wordmark-tech-22-palantir-chiseled-chamfer.jpg`](./tech-developer/wordmark-tech-22-palantir-chiseled-chamfer.jpg) |
+| **Tech 23** | Extended Horizon Geometry | DeepMind, OpenAI - expansive 120% horizontal foundation gravity | [`wordmark-tech-23-deepmind-extended-horizon.jpg`](./tech-developer/wordmark-tech-23-deepmind-extended-horizon.jpg) |
+| **Tech 24** | Iconic Continuous Monoline | NASA Worm, Teenage Engineering - unforgettable continuous tubular flow | [`wordmark-tech-24-nasa-worm-continuous-monoline.jpg`](./tech-developer/wordmark-tech-24-nasa-worm-continuous-monoline.jpg) |
+| **Tech 25** | Grounded Chiseled Modernist | Stripe Press, Supabase - monumental flat apex trapezoid authority | [`wordmark-tech-25-stripe-grounded-modernist.jpg`](./tech-developer/wordmark-tech-25-stripe-grounded-modernist.jpg) |
+| **Tech 26** | Anisotropic Laser-Hatched Titanium | Milled aerospace titanium, 45° optical grating laser hatch pattern | [`wordmark-tech-26-anisotropic-hatch-monolith.jpg`](./tech-developer/wordmark-tech-26-anisotropic-hatch-monolith.jpg) |
+| **Tech 27** | Voronoi Topological Graph Shards | Computational geometry, faceted Voronoi polygon shards, zero slime | [`wordmark-tech-27-voronoi-graph-shards.jpg`](./tech-developer/wordmark-tech-27-voronoi-graph-shards.jpg) |
+| **Tech 28** | Geometric Chevron Guilloché | Structural concrete mass with internal forward chevron optical acceleration | [`wordmark-tech-28-chevron-guilloche-matrix.jpg`](./tech-developer/wordmark-tech-28-chevron-guilloche-matrix.jpg) |
+| **Tech 29** | Hexagonal Honeycomb Exoskeleton | Aerospace beryllium bulkhead, 60°/120° isometric core weight voids | [`wordmark-tech-29-hex-honeycomb-monolith.jpg`](./tech-developer/wordmark-tech-29-hex-honeycomb-monolith.jpg) |
+| **Tech 30** | Stepped Brutalist Ziggurat | Tectonic data fortress, 90° stepped orthogonal terraces, pure brutalism | [`wordmark-tech-30-stepped-brutalist-ziggurat.jpg`](./tech-developer/wordmark-tech-30-stepped-brutalist-ziggurat.jpg) |
+| **Tech 31** | Kinetico-Moiré Interference Lattice | Optical moiré wave fringes, 45°/15° dual-raster laser grating, completely solid | [`wordmark-tech-31-moire-interference-lattice.jpg`](./tech-developer/wordmark-tech-31-moire-interference-lattice.jpg) |
+| **Tech 32** | Topographical Causal Iso-Contour Monolith | Geodesic LiDAR elevation isobars, 5-axis CNC contour milling, dense monolithic slabs | [`wordmark-tech-32-topographic-isocontour-monolith.jpg`](./tech-developer/wordmark-tech-32-topographic-isocontour-monolith.jpg) |
+| **Tech 33** | Guilloché Banknote Security Weave | Sovereign currency mathematical sine-rosettes, unforgeable passport security threads | [`wordmark-tech-33-guilloche-banknote-security-weave.jpg`](./tech-developer/wordmark-tech-33-guilloche-banknote-security-weave.jpg) |
+| **Tech 34** | Quantum Braided Anyon Topological Braid | Non-Abelian anyon world-line multi-rail braids, topological knot proof, unbreakable | [`wordmark-tech-34-quantum-braided-anyon-topology.jpg`](./tech-developer/wordmark-tech-34-quantum-braided-anyon-topology.jpg) |
+| **Tech 35** | Brutalist Architectural Rebar Truss | Industrial Pratt/Warren truss web, high-tensile steel rebar matrix, riveted gusset joints | [`wordmark-tech-35-brutalist-rebar-truss.jpg`](./tech-developer/wordmark-tech-35-brutalist-rebar-truss.jpg) |
+| **Classic 01** | Swiss Neo-Grotesk Architectural | Söhne, Neue Haas Grotesk, Linear & OpenAI standard | [`wordmark-classic-01-swiss-neo-grotesk.jpg`](./classic-modernist/wordmark-classic-01-swiss-neo-grotesk.jpg) |
+| **Classic 02** | Extended Geometric Tech Sans | Space Grotesk Bold, PP Neue Montreal Extended | [`wordmark-classic-02-extended-geometric-sans.jpg`](./classic-modernist/wordmark-classic-02-extended-geometric-sans.jpg) |
+| **Classic 03** | Chiseled Precision Modernist | Stripe Press, Pentagram, Mathematical angles | [`wordmark-classic-03-chiseled-precision-modernist.jpg`](./classic-modernist/wordmark-classic-03-chiseled-precision-modernist.jpg) |
+| **Classic 04** | Institutional Minimalist Monoline | Apple Pro Display, Helvetica Now Black | [`wordmark-classic-04-institutional-minimalist-monoline.jpg`](./classic-modernist/wordmark-classic-04-institutional-minimalist-monoline.jpg) |
 | **Classic 05** | Micro-Node Precision Vector | Linear / Vercel calibrated micro-nodes (50% reduction) | [`wordmark-classic-05-micro-node-precision.jpg`](./-Semi-Selected-/wordmark-classic-05-micro-node-precision.jpg) |
 | **Classic 06** | Hollow Reticle Aperture | Verification rings, zero-knowledge targeting aperture gates | [`wordmark-classic-06-hollow-reticle-aperture.jpg`](./-Semi-Selected-/wordmark-classic-06-hollow-reticle-aperture.jpg) |
 | **Classic 07** | Minimal Vector Hairline | Stripe Press / Pentagram extreme typographic-to-hairline contrast | [`wordmark-classic-07-minimal-vector-hairline.jpg`](./-Semi-Selected-/wordmark-classic-07-minimal-vector-hairline.jpg) |
@@ -59,7 +59,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ## Detailed Typographic Anatomy
 
 ### Tech 01: Cyber-Architectural Squircle
-* **Asset**: [`wordmark-tech-01-squircle-aerospace.jpg`](./wordmark-tech-01-squircle-aerospace.jpg)
+* **Asset**: [`wordmark-tech-01-squircle-aerospace.jpg`](./tech-developer/wordmark-tech-01-squircle-aerospace.jpg)
 * **Inspiration**: Eurostile Bold Extended, Microgramma, aerospace heads-up displays (SpaceX Dragon GUI).
 * **Glyph Anatomy**:
   - `C` & `D`: Rounded-square (`squircle`) outer curvature with flat top/bottom planes, maximizing horizontal stability.
@@ -72,7 +72,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 02: Developer Terminal Monospace
-* **Asset**: [`wordmark-tech-02-terminal-monospace.jpg`](./wordmark-tech-02-terminal-monospace.jpg)
+* **Asset**: [`wordmark-tech-02-terminal-monospace.jpg`](./tech-developer/wordmark-tech-02-terminal-monospace.jpg)
 * **Inspiration**: JetBrains Mono, Berkeley Mono, high-contrast hacker terminal interfaces.
 * **Glyph Anatomy**:
   - Strict fixed-width optical grid; each letter occupies an identical bounding box.
@@ -85,7 +85,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 03: Chamfered Cryptographic Hardware
-* **Asset**: [`wordmark-tech-03-chamfered-cryptographic.jpg`](./wordmark-tech-03-chamfered-cryptographic.jpg)
+* **Asset**: [`wordmark-tech-03-chamfered-cryptographic.jpg`](./tech-developer/wordmark-tech-03-chamfered-cryptographic.jpg)
 * **Inspiration**: Hardware Security Modules (HSM), cryptographic cold-storage devices, stealth geometric facets.
 * **Glyph Anatomy**:
   - Eliminates smooth organic curves entirely.
@@ -97,7 +97,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 04: Stencil Graph Matrix
-* **Asset**: [`wordmark-tech-04-stencil-graph-matrix.jpg`](./wordmark-tech-04-stencil-graph-matrix.jpg)
+* **Asset**: [`wordmark-tech-04-stencil-graph-matrix.jpg`](./tech-developer/wordmark-tech-04-stencil-graph-matrix.jpg)
 * **Inspiration**: Abstract Syntax Tree (AST) compilation passes, modular micro-circuitry, industrial stencil printing.
 * **Glyph Anatomy**:
   - Surgical stencil cutouts (apertures) pierce through the continuous stems of `C`, `A`, `D`, and `X`.
@@ -108,7 +108,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 05: Silicon PCB Micro-Trace
-* **Asset**: [`wordmark-tech-05-silicon-pcb-microtrace.jpg`](./wordmark-tech-05-silicon-pcb-microtrace.jpg)
+* **Asset**: [`wordmark-tech-05-silicon-pcb-microtrace.jpg`](./tech-developer/wordmark-tech-05-silicon-pcb-microtrace.jpg)
 * **Inspiration**: Semiconductor silicon lithography, printed circuit board (PCB) trace routing, VLSI microarchitecture.
 * **Glyph Anatomy**:
   - 45-degree angle trace routing at all letter corners.
@@ -120,7 +120,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 06: Cryptographic Verification Monospace
-* **Asset**: [`wordmark-tech-06-crypto-verification-monospace.jpg`](./wordmark-tech-06-crypto-verification-monospace.jpg)
+* **Asset**: [`wordmark-tech-06-crypto-verification-monospace.jpg`](./tech-developer/wordmark-tech-06-crypto-verification-monospace.jpg)
 * **Inspiration**: Zero-Knowledge proof protocols, Signal cryptographic ratchet, Bitcoin transaction hash typography.
 * **Glyph Anatomy**:
   - Fixed-pitch block geometry with horizontal terminal bracket tabs.
@@ -132,7 +132,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 07: Quantum Vector Lattice
-* **Asset**: [`wordmark-tech-07-quantum-vector-lattice.jpg`](./wordmark-tech-07-quantum-vector-lattice.jpg)
+* **Asset**: [`wordmark-tech-07-quantum-vector-lattice.jpg`](./tech-developer/wordmark-tech-07-quantum-vector-lattice.jpg)
 * **Inspiration**: GraphBLAS sparse matrix linear algebra, quantum computing state vectors, high-frequency autonomous trading networks.
 * **Glyph Anatomy**:
   - Letters constructed from intersecting vector rays with surgical 60°/120° lattice vertices.
@@ -144,7 +144,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 08: Military-Grade Telemetry HUD
-* **Asset**: [`wordmark-tech-08-telemetry-hud.jpg`](./wordmark-tech-08-telemetry-hud.jpg)
+* **Asset**: [`wordmark-tech-08-telemetry-hud.jpg`](./tech-developer/wordmark-tech-08-telemetry-hud.jpg)
 * **Inspiration**: Aerospace flight computers, military-grade telemetry HUDs, tactical navigation reticles.
 * **Glyph Anatomy**:
   - Chiseled 60°/120° chamfers on `C` and `D`.
@@ -157,7 +157,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 09: Brutalist Matrix Monolith
-* **Asset**: [`wordmark-tech-09-matrix-monolith.jpg`](./wordmark-tech-09-matrix-monolith.jpg)
+* **Asset**: [`wordmark-tech-09-matrix-monolith.jpg`](./tech-developer/wordmark-tech-09-matrix-monolith.jpg)
 * **Inspiration**: Teenage Engineering OP-1, Dieter Rams Braun hardware, Nothing OS dot-matrix industrialism.
 * **Glyph Anatomy**:
   - Heavy 26px rounded orthogonal modular letterforms built on a strict physical hardware grid.
@@ -168,7 +168,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 10: Deep AST Compiler Syntax Token
-* **Asset**: [`wordmark-tech-10-compiler-ast-syntax.jpg`](./wordmark-tech-10-compiler-ast-syntax.jpg)
+* **Asset**: [`wordmark-tech-10-compiler-ast-syntax.jpg`](./tech-developer/wordmark-tech-10-compiler-ast-syntax.jpg)
 * **Inspiration**: Rust compiler AST, LLVM IR, formal lambda calculus, Haskell proof systems.
 * **Glyph Anatomy**:
   - Wordmark framed by syntactic code brackets: `[ CAVDAX ]`.
@@ -180,7 +180,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 11: Laser-Etched Silicon Dual-Rail
-* **Asset**: [`wordmark-tech-11-laser-etched-monolith.jpg`](./wordmark-tech-11-laser-etched-monolith.jpg)
+* **Asset**: [`wordmark-tech-11-laser-etched-monolith.jpg`](./tech-developer/wordmark-tech-11-laser-etched-monolith.jpg)
 * **Inspiration**: Apple Silicon M-series Neural Engine die lithography, laser-etched black titanium hardware.
 * **Glyph Anatomy**:
   - Every letterform is composed of dual hairline parallel tracks (6px outer rail + 3px inner rail).
@@ -191,7 +191,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 12: Cypherpunk Bytecode Kernel
-* **Asset**: [`wordmark-tech-12-cypherpunk-kernel.jpg`](./wordmark-tech-12-cypherpunk-kernel.jpg)
+* **Asset**: [`wordmark-tech-12-cypherpunk-kernel.jpg`](./tech-developer/wordmark-tech-12-cypherpunk-kernel.jpg)
 * **Inspiration**: Linux kernel source headers, GDB disassemblers, real hexadecimal memory dumps.
 * **Glyph Anatomy**:
   - Real ASCII hex byte annotations positioned above each letter: `0x43 [C]  0x41 [A]  0x56 [V]  0x44 [D]  0x41 [A]  0x58 [X]`.
@@ -202,7 +202,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 13: Radar Vector Oscilloscope
-* **Asset**: [`wordmark-tech-13-radar-oscilloscope.jpg`](./wordmark-tech-13-radar-oscilloscope.jpg)
+* **Asset**: [`wordmark-tech-13-radar-oscilloscope.jpg`](./tech-developer/wordmark-tech-13-radar-oscilloscope.jpg)
 * **Inspiration**: Naval sonar, radar sweep displays, vector oscilloscopes, telemetry sensors.
 * **Glyph Anatomy**:
   - Concentric radar sweep range rings frame the typography.
@@ -214,7 +214,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 14: Quantum Phase-Gate Circuit
-* **Asset**: [`wordmark-tech-14-quantum-phase-gate.jpg`](./wordmark-tech-14-quantum-phase-gate.jpg)
+* **Asset**: [`wordmark-tech-14-quantum-phase-gate.jpg`](./tech-developer/wordmark-tech-14-quantum-phase-gate.jpg)
 * **Inspiration**: Topological quantum computing, quantum circuit schematics, Hadamard/Phase gate matrix blocks.
 * **Glyph Anatomy**:
   - Topological vector tracks with bold 24px strokes.
@@ -225,7 +225,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 15: Cyber-Chassis Server Blade
-* **Asset**: [`wordmark-tech-15-cyber-chassis-blade.jpg`](./wordmark-tech-15-cyber-chassis-blade.jpg)
+* **Asset**: [`wordmark-tech-15-cyber-chassis-blade.jpg`](./tech-developer/wordmark-tech-15-cyber-chassis-blade.jpg)
 * **Inspiration**: 1U rack-mount datacenter server blades, high-density GPU accelerators, industrial server chassis.
 * **Glyph Anatomy**:
   - Heavy 26px chiseled geometry with internal cooling ventilation void cutouts in `C` and `D`.
@@ -236,7 +236,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 16: RISC-V Silicon Micro-Op Architecture
-* **Asset**: [`wordmark-tech-16-riscv-micro-op.jpg`](./wordmark-tech-16-riscv-micro-op.jpg)
+* **Asset**: [`wordmark-tech-16-riscv-micro-op.jpg`](./tech-developer/wordmark-tech-16-riscv-micro-op.jpg)
 * **Inspiration**: RISC-V RV64GC microarchitecture, superscalar out-of-order CPU instruction pipelining.
 * **Glyph Anatomy**:
   - Segmented micro-op instruction stroke divisions (sub-micron breaks simulating instruction cycle slices).
@@ -247,7 +247,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 17: Silicon Photonics Waveguide
-* **Asset**: [`wordmark-tech-17-photonics-waveguide.jpg`](./wordmark-tech-17-photonics-waveguide.jpg)
+* **Asset**: [`wordmark-tech-17-photonics-waveguide.jpg`](./tech-developer/wordmark-tech-17-photonics-waveguide.jpg)
 * **Inspiration**: Integrated silicon photonics, Mach-Zehnder optical interferometers, DWDM fiber-optic waveguides.
 * **Glyph Anatomy**:
   - Continuous low-loss waveguide curves with rounded terminal end-couplers.
@@ -258,7 +258,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 18: Spacecraft Inertial Telemetry
-* **Asset**: [`wordmark-tech-18-spacecraft-inertial-gyro.jpg`](./wordmark-tech-18-spacecraft-inertial-gyro.jpg)
+* **Asset**: [`wordmark-tech-18-spacecraft-inertial-gyro.jpg`](./tech-developer/wordmark-tech-18-spacecraft-inertial-gyro.jpg)
 * **Inspiration**: NASA / JPL deep space telemetry, James Webb Space Telescope attitude control, 3-axis inertial gyroscopes.
 * **Glyph Anatomy**:
   - `C` features reaction-control nozzle terminal pins.
@@ -270,7 +270,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 19: Cryptographic Merkle-DAG Block Matrix
-* **Asset**: [`wordmark-tech-19-merkle-dag-matrix.jpg`](./wordmark-tech-19-merkle-dag-matrix.jpg)
+* **Asset**: [`wordmark-tech-19-merkle-dag-matrix.jpg`](./tech-developer/wordmark-tech-19-merkle-dag-matrix.jpg)
 * **Inspiration**: Merkle Trees, Git commit DAGs, Blake3 cryptographic hash chains, zero-knowledge proofs.
 * **Glyph Anatomy**:
   - Solid rectangular block tags mark cryptographic block anchor points at `C`, `A`, `D`, and `X`.
@@ -281,7 +281,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 20: Bio-Cybernetic Neuromorphic Spiking Mesh
-* **Asset**: [`wordmark-tech-20-neuromorphic-spiking-mesh.jpg`](./wordmark-tech-20-neuromorphic-spiking-mesh.jpg)
+* **Asset**: [`wordmark-tech-20-neuromorphic-spiking-mesh.jpg`](./tech-developer/wordmark-tech-20-neuromorphic-spiking-mesh.jpg)
 * **Inspiration**: Neuromorphic spiking neural networks (Intel Loihi, BrainScaleS), synaptic plasticity (STDP).
 * **Glyph Anatomy**:
   - Synaptic junction nodes (solid circular terminal weights) anchor the endpoints and vertices of each letterform.
@@ -292,7 +292,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 21: Precision Monoline Apex (The Linear / Vercel Tier)
-* **Asset**: [`wordmark-tech-21-linear-precision-apex.jpg`](./wordmark-tech-21-linear-precision-apex.jpg)
+* **Asset**: [`wordmark-tech-21-linear-precision-apex.jpg`](./tech-developer/wordmark-tech-21-linear-precision-apex.jpg)
 * **Inspiration**: Linear app identity, Vercel design system, Figma. Pure modern developer tool perfection.
 * **Glyph Anatomy**:
   - `C` and `D`: 90-degree flat vertical shear cuts on stroke terminals, circular architectural geometry.
@@ -304,7 +304,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 22: Monolithic Chiseled Chamfer (The Palantir / Anduril Tier)
-* **Asset**: [`wordmark-tech-22-palantir-chiseled-chamfer.jpg`](./wordmark-tech-22-palantir-chiseled-chamfer.jpg)
+* **Asset**: [`wordmark-tech-22-palantir-chiseled-chamfer.jpg`](./tech-developer/wordmark-tech-22-palantir-chiseled-chamfer.jpg)
 * **Inspiration**: Palantir, Anduril Industries, Shield AI. Sovereign high-assurance autonomous power.
 * **Glyph Anatomy**:
   - `C` and `D`: 45-degree internal chiseled facet chamfers, eliminating organic softness.
@@ -316,7 +316,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 23: Extended Horizon Geometry (The DeepMind / OpenAI Tier)
-* **Asset**: [`wordmark-tech-23-deepmind-extended-horizon.jpg`](./wordmark-tech-23-deepmind-extended-horizon.jpg)
+* **Asset**: [`wordmark-tech-23-deepmind-extended-horizon.jpg`](./tech-developer/wordmark-tech-23-deepmind-extended-horizon.jpg)
 * **Inspiration**: Google DeepMind, OpenAI, Scale AI. Frontier AI foundation model authority.
 * **Glyph Anatomy**:
   - 120% horizontal expansion; wide architectural stance that anchors the wordmark with massive visual gravity.
@@ -329,7 +329,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 24: Iconic Continuous Monoline (The NASA Worm / Teenage Engineering Tier)
-* **Asset**: [`wordmark-tech-24-nasa-worm-continuous-monoline.jpg`](./wordmark-tech-24-nasa-worm-continuous-monoline.jpg)
+* **Asset**: [`wordmark-tech-24-nasa-worm-continuous-monoline.jpg`](./tech-developer/wordmark-tech-24-nasa-worm-continuous-monoline.jpg)
 * **Inspiration**: The 1975 NASA Worm logotype by Danne & Blackburn, Teenage Engineering OP-1, Dieter Rams Braun hardware.
 * **Glyph Anatomy**:
   - Continuous, uniform-thickness tubular strokes with perfectly rounded capsule end-caps.
@@ -341,7 +341,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 25: Grounded Chiseled Modernist (The Stripe Press / Supabase Tier)
-* **Asset**: [`wordmark-tech-25-stripe-grounded-modernist.jpg`](./wordmark-tech-25-stripe-grounded-modernist.jpg)
+* **Asset**: [`wordmark-tech-25-stripe-grounded-modernist.jpg`](./tech-developer/wordmark-tech-25-stripe-grounded-modernist.jpg)
 * **Inspiration**: Stripe Press, Supabase, Datadog. Deep developer trust, timeless prestige.
 * **Glyph Anatomy**:
   - `A`: Flat trapezoidal top apex (eliminates pointed needle for monumental stability).
@@ -353,7 +353,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 26: Anisotropic Laser-Hatched Titanium (Milled Titanium Standard)
-* **Asset**: [`wordmark-tech-26-anisotropic-hatch-monolith.jpg`](./wordmark-tech-26-anisotropic-hatch-monolith.jpg)
+* **Asset**: [`wordmark-tech-26-anisotropic-hatch-monolith.jpg`](./tech-developer/wordmark-tech-26-anisotropic-hatch-monolith.jpg)
 * **Inspiration**: CNC-milled aerospace titanium, semiconductor wafer stepper lithography, concrete cast facets.
 * **Glyph Anatomy**:
   - Exterior silhouette: Chiseled, solid monolithic planes with razor-sharp 90° shear edges. Zero rounded caps.
@@ -364,7 +364,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 27: Voronoi Topological Graph Shards (Computational Geometry Standard)
-* **Asset**: [`wordmark-tech-27-voronoi-graph-shards.jpg`](./wordmark-tech-27-voronoi-graph-shards.jpg)
+* **Asset**: [`wordmark-tech-27-voronoi-graph-shards.jpg`](./tech-developer/wordmark-tech-27-voronoi-graph-shards.jpg)
 * **Inspiration**: Computational geometry, GraphBLAS partition matrices, concrete tectonic plates, armor plating.
 * **Glyph Anatomy**:
   - Each letter is segmented into precision-faceted polygonal Voronoi shards separated by crisp 2.5px negative-space fracture seams.
@@ -375,7 +375,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 28: Geometric Chevron Guilloché (Optical Acceleration Standard)
-* **Asset**: [`wordmark-tech-28-chevron-guilloche-matrix.jpg`](./wordmark-tech-28-chevron-guilloche-matrix.jpg)
+* **Asset**: [`wordmark-tech-28-chevron-guilloche-matrix.jpg`](./tech-developer/wordmark-tech-28-chevron-guilloche-matrix.jpg)
 * **Inspiration**: High-frequency algorithmic execution pipelines, supersonic wind-tunnel shock diamonds, currency guilloché security.
 * **Glyph Anatomy**:
   - Heavy 26px solid concrete letterforms with square orthogonal cut terminals.
@@ -386,7 +386,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 29: Hexagonal Honeycomb Exoskeleton (Aerospace Bulkhead Standard)
-* **Asset**: [`wordmark-tech-29-hex-honeycomb-monolith.jpg`](./wordmark-tech-29-hex-honeycomb-monolith.jpg)
+* **Asset**: [`wordmark-tech-29-hex-honeycomb-monolith.jpg`](./tech-developer/wordmark-tech-29-hex-honeycomb-monolith.jpg)
 * **Inspiration**: James Webb Space Telescope beryllium mirrors, rocket engine thrust puck bulkheads, composite carbon-fiber monocoques.
 * **Glyph Anatomy**:
   - Heavy 28px square-shear letter silhouettes.
@@ -397,7 +397,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 30: Stepped Brutalist Ziggurat (Tectonic Data Fortress Standard)
-* **Asset**: [`wordmark-tech-30-stepped-brutalist-ziggurat.jpg`](./wordmark-tech-30-stepped-brutalist-ziggurat.jpg)
+* **Asset**: [`wordmark-tech-30-stepped-brutalist-ziggurat.jpg`](./tech-developer/wordmark-tech-30-stepped-brutalist-ziggurat.jpg)
 * **Inspiration**: Brutalist concrete architecture, stepped pyramid ziggurats, high-performance server cooling heat sinks.
 * **Glyph Anatomy**:
   - Diagonal strokes and curved bowls are completely replaced with 90° stepped micro-terraces.
@@ -409,7 +409,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 31: Kinetico-Moiré Interference Lattice (Kinetico-Optical Resonance Standard)
-* **Asset**: [`wordmark-tech-31-moire-interference-lattice.jpg`](./wordmark-tech-31-moire-interference-lattice.jpg)
+* **Asset**: [`wordmark-tech-31-moire-interference-lattice.jpg`](./tech-developer/wordmark-tech-31-moire-interference-lattice.jpg)
 * **Inspiration**: Op-Art computational wave interference, moiré optical diffraction gratings, holographic semiconductor lithography.
 * **Glyph Anatomy**:
   - Closed, solid monolithic outer contours ensuring 100% structural unity (never fragmented or broken).
@@ -421,7 +421,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 32: Topographical Causal Iso-Contour Monolith (LiDAR Geodesic Elevation Standard)
-* **Asset**: [`wordmark-tech-32-topographic-isocontour-monolith.jpg`](./wordmark-tech-32-topographic-isocontour-monolith.jpg)
+* **Asset**: [`wordmark-tech-32-topographic-isocontour-monolith.jpg`](./tech-developer/wordmark-tech-32-topographic-isocontour-monolith.jpg)
 * **Inspiration**: Aerial LiDAR elevation contours, cartographic GIS geodesic curves, precision 5-axis CNC toolpaths.
 * **Glyph Anatomy**:
   - Monolithic slab letterforms filled with mathematically smooth concentric elevation isobars.
@@ -433,7 +433,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 33: Guilloché Banknote Security Weave (Sovereign Cryptographic Passport Standard)
-* **Asset**: [`wordmark-tech-33-guilloche-banknote-security-weave.jpg`](./wordmark-tech-33-guilloche-banknote-security-weave.jpg)
+* **Asset**: [`wordmark-tech-33-guilloche-banknote-security-weave.jpg`](./tech-developer/wordmark-tech-33-guilloche-banknote-security-weave.jpg)
 * **Inspiration**: Central bank sovereign currencies, banknote steel intaglio engraving, cryptographic high-security certificates.
 * **Glyph Anatomy**:
   - Complex mathematical spirograph guilloché rose-curves and harmonic sine-cosine weaves enclosed within monumental glyph bones.
@@ -445,7 +445,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 34: Quantum Braided Anyon Topological Braid (Non-Abelian World-Line Braid Standard)
-* **Asset**: [`wordmark-tech-34-quantum-braided-anyon-topology.jpg`](./wordmark-tech-34-quantum-braided-anyon-topology.jpg)
+* **Asset**: [`wordmark-tech-34-quantum-braided-anyon-topology.jpg`](./tech-developer/wordmark-tech-34-quantum-braided-anyon-topology.jpg)
 * **Inspiration**: Topological quantum computing, non-Abelian anyon particle braiding in 2D space-time, multi-rail data highways.
 * **Glyph Anatomy**:
   - Interlaced multi-strand micro-ribbons that weave over and under each other within the structural stems of each letter.
@@ -457,7 +457,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 35: Brutalist Architectural Rebar Truss (Vierendeel Structural Girder Standard)
-* **Asset**: [`wordmark-tech-35-brutalist-rebar-truss.jpg`](./wordmark-tech-35-brutalist-rebar-truss.jpg)
+* **Asset**: [`wordmark-tech-35-brutalist-rebar-truss.jpg`](./tech-developer/wordmark-tech-35-brutalist-rebar-truss.jpg)
 * **Inspiration**: High-tensile civil engineering trusses (Warren & Pratt), heavy aerospace launch gantries, brutalist steel rebar matrices.
 * **Glyph Anatomy**:
   - Monumental structural perimeter frames braced internally by diagonal rebar cross-trusses.
@@ -469,7 +469,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 36: Penrose Aperiodic Quasicrystal Matrix (Infinite Non-Periodic DAG Standard)
-* **Asset**: [`wordmark-tech-36-penrose-aperiodic-quasicrystal.jpg`](./wordmark-tech-36-penrose-aperiodic-quasicrystal.jpg)
+* **Asset**: [`wordmark-tech-36-penrose-aperiodic-quasicrystal.jpg`](./tech-developer/wordmark-tech-36-penrose-aperiodic-quasicrystal.jpg)
 * **Inspiration**: Sir Roger Penrose's non-repeating 5-fold aperiodic tilings, quasicrystal crystallography, infinite state-space DAG traversals.
 * **Glyph Anatomy**:
   - Closed monolithic letter contours containing a dense geometric matrix of rhombuses and kite-and-dart shapes obeying golden-ratio (φ ≈ 1.618) angles (72° / 36°).
@@ -481,7 +481,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 37: Chladni Cymatics Resonant Waveform (Acoustic Frequency Nodal Matrix Standard)
-* **Asset**: [`wordmark-tech-37-chladni-cymatics-resonant-waveform.jpg`](./wordmark-tech-37-chladni-cymatics-resonant-waveform.jpg)
+* **Asset**: [`wordmark-tech-37-chladni-cymatics-resonant-waveform.jpg`](./tech-developer/wordmark-tech-37-chladni-cymatics-resonant-waveform.jpg)
 * **Inspiration**: Ernst Chladni acoustic resonance plates, standing wave vibrational physics, ultrasonic structural testing.
 * **Glyph Anatomy**:
   - Monolithic architectural letterforms filled with concentric hyperbolic resonance curves and concentric nodal circles.
@@ -493,7 +493,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 38: Discrete Cellular Automata Matrix (Rule 30 Chaotic & Conway Glider Standard)
-* **Asset**: [`wordmark-tech-38-discrete-cellular-automata-matrix.jpg`](./wordmark-tech-38-discrete-cellular-automata-matrix.jpg)
+* **Asset**: [`wordmark-tech-38-discrete-cellular-automata-matrix.jpg`](./tech-developer/wordmark-tech-38-discrete-cellular-automata-matrix.jpg)
 * **Inspiration**: Stephen Wolfram's Rule 30 elementary cellular automata, John Conway's Game of Life, discrete deterministic computation.
 * **Glyph Anatomy**:
   - Rigid orthogonal grid structure populated with discrete binary cell states and triangular pyramid propagation cascades.
@@ -505,7 +505,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 39: Anisotropic Carbon-Fiber Monocoque Weave (Aerospace 2x2 Carbon Twill Standard)
-* **Asset**: [`wordmark-tech-39-anisotropic-carbon-monocoque-weave.jpg`](./wordmark-tech-39-anisotropic-carbon-monocoque-weave.jpg)
+* **Asset**: [`wordmark-tech-39-anisotropic-carbon-monocoque-weave.jpg`](./tech-developer/wordmark-tech-39-anisotropic-carbon-monocoque-weave.jpg)
 * **Inspiration**: Formula 1 carbon monocoques, supersonic aerospace airframes, high-modulus pre-preg carbon fiber twill weaves.
 * **Glyph Anatomy**:
   - Interlocking 2x2 carbon twill block matrix with alternating diagonal micro-hatching (+45° and -45° tensile ribs).
@@ -517,7 +517,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Tech 40: Fresnel Zone Plate & SAR Phase Array (Coherent Synthetic Aperture Optics Standard)
-* **Asset**: [`wordmark-tech-40-fresnel-zone-plate-radar-aperture.jpg`](./wordmark-tech-40-fresnel-zone-plate-radar-aperture.jpg)
+* **Asset**: [`wordmark-tech-40-fresnel-zone-plate-radar-aperture.jpg`](./tech-developer/wordmark-tech-40-fresnel-zone-plate-radar-aperture.jpg)
 * **Inspiration**: Optical Fresnel phase zone plates, synthetic aperture radar (SAR) phase-delay matrices, holographic beam-steering arrays.
 * **Glyph Anatomy**:
   - Alternating concentric phase-reversal zone rings and quad-axis graticule alignment crosshairs etched into the letters.
@@ -531,7 +531,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ## 3. Classic Modernist Archetypes
 
 ### Classic 01: Swiss Neo-Grotesk Architectural
-* **Asset**: [`wordmark-classic-01-swiss-neo-grotesk.jpg`](./wordmark-classic-01-swiss-neo-grotesk.jpg)
+* **Asset**: [`wordmark-classic-01-swiss-neo-grotesk.jpg`](./classic-modernist/wordmark-classic-01-swiss-neo-grotesk.jpg)
 * **Inspiration**: Söhne, Neue Haas Grotesk, Linear identity, OpenAI brand standard.
 * **Glyph Anatomy**:
   - 90-degree flat vertical shear cuts on `C` and `D` terminals (strictly zero rounded sausage pill-caps).
@@ -543,7 +543,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Classic 02: Extended Geometric Tech Sans
-* **Asset**: [`wordmark-classic-02-extended-geometric-sans.jpg`](./wordmark-classic-02-extended-geometric-sans.jpg)
+* **Asset**: [`wordmark-classic-02-extended-geometric-sans.jpg`](./classic-modernist/wordmark-classic-02-extended-geometric-sans.jpg)
 * **Inspiration**: Space Grotesk Bold, PP Neue Montreal Extended, Raycast & Scale AI.
 * **Glyph Anatomy**:
   - Distinct extended horizontal stance grounding the wordmark with massive visual stability.
@@ -555,7 +555,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Classic 03: Chiseled Precision Modernist
-* **Asset**: [`wordmark-classic-03-chiseled-precision-modernist.jpg`](./wordmark-classic-03-chiseled-precision-modernist.jpg)
+* **Asset**: [`wordmark-classic-03-chiseled-precision-modernist.jpg`](./classic-modernist/wordmark-classic-03-chiseled-precision-modernist.jpg)
 * **Inspiration**: Stripe Press, Pentagram tech identities, NASA architectural graphics.
 * **Glyph Anatomy**:
   - Diagonal strokes of `A`, `V`, and `X` share identical parallel mathematical angles.
@@ -567,7 +567,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Classic 04: Institutional Minimalist Monoline
-* **Asset**: [`wordmark-classic-04-institutional-minimalist-monoline.jpg`](./wordmark-classic-04-institutional-minimalist-monoline.jpg)
+* **Asset**: [`wordmark-classic-04-institutional-minimalist-monoline.jpg`](./classic-modernist/wordmark-classic-04-institutional-minimalist-monoline.jpg)
 * **Inspiration**: Helvetica Now Black, SF Pro Display, Akzidenz-Grotesk.
 * **Glyph Anatomy**:
   - Heavy, authoritative weight with pure optical neutrality.
@@ -630,7 +630,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ## 4. Iron Man Aerospace & Stark Arc Reactor Archetypes
 
 ### Iron Man 01: Mark VII Hot-Rod Crimson & Gold Titanium Armor Chassis
-* **Asset**: [`wordmark-ironman-01-stark-mark-armor-chassis.jpg`](./wordmark-ironman-01-stark-mark-armor-chassis.jpg)
+* **Asset**: [`wordmark-ironman-01-stark-mark-armor-chassis.jpg`](./iron-man/wordmark-ironman-01-stark-mark-armor-chassis.jpg)
 * **Inspiration**: Tony Stark Mark VII / Mark 85 armor plating, aerospace titanium-gold alloy, Stark Industries military-spec R&D enclaves.
 * **Glyph Anatomy**:
   - Aggressive 14-degree forward aerodynamic rake (`skewX(-14deg)`) expressing hyper-velocity causal computation.
@@ -646,7 +646,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 02: Stealth Ops Titanium & Ice-Blue Arc Reactor
-* **Asset**: [`wordmark-ironman-02-stealth-palladium-reactor.jpg`](./wordmark-ironman-02-stealth-palladium-reactor.jpg)
+* **Asset**: [`wordmark-ironman-02-stealth-palladium-reactor.jpg`](./iron-man/wordmark-ironman-02-stealth-palladium-reactor.jpg)
 * **Inspiration**: Mark XV Sneaky, Mark XVI Nightclub tactical stealth armor, War Machine tactical obsidian matte chassis, palladium-core containment.
 * **Glyph Anatomy**:
   - Monochromatic brushed tungsten & aerospace titanium gradient (`#FFFFFF` to `#94A3B8` to `#1E293B`).
@@ -661,7 +661,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 03: Master System & Executive Presentation Board
-* **Asset**: [`wordmark-ironman-03-master-system-board.jpg`](./wordmark-ironman-03-master-system-board.jpg)
+* **Asset**: [`wordmark-ironman-03-master-system-board.jpg`](./iron-man/wordmark-ironman-03-master-system-board.jpg)
 * **Inspiration**: Stark Industries executive presentation dossiers, DARPA advanced technology briefing boards.
 * **Glyph Anatomy**:
   - Side-by-side comparative architectural breakdown of both Mark VII Armor and Stealth Ops wordmarks.
@@ -672,7 +672,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 
 
 ### Iron Man 08: Pure Title Typography (Mark VII Armor Finish)
-* **Asset**: [`wordmark-ironman-08-pure-typography-gold-crimson.jpg`](./wordmark-ironman-08-pure-typography-gold-crimson.jpg)
+* **Asset**: [`wordmark-ironman-08-pure-typography-gold-crimson.jpg`](./iron-man/wordmark-ironman-08-pure-typography-gold-crimson.jpg)
 * **Inspiration**: Pure, unadorned Iron Man movie & comic title lettering. Strictly typography only: zero symbols, zero logos, zero arc reactor cores, zero underline vectors.
 * **Glyph Anatomy**:
   - Pure `CAVDAX` architectural block forms with 45-degree corner chamfers.
@@ -684,7 +684,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 09: Pure Stark White Typography (Minimalist Architecture)
-* **Asset**: [`wordmark-ironman-09-pure-typography-monochrome-stark.jpg`](./wordmark-ironman-09-pure-typography-monochrome-stark.jpg)
+* **Asset**: [`wordmark-ironman-09-pure-typography-monochrome-stark.jpg`](./iron-man/wordmark-ironman-09-pure-typography-monochrome-stark.jpg)
 * **Inspiration**: Minimalist Stark Industries aerospace laboratory branding; high-contrast monolithic white letterforms on obsidian.
 * **Glyph Anatomy**:
   - Pristine solid white-to-silver gradient (`#FFFFFF` to `#CBD5E1`).
@@ -696,7 +696,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 10: Pure Brushed Titanium Typography (Aerospace Finish)
-* **Asset**: [`wordmark-ironman-10-pure-typography-brushed-titanium.jpg`](./wordmark-ironman-10-pure-typography-brushed-titanium.jpg)
+* **Asset**: [`wordmark-ironman-10-pure-typography-brushed-titanium.jpg`](./iron-man/wordmark-ironman-10-pure-typography-brushed-titanium.jpg)
 * **Inspiration**: Milled aerospace titanium chassis plate from Stark flight testing armor.
 * **Glyph Anatomy**:
   - Multi-tone brushed titanium gradient (`#FFFFFF` to `#94A3B8` to `#1E293B`) with crisp slate-black bevel outline.
@@ -707,7 +707,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 11: Pure Typography Comparative Master Board
-* **Asset**: [`wordmark-ironman-11-pure-typography-presentation-board.jpg`](./wordmark-ironman-11-pure-typography-presentation-board.jpg)
+* **Asset**: [`wordmark-ironman-11-pure-typography-presentation-board.jpg`](./iron-man/wordmark-ironman-11-pure-typography-presentation-board.jpg)
 * **Inspiration**: Clean design agency presentation dossier comparing the three pure typography finishes side by side.
 * **Glyph Anatomy**:
   - Displays Mark VII Gold & Crimson, Pure Stark White, and Brushed Titanium together for instant evaluation.
@@ -716,7 +716,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 
 
 ### Iron Man 12: Smooth C & D Pure Typography (Mark VII Armor Finish)
-* **Asset**: [`wordmark-ironman-12-smooth-pure-gold-crimson.jpg`](./wordmark-ironman-12-smooth-pure-gold-crimson.jpg)
+* **Asset**: [`wordmark-ironman-12-smooth-pure-gold-crimson.jpg`](./iron-man/wordmark-ironman-12-smooth-pure-gold-crimson.jpg)
 * **Inspiration**: Refined Iron Man title architecture with completely smooth, ridge-free continuous curves on `C` and `D`, matching the sleek diagonal blades of crossbar-less `A` (`Λ`).
 * **Glyph Anatomy**:
   - `C`: Continuous mathematical elliptical arcs (`R=85px` outer, `R=47px` inner) eliminating all faceted corner ridges.
@@ -730,7 +730,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 13: Smooth C & D Pure Stark White Typography (Minimalist)
-* **Asset**: [`wordmark-ironman-13-smooth-pure-monochrome-stark.jpg`](./wordmark-ironman-13-smooth-pure-monochrome-stark.jpg)
+* **Asset**: [`wordmark-ironman-13-smooth-pure-monochrome-stark.jpg`](./iron-man/wordmark-ironman-13-smooth-pure-monochrome-stark.jpg)
 * **Inspiration**: Stark Industries aerospace corporate monoline with smooth, continuous `C` and `D` contours on deep obsidian black.
 * **Glyph Anatomy**:
   - Crisp solid white-to-silver gradient (`#FFFFFF` to `#CBD5E1`).
@@ -742,7 +742,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 14: Smooth C & D Pure Brushed Titanium Typography (Aerospace)
-* **Asset**: [`wordmark-ironman-14-smooth-pure-brushed-titanium.jpg`](./wordmark-ironman-14-smooth-pure-brushed-titanium.jpg)
+* **Asset**: [`wordmark-ironman-14-smooth-pure-brushed-titanium.jpg`](./iron-man/wordmark-ironman-14-smooth-pure-brushed-titanium.jpg)
 * **Inspiration**: Milled smooth aerospace titanium flight surface; seamless transitions between curved and angular glyphs.
 * **Glyph Anatomy**:
   - Multi-tone brushed titanium gradient (`#FFFFFF` to `#94A3B8` to `#1E293B`) with slate-black bevel outline.
@@ -753,7 +753,7 @@ This document provides a technical anatomy, geometric breakdown, and design just
 ---
 
 ### Iron Man 15: Smooth Typography Comparative Master Board
-* **Asset**: [`wordmark-ironman-15-smooth-pure-presentation-board.jpg`](./wordmark-ironman-15-smooth-pure-presentation-board.jpg)
+* **Asset**: [`wordmark-ironman-15-smooth-pure-presentation-board.jpg`](./iron-man/wordmark-ironman-15-smooth-pure-presentation-board.jpg)
 * **Inspiration**: Executive comparative briefing dossier evaluating the ridge-free smooth `C` & `D` letterforms across all three finishes.
 * **Glyph Anatomy**:
   - Side-by-side presentation of Smooth Mark VII Gold & Crimson, Smooth Stark White, and Smooth Brushed Titanium.

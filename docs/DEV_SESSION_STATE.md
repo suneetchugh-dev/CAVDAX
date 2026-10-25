@@ -18,6 +18,31 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.14 Latest Session Achievements (October 25, 2026 - Critical Critique Protocol, Anti-Pattern Taxonomy, Console Discovery & Auth UX)
+
+- **Rule 24: The Critical Critique & Anti-Pattern Defense Protocol (`AGENTS.md`)**:
+  - Codified mandatory premise scrutiny before code execution.
+  - Mandated dual perspective audits (Designer vs. User) to evaluate visual hierarchy, negative space, cognitive effort, and upfront affordance.
+- **Master Taxonomy of UI/UX Flaws & AI Anti-Patterns (`docs/UI_DESIGN_SYSTEM.md#36`)**:
+  - Documented 8 classic web anti-patterns (Mystery Meat Navigation, Cargo Cult UI, Banner Blindness, Modal Hell, False Affordance, Premature Optimization, Infinite Scroll Disorientation, Zombie States).
+  - Codified 7 modern AI design flaws (Monoculture Dark-Indigo / Inter Cliché, Bento Card Data-Tetris, Recursive Card Nesting, Illusion of Determinism, Cloned SaaS Tropes, Slop Micro-Copy, Orphan Icons).
+  - Formulated the 5-point Pre-Flight Antidote Review Checklist.
+- **External Master Prompts Synchronization (`C:\(Lectures)\+[Dev-Assets]\#(AI-AGENTS)\#Prompts`)**:
+  - Synchronized Rule 24 into `#AGENTS.md File.md`.
+  - Synchronized Section 36 into `#UI_DESIGN_SYSTEM.md file.md`.
+  - Synchronized Phase 7 architectural hardening into `##Global-Cloudflare-Security-Audit-And-Hardening-Playbook.md`.
+  - Synchronized Anti-Pattern C into `##Dual-Mode-Workspace-Visualizer.md`.
+  - Synchronized Anti-Patterns 9, 10, 11 into `##SaaS-Developer-Profile-Quota-And-Resource-Consumption-Card.md`.
+- **Elimination of Mystery Meat Navigation in Console HUD (`apps/client/src/App.jsx`)**:
+  - Renamed closed workspace dropdown trigger to clear label `Workspace: Demo Sandbox ▾`.
+  - Removed redundant `Connect MCP` toolbar button that duplicated the persistent top navbar tab.
+  - Added prominent upfront `[ + Connect Repo ]` button opening the GitHub repo connection modal in 1 click.
+- **Hero Architectural Subtitle Copy (`LandingPage.jsx`)**:
+  - Added concise, professional positioning copy: *"Immunize Your Codebase Against Architectural Rot"* on the Section 1 Overview hero.
+- **Direct OAuth Redirect on Tier Unlock (`ProfilePage.jsx`)**:
+  - Resolved False Affordance flaw where clicking *"Sign In to Unlock"* only showed a passive toast message.
+  - Now directly initiates GitHub OAuth (`window.location.href = '/api/auth/github?returnTo=/profile'`) returning users directly to the unlocked tier screen.
+
 ## 1.0.13 Latest Session Achievements (October 25, 2026 - Cryptographic MCP Key Generation, Dynamic Currency Switching & Profile Polish)
 
 - **Cryptographic User API Key Infrastructure (`apps/server/index.js`)**:

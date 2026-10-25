@@ -473,6 +473,14 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 
     - Schedule biomimetic swarm migrations across key waypoints using alternating short flits (2.2s–4.5s) and long roosts (6.0s–10.5s).
 
+24. **The Critical Critique & Anti-Pattern Defense Protocol**:
+    - **Mandatory Premise Scrutiny**: Whenever the user, another agent, or a feature proposal suggests a UI pattern, design adjustment, copy change, or architecture decision, the agent MUST NOT blindly agree or immediately implement. First evaluate whether the underlying premise is valid, whether it solves a real user problem, or whether it creates an anti-pattern.
+    - **Dual Perspective Auditing (Designer vs. User)**:
+      - *Designer Perspective*: Does it preserve visual hierarchy, negative space, typography balance, and aesthetic restraint? Does it fight clutter or add noise?
+      - *User Perspective*: Does a first-time visitor immediately understand the affordance without clicking, hovering, or guessing? Is the primary call-to-action upfront or buried inside an unrelated dropdown/demo tab?
+    - **Root Out Classic & AI Anti-Patterns**: Explicitly hunt for and prevent anti-patterns documented in `UI_DESIGN_SYSTEM.md#36` (e.g. Mystery Meat Navigation, Hidden Critical Paths, Cargo Cult UI, Bento Card recursive slop, low-contrast grays, orphan icons).
+    - **Constructive Synthesis**: Present a concise, critical critique, state the established industry standard (e.g., Linear, Vercel, Stripe), explain the trade-offs, and offer ranked, actionable alternatives before touching code.
+
 
 
 ---
