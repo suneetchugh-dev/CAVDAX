@@ -1,7 +1,7 @@
 # CAVDAX Billing, Payments, and Quota Metering Architecture
 
 **Document Status:** Architecture Blueprint & Implementation Specification  
-**Version:** 1.0.0 (SIH26043 / GraphHacks Monorepo Standard)  
+**Version:** 1.0.0 (GraphHacks Monorepo Standard)  
 **Security Standard:** Zero-Trust Client, Zero-PCI Footprint, Test-Mode Intermediary  
 **Constraint Rule:** Strictly zero real financial custody. Student prototype concept utilizing sandbox/test credentials only.
 
@@ -203,7 +203,7 @@ REDIS_QUOTA_PORT=6379
 
 ## 6. Audit Logging & Compliance Ledger
 
-In accordance with SIH26043 standards, all subscription tier transitions, mock payments, and quota resets produce an audit log entry visible in the `/audit` inspection ledger:
+In accordance with audit trail standards, all subscription tier transitions, mock payments, and quota resets produce an audit log entry visible in the `/audit` inspection ledger:
 
 ```json
 {

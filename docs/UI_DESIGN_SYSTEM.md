@@ -170,7 +170,7 @@ You must strictly incorporate and enforce every single one of the following 34 a
 
 11G. **STRICT BAN ON EXTERNAL PROTOTYPE / STUDENT REFERENCES IN CLIENT**:
 
-      - NEVER include mentions of `SIH26043`, `SIH`, `Smart India Hackathon`, or legacy project names like `SAHNIRMAAN` on any client surface.
+      - NEVER include mentions of external hackathon identifiers or legacy project names like SAHNIRMAAN on any client surface.
 
       - The web app stands autonomously as CAVDAX.
 
