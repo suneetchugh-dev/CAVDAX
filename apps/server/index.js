@@ -346,6 +346,50 @@ app.post('/api/system/dev-ips', (req, res) => {
   });
 });
 
+// Global Authorized Developer GitHub Roster (stored in server state)
+let globalDevRoster = Array.from(new Set([
+  'suneetchugh-dev',
+  'geetikachughibm',
+  'gkc2406',
+  ...(process.env.VITE_AUTHORIZED_DEV_USERS || process.env.AUTHORIZED_DEV_USERS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase().replace(/^@/, ''))
+    .filter(Boolean)
+]));
+
+// GET /api/system/dev-roster
+app.get('/api/system/dev-roster', (req, res) => {
+  res.json({
+    roster: globalDevRoster
+  });
+});
+
+// POST /api/system/dev-roster
+app.post('/api/system/dev-roster', (req, res) => {
+  const { username, action } = req.body || {};
+  if (!username || typeof username !== 'string') {
+    return res.status(400).json({ success: false, error: 'Valid username required' });
+  }
+  const clean = username.trim().toLowerCase().replace(/^@/, '');
+  if (action === 'remove') {
+    if (!['suneetchugh-dev', 'geetikachughibm', 'gkc2406'].includes(clean)) {
+      globalDevRoster = globalDevRoster.filter(u => u !== clean);
+      console.log(`[CAVDAX] Revoked dev roster authorization: @${clean}`);
+    }
+  } else {
+    if (!globalDevRoster.includes(clean)) {
+      globalDevRoster.push(clean);
+      console.log(`[CAVDAX] Granted dev roster authorization: @${clean}`);
+    }
+  }
+
+  broadcastEvent('DEV_ROSTER_UPDATED', { roster: globalDevRoster });
+  res.json({
+    success: true,
+    roster: globalDevRoster
+  });
+});
+
 // Global Hackathon Evaluation Mode REST Endpoints
 app.get('/api/system/hackathon-mode', (req, res) => {
   res.json({

@@ -21,7 +21,7 @@ import Tooltip from './components/Tooltip.jsx';
 import AuditPage from './components/AuditPage.jsx';
 import DevConsolePage from './components/DevConsolePage.jsx';
 import DevTeamPanel from './components/DevTeamPanel.jsx';
-import { fetchClientIp, isIpAuthorized, isUserAuthorized } from './services/devAuth.js';
+import { fetchClientIp, isIpAuthorized, isUserAuthorized, fetchGlobalWhitelistedIps, fetchGlobalDevRoster, getActiveDevSession } from './services/devAuth.js';
 import ProfilePage from './components/ProfilePage.jsx';
 import SupportPage from './components/SupportPage.jsx';
 import SubsystemErrorBoundary from './components/SubsystemErrorBoundary.jsx';
@@ -593,7 +593,7 @@ export default function App() {
     async function checkDevAccess() {
       setDevAuthEvaluating(true);
       try {
-        await fetchGlobalWhitelistedIps();
+        await Promise.all([fetchGlobalWhitelistedIps(), fetchGlobalDevRoster()]);
         const ip = await fetchClientIp();
         const ipOk = isIpAuthorized(ip);
         const userOk = isUserAuthorized(githubUser);
@@ -614,7 +614,17 @@ export default function App() {
       }
     }
     checkDevAccess();
-    return () => { isMounted = false; };
+
+    const handleRosterUpdate = () => { checkDevAccess(); };
+    const handleIpUpdate = () => { checkDevAccess(); };
+    window.addEventListener('cavdax:dev-roster-updated', handleRosterUpdate);
+    window.addEventListener('cavdax:dev-ips-updated', handleIpUpdate);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('cavdax:dev-roster-updated', handleRosterUpdate);
+      window.removeEventListener('cavdax:dev-ips-updated', handleIpUpdate);
+    };
   }, [githubUser]);
 
   // Terminal & Action state
@@ -696,6 +706,36 @@ export default function App() {
           try {
             const updated = JSON.parse(e.data);
             if (updated && updated.data) setGraphData(updated.data);
+          } catch {}
+        });
+
+        evtSource.addEventListener('DEV_ROSTER_UPDATED', (e) => {
+          try {
+            const payload = JSON.parse(e.data);
+            if (Array.isArray(payload?.roster)) {
+              localStorage.setItem('cavdax_authorized_dev_roster', JSON.stringify(payload.roster));
+              window.dispatchEvent(new CustomEvent('cavdax:dev-roster-updated', { detail: { roster: payload.roster } }));
+            }
+          } catch {}
+        });
+
+        evtSource.addEventListener('DEV_IPS_UPDATED', (e) => {
+          try {
+            const payload = JSON.parse(e.data);
+            if (Array.isArray(payload?.ips)) {
+              localStorage.setItem('cavdax_authorized_dev_ips', JSON.stringify(payload.ips));
+              window.dispatchEvent(new CustomEvent('cavdax:dev-ips-updated', { detail: { ips: payload.ips } }));
+            }
+          } catch {}
+        });
+
+        evtSource.addEventListener('HACKATHON_MODE_CHANGED', (e) => {
+          try {
+            const payload = JSON.parse(e.data);
+            if (payload && typeof payload.enabled === 'boolean') {
+              localStorage.setItem('cavdax_hackathon_mode', String(payload.enabled));
+              window.dispatchEvent(new CustomEvent('cavdax:hackathon-mode-changed', { detail: { enabled: payload.enabled } }));
+            }
           } catch {}
         });
 

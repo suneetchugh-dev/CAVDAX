@@ -27,6 +27,7 @@ import {
   getAllowedIps, getAuthorizedUsers, fetchClientIp,
   addAuthorizedUser, removeAuthorizedUser,
   addWhitelistedIp, removeWhitelistedIp, getCustomWhitelistedIps, fetchGlobalWhitelistedIps, addGlobalWhitelistedIp, removeGlobalWhitelistedIp,
+  fetchGlobalDevRoster, addGlobalAuthorizedUser, removeGlobalAuthorizedUser,
   setDevTierOverride, getDevCurrentTier, isHackathonEvaluationMode, setHackathonEvaluationMode, setGlobalHackathonMode, fetchGlobalHackathonMode
 } from '../services/devAuth';
 import { playClick, playRejectBuzz, playApprovalChime } from '../utils/soundFx';
@@ -116,6 +117,32 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     fetchGlobalWhitelistedIps().then((ips) => {
       if (Array.isArray(ips)) setIpList(ips);
     });
+    fetchGlobalDevRoster().then((roster) => {
+      if (Array.isArray(roster)) setRosterList(roster);
+    });
+
+    const handleRosterUpdate = (e) => {
+      if (Array.isArray(e.detail?.roster)) setRosterList(e.detail.roster);
+    };
+    const handleIpUpdate = (e) => {
+      if (Array.isArray(e.detail?.ips)) setIpList(e.detail.ips);
+    };
+    const handleModeUpdate = (e) => {
+      if (e.detail?.enabled !== undefined) {
+        setIsHackathonMode(e.detail.enabled);
+        if (e.detail.enabled) setActiveDevTier('enterprise');
+      }
+    };
+
+    window.addEventListener('cavdax:dev-roster-updated', handleRosterUpdate);
+    window.addEventListener('cavdax:dev-ips-updated', handleIpUpdate);
+    window.addEventListener('cavdax:hackathon-mode-changed', handleModeUpdate);
+
+    return () => {
+      window.removeEventListener('cavdax:dev-roster-updated', handleRosterUpdate);
+      window.removeEventListener('cavdax:dev-ips-updated', handleIpUpdate);
+      window.removeEventListener('cavdax:hackathon-mode-changed', handleModeUpdate);
+    };
   }, []);
 
   const handleToggleHackathonMode = async () => {
@@ -143,14 +170,16 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
   const [newIpInput, setNewIpInput] = useState('');
   const [ipMsg, setIpMsg] = useState(null);
 
-  const handleAddIp = (e) => {
+  const handleAddIp = async (e) => {
     e?.preventDefault();
     if (!newIpInput.trim()) return;
-    const ok = addWhitelistedIp(newIpInput.trim());
+    const clean = newIpInput.trim();
+    const ok = await addGlobalWhitelistedIp(clean);
     if (ok) {
       playApprovalChime();
-      setIpList(getAllowedIps());
-      setIpMsg(`IP ${newIpInput.trim()} added to whitelist.`);
+      const updated = await fetchGlobalWhitelistedIps();
+      setIpList(updated);
+      setIpMsg(`IP ${clean} whitelisted globally.`);
       setNewIpInput('');
       setTimeout(() => setIpMsg(null), 3000);
     } else {
@@ -160,13 +189,14 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     }
   };
 
-  const handleWhitelistCurrentIp = () => {
+  const handleWhitelistCurrentIp = async () => {
     if (!clientIp || clientIp === 'Detecting...') return;
-    const ok = addWhitelistedIp(clientIp);
+    const ok = await addGlobalWhitelistedIp(clientIp);
     if (ok) {
       playApprovalChime();
-      setIpList(getAllowedIps());
-      setIpMsg(`Current IP ${clientIp} whitelisted.`);
+      const updated = await fetchGlobalWhitelistedIps();
+      setIpList(updated);
+      setIpMsg(`Current IP ${clientIp} whitelisted globally.`);
       setTimeout(() => setIpMsg(null), 3000);
     } else {
       setIpMsg(`Current IP ${clientIp} is already whitelisted.`);
@@ -174,11 +204,12 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     }
   };
 
-  const handleRemoveIp = (ip) => {
-    removeWhitelistedIp(ip);
+  const handleRemoveIp = async (ip) => {
+    await removeGlobalWhitelistedIp(ip);
     playClick();
-    setIpList(getAllowedIps());
-    setIpMsg(`Revoked IP ${ip}.`);
+    const updated = await fetchGlobalWhitelistedIps();
+    setIpList(updated);
+    setIpMsg(`Revoked IP ${ip} globally.`);
     setTimeout(() => setIpMsg(null), 3000);
   };
 
@@ -259,14 +290,16 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     ]);
   };
 
-  const handleAddMember = (e) => {
+  const handleAddMember = async (e) => {
     e?.preventDefault();
     if (!newDevHandle.trim()) return;
     playClick();
-    const ok = addAuthorizedUser(newDevHandle);
+    const clean = newDevHandle.trim().replace(/^@/, '');
+    const ok = await addGlobalAuthorizedUser(clean);
     if (ok) {
-      setRosterList(getAuthorizedUsers());
-      setRosterMsg(`Authorized developer @${newDevHandle.trim().replace(/^@/, '')}`);
+      const updated = await fetchGlobalDevRoster();
+      setRosterList(updated);
+      setRosterMsg(`Authorized developer @${clean} globally.`);
       setNewDevHandle('');
     } else {
       setRosterMsg(`Handle already present or invalid.`);
@@ -274,11 +307,12 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     setTimeout(() => setRosterMsg(null), 3000);
   };
 
-  const handleRemoveMember = (u) => {
+  const handleRemoveMember = async (u) => {
     playClick();
-    removeAuthorizedUser(u);
-    setRosterList(getAuthorizedUsers());
-    setRosterMsg(`Revoked authorization for @${u}`);
+    await removeGlobalAuthorizedUser(u);
+    const updated = await fetchGlobalDevRoster();
+    setRosterList(updated);
+    setRosterMsg(`Revoked authorization for @${u} globally.`);
     setTimeout(() => setRosterMsg(null), 3000);
   };
 
@@ -650,29 +684,25 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
           </div>
 
           {tierToast && (
-            <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="p-3 rounded-xl border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white font-mono text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-slate-900 dark:text-white" />
               <span>{tierToast}</span>
             </div>
           )}
 
-          {/* Hackathon Evaluation Master Switch */}
-          <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Hackathon Evaluation Master Switch — Strictly Monochromatic */}
+          <div className="rounded-xl border border-slate-300 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   Hackathon Evaluation Mode
                 </span>
-                <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
-                  isHackathonMode
-                    ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/40'
-                    : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-white/10'
-                }`}>
-                  {isHackathonMode ? 'ACTIVE · ALL USERS ENTERPRISE' : 'STANDBY (STANDARD BILLING)'}
+                <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded border border-slate-300 dark:border-white/20 bg-slate-200 dark:bg-white/10 text-slate-800 dark:text-slate-200">
+                  {isHackathonMode ? 'ACTIVE · ALL USERS ENTERPRISE' : 'STANDBY · STANDARD BILLING'}
                 </span>
               </div>
               <p className="text-[11px] font-mono text-slate-600 dark:text-slate-400 max-w-xl">
-                When active, all visitors, judges, and evaluators automatically receive flagship Enterprise Tier capabilities (unlimited repositories, infinite graph traversals, and multi-agent coordination) without paying or entering credentials.
+                Unlocks flagship Enterprise Tier capabilities globally for all visitors, judges, and evaluators without payment credentials or tier limits.
               </p>
             </div>
 
@@ -680,8 +710,8 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               onClick={handleToggleHackathonMode}
               className={`px-5 py-2.5 rounded-lg text-xs font-mono font-bold tracking-wider transition-all cursor-pointer whitespace-nowrap shadow-xs ${
                 isHackathonMode
-                  ? 'bg-rose-600 text-white hover:bg-rose-700'
-                  : 'bg-purple-600 text-white hover:bg-purple-700'
+                  ? 'border border-slate-300 dark:border-white/20 bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-white/20'
+                  : 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 active:scale-98'
               }`}
             >
               {isHackathonMode ? 'DISABLE EVALUATION MODE' : 'ENABLE EVALUATION MODE'}

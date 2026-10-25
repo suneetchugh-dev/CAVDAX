@@ -265,10 +265,18 @@ export default function ProfilePage({
     }
   }, [isHackathonMode, isAuthorizedDev, currentTier, onSelectTier]);
 
-  const showToast = (msg) => {
+  const showToast = (msg, duration = 3500) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3500);
+    setTimeout(() => {
+      setToastMsg((prev) => (prev === msg ? null : prev));
+    }, duration);
   };
+
+  useEffect(() => {
+    if (isHackathonMode) {
+      showToast('Hackathon Evaluation Window Active · Enterprise Capabilities Unlocked for Hackathon Review', 5000);
+    }
+  }, [isHackathonMode]);
 
   const handleTierSwitch = (newTier) => {
     playClick();
@@ -621,21 +629,6 @@ export default function ProfilePage({
 
       {/* ── 2. Architecture Tiers & Quotas (Exact 4 Benefits per Tier) ── */}
       <section className="mt-0 mb-0">
-        {/* Hackathon Evaluation Mode Notice Banner */}
-        {isHackathonMode && (
-          <div className="mb-4 p-3.5 sm:p-4 rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-900 dark:text-purple-200 flex items-center justify-between gap-3 text-xs font-mono shadow-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shrink-0" />
-              <span className="font-semibold">
-                Hackathon Evaluation Window Active · Enterprise Capabilities Unlocked for Hackathon Review
-              </span>
-            </div>
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 shrink-0">
-              Judges Pass
-            </span>
-          </div>
-        )}
-
         <div className="flex items-center justify-between mb-3.5 sm:mb-4">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Subscription Tiers

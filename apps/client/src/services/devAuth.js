@@ -445,3 +445,69 @@ export async function removeGlobalWhitelistedIp(ip) {
   } catch {}
   return true;
 }
+
+// Global Authorized Developer GitHub Roster Service (Server-backed + SSE synchronized)
+export async function fetchGlobalDevRoster() {
+  try {
+    const res = await fetch('/api/system/dev-roster');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.roster)) {
+        try {
+          localStorage.setItem(DYNAMIC_ROSTER_KEY, JSON.stringify(data.roster));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:dev-roster-updated', { detail: { roster: data.roster } }));
+        return data.roster;
+      }
+    }
+  } catch {}
+  return getAuthorizedUsers();
+}
+
+export async function addGlobalAuthorizedUser(username) {
+  if (!username) return false;
+  const clean = username.trim().toLowerCase().replace(/^@/, '');
+  addAuthorizedUser(clean);
+  try {
+    const res = await fetch('/api/system/dev-roster', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: clean, action: 'add' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.roster)) {
+        try {
+          localStorage.setItem(DYNAMIC_ROSTER_KEY, JSON.stringify(data.roster));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:dev-roster-updated', { detail: { roster: data.roster } }));
+      }
+      return true;
+    }
+  } catch {}
+  return true;
+}
+
+export async function removeGlobalAuthorizedUser(username) {
+  if (!username) return false;
+  const clean = username.trim().toLowerCase().replace(/^@/, '');
+  removeAuthorizedUser(clean);
+  try {
+    const res = await fetch('/api/system/dev-roster', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: clean, action: 'remove' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.roster)) {
+        try {
+          localStorage.setItem(DYNAMIC_ROSTER_KEY, JSON.stringify(data.roster));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:dev-roster-updated', { detail: { roster: data.roster } }));
+      }
+      return true;
+    }
+  } catch {}
+  return true;
+}
