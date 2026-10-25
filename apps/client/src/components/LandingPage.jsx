@@ -742,14 +742,9 @@ export default function LandingPage({
 
             }}
 
-            className="flex flex-col items-center mt-6 sm:mt-8 relative z-20"
+            className="flex flex-col items-center mt-8 sm:mt-10 md:mt-12 relative z-20"
 
           >
-
-            {/* Wordmark Subtitle */}
-            <p className="text-xs sm:text-sm md:text-base font-mono tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 font-medium text-center mb-6 sm:mb-8 max-w-xl px-4 select-none">
-              Immunize Your Codebase Against Architectural Rot
-            </p>
 
             {/* CurvyArrow with Rectangular Squircle Arrow-Only CTA Button */}
 
