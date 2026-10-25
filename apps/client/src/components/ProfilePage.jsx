@@ -97,7 +97,8 @@ export default function ProfilePage({
     return () => window.removeEventListener('cavdax:hackathon-mode-changed', handleMode);
   }, []);
   const [toastMsg, setToastMsg] = useState(null);
-  const [apiKeySuffix, setApiKeySuffix] = useState('a8f27e69');
+  const [apiKey, setApiKey] = useState('');
+  const [isLoadingKey, setIsLoadingKey] = useState(true);
   const [hoveredTierBtn, setHoveredTierBtn] = useState(null);
   const [quotaData, setQuotaData] = useState(null);
   const [connectedRepoCount, setConnectedRepoCount] = useState(0);
@@ -133,6 +134,27 @@ export default function ProfilePage({
     window.addEventListener('cavdax:currency-changed', handleCurrencyChange);
     return () => window.removeEventListener('cavdax:currency-changed', handleCurrencyChange);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchApiKey() {
+      try {
+        setIsLoadingKey(true);
+        const res = await fetch('/api/user/api-key', { credentials: 'include' });
+        const data = await res.json();
+        if (isMounted && data.success && data.apiKey) {
+          setApiKey(data.apiKey);
+        }
+      } catch (err) {
+        console.warn('[CAVDAX] Could not fetch user API key:', err);
+      } finally {
+        if (isMounted) setIsLoadingKey(false);
+      }
+    }
+    fetchApiKey();
+    return () => { isMounted = false; };
+  }, [user]);
+
 
   const handleRazorpayUpgrade = async () => {
     if (!user) {
@@ -372,22 +394,33 @@ export default function ProfilePage({
 
   const handleCopyApiKey = () => {
     playClick();
-    const demoKey = 'cvdx_live_' + (user?.login ? user.login.toLowerCase() : 'contributor') + '_' + apiKeySuffix;
-    navigator.clipboard.writeText(demoKey);
+    const keyToCopy = apiKey || ('cvdx_live_' + (user?.login ? user.login.toLowerCase() : 'contributor') + '_a8f27e69');
+    navigator.clipboard.writeText(keyToCopy);
     setCopiedKey(true);
-    showToast('API Key copied to clipboard.');
+    showToast('Cryptographic API Key copied to clipboard.');
     setTimeout(() => setCopiedKey(false), 2000);
   };
 
-  const handleRotateKey = () => {
+  const handleRotateKey = async () => {
     playClick();
     setIsRotating(true);
-    const newSuffix = Math.random().toString(16).substring(2, 10);
-    setApiKeySuffix(newSuffix);
-    showToast('API Key successfully rotated.');
-    setTimeout(() => {
-      setIsRotating(false);
-    }, 600);
+    try {
+      const res = await fetch('/api/user/rotate-api-key', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success && data.apiKey) {
+        setApiKey(data.apiKey);
+        showToast('Cryptographic API Key successfully rotated.');
+      } else {
+        showToast('Failed to rotate API Key.');
+      }
+    } catch (err) {
+      showToast(`Error rotating key: ${err.message}`);
+    } finally {
+      setTimeout(() => setIsRotating(false), 400);
+    }
   };
 
   // Concentric avatar ring specifications
@@ -1148,7 +1181,7 @@ export default function ProfilePage({
             <div className="flex items-center gap-2.5 overflow-hidden">
               <span className="text-slate-500 select-none text-[11px] font-mono">$</span>
               <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
-                cvdx_live_{user?.login ? user.login.toLowerCase() : 'contributor'}_{apiKeySuffix}
+                {isLoadingKey ? 'Retrieving cryptographic key...' : (apiKey || `cvdx_live_${user?.login ? user.login.toLowerCase() : 'contributor'}_a8f27e69`)}
               </code>
             </div>
             <button
