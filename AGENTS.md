@@ -98,6 +98,16 @@ Operational constitution, architecture standards, and safety governance for AI c
    - **Elevated Rate Ceiling**: Expands per-IP rate limits to 1,200 req/min (20 req/sec) to guarantee zero throttling during evaluation, while avoiding `skip: true` to keep the server shielded against bots.
    - **Instant Reversion**: Toggling OFF instantly restores standard production enforcement across all clients without redeployment.
 
+0j. **Inviolable Guard: Zero Split-Brain Session Desynchronization & Auth State Coherence**:
+   - **Server Session is the Single Source of Truth**: The backend session state (`req.session.user` / `/api/auth/me`) is the absolute authority on user authentication. LocalStorage (`cavdax_user_session`) is strictly an ephemeral UI cache, NEVER an override or replacement for backend authentication status.
+   - **Immediate Invalidation on 401 / Unauthenticated**: Whenever ANY API endpoint returns `401 Unauthorized` or `{ authenticated: false }`:
+     - Never preserve or fall back to stale `localStorage` user objects.
+     - Immediately purge `localStorage.removeItem('cavdax_user_session')`.
+     - Dispatch `window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }))` so that the navbar, profile, modal connectors, and workspace immediately synchronize without creating "phantom" logged-in states.
+   - **Mandatory `{ credentials: 'include' }` on All Internal API Calls**: Every frontend `fetch()` targeting an internal route (`/api/...`) that reads or mutates user data, listed repositories, API keys, quotas, or graph mutations MUST explicitly declare `{ credentials: 'include' }`. Omitting credentials leads to silent session drops and false 401 errors.
+   - **Never Render Misleading "Empty Data" on Authentication Failures**: When an authenticated fetch (such as listing GitHub repositories or reading API keys) fails due to session expiration (401 / unauthenticated), NEVER silently swallow the error and render misleading empty copy like *"No repositories found."* Always render an informative session-expiration state informing the user that the backend process was updated, along with a direct 1-click re-authentication button (`[ Reconnect GitHub ]`).
+   - **Stable Deployment Session Secrets**: In production or containerized environments, Express session middleware (`express-session`) must NEVER generate ephemeral in-memory random secrets (`randomBytes(32)`) on boot without a stable persistent fallback. Random secret regeneration invalidates all signed cookies across process restarts, causing widespread session desynchronization after every production deployment.
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:
