@@ -100,7 +100,11 @@ export default function App() {
   const workspaceRef = useRef(null);
   const [activeWorkspace, setActiveWorkspace] = useState('demo');
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false);
-  const [isConnectRepoModalOpen, setIsConnectRepoModalOpen] = useState(false);
+  const [isConnectRepoModalOpen, setIsConnectRepoModalOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("openConnectRepo") === "1" || params.get("connectRepo") === "1";
+  });
   const [connectedRepos, setConnectedRepos] = useState(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -546,6 +550,31 @@ export default function App() {
       setGithubUser(e.detail || false);
     };
     window.addEventListener('cavdax:user-changed', handleUserChanged);
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("connected") === "1" && params.get("login")) {
+        const u = {
+          login: params.get("login"),
+          name: params.get("name") || params.get("login"),
+          avatarUrl: params.get("avatar") || "",
+          role: "user"
+        };
+        setGithubUser(u);
+        try {
+          localStorage.setItem("cavdax_user_session", JSON.stringify({
+            username: u.login,
+            name: u.name,
+            avatarUrl: u.avatarUrl,
+            connectedAt: new Date().toISOString()
+          }));
+        } catch {}
+        if (params.get("openConnectRepo") === "1") {
+          setIsConnectRepoModalOpen(true);
+        }
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
 
     fetch('/api/auth/me', { credentials: 'include' })
       .then(async (r) => {
@@ -1441,6 +1470,7 @@ export default function App() {
         onConnectRepo={handleConnectRepo}
         connectedRepoIds={connectedRepos.map(r => r.id)}
         onDisconnectRepo={handleDisconnectRepo}
+        returnTo={TAB_TO_PATH[activeTab] || "/console"}
       />
     </div>
   );
