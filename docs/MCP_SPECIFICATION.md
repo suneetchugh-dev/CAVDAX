@@ -69,7 +69,7 @@ CAVDAX implements both standard MCP transport mechanisms to accommodate local de
 
 ## 3. Tool Definitions & JSON-RPC Schemas
 
-CAVDAX registers three core MCP tools under the `2024-11-05` specification:
+CAVDAX registers six core MCP tools under the `2024-11-05` specification:
 
 ### 3.1 Tool 1: `apply_code_change` (Enclosed Write Interceptor)
 The primary execution gate. Encloses all filesystem mutations behind causal provenance validation.
@@ -239,11 +239,11 @@ Connecting an AI coding agent to CAVDAX requires zero modification to agent core
 ### 4.1 Claude Code CLI (Anthropic)
 Run the following command directly in your repository root before launching `claude`:
 ```bash
-claude mcp add cavdax -- node /opt/cavdax/mcp/stdio.js
-```
-*Or using the future global npm distribution*:
-```bash
 claude mcp add cavdax -- npx -y @cavdax/mcp-server
+```
+*Or connect to the centralized team cloud SSE endpoint*:
+```bash
+claude mcp add cavdax https://cavdax.sahnirmaan.live/api/mcp/sse
 ```
 
 ---

@@ -18,6 +18,18 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.24 Latest Session Achievements (October 27, 2026 - MCP Client Tool Catalog Synchronization & Documentation Coherence - PR #61 & PR #62)
+
+- **MCP Client UI Synchronization (`apps/client/src/components/ConnectMcpPage.jsx`, `apps/client/src/components/McpConnectModal.jsx`) - PR #61**:
+  - Updated `@cavdax/mcp-server` version badge from `v1.0.0` to `v1.2.0` in `ConnectMcpPage.jsx` to reflect the published npm package state.
+  - Expanded the Exposed MCP Tools grid in `McpConnectModal.jsx` from 3 tools to all **6 registered tools** (`check_intent_clearance`, `apply_code_change`, `revalidate_decision`, `acquire_decision_lock`, `release_decision_lock`, `query_causal_graph`).
+  - Updated the stdio daemon reference from legacy `core/mcp/stdio.js` to `npx -y @cavdax/mcp-server`.
+  - Verified with clean production build (`14.59s`) and passing CI workflow checks.
+- **Root Documentation & Specification Hardening (`README.md`, `docs/MCP_SPECIFICATION.md`)**:
+  - Corrected Tool #6 in `README.md` from `verify_decision` to `revalidate_decision`, maintaining 100% naming parity with registered MCP handlers in `stdioServer.js` and `core/mcp/server.js`.
+  - Documented `@cavdax/mcp-server` v1.2.0 capabilities in `README.md`, including zero-configuration plain Markdown ADR ingestion (no YAML frontmatter needed) and CLI command workflows (`doctor`, `ingest`, `check`).
+  - Updated `docs/MCP_SPECIFICATION.md` to formally document 6 core tools and replaced legacy `/opt/cavdax/mcp/stdio.js` directives with standard `npx -y @cavdax/mcp-server` integration.
+
 ## 1.0.23 Latest Session Achievements (October 27, 2026 - CI Causal Execution Gate Resolution & Framework Internals Exclusion - PR #59)
 
 - **Root Cause Diagnosis of CI Asymmetry (PR #57 failure vs. main push success)**:
