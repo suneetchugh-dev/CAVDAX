@@ -19,6 +19,7 @@ export default function ConnectRepoModal({
   onClose,
   user,
   onConnectRepo,
+  onDisconnectRepo,
   connectedRepoIds = [],
   returnTo = '/console'
 }) {
