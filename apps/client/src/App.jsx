@@ -155,6 +155,9 @@ export default function App() {
         if (d?.authenticated && d?.user) {
           setGithubUser(d.user);
           if (d.user.tier) setActiveTierKey(d.user.tier);
+        } else if (d && !d.authenticated) {
+          try { localStorage.removeItem('cavdax_user_session'); } catch {}
+          setGithubUser(false);
         }
       })
       .catch(() => {});
@@ -566,8 +569,8 @@ export default function App() {
             }));
           } catch {}
         } else if (d && !d.authenticated) {
-          const raw = localStorage.getItem('cavdax_user_session');
-          if (!raw) setGithubUser(false);
+          try { localStorage.removeItem('cavdax_user_session'); } catch {}
+          setGithubUser(false);
         }
       })
       .catch(() => {

@@ -202,23 +202,9 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
           window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: u }));
           if (onAuthChange) onAuthChange(u);
         } else {
-          // If server session is unauthenticated (e.g. after container restart), fall back to client session
-          try {
-            const raw = localStorage.getItem('cavdax_user_session');
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              if (parsed?.username || parsed?.login) {
-                const u = {
-                  login: parsed.username || parsed.login,
-                  name: parsed.name || parsed.username || parsed.login,
-                  avatarUrl: parsed.avatarUrl || parsed.avatar_url || parsed.avatar || '',
-                  githubId: parsed.githubId
-                };
-                setGithubUser(u);
-                return;
-              }
-            }
-          } catch {}
+          // Server session is unauthenticated (e.g. after container restart).
+          // Clear stale client credentials to prevent split-brain ghost session.
+          try { localStorage.removeItem('cavdax_user_session'); } catch {}
           setGithubUser(false);
         }
       })
