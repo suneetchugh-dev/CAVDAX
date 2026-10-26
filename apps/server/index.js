@@ -99,7 +99,7 @@ app.use(express.json({ limit: '2mb' }));
 // SESSION_SECRET must be set in .env for production.
 // In-memory store is fine for a single-process server; scale to Redis later.
 app.use(session({
-  secret: process.env.SESSION_SECRET || randomBytes(32).toString('hex'),
+  secret: process.env.SESSION_SECRET || 'cavdax_session_secret_vault_fallback_2026',
   resave: false,
   saveUninitialized: false,
   cookie: {
