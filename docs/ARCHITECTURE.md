@@ -263,4 +263,4 @@ The client application provides 9 dedicated routes:
 - `/team`: Engineering credits and research attribution.
 - `/profile`: Developer quota tracking, plan capability matrix, and active MCP key provisioning.
 - `/support`: Community sponsorship tiers and transparent operational backing breakdown.
-- `/devteam`: Zero-trust administrative diagnostics, dev IP roster, and node state inspection.
+- Zero-Trust Administrative Enclave: Diagnostic console, dev IP roster, and node state inspection.

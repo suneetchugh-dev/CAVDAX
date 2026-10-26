@@ -18,6 +18,20 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.21 Latest Session Achievements (October 26, 2026 - GitHub OAuth RFC 6749 Hardening, Fail-Closed Fallbacks & Cloudflare Security Audit)
+
+- **GitHub OAuth RFC 6749 Redirect URI Hardening (`apps/server/index.js`, `docker-compose.yml`)**:
+  - *Root Cause Diagnosis*: Resolved GitHub OAuth authorization warning (`redirect_uri is not associated with this application`) by establishing strict environment-aware separation between production and local development OAuth apps.
+  - *Fail-Closed Production Guard*: In `apps/server/index.js`, enforced `isProduction = process.env.NODE_ENV === 'production'`. In production, `GITHUB_CALLBACK_URL` and `CLIENT_URL` strictly default to `https://cavdax.sahnirmaan.live`, eliminating any possibility of localhost misdirection or open redirects on live environments.
+  - *Seamless Local Docker Parity*: In local development, `GITHUB_CALLBACK_URL` automatically resolves to host-accessible port 3001 (`http://localhost:3001/api/auth/github/callback`) and `CLIENT_URL` resolves to Vite on port 5173 (`http://localhost:5173`).
+  - *Local Compose Environment*: Updated `docker-compose.yml` with `NODE_ENV=development` and explicit callback/client URL forwarding.
+- **Developer Documentation & Credential Isolation (`.env.example`, `README.md`)**:
+  - Documented the dual OAuth identity architecture in `.env.example`, providing exact parameters for registering a separate "CAVDAX Local Dev" OAuth app on GitHub.
+  - Codified the principle of zero credential sharing: production client secrets are never exposed to local development.
+- **Cloudflare 7-Phase Security Audit Gate Certified (Rule 25)**:
+  - Executed formal 7-phase pen-test audit across boundary mapping, CSRF state store, token exfiltration defense, Cypher injection immunity, and RFC 6749 redirect compliance.
+  - Certified 100% green with 0 vulnerabilities in `cavdax_cloudflare_security_audit_github_oauth_and_local_parity.md`.
+
 ## 1.0.20 Latest Session Achievements (October 26, 2026 - Demo Decision Quota Exclusion & Automatic Demo Tagging)
 
 - **Demo Decision Quota Exclusion (`core/ingestion/parser.js`, `core/graph/queries.js`, `apps/server/index.js`)**:
