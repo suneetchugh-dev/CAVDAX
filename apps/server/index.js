@@ -1617,6 +1617,19 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ authenticated: true, user: { githubId, login, name, avatarUrl } });
 });
 
+// Test-only session bootstrap (Strictly disabled in production)
+if (process.env.NODE_ENV === 'test') {
+  app.post('/api/auth/test-session', (req, res) => {
+    req.session.user = {
+      githubId: req.body?.githubId || 12345,
+      login: req.body?.login || 'test-dev',
+      name: 'Test Dev',
+      avatarUrl: ''
+    };
+    res.json({ success: true, user: req.session.user });
+  });
+}
+
 /**
  * GET /api/user/api-key
  * Returns the active cryptographic API key for the authenticated user or session.
