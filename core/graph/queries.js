@@ -136,6 +136,7 @@ export async function revalidateDecision(graph, { newSourceId, oldDecisionId, ne
       id: $newDecisionId,
       title: $title,
       status: 'VALID',
+      is_demo: $isDemo,
       created_at: timestamp()
     })
     CREATE (newDecision)-[:DEPENDS_ON]->(newFact)
@@ -145,7 +146,7 @@ export async function revalidateDecision(graph, { newSourceId, oldDecisionId, ne
   `;
 
   const result = await graph.query(cypher, {
-    params: { newSourceId, oldDecisionId, newDecisionId, newFactId, title }
+    params: { newSourceId, oldDecisionId, newDecisionId, newFactId, title, isDemo: Boolean(oldDecisionId?.startsWith('DEC-10') || newDecisionId?.startsWith('DEC-10') || newSourceId === 'ADR-002') }
   });
   const latencyMs = extractLatencyMs(result, hrtStart);
 
@@ -229,6 +230,7 @@ export async function seedDemoGraph(graph) {
       id: 'DEC-102',
       title: 'Generate Checkout Service with TokenAuth v1',
       status: 'VALID',
+      is_demo: true,
       created_at: timestamp()
     })
     CREATE (d1)-[:DEPENDS_ON]->(f1)

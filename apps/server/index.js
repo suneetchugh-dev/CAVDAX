@@ -1535,7 +1535,7 @@ app.get('/api/user/quota', async (req, res) => {
         activeNodes = typeof val === 'number' ? val : parseInt(val, 10) || fallbackGraphState.nodes.length;
       }
       // Count only real user-created decisions (strictly excluding the canonical 4-Act demo decisions)
-      const dRes = await graph.query("MATCH (d:Decision) WHERE NOT d.id IN ['DEC-101', 'DEC-102', 'DEC-103'] RETURN count(d) AS cnt");
+      const dRes = await graph.query("MATCH (d:Decision) WHERE coalesce(d.is_demo, false) = false AND NOT d.id IN ['DEC-001', 'DEC-002', 'DEC-003', 'DEC-100', 'DEC-101', 'DEC-102', 'DEC-103', 'DEC-201'] RETURN count(d) AS cnt");
       if (dRes && dRes.data && dRes.data.length > 0) {
         userDecisions = typeof dRes.data[0].cnt === 'number' ? dRes.data[0].cnt : parseInt(dRes.data[0].cnt, 10) || 0;
       }

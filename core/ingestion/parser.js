@@ -172,6 +172,7 @@ export function parseFrontmatter(fileContent, filePath = '') {
  *   Defaults to the CAVDAX monorepo root; the npm CLI passes the user's repo.
  */
 export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootOption } = {}) {
+  const isDemo = filePath.includes('demo-repo') || filePath.includes('demo');
   console.log(`[Ingestion] Reading ADR file: ${filePath}`);
   const absolutePath = path.resolve(filePath);
 
@@ -242,14 +243,16 @@ export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootO
     const mergeDecisionCypher = `
       MATCH (f:Fact {id: $factId})
       MERGE (d:Decision {id: $decisionId})
-      ON CREATE SET d.title = $decisionTitle, d.status = 'VALID', d.created_at = timestamp()
+      ON CREATE SET d.title = $decisionTitle, d.status = 'VALID', d.is_demo = $isDemo, d.created_at = timestamp()
+      ON MATCH SET d.is_demo = CASE WHEN $isDemo THEN true ELSE d.is_demo END
       MERGE (d)-[:DEPENDS_ON]->(f)
     `;
     await graph.query(mergeDecisionCypher, {
       params: {
         factId: frontmatter.fact_id,
         decisionId: frontmatter.decision_id,
-        decisionTitle: frontmatter.decision_title || frontmatter.decision_id
+        decisionTitle: frontmatter.decision_title || frontmatter.decision_id,
+        isDemo
       }
     });
   }
