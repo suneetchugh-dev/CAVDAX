@@ -152,6 +152,16 @@ export async function ingestGitCommit(graph, { sha, message, author = 'unknown',
  * @param {string} [opts.filePath]   - Relative path to package.json
  * @returns {Promise<object>}
  */
+/**
+ * Safely extracts the major version integer from a semver string
+ * (e.g. "^10.2.1", "~9.4.0", ">=10.0.0", "v10.0.0" -> 10, 9, 10, 10)
+ */
+export function parseMajorVersion(v) {
+  if (!v || typeof v !== 'string') return null;
+  const match = v.trim().match(/^(?:[\^~>=<vV\s]*?)(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 export async function ingestPackageJsonChange(graph, { packageName, oldVersion, newVersion, filePath = 'package.json' }) {
   if (!packageName || !newVersion) throw new Error('ingestPackageJsonChange requires packageName and newVersion');
 
@@ -160,9 +170,9 @@ export async function ingestPackageJsonChange(graph, { packageName, oldVersion, 
   const newSourceId = `pkg-${packageName}-${sanitize(newVersion)}`;
   const oldSourceId = oldVersion ? `pkg-${packageName}-${sanitize(oldVersion)}` : null;
 
-  const isMajorBump = oldVersion
-    ? parseInt(newVersion.replace(/\D/g, '')[0]) > parseInt(oldVersion.replace(/\D/g, '')[0])
-    : false;
+  const oldMajor = parseMajorVersion(oldVersion);
+  const newMajor = parseMajorVersion(newVersion);
+  const isMajorBump = oldMajor !== null && newMajor !== null && newMajor > oldMajor;
 
   const title = oldVersion
     ? `${packageName} upgraded ${oldVersion} → ${newVersion}${isMajorBump ? ' (breaking major bump)' : ''}`
