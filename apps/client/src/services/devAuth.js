@@ -517,3 +517,24 @@ export async function removeGlobalAuthorizedUser(username) {
   } catch {}
   return true;
 }
+
+
+// Emergency Global API Key Revocation Service (Dev Enclave -> Server & SSE broadcast)
+export async function emergencyRevokeAllKeys(reason = 'Emergency security revocation triggered by dev team enclave') {
+  try {
+    const res = await fetch('/api/system/revoke-all-keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ reason })
+    });
+    const data = await res.json();
+    if (res.ok && data?.success) {
+      window.dispatchEvent(new CustomEvent('cavdax:keys-revoked', { detail: data }));
+      return { success: true, data };
+    }
+    return { success: false, error: data?.error || 'Failed to revoke keys' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}

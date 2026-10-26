@@ -750,6 +750,13 @@ export default function App() {
           } catch {}
         });
 
+        evtSource.addEventListener('GLOBAL_KEYS_REVOKED', (e) => {
+          try {
+            const payload = JSON.parse(e.data);
+            window.dispatchEvent(new CustomEvent('cavdax:keys-revoked', { detail: payload }));
+          } catch {}
+        });
+
         evtSource.onopen = () => {
           setSseOnline(true);
           retryDelay = 1000; // reset backoff on successful open

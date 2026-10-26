@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, Copy, Check, CheckCircle2, Lock, Terminal,
-  SlidersHorizontal, Key, HardDrive, RefreshCw, Heart, ExternalLink, LogOut, Github, Eye, EyeOff
+  SlidersHorizontal, Key, HardDrive, AlertTriangle, RefreshCw, Heart, ExternalLink, LogOut, Github, Eye, EyeOff
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
@@ -98,6 +98,7 @@ export default function ProfilePage({
   }, []);
   const [toastMsg, setToastMsg] = useState(null);
   const [apiKey, setApiKey] = useState('');
+  const [isRevokedNotice, setIsRevokedNotice] = useState(false);
   const [isLoadingKey, setIsLoadingKey] = useState(true);
   const [isKeyRevealed, setIsKeyRevealed] = useState(false);
   const [hoveredTierBtn, setHoveredTierBtn] = useState(null);
@@ -142,6 +143,7 @@ export default function ProfilePage({
       if (!user) {
         if (isMounted) {
           setApiKey('');
+          setIsRevokedNotice(false);
           setIsLoadingKey(false);
         }
         return;
@@ -150,8 +152,14 @@ export default function ProfilePage({
         setIsLoadingKey(true);
         const res = await fetch('/api/user/api-key', { credentials: 'include' });
         const data = await res.json();
-        if (isMounted && data.success && data.apiKey) {
-          setApiKey(data.apiKey);
+        if (isMounted) {
+          if (data.success && data.apiKey) {
+            setApiKey(data.apiKey);
+            setIsRevokedNotice(false);
+          } else if (data.revoked) {
+            setApiKey('');
+            setIsRevokedNotice(true);
+          }
         }
       } catch (err) {
         console.warn('[CAVDAX] Could not fetch user API key:', err);
@@ -160,7 +168,19 @@ export default function ProfilePage({
       }
     }
     fetchApiKey();
-    return () => { isMounted = false; };
+
+    const handleKeysRevoked = () => {
+      if (isMounted) {
+        setApiKey('');
+        setIsRevokedNotice(true);
+      }
+    };
+    window.addEventListener('cavdax:keys-revoked', handleKeysRevoked);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('cavdax:keys-revoked', handleKeysRevoked);
+    };
   }, [user]);
 
 
@@ -439,6 +459,7 @@ export default function ProfilePage({
       const data = await res.json();
       if (data.success && data.apiKey) {
         setApiKey(data.apiKey);
+        setIsRevokedNotice(false);
         showToast('Cryptographic API Key successfully rotated.');
       } else {
         showToast('Failed to rotate API Key.');
@@ -1206,6 +1227,15 @@ export default function ProfilePage({
             </p>
           </div>
 
+          {isRevokedNotice && user && (
+            <div className="mb-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 shadow-xs">
+              <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <div className="text-xs text-rose-700 dark:text-rose-300">
+                <span className="font-bold">Emergency Revocation Notice:</span> All credentials across the network were invalidated by administrator emergency response. Please click <button onClick={handleRotateKey} className="font-bold underline hover:text-rose-950 dark:hover:text-white cursor-pointer">Rotate Key</button> to generate a replacement token.
+              </div>
+            </div>
+          )}
+
           {!user ? (
             <div className="py-2.5 px-3.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-dashed border-slate-300 dark:border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -1232,9 +1262,11 @@ export default function ProfilePage({
                 <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
                   {isLoadingKey
                     ? 'Retrieving cryptographic key...'
-                    : (isKeyRevealed
-                        ? apiKey
-                        : (apiKey ? `${apiKey.slice(0, 16)}••••••••••••••••${apiKey.slice(-4)}` : 'No key generated'))}
+                    : (isRevokedNotice && !apiKey
+                        ? 'REVOKED — Action Required: Rotate Key'
+                        : (isKeyRevealed
+                            ? apiKey
+                            : (apiKey ? `${apiKey.slice(0, 16)}••••••••••••••••${apiKey.slice(-4)}` : 'No key generated')))}
                 </code>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">

@@ -28,7 +28,7 @@ import {
   addAuthorizedUser, removeAuthorizedUser,
   addWhitelistedIp, removeWhitelistedIp, getCustomWhitelistedIps, fetchGlobalWhitelistedIps, addGlobalWhitelistedIp, removeGlobalWhitelistedIp,
   fetchGlobalDevRoster, addGlobalAuthorizedUser, removeGlobalAuthorizedUser,
-  setDevTierOverride, getDevCurrentTier, isHackathonEvaluationMode, setHackathonEvaluationMode, setGlobalHackathonMode, fetchGlobalHackathonMode
+  setDevTierOverride, getDevCurrentTier, isHackathonEvaluationMode, setHackathonEvaluationMode, setGlobalHackathonMode, fetchGlobalHackathonMode, emergencyRevokeAllKeys
 } from '../services/devAuth';
 import { playClick, playRejectBuzz, playApprovalChime } from '../utils/soundFx';
 
@@ -226,6 +226,10 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
 
   // Killswitch modal
   const [isKillswitchModalOpen, setIsKillswitchModalOpen] = useState(false);
+  const [isRevokeAllModalOpen, setIsRevokeAllModalOpen] = useState(false);
+  const [revokeStep, setRevokeStep] = useState(1);
+  const [revokeConfirmInput, setRevokeConfirmInput] = useState('');
+  const [isRevokingAll, setIsRevokingAll] = useState(false);
 
   useEffect(() => {
     fetchClientIp().then((ip) => {
@@ -360,6 +364,36 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
     setSession(null);
     setIsKillswitchModalOpen(false);
     if (onNavigateHome) onNavigateHome();
+  };
+
+  const handleExecuteGlobalRevocation = async () => {
+    if (revokeConfirmInput !== 'REVOKE-ALL-KEYS' || isRevokingAll) return;
+    playRejectBuzz();
+    setIsRevokingAll(true);
+    try {
+      const res = await emergencyRevokeAllKeys('Emergency revocation triggered by developer enclave');
+      if (res.success) {
+        setInjectionLogs((prev) => [
+          {
+            id: `log-revoke-${Date.now()}`,
+            timestamp: new Date().toLocaleTimeString(),
+            type: 'CRITICAL',
+            message: 'EMERGENCY PROTOCOL ENGAGED: Global API Key Invalidation executed. All user & MCP agent keys revoked across network.',
+          },
+          ...prev,
+        ]);
+        showPanelToast('Emergency Protocol Engaged: All API keys across network invalidated.');
+        setIsRevokeAllModalOpen(false);
+        setRevokeStep(1);
+        setRevokeConfirmInput('');
+      } else {
+        showPanelToast(`Revocation failed: ${res.error || 'Server error'}`);
+      }
+    } catch (err) {
+      showPanelToast(`Error: ${err.message}`);
+    } finally {
+      setIsRevokingAll(false);
+    }
   };
 
   // ─── GATE 1: PASSKEY CHALLENGE SCREEN ──────────────────────────────────────
@@ -929,15 +963,44 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               ))}
             </div>
 
-            {/* Emergency Killswitch trigger */}
-            <div className="mt-2 pt-3 border-t border-slate-200 dark:border-white/10">
+            {/* Emergency Killswitches & Invalidation triggers */}
+            <div className="mt-2 pt-3 border-t border-slate-200 dark:border-white/10 flex flex-col gap-3">
               <button
                 onClick={() => setIsKillswitchModalOpen(true)}
                 className="w-full py-2.5 rounded-xl border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white text-xs font-mono font-bold hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-500 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Flame size={14} />
-                <span>EMERGENCY SESSION KILLSWITCH</span>
+                <span>EMERGENCY SESSION LOCKOUT (LOCAL ENCLAVE)</span>
               </button>
+
+              <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/5 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[10px] font-mono font-bold tracking-wider uppercase">
+                      Global Credential Invalidation
+                    </span>
+                  </div>
+                  <span className="text-[8px] font-mono font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                    HIGH BLAST RADIUS
+                  </span>
+                </div>
+                <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Purges all active API keys network-wide across Community, Pro, and Enterprise tiers. Forces 100% of MCP agents and users to re-rotate credentials.
+                </p>
+                <button
+                  onClick={() => {
+                    playClick();
+                    setRevokeStep(1);
+                    setRevokeConfirmInput('');
+                    setIsRevokeAllModalOpen(true);
+                  }}
+                  className="w-full py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-98"
+                >
+                  <Key className="w-3 h-3" />
+                  <span>REVOKE ALL API KEYS (DOUBLE WARNING)</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1037,6 +1100,164 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                   ENGAGE LOCKOUT NOW
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Global API Key Revocation Double Warning Modal */}
+      <AnimatePresence>
+        {isRevokeAllModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => {
+              if (!isRevokingAll) {
+                setIsRevokeAllModalOpen(false);
+                setRevokeStep(1);
+                setRevokeConfirmInput('');
+              }
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg rounded-2xl border border-rose-500/50 bg-white dark:bg-[#070709] p-6 shadow-2xl flex flex-col gap-4"
+            >
+              {/* Step Indicator Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+                <div className="flex items-center gap-2.5 text-rose-500">
+                  <AlertTriangle className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-mono font-bold tracking-wider uppercase">
+                    {revokeStep === 1
+                      ? 'WARNING 1 OF 2 — BLAST RADIUS ADVISORY'
+                      : 'WARNING 2 OF 2 — DESTRUCTIVE CONFIRMATION'}
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-500 border border-rose-500/30 font-bold">
+                  STEP {revokeStep}/2
+                </span>
+              </div>
+
+              {revokeStep === 1 ? (
+                <div className="flex flex-col gap-3 font-mono text-xs">
+                  <p className="text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                    You are initiating an emergency network-wide API key invalidation. Review the operational impact before proceeding:
+                  </p>
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3.5 flex flex-col gap-2.5 text-[11px] text-slate-600 dark:text-slate-300">
+                    <div className="flex items-start gap-2">
+                      <span className="text-rose-500 font-bold shrink-0">•</span>
+                      <span><strong>100% Key Invalidation:</strong> Every active API key across Community, Pro, and Enterprise tiers becomes invalid immediately.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-rose-500 font-bold shrink-0">•</span>
+                      <span><strong>MCP Daemon Disruption:</strong> Active Cursor, Claude Code, and Windsurf MCP connections will drop and fail with HTTP 401 Unauthorized.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-rose-500 font-bold shrink-0">•</span>
+                      <span><strong>Mandatory User Rotation:</strong> Users will receive an emergency notice on their Profile page prompting them to manually rotate their key to regain access.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-rose-500 font-bold shrink-0">•</span>
+                      <span><strong>Immutable Causal Log:</strong> A cryptographic audit record of this event will be permanently written to the ledger.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2.5 pt-2">
+                    <button
+                      onClick={() => {
+                        setIsRevokeAllModalOpen(false);
+                        setRevokeStep(1);
+                        setRevokeConfirmInput('');
+                      }}
+                      className="px-4 py-2 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-mono text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        playClick();
+                        setRevokeStep(2);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-mono font-bold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5"
+                    >
+                      <span>PROCEED TO CONFIRMATION</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 font-mono text-xs">
+                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-2.5">
+                    <Flame className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                    <div className="text-[11px] text-rose-900 dark:text-rose-200">
+                      <p className="font-bold">CRITICAL FRICTION GATE</p>
+                      <p className="mt-0.5 text-slate-700 dark:text-rose-300/80 leading-relaxed">
+                        This action cannot be undone. To verify authorization and intent, type <code className="px-1.5 py-0.5 bg-black/20 dark:bg-black/50 rounded text-rose-500 font-bold">REVOKE-ALL-KEYS</code> below.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                      Type confirmation phrase:
+                    </label>
+                    <input
+                      type="text"
+                      value={revokeConfirmInput}
+                      onChange={(e) => setRevokeConfirmInput(e.target.value)}
+                      placeholder="REVOKE-ALL-KEYS"
+                      disabled={isRevokingAll}
+                      autoFocus
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-white/5 font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:border-rose-500 placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      onClick={() => {
+                        setRevokeStep(1);
+                        setRevokeConfirmInput('');
+                      }}
+                      disabled={isRevokingAll}
+                      className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer disabled:opacity-50"
+                    >
+                      Back to Advisory
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setIsRevokeAllModalOpen(false);
+                          setRevokeStep(1);
+                          setRevokeConfirmInput('');
+                        }}
+                        disabled={isRevokingAll}
+                        className="px-3.5 py-2 rounded-xl text-xs font-mono text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleExecuteGlobalRevocation}
+                        disabled={revokeConfirmInput !== 'REVOKE-ALL-KEYS' || isRevokingAll}
+                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 dark:disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-mono font-bold cursor-pointer transition-colors shadow-sm flex items-center gap-1.5"
+                      >
+                        {isRevokingAll ? (
+                          <span>REVOKING ALL KEYS...</span>
+                        ) : (
+                          <>
+                            <Flame className="w-3.5 h-3.5" />
+                            <span>EXECUTE PURGE NOW</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}
