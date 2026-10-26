@@ -1767,7 +1767,7 @@ app.get('/api/auth/github', (req, res) => {
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
     redirect_uri: GITHUB_CALLBACK_URL,
-    scope: 'read:user read:org',
+    scope: 'repo read:user read:org',
     state
   });
 
