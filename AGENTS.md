@@ -98,6 +98,16 @@ Operational constitution, architecture standards, and safety governance for AI c
    - **Elevated Rate Ceiling**: Expands per-IP rate limits to 1,200 req/min (20 req/sec) to guarantee zero throttling during evaluation, while avoiding `skip: true` to keep the server shielded against bots.
    - **Instant Reversion**: Toggling OFF instantly restores standard production enforcement across all clients without redeployment.
 
+0j. **Inviolable Guard: Zero Split-Brain Session Desynchronization & Auth State Coherence**:
+   - **Server Session is the Single Source of Truth**: The backend session state (`req.session.user` / `/api/auth/me`) is the absolute authority on user authentication. LocalStorage (`cavdax_user_session`) is strictly an ephemeral UI cache, NEVER an override or replacement for backend authentication status.
+   - **Immediate Invalidation on 401 / Unauthenticated**: Whenever ANY API endpoint returns `401 Unauthorized` or `{ authenticated: false }`:
+     - Never preserve or fall back to stale `localStorage` user objects.
+     - Immediately purge `localStorage.removeItem('cavdax_user_session')`.
+     - Dispatch `window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }))` so that the navbar, profile, modal connectors, and workspace immediately synchronize without creating "phantom" logged-in states.
+   - **Mandatory `{ credentials: 'include' }` on All Internal API Calls**: Every frontend `fetch()` targeting an internal route (`/api/...`) that reads or mutates user data, listed repositories, API keys, quotas, or graph mutations MUST explicitly declare `{ credentials: 'include' }`. Omitting credentials leads to silent session drops and false 401 errors.
+   - **Never Render Misleading "Empty Data" on Authentication Failures**: When an authenticated fetch (such as listing GitHub repositories or reading API keys) fails due to session expiration (401 / unauthenticated), NEVER silently swallow the error and render misleading empty copy like *"No repositories found."* Always render an informative session-expiration state informing the user that the backend process was updated, along with a direct 1-click re-authentication button (`[ Reconnect GitHub ]`).
+   - **Stable Deployment Session Secrets**: In production or containerized environments, Express session middleware (`express-session`) must NEVER generate ephemeral in-memory random secrets (`randomBytes(32)`) on boot without a stable persistent fallback. Random secret regeneration invalidates all signed cookies across process restarts, causing widespread session desynchronization after every production deployment.
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:
@@ -481,6 +491,17 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
     - **Root Out Classic & AI Anti-Patterns**: Explicitly hunt for and prevent anti-patterns documented in `UI_DESIGN_SYSTEM.md#36` (e.g. Mystery Meat Navigation, Hidden Critical Paths, Cargo Cult UI, Bento Card recursive slop, low-contrast grays, orphan icons).
     - **Constructive Synthesis**: Present a concise, critical critique, state the established industry standard (e.g., Linear, Vercel, Stripe), explain the trade-offs, and offer ranked, actionable alternatives before touching code.
 
+25. **Mandatory Cloudflare 7-Phase Security Audit Gate Before Merging to `main`**:
+    - **Inviolable Pre-Merge Security Requirement**: No branch (`frontend`, `backend`, `docs`) may ever be merged into `main` until the agent has executed a formal security audit against all 7 phases of the Cloudflare Security & Pen-Test Playbook (`##Global-Cloudflare-Security-Audit-And-Hardening-Playbook.md`):
+      1. *Phase 1 (Boundary & Trust Mapping)*: Zero client-side validation trusted as a security boundary; all HTTP, WebSocket, and MCP inputs validated server-side.
+      2. *Phase 2 (Auth & Session Gate Inspection)*: All protected routes verify cryptographic signatures or authenticated web session cookies (`req.session?.user`); zero privilege escalation vectors.
+      3. *Phase 3 (Injection & Path Traversal Hunting)*: Strictly confine all file paths using `path.resolve(REPO_ROOT)` and `startsWith`; all database queries parameterized `{ params }` with zero string concatenation.
+      4. *Phase 4 (Business Logic & Financial Integrity)*: Constant-time HMAC verification (`timingSafeStringEqual`); server-side order and tier authority; zero client-supplied tier overrides.
+      5. *Phase 5 (Security Headers, CORS & Dependency Hygiene)*: Strict CSP, HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, strict CORS origin allowlists, zero critical/high CVEs.
+      6. *Phase 6 (Cloudflare Edge & Zero-Trust Architecture)*: Reverse proxy SSL termination, reverse proxy trust (`trust proxy: 1`), rate limiting, zero public exposure of raw backend IPs or dev endpoints.
+      7. *Phase 7 (Advanced Memory & Session Lifecycle Hardening)*: Automatic key map re-hydration (`SEC-KEY-03`) across worker restarts; emergency key revocation epoch checks; input length/type sanitization.
+    - **Strict Gatekeeper Enforcement**: Only when ALL 7 phases pass 100% green with zero critical, high, or medium findings may an agent seek developer approval to merge into `main`. If ANY vulnerability or defect is detected, the agent MUST resolve all findings on the feature branch, re-audit, and verify a clean passing report before merging.
+
 
 
 ---
@@ -589,7 +610,9 @@ pm run build (or equivalent) passes with zero fatal errors.
 
     6. *Accurate Concept Framing*: Zero unauthorized government/institutional claims or fake escrow assertions.
 
-    7. *Persistent Memory Sync*: docs/DEV_SESSION_STATE.md synchronized.
+    7. *Cloudflare 7-Phase Security Audit Pass*: Full diff passes all 7 phases of the Cloudflare Security Audit Playbook with zero unresolved critical, high, or medium findings.
+
+    8. *Persistent Memory Sync*: docs/DEV_SESSION_STATE.md synchronized.
 
 
 

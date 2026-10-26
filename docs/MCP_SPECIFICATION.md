@@ -181,26 +181,54 @@ Allows agents and developers to inspect the live FalkorDB DAG to discover active
 
 ---
 
-### 3.3 Tool 3: `verify_decision` (Pre-Flight Causal Check)
-Performs a dry-run causal check without touching the filesystem.
+### 3.3 Tool 3: `check_intent_clearance` (Pre-Flight Architectural Clearance Radar)
+Enables AI coding agents (Claude Code, Cursor) to proactively verify architectural intent in **< 2ms** *before* generating code tokens or writing files. Prevents the common competitor gap where agents burn 3,000+ tokens on obsolete patterns before encountering a write-time refusal.
 
 #### Input Schema
 ```json
 {
-  "name": "verify_decision",
-  "description": "Performs a pre-flight GraphBLAS check on a proposed Decision ID to verify whether its causal chain is 100% active before generating code.",
+  "name": "check_intent_clearance",
+  "description": "Pre-flight architectural clearance. Call BEFORE generating or applying code to verify if your proposed decision is grounded in active, un-superseded architecture records.",
   "parameters": {
     "type": "object",
     "properties": {
       "decision_id": {
         "type": "string",
-        "description": "The decision identifier to test (e.g. 'DEC-102')."
+        "description": "The ID of the Architecture Decision (e.g. DEC-102 or DEC-103) you intend to implement."
+      },
+      "target_file": {
+        "type": "string",
+        "description": "Optional target file path you intend to touch."
+      },
+      "proposed_action": {
+        "type": "string",
+        "description": "Optional summary of the intended code change."
+      },
+      "agent_id": {
+        "type": "string",
+        "description": "Optional unique identifier of the calling agent (e.g. devin-instance-01)."
       }
     },
     "required": ["decision_id"]
   }
 }
 ```
+
+---
+
+### 3.4 Tool 4: `revalidate_decision` (Act IV Dynamic Invalidation Recovery)
+Allows agents to synthesize a new Decision replacing an invalidated or superseded one, automatically linking the new Decision to active Facts extracted from fresh ADRs.
+
+---
+
+### 3.5 Tool 5: `acquire_decision_lock` & `release_decision_lock` (Multi-Agent Concurrency Control)
+Eliminates race conditions when parallel autonomous agent fleets (e.g. dual Devin or Claude Code subagent instances) operate on the same repository branches.
+
+#### `acquire_decision_lock`
+Takes an exclusive, timed lease (`ttl_ms`) on a decision branch. Any concurrent agent attempting to modify or clear that decision is met with `BLOCKED_CONCURRENT_AGENT_LOCK`.
+
+#### `release_decision_lock`
+Releases the held lease when an agent finishes its milestone or aborts its task.
 
 ---
 
@@ -414,3 +442,17 @@ jobs:
 1. **Sandboxed In-Flight Interception**: Tool calls are intercepted at the protocol level. If the gate rejects the action, the file payload is dropped from memory immediately without invoking `fs.writeFile` or touching disk blocks.
 2. **Deterministic Provenance**: Invalidation is computed through strict algebraic graph reachability, not probabilistic LLM judgment or heuristic prompt scanning.
 3. **Audit Trail**: Every verdict is timestamped and recorded into the persistent FalkorDB graph as a `(:VerificationAudit)` node linked to the target git commit hash.
+
+---
+
+## 7. The 4 Competitive Moats: Elimination of Competitor Gaps
+
+CAVDAX closes the four major structural vulnerabilities that traditional security and governance tools suffer from:
+
+| Gap | Competitor Vulnerability | CAVDAX Solution & Moat |
+|---|---|---|
+| **1. Reactive Token Burn** | Competitors only block writes at the end, wasting 3,000+ LLM context window tokens on obsolete code. | `check_intent_clearance` queries FalkorDB GraphBLAS in **< 2ms** *before* code generation begins. |
+| **2. Manual Ingest Friction** | Governance tools demand strict, proprietary YAML frontmatter in every document. | **Zero-Config Heuristic Ingest**: Automatically mines Decisions, Facts, and Supersedes relationships from plain Markdown, RFCs, and Notion exports. |
+| **3. Disconnected CI/CD** | Tools only offer local developer CLI checks, leaving PRs unmonitored. | **Native GitHub Action (`action.yml`) & Workflow**: Ephemeral FalkorDB service containers verify PRs automatically and publish Markdown badges to `$GITHUB_STEP_SUMMARY`. |
+| **4. Multi-Agent Race Conditions** | Parallel coding agents mutate conflicting architecture branches concurrently. | **`DecisionLockManager`**: Timed concurrency leases (`acquire_decision_lock`) reject overlapping mutations with `BLOCKED_CONCURRENT_AGENT_LOCK`. |
+
