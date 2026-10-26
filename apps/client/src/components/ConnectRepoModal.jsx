@@ -19,8 +19,10 @@ export default function ConnectRepoModal({
   onClose,
   user,
   onConnectRepo,
-  connectedRepoIds = []
+  connectedRepoIds = [],
+  returnTo = '/console'
 }) {
+  const githubAuthUrl = `/api/auth/github?returnTo=${encodeURIComponent(`${returnTo}?connected=1&openConnectRepo=1`)}`;
   const [repos, setRepos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [authExpired, setAuthExpired] = useState(false);
@@ -381,7 +383,7 @@ export default function ConnectRepoModal({
                           Your backend session was reset during deployment. Reconnect GitHub to load your repositories.
                         </p>
                         <a
-                          href="/api/auth/github"
+                          href={githubAuthUrl}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-semibold hover:opacity-90 transition-opacity"
                         >
                           <Github className="w-3 h-3" />
@@ -420,7 +422,7 @@ export default function ConnectRepoModal({
                 Sign in with GitHub to view and connect your private and public repositories.
               </p>
               <a
-                href="/api/auth/github"
+                href={githubAuthUrl}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-semibold hover:opacity-90 transition-opacity"
               >
                 <Github className="w-3.5 h-3.5" />
