@@ -202,23 +202,9 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
           window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: u }));
           if (onAuthChange) onAuthChange(u);
         } else {
-          // If server session is unauthenticated (e.g. after container restart), fall back to client session
-          try {
-            const raw = localStorage.getItem('cavdax_user_session');
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              if (parsed?.username || parsed?.login) {
-                const u = {
-                  login: parsed.username || parsed.login,
-                  name: parsed.name || parsed.username || parsed.login,
-                  avatarUrl: parsed.avatarUrl || parsed.avatar_url || parsed.avatar || '',
-                  githubId: parsed.githubId
-                };
-                setGithubUser(u);
-                return;
-              }
-            }
-          } catch {}
+          // Server session is unauthenticated (e.g. after container restart).
+          // Clear stale client credentials to prevent split-brain ghost session.
+          try { localStorage.removeItem('cavdax_user_session'); } catch {}
           setGithubUser(false);
         }
       })
@@ -558,11 +544,11 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
 Before modifying repository code, verify architectural alignment with CAVDAX:
 
-1. Ground all filesystem writes in active Architectural Decisions.
+1. Pre-flight check: Run \`check_intent_clearance\` with your proposed \`decision_id\` (e.g. DEC-103) before generating code to verify active provenance with zero token waste.
 
-2. Route file edits through the \`apply_code_change\` MCP tool with the target \`decision_id\` (e.g., DEC-102).
+2. Enclosed execution: Route file edits through the \`apply_code_change\` MCP tool with the verified \`decision_id\`.
 
-3. If CAVDAX returns 403 BLOCKED_SUPERSEDED_SOURCE, examine the invalidation path and revalidate before writing.`;
+3. Fast revalidation: If CAVDAX returns BLOCKED_SUPERSEDED_SOURCE, invoke \`revalidate_decision\` with the fresh ADR before re-checking clearance.`;
 
 
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Github, Search, Plus, Check,
-  X, RefreshCw, Lock, Globe, ExternalLink
+  X, RefreshCw, Lock, Globe, ExternalLink, AlertCircle
 } from 'lucide-react';
 import { playClick, playApprovalChime } from '../utils/soundFx';
 
@@ -23,6 +23,7 @@ export default function ConnectRepoModal({
 }) {
   const [repos, setRepos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [authExpired, setAuthExpired] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [customRepoUrl, setCustomRepoUrl] = useState('');
 
@@ -113,18 +114,35 @@ export default function ConnectRepoModal({
     if (!isOpen) return;
 
     if (user?.login) {
+      setAuthExpired(false);
       fetchUserRepos();
     } else {
       setRepos([]);
+      setAuthExpired(false);
     }
   }, [isOpen, user]);
 
   const fetchUserRepos = async () => {
     setIsLoading(true);
+    setAuthExpired(false);
     try {
-      const res = await fetch('/api/github/repos');
+      const res = await fetch('/api/github/repos', { credentials: 'include' });
+      if (res.status === 401) {
+        setAuthExpired(true);
+        setRepos([]);
+        try { localStorage.removeItem('cavdax_user_session'); } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
+        if (data && data.authenticated === false) {
+          setAuthExpired(true);
+          setRepos([]);
+          try { localStorage.removeItem('cavdax_user_session'); } catch {}
+          window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+          return;
+        }
         if (data.repos && Array.isArray(data.repos)) {
           setRepos(data.repos);
         } else {
@@ -353,7 +371,28 @@ export default function ConnectRepoModal({
                     })
                   ) : (
                     <div className="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-white/10 rounded-xl">
-                      {isLoading ? 'Loading repositories...' : 'No repositories found.'}
+                      {authExpired ? (
+                      <div className="p-4 text-center border border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl space-y-2">
+                        <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400 text-xs font-mono font-medium">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>Session Expired After Server Update</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
+                          Your backend session was reset during deployment. Reconnect GitHub to load your repositories.
+                        </p>
+                        <a
+                          href="/api/auth/github"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          <Github className="w-3 h-3" />
+                          <span>Reconnect GitHub</span>
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-white/10 rounded-xl">
+                        {isLoading ? 'Loading repositories...' : 'No repositories found.'}
+                      </div>
+                    )}
                     </div>
                   )}
                   </div>

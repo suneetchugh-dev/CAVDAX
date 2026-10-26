@@ -61,6 +61,26 @@ function loadRazorpayScript() {
   });
 }
 
+
+const LARGE_DISPLAY_QUERY = "(min-width: 1537px), (min-height: 875px) and (min-width: 1280px)";
+
+function useIsLargeDisplay() {
+  const [isLarge, setIsLarge] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(LARGE_DISPLAY_QUERY).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(LARGE_DISPLAY_QUERY);
+    const onChange = (e) => setIsLarge(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return isLarge;
+}
+
 export default function ProfilePage({
   user,
   tier = 'free',
@@ -153,6 +173,13 @@ export default function ProfilePage({
         const res = await fetch('/api/user/api-key', { credentials: 'include' });
         const data = await res.json();
         if (isMounted) {
+          if (res.status === 401 || (data && data.authenticated === false)) {
+            setApiKey('');
+            setIsRevokedNotice(false);
+            try { localStorage.removeItem('cavdax_user_session'); } catch {}
+            window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+            return;
+          }
           if (data.success && data.apiKey) {
             setApiKey(data.apiKey);
             setIsRevokedNotice(false);
@@ -309,7 +336,7 @@ export default function ProfilePage({
 
     const fetchQuota = async () => {
       try {
-        const res = await fetch(`/api/user/quota?tier=${currentTier}`);
+        const res = await fetch(`/api/user/quota?tier=${currentTier}`, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setQuotaData(data);
@@ -457,6 +484,12 @@ export default function ProfilePage({
         credentials: 'include'
       });
       const data = await res.json();
+      if (res.status === 401 || (data && data.authenticated === false)) {
+        try { localStorage.removeItem('cavdax_user_session'); } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+        showToast('Session expired after server update. Reconnect GitHub to rotate keys.');
+        return;
+      }
       if (data.success && data.apiKey) {
         setApiKey(data.apiKey);
         setIsRevokedNotice(false);
@@ -498,15 +531,841 @@ export default function ProfilePage({
   const repoLimit = currentTier === 'free' ? '1' : (currentTier === 'pro' ? '10' : 'Unlimited');
   const mcpRateLimit = currentTier === 'free' ? '30 rpm' : (currentTier === 'pro' ? '100 rpm' : 'Unlimited');
 
+  const isLargeDisplay = useIsLargeDisplay();
+
+  // 1. Spacious Layout (Preserved from pre-compact commit 3e35dc6 for 27-inch monitors & large displays)
+  if (isLargeDisplay) {
+    return (
+      <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        
+        {/* ── 1. Top Identity & Account State (Frameless, Spacious, Centered Elegance) ── */}
+        <section className="text-center mt-6 sm:mt-8 md:mt-10 pt-4 pb-4 sm:pb-6 relative flex flex-col items-center">
+          {/* Large Concentric Avatar (Centered, Frameless, Tier-Ring Halo) */}
+          <div className="relative mb-3 sm:mb-4 flex justify-center">
+            <div className="relative">
+              <div className={`w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden transition-all duration-500 bg-slate-100 dark:bg-white/5 ${tierRingStyles[currentTier] || tierRingStyles.free}`}>
+                {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
+                  <ShimmerImage
+                    src={user?.avatar_url || user?.avatarUrl || user?.avatar}
+                    alt={user.login || 'User Avatar'}
+                    containerClassName="h-full w-full rounded-full"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center font-mono font-bold text-slate-400 text-2xl sm:text-3xl">
+                    {userInitial}
+                  </div>
+                )}
+              </div>
+  
+              {/* Micro Tier Badge Floating Over Bottom-Right of Avatar (Authentic Tier SVGs) */}
+              <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm border border-slate-200/80 dark:border-white/10">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center">
+                  {currentTier === 'enterprise' ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-purple-500 dark:text-purple-400 shrink-0 transform -rotate-45" aria-hidden="true">
+                      <path d="M3 18h18l-2-11-4.5 4.5L12 4l-2.5 7.5L5 7l-2 11z" fill="currentColor" fillOpacity="0.25" />
+                      <line x1="4" y1="20" x2="20" y2="20" strokeWidth="1.8" />
+                      <circle cx="12" cy="4" r="1.3" fill="currentColor" />
+                    </svg>
+                  ) : currentTier === 'pro' ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-amber-500 dark:text-amber-400 shrink-0 transform -rotate-45" aria-hidden="true">
+                      <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" fill="currentColor" fillOpacity="0.25" />
+                      <line x1="2" y1="9" x2="22" y2="9" />
+                      <line x1="10" y1="9" x2="12" y2="22" />
+                      <line x1="14" y1="9" x2="12" y2="22" />
+                    </svg>
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-3 h-3 text-slate-600 dark:text-slate-400 shrink-0 transform -rotate-45"
+                      aria-hidden="true"
+                    >
+                      <path d="M7 8h10" />
+                      <path d="M8.5 8c0-2 1.5-3.5 3.5-3.5s3.5 1.5 3.5 3.5" />
+                      <circle cx="5" cy="11" r="1.75" />
+                      <path d="M2.5 17c0-2 1.5-3 3-3 .8 0 1.5.3 2 .8" />
+                      <circle cx="19" cy="11" r="1.75" />
+                      <path d="M21.5 17c0-2-1.5-3-3-3-.8 0-1.5.3-2 .8" />
+                      <path d="M9 16c0-1.8 1.3-2.5 3-2.5s3 .7 3 2.5" />
+                      <rect x="5" y="18" width="14" height="4.5" rx="1" fill="currentColor" fillOpacity="0.25" />
+                      <line x1="8" y1="20" x2="8.01" y2="20" strokeWidth="2" />
+                      <line x1="11" y1="20" x2="11.01" y2="20" strokeWidth="2" />
+                      <line x1="14" y1="20" x2="14.01" y2="20" strokeWidth="2" />
+                      <line x1="16.5" y1="20" x2="16.51" y2="20" strokeWidth="2" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          {/* Identity & Verified Handle */}
+          <h1 className="text-base sm:text-lg font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
+            {user?.name || user?.login || 'Local Contributor'}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
+            {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
+          </p>
+  
+          {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
+          <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
+            {/* Support Us Button with Rose Fluid Wave Fill */}
+            <button
+              onClick={() => {
+                playClick();
+                if (onOpenSupportPage) onOpenSupportPage();
+              }}
+              onMouseEnter={() => setIsSponsorHovered(true)}
+              onMouseLeave={() => setIsSponsorHovered(false)}
+              className={`relative overflow-hidden group h-9 min-w-[140px] px-5 flex items-center justify-center gap-2 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
+                isSponsorHovered
+                  ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
+                  : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-rose-400'
+              }`}
+              title="Support the CAVDAX open-source project"
+            >
+              {/* Fluid Water Fill Layer */}
+              <div
+                aria-hidden="true"
+                style={{
+                  transform: isSponsorHovered ? 'translateY(0%)' : 'translateY(105%)',
+                  opacity: isSponsorHovered ? 1 : 0,
+                  transition: isSponsorHovered
+                    ? 'transform 1000ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                    : 'opacity 250ms ease-out, transform 0s 250ms'
+                }}
+                className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+              >
+                <svg
+                  viewBox="0 0 320 48"
+                  preserveAspectRatio="none"
+                  className="w-full h-6 shrink-0 text-rose-500 dark:text-rose-600 fill-current block"
+                >
+                  <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                  <circle cx="80" cy="20" r="4.5" />
+                  <circle cx="120" cy="12" r="3.5" />
+                  <circle cx="160" cy="15" r="5" />
+                  <circle cx="200" cy="13" r="3.5" />
+                  <circle cx="240" cy="22" r="4.5" />
+                  <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                </svg>
+                <div className="flex-1 w-full bg-rose-500 dark:bg-rose-600" />
+              </div>
+  
+              <Heart className={`w-3.5 h-3.5 relative z-10 transition-colors duration-500 ${
+                isSponsorHovered ? 'text-white fill-white' : 'text-rose-500'
+              }`} />
+              <span className={`relative z-10 transition-colors duration-500 ${
+                isSponsorHovered ? 'text-white' : ''
+              }`}>
+                Support Us
+              </span>
+            </button>
+  
+            {/* Account Action: Log Out (if user) OR Connect GitHub (with Monochrome Fluid Wave Fill) */}
+            {user ? (
+              <button
+                onClick={handleLogout}
+                onMouseEnter={() => setIsLogoutHovered(true)}
+                onMouseLeave={() => setIsLogoutHovered(false)}
+                className={`relative overflow-hidden group h-9 min-w-[130px] px-5 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
+                  isLogoutHovered
+                    ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
+                    : 'border-rose-500/50 dark:border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                }`}
+                title="Sign out of current GitHub session"
+              >
+                {/* Fluid Water Fill Layer */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    transform: isLogoutHovered ? 'translateY(0%)' : 'translateY(105%)',
+                    opacity: isLogoutHovered ? 1 : 0,
+                    transition: isLogoutHovered
+                      ? 'transform 1000ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                      : 'opacity 250ms ease-out, transform 0s 250ms'
+                  }}
+                  className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+                >
+                  <svg
+                    viewBox="0 0 320 48"
+                    preserveAspectRatio="none"
+                    className="w-full h-6 shrink-0 text-rose-600 fill-current block"
+                  >
+                    <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                    <circle cx="80" cy="20" r="4.5" />
+                    <circle cx="120" cy="12" r="3.5" />
+                    <circle cx="160" cy="15" r="5" />
+                    <circle cx="200" cy="13" r="3.5" />
+                    <circle cx="240" cy="22" r="4.5" />
+                    <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  </svg>
+                  <div className="flex-1 w-full bg-rose-600" />
+                </div>
+  
+                <LogOut className={`w-3.5 h-3.5 relative z-10 transition-colors duration-500 ${
+                  isLogoutHovered ? 'text-white' : 'text-rose-600 dark:text-rose-400'
+                }`} />
+                <span className={`relative z-10 transition-colors duration-500 ${
+                  isLogoutHovered ? 'text-white' : ''
+                }`}>
+                  Log Out
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  playClick();
+                  window.location.href = '/api/auth/github?returnTo=/profile';
+                }}
+                onMouseEnter={() => setIsGithubHovered(true)}
+                onMouseLeave={() => setIsGithubHovered(false)}
+                className={`relative overflow-hidden group h-9 min-w-[150px] px-5 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
+                  isGithubHovered
+                    ? 'border-slate-950 dark:border-white text-white dark:text-slate-950 shadow-slate-950/20 dark:shadow-white/20'
+                    : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40'
+                }`}
+                title="Connect with GitHub OAuth"
+              >
+                {/* Fluid Water Fill Layer (Monochrome Obsidian / Porcelain) */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    transform: isGithubHovered ? 'translateY(0%)' : 'translateY(105%)',
+                    opacity: isGithubHovered ? 1 : 0,
+                    transition: isGithubHovered
+                      ? 'transform 1000ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                      : 'opacity 250ms ease-out, transform 0s 250ms'
+                  }}
+                  className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+                >
+                  <svg
+                    viewBox="0 0 320 48"
+                    preserveAspectRatio="none"
+                    className="w-full h-6 shrink-0 text-slate-950 dark:text-white fill-current block"
+                  >
+                    <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                    <circle cx="80" cy="20" r="4.5" />
+                    <circle cx="120" cy="12" r="3.5" />
+                    <circle cx="160" cy="15" r="5" />
+                    <circle cx="200" cy="13" r="3.5" />
+                    <circle cx="240" cy="22" r="4.5" />
+                    <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                  </svg>
+                  <div className="flex-1 w-full bg-slate-950 dark:bg-white" />
+                </div>
+  
+                <Github className={`w-3.5 h-3.5 relative z-10 transition-colors duration-500 ${
+                  isGithubHovered ? 'text-white dark:text-slate-950' : 'text-slate-800 dark:text-slate-200'
+                }`} />
+                <span className={`relative z-10 transition-colors duration-500 ${
+                  isGithubHovered ? 'text-white dark:text-slate-950' : ''
+                }`}>
+                  Connect GitHub
+                </span>
+              </button>
+            )}
+          </div>
+        </section>
+  
+        {/* ── 2. Architecture Tiers & Quotas (Exact 4 Benefits per Tier) ── */}
+        <section className="mt-0 mb-0">
+          <div className="flex items-center justify-between mb-3.5 sm:mb-4">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Subscription Tiers
+            </span>
+  
+            {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
+            <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-[10px] font-mono">
+              <button
+                type="button"
+                onClick={() => toggleCurrency('USD')}
+                className={`px-2 py-0.5 rounded-md transition-all ${
+                  currency === 'USD'
+                    ? 'bg-white dark:bg-white/15 text-slate-950 dark:text-white font-bold shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                USD ($)
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleCurrency('INR')}
+                className={`px-2 py-0.5 rounded-md transition-all ${
+                  currency === 'INR'
+                    ? 'bg-white dark:bg-white/15 text-slate-950 dark:text-white font-bold shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                INR (₹)
+              </button>
+            </div>
+          </div>
+  
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+            {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
+            <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+              currentTier === 'free'
+                ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10'
+                : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30'
+            }`}>
+              <div className="mb-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  {/* 45-Degree Tilted Community Hackers / Group With Hat & Keyboard SVG */}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 shrink-0 transform -rotate-45"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 8h10" />
+                    <path d="M8.5 8c0-2 1.5-3.5 3.5-3.5s3.5 1.5 3.5 3.5" />
+                    <circle cx="5" cy="11" r="1.75" />
+                    <path d="M2.5 17c0-2 1.5-3 3-3 .8 0 1.5.3 2 .8" />
+                    <circle cx="19" cy="11" r="1.75" />
+                    <path d="M21.5 17c0-2-1.5-3-3-3-.8 0-1.5.3-2 .8" />
+                    <path d="M9 16c0-1.8 1.3-2.5 3-2.5s3 .7 3 2.5" />
+                    <rect x="5" y="18" width="14" height="4.5" rx="1" fill="currentColor" fillOpacity="0.12" />
+                    <line x1="8" y1="20" x2="8.01" y2="20" strokeWidth="2" />
+                    <line x1="11" y1="20" x2="11.01" y2="20" strokeWidth="2" />
+                    <line x1="14" y1="20" x2="14.01" y2="20" strokeWidth="2" />
+                    <line x1="16.5" y1="20" x2="16.51" y2="20" strokeWidth="2" />
+                  </svg>
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    Community
+                  </span>
+                </div>
+                {currentTier === 'free' && (
+                  <span className="text-[9px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-200/60 dark:bg-white/10 text-slate-600 dark:text-slate-400 border border-slate-300/40 dark:border-white/10">
+                    CURRENT PLAN
+                  </span>
+                )}
+              </div>
+              <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+                {currency === 'INR' ? '₹0' : '$0'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
+              </div>
+              <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-medium mb-3">
+                Free Forever · No Credit Card
+              </div>
+              <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span>1 Connected repository</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span>50 Causal verifications / mo</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span>Read-only graph inspector</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span>Standard stdio MCP protocol gate</span>
+                </li>
+              </ul>
+              <button
+                onClick={() => handleTierSwitch('free')}
+                disabled={currentTier === 'free'}
+                onMouseEnter={() => setHoveredTierBtn('free')}
+                onMouseLeave={() => setHoveredTierBtn(null)}
+                className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+                  currentTier === 'free'
+                    ? 'bg-slate-100 dark:bg-white/5 border-transparent text-slate-500 dark:text-slate-400 cursor-default'
+                    : (hoveredTierBtn === 'free'
+                        ? 'border-slate-600 dark:border-slate-400 text-white cursor-pointer shadow-xs'
+                        : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-slate-600 dark:hover:border-slate-400 text-slate-900 dark:text-white cursor-pointer')
+                }`}
+              >
+                {currentTier !== 'free' && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      transform: hoveredTierBtn === 'free' ? 'translateY(0%)' : 'translateY(105%)',
+                      opacity: hoveredTierBtn === 'free' ? 1 : 0,
+                      transition: hoveredTierBtn === 'free'
+                        ? 'transform 900ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                        : 'opacity 250ms ease-out, transform 0s 250ms'
+                    }}
+                    className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+                  >
+                    <svg viewBox="0 0 320 48" preserveAspectRatio="none" className="w-full h-6 shrink-0 text-slate-600 dark:text-slate-400 fill-current block">
+                      <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                      <circle cx="80" cy="20" r="4.5" />
+                      <circle cx="120" cy="12" r="3.5" />
+                      <circle cx="160" cy="15" r="5" />
+                      <circle cx="200" cy="13" r="3.5" />
+                      <circle cx="240" cy="22" r="4.5" />
+                      <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    </svg>
+                    <div className="flex-1 w-full bg-slate-600 dark:bg-slate-500" />
+                  </div>
+                )}
+                <span className="relative z-10 transition-colors duration-300">
+                  {currentTier === 'free' ? 'Current Plan' : (hasEvaluationPass ? (isHackathonMode ? 'Switch to Community' : 'Switch (Dev)') : 'Switch to Community')}
+                </span>
+              </button>
+            </div>
+  
+            {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
+            <div className={`p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
+              currentTier === 'pro'
+                ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
+                : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
+            }`}>
+              {/* Top Floating Popular Badge */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 font-mono text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1 z-20">
+                <span>POPULAR</span>
+              </div>
+              <div className="mb-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  {/* 45-Degree Tilted Premium Diamond SVG */}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 transform -rotate-45"
+                    aria-hidden="true"
+                  >
+                    <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" fill="currentColor" fillOpacity="0.15" />
+                    <line x1="2" y1="9" x2="22" y2="9" />
+                    <line x1="6" y1="3" x2="10" y2="9" />
+                    <line x1="18" y1="3" x2="14" y2="9" />
+                    <line x1="10" y1="9" x2="12" y2="22" />
+                    <line x1="14" y1="9" x2="12" y2="22" />
+                    <circle cx="12" cy="22" r="1" fill="currentColor" />
+                    <circle cx="6" cy="3" r="0.8" fill="currentColor" />
+                    <circle cx="18" cy="3" r="0.8" fill="currentColor" />
+                  </svg>
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                    Pro Autonomous
+                  </span>
+                </div>
+                {hasEvaluationPass ? (
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-600/40 dark:border-amber-500/30">
+                    {isHackathonMode ? 'EVALUATION PASS' : 'DEV ACCESS'}
+                  </span>
+                ) : (
+                  <Lock className="w-3 h-3 text-slate-400" />
+                )}
+              </div>
+              <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+                {currency === 'INR' ? '₹320' : '$4'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
+              </div>
+              <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold mb-3">
+                Includes 7-Day Free Pro Trial
+              </div>
+              <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>10 Connected repositories</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>1,000 Causal verifications / mo</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>CI/CD intercept &amp; pre-commit scanners</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>Autonomous mutation loops</span>
+                </li>
+              </ul>
+              <button
+                onClick={() => handleTierSwitch('pro')}
+                disabled={currentTier === 'pro'}
+                onMouseEnter={() => setHoveredTierBtn('pro')}
+                onMouseLeave={() => setHoveredTierBtn(null)}
+                className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+                  currentTier === 'pro'
+                    ? 'bg-amber-400/20 border-transparent text-amber-700 dark:text-amber-400 cursor-default'
+                    : (hoveredTierBtn === 'pro'
+                        ? 'border-amber-400 text-slate-950 font-bold cursor-pointer shadow-xs'
+                        : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-amber-400 text-slate-900 dark:text-white cursor-pointer')
+                }`}
+              >
+                {currentTier !== 'pro' && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      transform: hoveredTierBtn === 'pro' ? 'translateY(0%)' : 'translateY(105%)',
+                      opacity: hoveredTierBtn === 'pro' ? 1 : 0,
+                      transition: hoveredTierBtn === 'pro'
+                        ? 'transform 900ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                        : 'opacity 250ms ease-out, transform 0s 250ms'
+                    }}
+                    className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+                  >
+                    <svg viewBox="0 0 320 48" preserveAspectRatio="none" className="w-full h-6 shrink-0 text-amber-400 fill-current block">
+                      <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                      <circle cx="80" cy="20" r="4.5" />
+                      <circle cx="120" cy="12" r="3.5" />
+                      <circle cx="160" cy="15" r="5" />
+                      <circle cx="200" cy="13" r="3.5" />
+                      <circle cx="240" cy="22" r="4.5" />
+                      <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    </svg>
+                    <div className="flex-1 w-full bg-amber-400" />
+                  </div>
+                )}
+                <span className="relative z-10 transition-colors duration-300 flex items-center gap-1.5">
+                  {!hasEvaluationPass && currentTier !== 'pro' && <Lock className="w-3 h-3" />}
+                  <span>
+                    {currentTier === 'pro'
+                      ? 'Current Plan'
+                      : (isUpgrading
+                          ? 'Connecting...'
+                          : (hasEvaluationPass
+                              ? (isHackathonMode ? 'Switch to Pro' : 'Switch (Dev)')
+                              : (!user
+                                  ? 'Sign In to Unlock'
+                                  : `Upgrade (${currency === 'INR' ? '₹320' : '$4'}/mo)`)))}
+                  </span>
+                </span>
+              </button>
+            </div>
+  
+            {/* Tier 3: Enterprise Mesh (Solid Deep Obsidian Purple Card Background) */}
+            <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+              currentTier === 'enterprise'
+                ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
+                : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-purple-400/40'
+            }`}>
+              <div className="mb-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  {/* 45-Degree Tilted King Crown SVG */}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-3.5 h-3.5 text-purple-400 shrink-0 transform -rotate-45"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 18h18l-2-11-4.5 4.5L12 4l-2.5 7.5L5 7l-2 11z"
+                      fill="currentColor"
+                      fillOpacity="0.2"
+                    />
+                    <line x1="4" y1="20" x2="20" y2="20" strokeWidth="1.8" />
+                    <circle cx="12" cy="4" r="1.3" fill="currentColor" />
+                    <circle cx="5" cy="7" r="1.1" fill="currentColor" />
+                    <circle cx="19" cy="7" r="1.1" fill="currentColor" />
+                  </svg>
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-400">
+                    Enterprise Mesh
+                  </span>
+                </div>
+                {hasEvaluationPass ? (
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                    currentTier === 'enterprise'
+                      ? 'bg-purple-500/25 text-purple-200 border-purple-400/40'
+                      : 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/40 dark:border-purple-500/30'
+                  }`}>
+                    {isHackathonMode ? 'EVALUATION PASS' : 'DEV ACCESS'}
+                  </span>
+                ) : (
+                  <Lock className="w-3 h-3 text-slate-400" />
+                )}
+              </div>
+              <div className={`text-2xl font-bold font-mono mb-1 ${
+                currentTier === 'enterprise' ? 'text-white' : 'text-slate-950 dark:text-white'
+              }`}>
+                Custom <span className={`text-xs font-normal font-sans ${
+                  currentTier === 'enterprise' ? 'text-purple-200/80' : 'text-slate-500'
+                }`}>/ SLA</span>
+              </div>
+              <div className={`text-[10px] font-mono font-medium mb-3 ${
+                currentTier === 'enterprise' ? 'text-purple-200/70' : 'text-purple-500 dark:text-purple-400'
+              }`}>
+                Tailored Infrastructure &amp; Dedicated VPC
+              </div>
+              <ul className={`text-xs font-mono space-y-2 mb-6 ${
+                currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
+              }`}>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>Unlimited connected repositories</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>Dedicated causal graph cluster</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>SSO, RBAC &amp; compliance audit trail</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>99.99% SLA &amp; 24/7 priority support</span>
+                </li>
+              </ul>
+              <button
+                onClick={() => handleTierSwitch('enterprise')}
+                disabled={currentTier === 'enterprise'}
+                onMouseEnter={() => setHoveredTierBtn('enterprise')}
+                onMouseLeave={() => setHoveredTierBtn(null)}
+                className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+                  currentTier === 'enterprise'
+                    ? 'bg-purple-600/30 border-purple-400/60 text-purple-100 font-semibold cursor-default shadow-xs'
+                    : (hoveredTierBtn === 'enterprise'
+                        ? 'border-purple-600 dark:border-purple-400 text-white cursor-pointer shadow-xs'
+                        : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-slate-950 dark:hover:border-white text-slate-900 dark:text-white cursor-pointer')
+                }`}
+              >
+                {currentTier !== 'enterprise' && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      transform: hoveredTierBtn === 'enterprise' ? 'translateY(0%)' : 'translateY(105%)',
+                      opacity: hoveredTierBtn === 'enterprise' ? 1 : 0,
+                      transition: hoveredTierBtn === 'enterprise'
+                        ? 'transform 900ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                        : 'opacity 250ms ease-out, transform 0s 250ms'
+                    }}
+                    className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+                  >
+                    <svg viewBox="0 0 320 48" preserveAspectRatio="none" className="w-full h-6 shrink-0 text-purple-400 fill-current block">
+                      <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                      <circle cx="80" cy="20" r="4.5" />
+                      <circle cx="120" cy="12" r="3.5" />
+                      <circle cx="160" cy="15" r="5" />
+                      <circle cx="200" cy="13" r="3.5" />
+                      <circle cx="240" cy="22" r="4.5" />
+                      <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                    </svg>
+                    <div className="flex-1 w-full bg-[#1e1035] dark:bg-[#180b2d]" />
+                  </div>
+                )}
+                <span className="relative z-10 transition-colors duration-300 flex items-center gap-1.5">
+                  {!hasEvaluationPass && currentTier !== 'enterprise' && <Lock className="w-3 h-3" />}
+                  <span>
+                    {currentTier === 'enterprise'
+                      ? 'Current Plan'
+                      : (hasEvaluationPass
+                          ? (isHackathonMode ? 'Switch to Enterprise' : 'Switch (Dev)')
+                          : (!user
+                              ? 'Sign In to Unlock'
+                              : 'Upgrade (Custom)'))}
+                  </span>
+                </span>
+              </button>
+            </div>
+          </div>
+        </section>
+  
+        {/* ── 3. Real-Time Metrics & API Credentials ── */}
+        <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
+          {/* Plan Quota & Consumption */}
+          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Plan Quota &amp; Usage
+                </span>
+                <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-medium">
+                  {decisionsCapacity === -1
+                    ? 'Unlimited Capacity (SLA)'
+                    : `${capacityPct}% Capacity (${userDecisionsCount}/${decisionsCapacity.toLocaleString()})`}
+                </span>
+              </div>
+  
+              <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden mb-3 sm:mb-3.5">
+                <div
+                  className="h-full rounded-full bg-slate-950 dark:bg-white transition-all duration-500"
+                  style={{ width: decisionsCapacity === -1 ? '100%' : `${capacityPct}%` }}
+                />
+              </div>
+            </div>
+  
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs font-mono">
+              <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+                <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Repos</span>
+                <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
+                  {connectedRepoCount} <span className="text-[10px] font-normal text-slate-500">/ {repoLimit}</span>
+                </span>
+              </div>
+              <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+                <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Decisions</span>
+                <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
+                  {userDecisionsCount} <span className="text-[10px] font-normal text-slate-500">/ {decisionsCapacity === -1 ? '∞' : decisionsCapacity.toLocaleString()}</span>
+                </span>
+              </div>
+              <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+                <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">MCP Gate</span>
+                <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight truncate">{mcpRateLimit}</span>
+              </div>
+              <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+                <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Cycle</span>
+                <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
+                  {daysRemaining}d <span className="text-[10px] font-normal text-slate-500">left</span>
+                </span>
+              </div>
+            </div>
+          </div>
+  
+          {/* API Credentials */}
+          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  MCP Agent API Key
+                </span>
+                {user && (
+                  <div className="flex items-center text-[10px] font-mono text-slate-500">
+                    <button
+                      onClick={handleRotateKey}
+                      className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                      title="Rotate API Key"
+                    >
+                      <RefreshCw className={`w-2.5 h-2.5 ${isRotating ? 'animate-spin' : ''}`} />
+                      <span>Rotate Key</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-sans mb-2.5 sm:mb-3 truncate">
+                Bearer authentication key for Cursor, Claude Code, and Windsurf MCP connections.
+              </p>
+            </div>
+  
+            {isRevokedNotice && user && (
+              <div className="mb-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 shadow-xs">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="text-xs text-rose-700 dark:text-rose-300">
+                  <span className="font-bold">Emergency Revocation Notice:</span> All credentials across the network were invalidated by administrator emergency response. Please click <button onClick={handleRotateKey} className="font-bold underline hover:text-rose-950 dark:hover:text-white cursor-pointer">Rotate Key</button> to generate a replacement token.
+                </div>
+              </div>
+            )}
+  
+            {!user ? (
+              <div className="py-2.5 px-3.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-dashed border-slate-300 dark:border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 truncate">
+                    Authentication required to generate MCP credentials
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    playClick();
+                    window.location.href = '/api/auth/github?returnTo=/profile';
+                  }}
+                  className="h-7 px-3 rounded-lg bg-slate-950 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 text-[10px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 tactile-btn shadow-xs"
+                >
+                  <Github className="w-3 h-3" />
+                  <span>Connect GitHub</span>
+                </button>
+              </div>
+            ) : (
+              <div className="py-2.5 px-3.5 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <span className="text-slate-500 select-none text-[11px] font-mono">$</span>
+                  <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
+                    {isLoadingKey
+                      ? 'Retrieving cryptographic key...'
+                      : (isRevokedNotice && !apiKey
+                          ? 'REVOKED — Action Required: Rotate Key'
+                          : (isKeyRevealed
+                              ? apiKey
+                              : (apiKey ? `${apiKey.slice(0, 16)}••••••••••••••••${apiKey.slice(-4)}` : 'No key generated')))}
+                  </code>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {apiKey && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playClick();
+                        setIsKeyRevealed(!isKeyRevealed);
+                      }}
+                      className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      title={isKeyRevealed ? "Mask Key" : "Reveal Key"}
+                    >
+                      {isKeyRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleCopyApiKey}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white text-[10px] font-mono font-bold transition-all cursor-pointer shrink-0"
+                    title="Copy API Key"
+                  >
+                    {copiedKey ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-400" />
+                        <span className="text-emerald-400">COPIED</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-slate-400" />
+                        <span>COPY</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+  
+        {/* Monochromatic Fading Toast */}
+        {toastMsg && (
+          <div
+            role="status"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-mono font-semibold shadow-2xl border border-slate-800 dark:border-white/20 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3 pointer-events-none"
+          >
+            <span>{toastMsg}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 2. Compact Layout (Optimized for HP Victus 1536x864 & laptops with height <= 864px)
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex-1 min-h-0 overflow-y-auto pt-14 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none flex flex-col justify-between [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       
       {/* ── 1. Top Identity & Account State (Frameless, Spacious, Centered Elegance) ── */}
-      <section className="text-center mt-6 sm:mt-8 md:mt-10 pt-4 pb-4 sm:pb-6 relative flex flex-col items-center">
+      <section className="text-center mt-0 sm:mt-1 pt-1 pb-2 sm:pb-2.5 relative flex flex-col items-center shrink-0">
         {/* Large Concentric Avatar (Centered, Frameless, Tier-Ring Halo) */}
-        <div className="relative mb-3 sm:mb-4 flex justify-center">
+        <div className="relative mt-2 sm:mt-3 mb-1.5 sm:mb-2 flex justify-center">
           <div className="relative">
-            <div className={`w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden transition-all duration-500 bg-slate-100 dark:bg-white/5 ${tierRingStyles[currentTier] || tierRingStyles.free}`}>
+            <div className={`w-14 h-14 sm:w-16 sm:h-16 lg:w-16 lg:h-16 xl:w-20 xl:h-20 rounded-full overflow-hidden transition-all duration-500 bg-slate-100 dark:bg-white/5 ${tierRingStyles[currentTier] || tierRingStyles.free}`}>
               {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
                 <ShimmerImage
                   src={user?.avatar_url || user?.avatarUrl || user?.avatar}
@@ -568,15 +1427,15 @@ export default function ProfilePage({
         </div>
 
         {/* Identity & Verified Handle */}
-        <h1 className="text-base sm:text-lg font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
+        <h1 className="text-sm sm:text-base font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
           {user?.name || user?.login || 'Local Contributor'}
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
           {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
         </p>
 
         {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
-        <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
+        <div className="mt-1.5 sm:mt-2 flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
           {/* Support Us Button with Rose Fluid Wave Fill */}
           <button
             onClick={() => {
@@ -585,7 +1444,7 @@ export default function ProfilePage({
             }}
             onMouseEnter={() => setIsSponsorHovered(true)}
             onMouseLeave={() => setIsSponsorHovered(false)}
-            className={`relative overflow-hidden group h-9 min-w-[140px] px-5 flex items-center justify-center gap-2 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
+            className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[125px] sm:min-w-[135px] px-3.5 sm:px-4 flex items-center justify-center gap-2 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
               isSponsorHovered
                 ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
                 : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-rose-400'
@@ -639,7 +1498,7 @@ export default function ProfilePage({
               onClick={handleLogout}
               onMouseEnter={() => setIsLogoutHovered(true)}
               onMouseLeave={() => setIsLogoutHovered(false)}
-              className={`relative overflow-hidden group h-9 min-w-[130px] px-5 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
+              className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[120px] sm:min-w-[130px] px-3.5 sm:px-4 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
                 isLogoutHovered
                   ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
                   : 'border-rose-500/50 dark:border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400'
@@ -694,7 +1553,7 @@ export default function ProfilePage({
               }}
               onMouseEnter={() => setIsGithubHovered(true)}
               onMouseLeave={() => setIsGithubHovered(false)}
-              className={`relative overflow-hidden group h-9 min-w-[150px] px-5 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
+              className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[135px] sm:min-w-[145px] px-3.5 sm:px-4 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
                 isGithubHovered
                   ? 'border-slate-950 dark:border-white text-white dark:text-slate-950 shadow-slate-950/20 dark:shadow-white/20'
                   : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40'
@@ -747,7 +1606,7 @@ export default function ProfilePage({
 
       {/* ── 2. Architecture Tiers & Quotas (Exact 4 Benefits per Tier) ── */}
       <section className="mt-0 mb-0">
-        <div className="flex items-center justify-between mb-3.5 sm:mb-4">
+        <div className="flex items-center justify-between mb-2 sm:mb-2.5">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Subscription Tiers
           </span>
@@ -779,9 +1638,9 @@ export default function ProfilePage({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-4 xl:gap-5 items-stretch">
           {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
-          <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
             currentTier === 'free'
               ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10'
               : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30'
@@ -822,13 +1681,13 @@ export default function ProfilePage({
                 </span>
               )}
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-950 dark:text-white mb-0.5">
               {currency === 'INR' ? '₹0' : '$0'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-medium mb-3">
+            <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-medium mb-2 sm:mb-2.5">
               Free Forever · No Credit Card
             </div>
-            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+            <ul className="text-[11px] sm:text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
                 <span>1 Connected repository</span>
@@ -851,7 +1710,7 @@ export default function ProfilePage({
               disabled={currentTier === 'free'}
               onMouseEnter={() => setHoveredTierBtn('free')}
               onMouseLeave={() => setHoveredTierBtn(null)}
-              className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+              className={`relative overflow-hidden group w-full h-8 flex items-center justify-center rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-300 ${
                 currentTier === 'free'
                   ? 'bg-slate-100 dark:bg-white/5 border-transparent text-slate-500 dark:text-slate-400 cursor-default'
                   : (hoveredTierBtn === 'free'
@@ -893,7 +1752,7 @@ export default function ProfilePage({
           </div>
 
           {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
-          <div className={`p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
+          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all duration-300 xl:scale-[1.015] xl:-translate-y-1 xl:hover:-translate-y-2 relative z-10 flex flex-col justify-between shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
             currentTier === 'pro'
               ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
               : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
@@ -937,13 +1796,13 @@ export default function ProfilePage({
                 <Lock className="w-3 h-3 text-slate-400" />
               )}
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-950 dark:text-white mb-0.5">
               {currency === 'INR' ? '₹320' : '$4'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold mb-3">
+            <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold mb-2 sm:mb-2.5">
               Includes 7-Day Free Pro Trial
             </div>
-            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+            <ul className="text-[11px] sm:text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>10 Connected repositories</span>
@@ -966,7 +1825,7 @@ export default function ProfilePage({
               disabled={currentTier === 'pro'}
               onMouseEnter={() => setHoveredTierBtn('pro')}
               onMouseLeave={() => setHoveredTierBtn(null)}
-              className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+              className={`relative overflow-hidden group w-full h-8 flex items-center justify-center rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-300 ${
                 currentTier === 'pro'
                   ? 'bg-amber-400/20 border-transparent text-amber-700 dark:text-amber-400 cursor-default'
                   : (hoveredTierBtn === 'pro'
@@ -1019,7 +1878,7 @@ export default function ProfilePage({
           </div>
 
           {/* Tier 3: Enterprise Mesh (Solid Deep Obsidian Purple Card Background) */}
-          <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
             currentTier === 'enterprise'
               ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
               : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-purple-400/40'
@@ -1063,19 +1922,19 @@ export default function ProfilePage({
                 <Lock className="w-3 h-3 text-slate-400" />
               )}
             </div>
-            <div className={`text-2xl font-bold font-mono mb-1 ${
+            <div className={`text-xl sm:text-2xl font-bold font-mono mb-0.5 ${
               currentTier === 'enterprise' ? 'text-white' : 'text-slate-950 dark:text-white'
             }`}>
               Custom <span className={`text-xs font-normal font-sans ${
                 currentTier === 'enterprise' ? 'text-purple-200/80' : 'text-slate-500'
               }`}>/ SLA</span>
             </div>
-            <div className={`text-[10px] font-mono font-medium mb-3 ${
+            <div className={`text-[10px] font-mono font-medium mb-2 sm:mb-2.5 ${
               currentTier === 'enterprise' ? 'text-purple-200/70' : 'text-purple-500 dark:text-purple-400'
             }`}>
               Tailored Infrastructure &amp; Dedicated VPC
             </div>
-            <ul className={`text-xs font-mono space-y-2 mb-6 ${
+            <ul className={`text-[11px] sm:text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 flex-1 ${
               currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
             }`}>
               <li className="flex items-center gap-2">
@@ -1100,7 +1959,7 @@ export default function ProfilePage({
               disabled={currentTier === 'enterprise'}
               onMouseEnter={() => setHoveredTierBtn('enterprise')}
               onMouseLeave={() => setHoveredTierBtn(null)}
-              className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+              className={`relative overflow-hidden group w-full h-8 flex items-center justify-center rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-300 ${
                 currentTier === 'enterprise'
                   ? 'bg-purple-600/30 border-purple-400/60 text-purple-100 font-semibold cursor-default shadow-xs'
                   : (hoveredTierBtn === 'enterprise'
@@ -1153,9 +2012,9 @@ export default function ProfilePage({
       </section>
 
       {/* ── 3. Real-Time Metrics & API Credentials ── */}
-      <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
+      <section className="mt-3 sm:mt-3.5 lg:mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-1 sm:mb-2 shrink-0">
         {/* Plan Quota & Consumption */}
-        <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1168,7 +2027,7 @@ export default function ProfilePage({
               </span>
             </div>
 
-            <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden mb-3 sm:mb-3.5">
+            <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden mb-2 sm:mb-2.5">
               <div
                 className="h-full rounded-full bg-slate-950 dark:bg-white transition-all duration-500"
                 style={{ width: decisionsCapacity === -1 ? '100%' : `${capacityPct}%` }}
@@ -1177,23 +2036,23 @@ export default function ProfilePage({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs font-mono">
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Repos</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
                 {connectedRepoCount} <span className="text-[10px] font-normal text-slate-500">/ {repoLimit}</span>
               </span>
             </div>
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Decisions</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
                 {userDecisionsCount} <span className="text-[10px] font-normal text-slate-500">/ {decisionsCapacity === -1 ? '∞' : decisionsCapacity.toLocaleString()}</span>
               </span>
             </div>
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">MCP Gate</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight truncate">{mcpRateLimit}</span>
             </div>
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Cycle</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
                 {daysRemaining}d <span className="text-[10px] font-normal text-slate-500">left</span>
@@ -1203,7 +2062,7 @@ export default function ProfilePage({
         </div>
 
         {/* API Credentials */}
-        <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1222,7 +2081,7 @@ export default function ProfilePage({
                 </div>
               )}
             </div>
-            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-sans mb-2.5 sm:mb-3 truncate">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-sans mb-2 truncate">
               Bearer authentication key for Cursor, Claude Code, and Windsurf MCP connections.
             </p>
           </div>
@@ -1256,7 +2115,7 @@ export default function ProfilePage({
               </button>
             </div>
           ) : (
-            <div className="py-2.5 px-3.5 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
+            <div className="py-1.5 sm:py-2 px-3 rounded-lg bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <span className="text-slate-500 select-none text-[11px] font-mono">$</span>
                 <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
@@ -1318,3 +2177,4 @@ export default function ProfilePage({
     </div>
   );
 }
+

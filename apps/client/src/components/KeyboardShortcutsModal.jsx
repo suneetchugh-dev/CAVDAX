@@ -8,7 +8,7 @@ const SHORTCUT_GROUPS = [
     title: "Global Navigation",
     items: [
       { key: "1", label: "Product Overview", icon: Layers, desc: "Navigate to system landing & architecture" },
-      { key: "2", label: "Verification Console", icon: SlidersHorizontal, desc: "Interactive GraphBLAS verification HUD" },
+      { key: "2", label: "Verification Console", icon: SlidersHorizontal, desc: "Interactive GraphBLAS verification console" },
       { key: "3", label: "Connect MCP", icon: Cable, desc: "Agent integration & MCP stdio protocol" },
       { key: "4", label: "Demo Video", icon: Play, desc: "Watch video presentation & live proof" },
       { key: "5", label: "Team Page", icon: Users, desc: "Team Contrarians presentation" },
@@ -21,7 +21,7 @@ const SHORTCUT_GROUPS = [
       { key: "D", label: "Toggle Theme", icon: Sun, desc: "Switch between Dark and Light themes" },
       { key: "T", label: "Tour Guide", icon: Compass, desc: "Start / Resume interactive console walkthrough" },
       { key: "R", label: "Reset Demo", icon: RotateCcw, desc: "Reset knowledge graph & verification pipeline" },
-      { key: ",", label: "Preferences", icon: Settings, desc: "Open audio, metrics & HUD preferences" },
+      { key: ",", label: "Preferences", icon: Settings, desc: "Open audio, metrics & display preferences" },
       { key: "?", label: "Shortcuts Help", icon: KeyboardIcon, desc: "Toggle this keyboard shortcuts panel" },
       { key: "Esc", label: "Close Overlay", icon: X, desc: "Dismiss active modal, guide or tooltip" },
     ]
@@ -77,9 +77,6 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }) {
                 <div>
                   <h2 className="text-base sm:text-lg font-bold font-mono tracking-tight text-slate-950 dark:text-white flex items-center gap-2">
                     Keyboard Shortcuts
-                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-black/5 dark:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400 font-normal">
-                      HUD
-                    </span>
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-sans">
                     Universal navigation and tactical keyboard controls
