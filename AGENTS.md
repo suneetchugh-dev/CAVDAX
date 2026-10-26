@@ -502,6 +502,11 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
       7. *Phase 7 (Advanced Memory & Session Lifecycle Hardening)*: Automatic key map re-hydration (`SEC-KEY-03`) across worker restarts; emergency key revocation epoch checks; input length/type sanitization.
     - **Strict Gatekeeper Enforcement**: Only when ALL 7 phases pass 100% green with zero critical, high, or medium findings may an agent seek developer approval to merge into `main`. If ANY vulnerability or defect is detected, the agent MUST resolve all findings on the feature branch, re-audit, and verify a clean passing report before merging.
 
+26. **Mandatory Documentation & README Synchronization Gate Before Merge & Push**:
+    - **Inviolable Documentation Sync Requirement**: Whenever any feature, bugfix, architectural enhancement, MCP tool addition, or security modification is made, the agent MUST evaluate whether project documentation (`docs/`), technical specifications (`docs/MCP_SPECIFICATION.md`, etc.), or `README.md` need to be updated.
+    - **Update in the Same Pass**: If any documentation, MD spec, or `README.md` requires synchronization, the agent MUST draft, refine, and commit the documentation updates on the appropriate branch (`docs`) in the same development pass *before* requesting approval, opening pull requests, or merging into `main`.
+    - **Never Ship Code Ahead of Documentation**: Code and documentation must move in strict lockstep. It is a fatal governance defect to push code changes while leaving `README.md` or technical specifications describing stale, outdated, or incomplete capabilities.
+
 
 
 ---
@@ -613,6 +618,8 @@ pm run build (or equivalent) passes with zero fatal errors.
     7. *Cloudflare 7-Phase Security Audit Pass*: Full diff passes all 7 phases of the Cloudflare Security Audit Playbook with zero unresolved critical, high, or medium findings.
 
     8. *Persistent Memory Sync*: docs/DEV_SESSION_STATE.md synchronized.
+
+    9. *Documentation & README Synchronization*: `README.md`, technical specifications, and architectural docs evaluated and updated to accurately describe in-flight features, tools, and fixes before creating PRs or merging into `main`.
 
 
 
