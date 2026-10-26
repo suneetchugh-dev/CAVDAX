@@ -31,6 +31,19 @@ Modern autonomous coding agents (Claude Code, Cursor Composer, Windsurf, GitHub 
 
 ---
 
+## 🚀 4 Architectural Pillars: Beyond Vector RAG & Naive Linters
+
+CAVDAX provides production engineering organizations with an impenetrable moat against autonomous agent hallucinations:
+
+| # | Competitive Moat | Problem in Traditional Agent Stacks | CAVDAX GraphBLAS Solution |
+|---|---|---|---|
+| **1** | **Proactive Intent Clearance** | Agents burn hundreds of tokens writing obsolete code before discovering a policy violation. | Agents query `check_intent_clearance` in **< 2ms pre-flight**. FalkorDB validates intent before a single byte of code is generated. |
+| **2** | **Zero-Config Heuristic Parser** | Rigid tools fail unless engineering teams hand-craft strict YAML frontmatter on every document. | Intelligent regex heuristics extract titles, status, and supersessions from **plain unstructured Markdown, RFCs, and Notion exports**. |
+| **3** | **Distributed Decision Locks** | Multiple autonomous agents (e.g., dual Devin or Claude Code instances) edit conflicting decisions concurrently. | `DecisionLockManager` provides **leased concurrency locks** (`acquire_decision_lock`, `release_decision_lock`) to eliminate multi-agent race conditions. |
+| **4** | **Automated CI/CD PR Gate** | Manual CLI tools require local developer execution and are ignored during pull requests. | Automated **GitHub Action (`cavdax-gate.yml`)** scans changed files on PRs, blocks stale code, and outputs rich Markdown summaries to `$GITHUB_STEP_SUMMARY`. |
+
+---
+
 ## 🛡️ The CAVDAX Solution: Graph-Grounded Enclosed Execution
 
 **CAVDAX** converts repository artifacts into an active, temporal causal Directed Acyclic Graph (DAG) stored inside **FalkorDB**:
@@ -292,18 +305,24 @@ CAVDAX is deployed and running live in production:
 The CAVDAX Web HUD provides a world-class, industrial-brutalist / porcelain operational interface spanning 9 specialized views:
 
 1. **Architectural Overview (`/overview` or `/`)**: Value proposition, Causal Invalidation Radar, and interactive Cytoscape.js Directed Acyclic Graph canvas.
-2. **Connected Repository Developer Workspace (`/console`)**: Multi-tenant workspace for linking GitHub repositories, tracking active branch mutations, and managing architecture baselines.
+2. **Connected Repository Developer Workspace (`/console`)**: Multi-tenant workspace for linking GitHub repositories with context-preserving OAuth reconnection, tracking active branch mutations, and managing architecture baselines.
 3. **MCP Action Playground (`/mcp`)**: Interactive pre-flight verification console with dynamic traversal depth sliders (`1..4` hops), live Cypher inspection, and sub-millisecond execution timing metrics.
 4. **4-Act Storyline Stepper (`/walkthrough`)**: Interactive demonstration stepper guiding evaluators through baseline validity, upstream commit mutation, enclosed MCP gate rejection, and Act IV revalidation.
 5. **Immutable Compliance Audit Ledger (`/audit`)**: Tamper-evident ledger providing full provenance and execution verification history across all agent actions.
 6. **Core Maintainers & Attribution (`/team`)**: Project research attribution, engineering background, and architecture credits.
-7. **Developer Profile & Plan Quotas (`/profile`)**: Live plan quota consumption monitoring, capability tiers, and secure MCP key generation.
+7. **Developer Profile & Responsive Dual-Display Engine (`/profile`)**: Live plan quota consumption monitoring, capability tiers, secure MCP key generation, and an adaptive dual-layout engine calibrated for both **HP Victus laptop single-screen viewports (1536×864, zero vertical scrolling)** and **27-inch desktop monitors (1440p/1080p, spacious layout)** with profile-exclusive transparent navbar.
 8. **Community Stewardship & Operational Backing (`/support`)**: Transparent operational resource breakdown and community sponsorship integration.
 9. **Zero-Trust Administrative Enclave (`/devteam`)**: Protected diagnostic console, developer IP whitelisting gate, and system status roster.
 
 ---
 
-## 🔒 Enterprise Security Hardening & Zero-Trust Architecture
+## 🔒 Enterprise Security Hardening & Cloudflare Zero-Trust Standard
+
+CAVDAX enforces a mandatory **7-Phase Cloudflare Security & Pen-Test Audit Standard (Rule 25)** across all runtime, API, and MCP layers:
+
+* **Boundary & Parameter Sanitization**: All endpoint inputs (`decision_id <= 128`, `target_file <= 256`, `proposed_action <= 500`) are strictly clamped to eliminate ReDoS and memory amplification vectors.
+* **Zero Split-Brain Session Desynchronization (Rule 0j)**: Enforces `credentials: 'include'` and instantaneous 401 unauthenticated session purges across all client endpoints to keep client cookies synchronized with server sessions across deployment restarts.
+* **Context-Preserving GitHub OAuth Routing**: Preserves the user's active page and workflow context (`returnTo`) upon authenticating, automatically reopening repository connection dialogs without disorienting navigation jumps.
 
 CAVDAX implements comprehensive defense-in-depth security across both API and runtime layers:
 
@@ -411,10 +430,13 @@ claude mcp add cavdax https://cavdax.sahnirmaan.live/api/mcp/sse
 }
 ```
 
-### Enclosed MCP Tools Registered:
-1. `apply_code_change`: Intercepts in-flight code changes and validates decision provenance against FalkorDB.
-2. `query_causal_graph`: Sub-millisecond GraphBLAS BFS Cypher query for active ADRs and invalidation trails.
-3. `verify_decision`: Pre-flight dry-run check before code synthesis.
+### Registered Model Context Protocol (MCP) Tools:
+1. `check_intent_clearance`: **Proactive Architectural Pre-Flight Radar.** Allows AI coding agents (Claude Code, Devin, Cursor) to verify proposed actions against FalkorDB *prior to generating tokens or editing files*. Eliminates reactive token burn in < 2ms.
+2. `apply_code_change`: **Enclosed Execution Gate.** Intercepts in-flight file write actions and validates decision provenance against the causal graph. Hard-blocks execution if grounding facts are stale (`BLOCKED_SUPERSEDED_SOURCE`).
+3. `acquire_decision_lock`: **Distributed Concurrency Lock.** Prevents race conditions during multi-agent workflows (e.g. concurrent Devin or Claude Code sessions) by leasing atomic locks on specific decision branches.
+4. `release_decision_lock`: **Lease Release.** Voluntarily releases leased locks upon completed task execution.
+5. `query_causal_graph`: Sub-millisecond GraphBLAS BFS Cypher query for active ADRs, dependencies, and invalidation trails.
+6. `verify_decision`: Dry-run decision validation verifying that grounding facts remain fresh.
 
 ---
 

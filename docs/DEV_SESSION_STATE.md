@@ -18,6 +18,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.18 Latest Session Achievements (October 26, 2026 - Console GitHub OAuth Context Preservation, Professional README Modernization, and Rule 26 Codification)
+
+- **GitHub OAuth Context Preservation on Console (`apps/server/index.js`, `ConnectRepoModal.jsx`, `App.jsx`)**:
+  - *Server-Side Parameterized `returnTo` Support*: Enhanced `/api/auth/github/callback` in `apps/server/index.js` to inspect whether `returnTo` already contains query parameters (`sep = returnTo.includes('?') ? '&' : '?'`), preventing malformed redirect URLs with duplicate question marks.
+  - *Console Tab & Modal Auto-Reopening*: In `ConnectRepoModal.jsx`, parameterized the GitHub connect link with `returnTo=/console?connected=1&openConnectRepo=1`.
+  - *Immediate State Hydration*: In `App.jsx`, initialized `isConnectRepoModalOpen` from the URL parameter, hydrated `githubUser` immediately from callback query data without waiting for `/api/auth/me`, and cleanly sanitized URL query parameters with `window.history.replaceState`.
+- **Comprehensive `README.md` Modernization**:
+  - Added the **4 Architectural Pillars & Competitive Moats** table highlighting Proactive Intent Clearance (`< 2ms`), Zero-Config Heuristic Markdown Parser, Distributed Decision Locks (`DecisionLockManager`), and Automated CI/CD PR Gate (`cavdax-gate.yml`).
+  - Registered all **6 Model Context Protocol (MCP) Tools** (`check_intent_clearance`, `apply_code_change`, `acquire_decision_lock`, `release_decision_lock`, `query_causal_graph`, `verify_decision`).
+  - Updated Web HUD route documentation for `/console` (context-preserving OAuth reconnection) and `/profile` (adaptive dual-layout engine for HP Victus 1536×864 and 27-inch monitors).
+  - Codified the Cloudflare 7-Phase Security Audit Gate (Rule 25) and Zero Split-Brain Session Desynchronization (Rule 0j) in the Enterprise Security section.
+- **Rule 26 Codification in `AGENTS.md`**:
+  - Enforced mandatory documentation and `README.md` synchronization gate across all workflows before PR creation and merging into `main`.
+  - Appended Item 9 to the Pre-Merge Invariant Checklist.
+
 ## 1.0.17 Latest Session Achievements (October 26, 2026 - Responsive Dual-Display Profile Engine & Full Main Integration)
 
 - **Responsive Dual-Display Profile Engine (`ProfilePage.jsx`)**:
