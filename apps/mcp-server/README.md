@@ -76,7 +76,12 @@ npx cavdax doctor                   # Diagnose FalkorDB & MCP readiness
 |------|-------------|
 | `apply_code_change` | Writes a file (confined to the repo root) only if the referenced `decision_id` is causally valid. Hard-rejects stale, invalidated and unknown decisions. |
 | `revalidate_decision` | Archives an invalidated decision and creates a new one grounded in a superseding ADR. |
+| `check_intent_clearance` | Pre-flight check. Call before writing code to find out whether a `decision_id` is still valid, without generating anything. Takes `decision_id` (required), `target_file` and `proposed_action`. |
+| `acquire_decision_lock` | Leases an exclusive lock on a decision so two agents cannot change it at once. Takes `decision_id`, `agent_id`, optional `ttl_ms` and `reason`. |
+| `release_decision_lock` | Releases a lock held by the calling agent. |
 | `query_causal_graph` | Inspects the causal graph (optionally one `node_id`) to check node statuses and dependency paths. |
+
+> **About decision locks.** Locks are leased (5 seconds to 5 minutes) and held in the memory of one MCP server process. They stop two agents that share that server from changing the same decision at once. Each IDE or agent that starts its own `npx` stdio process gets its own lock table, so those processes do not see each other's locks. For multi-agent safety across separate clients, point them at one shared server, such as the hosted SSE endpoint.
 
 ---
 
@@ -85,7 +90,7 @@ npx cavdax doctor                   # Diagnose FalkorDB & MCP readiness
 ```bash
 docker run -d --name falkordb -p 6379:6379 falkordb/falkordb:latest
 npx cavdax doctor
-npx cavdax ingest --repo .     # ADRs may declare decision_id / decision_title in frontmatter
+npx cavdax ingest --repo .     # ADRs may declare decision_id / decision_title in frontmatter; plain Markdown ADRs (no frontmatter) are also parsed
 ```
 
 ## Modes

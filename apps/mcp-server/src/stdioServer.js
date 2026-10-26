@@ -172,7 +172,7 @@ export class CavdaxStdioGateway {
       const connection = await connectGraph();
       this.live = {
         connection,
-        server: new CavdaxMcpServer(connection.graph, { repoRoot: this.repoRoot }),
+        server: new CavdaxMcpServer(connection.graph, { repoRoot: this.repoRoot, tagDemo: false }),
         fetchGraphState: queries.fetchGraphState
       };
       this.lastError = null;

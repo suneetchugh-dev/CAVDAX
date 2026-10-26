@@ -170,9 +170,11 @@ export function parseFrontmatter(fileContent, filePath = '') {
  * @param {object} [options]
  * @param {string} [options.allowedRoot] Directory the ADR must live under.
  *   Defaults to the CAVDAX monorepo root; the npm CLI passes the user's repo.
+ * @param {boolean} [options.isDemo] Tag the decision as demo data (excluded from the hosted
+ *   plan quota). Defaults to a path check for the hosted server; the npm CLI passes false.
  */
-export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootOption } = {}) {
-  const isDemo = filePath.includes('demo-repo') || filePath.includes('demo');
+export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootOption, isDemo: isDemoOption } = {}) {
+  const isDemo = isDemoOption ?? (filePath.includes('demo-repo') || filePath.includes('demo'));
   console.log(`[Ingestion] Reading ADR file: ${filePath}`);
   const absolutePath = path.resolve(filePath);
 
