@@ -14,8 +14,16 @@ const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '../../');
 
 export class CavdaxMcpServer {
-  constructor(graph) {
+  /**
+   * @param {object} graph FalkorDB graph
+   * @param {object} [options]
+   * @param {string} [options.repoRoot] Directory writes are confined to.
+   *   Defaults to the CAVDAX monorepo root; the npm stdio server passes the
+   *   user's working directory.
+   */
+  constructor(graph, { repoRoot } = {}) {
     this.graph = graph;
+    this.repoRoot = repoRoot ? path.resolve(repoRoot) : REPO_ROOT;
   }
 
   /**
@@ -137,7 +145,7 @@ export class CavdaxMcpServer {
     console.log(`[MCP Gate] ✅ GATE APPROVED: Causal provenance verified in ${checkResult.latency_ms}ms.`);
 
     // Security Confinement: Prevent path traversal (OWASP A01/A03 Hardening)
-    const resolvedRepo = path.resolve(REPO_ROOT);
+    const resolvedRepo = path.resolve(this.repoRoot);
     const resolvedPath = path.resolve(resolvedRepo, file_path);
     if (!resolvedPath.startsWith(resolvedRepo + path.sep) && resolvedPath !== resolvedRepo) {
       console.warn(`[MCP Gate] ⛔ PATH TRAVERSAL ATTEMPT BLOCKED: '${file_path}' attempts to escape repo root.`);

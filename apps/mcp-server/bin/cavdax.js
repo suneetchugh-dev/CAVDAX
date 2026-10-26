@@ -10,17 +10,19 @@
  */
 
 import { Command } from 'commander';
+import { createRequire } from 'module';
 import { startStdioServer } from '../src/stdioServer.js';
 import { runIngest } from '../src/ingestCommand.js';
 import { runCheck } from '../src/checkCommand.js';
 import { runDoctor } from '../src/doctorCommand.js';
 
 const program = new Command();
+const { version } = createRequire(import.meta.url)('../package.json');
 
 program
   .name('cavdax')
   .description('CAVDAX: Causal Invalidation & Enclosed MCP Execution Gate for AI Coding Agents')
-  .version('1.0.0');
+  .version(version);
 
 program
   .command('mcp', { isDefault: true })
@@ -53,6 +55,7 @@ program
   .description('Verify staged files or PR commits against the FalkorDB causal dependency graph')
   .option('-s, --staged', 'Check currently staged git files')
   .option('--pr <number>', 'GitHub Pull Request number (for CI environments)')
+  .option('--strict', 'Fail (exit 1) when FalkorDB is unreachable instead of skipping the check')
   .action(async (options) => {
     const success = await runCheck(options);
     process.exit(success ? 0 : 1);

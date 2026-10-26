@@ -1,6 +1,6 @@
 {
   "name": "@cavdax/mcp-server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CAVDAX Enclosed Model Context Protocol (MCP) Server backed by FalkorDB GraphBLAS",
   "main": "src/stdioServer.js",
   "type": "module",
@@ -11,8 +11,13 @@
   "files": [
     "bin",
     "src",
+    "core",
     "README.md"
   ],
+  "scripts": {
+    "prepack": "node scripts/bundle-core.mjs",
+    "postpack": "node scripts/bundle-core.mjs --clean"
+  },
   "keywords": [
     "mcp",
     "model-context-protocol",
