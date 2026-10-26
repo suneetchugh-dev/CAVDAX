@@ -28,6 +28,10 @@
 - **Developer Documentation & Credential Isolation (`.env.example`, `README.md`)**:
   - Documented the dual OAuth identity architecture in `.env.example`, providing exact parameters for registering a separate "CAVDAX Local Dev" OAuth app on GitHub.
   - Codified the principle of zero credential sharing: production client secrets are never exposed to local development.
+- **Private Repository Access Scope Expansion (`apps/server/index.js`, `ConnectRepoModal.jsx`)**:
+  - Expanded requested OAuth scope from `read:user read:org` to `repo read:user read:org`.
+  - Enables authenticated developers to inspect and connect their own private repositories, seamlessly distinguished in the Connect modal via the `<Lock />` icon and `repo.private` metadata.
+  - Zero cross-user visibility: user access tokens remain strictly isolated to the authenticated session.
 - **Cloudflare 7-Phase Security Audit Gate Certified (Rule 25)**:
   - Executed formal 7-phase pen-test audit across boundary mapping, CSRF state store, token exfiltration defense, Cypher injection immunity, and RFC 6749 redirect compliance.
   - Certified 100% green with 0 vulnerabilities in `cavdax_cloudflare_security_audit_github_oauth_and_local_parity.md`.
