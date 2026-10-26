@@ -160,7 +160,7 @@ export default function AuditPage() {
   const fetchAudit = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/audit?limit=${limit}`);
+      const res = await fetch(`${API_BASE}/api/audit?limit=${limit}`, { credentials: 'include' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setEntries(data.entries || []);

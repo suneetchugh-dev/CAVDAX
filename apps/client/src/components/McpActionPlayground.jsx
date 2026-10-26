@@ -18,6 +18,7 @@ export default function McpActionPlayground({ onRunCustomAction }) {
     try {
       const res = await fetch('/api/mcp/call', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           toolName: 'apply_code_change',

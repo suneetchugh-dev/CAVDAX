@@ -153,6 +153,13 @@ export default function ProfilePage({
         const res = await fetch('/api/user/api-key', { credentials: 'include' });
         const data = await res.json();
         if (isMounted) {
+          if (res.status === 401 || (data && data.authenticated === false)) {
+            setApiKey('');
+            setIsRevokedNotice(false);
+            try { localStorage.removeItem('cavdax_user_session'); } catch {}
+            window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+            return;
+          }
           if (data.success && data.apiKey) {
             setApiKey(data.apiKey);
             setIsRevokedNotice(false);
@@ -309,7 +316,7 @@ export default function ProfilePage({
 
     const fetchQuota = async () => {
       try {
-        const res = await fetch(`/api/user/quota?tier=${currentTier}`);
+        const res = await fetch(`/api/user/quota?tier=${currentTier}`, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setQuotaData(data);
@@ -457,6 +464,12 @@ export default function ProfilePage({
         credentials: 'include'
       });
       const data = await res.json();
+      if (res.status === 401 || (data && data.authenticated === false)) {
+        try { localStorage.removeItem('cavdax_user_session'); } catch {}
+        window.dispatchEvent(new CustomEvent('cavdax:user-changed', { detail: null }));
+        showToast('Session expired after server update. Reconnect GitHub to rotate keys.');
+        return;
+      }
       if (data.success && data.apiKey) {
         setApiKey(data.apiKey);
         setIsRevokedNotice(false);
