@@ -491,6 +491,17 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
     - **Root Out Classic & AI Anti-Patterns**: Explicitly hunt for and prevent anti-patterns documented in `UI_DESIGN_SYSTEM.md#36` (e.g. Mystery Meat Navigation, Hidden Critical Paths, Cargo Cult UI, Bento Card recursive slop, low-contrast grays, orphan icons).
     - **Constructive Synthesis**: Present a concise, critical critique, state the established industry standard (e.g., Linear, Vercel, Stripe), explain the trade-offs, and offer ranked, actionable alternatives before touching code.
 
+25. **Mandatory Cloudflare 7-Phase Security Audit Gate Before Merging to `main`**:
+    - **Inviolable Pre-Merge Security Requirement**: No branch (`frontend`, `backend`, `docs`) may ever be merged into `main` until the agent has executed a formal security audit against all 7 phases of the Cloudflare Security & Pen-Test Playbook (`##Global-Cloudflare-Security-Audit-And-Hardening-Playbook.md`):
+      1. *Phase 1 (Boundary & Trust Mapping)*: Zero client-side validation trusted as a security boundary; all HTTP, WebSocket, and MCP inputs validated server-side.
+      2. *Phase 2 (Auth & Session Gate Inspection)*: All protected routes verify cryptographic signatures or authenticated web session cookies (`req.session?.user`); zero privilege escalation vectors.
+      3. *Phase 3 (Injection & Path Traversal Hunting)*: Strictly confine all file paths using `path.resolve(REPO_ROOT)` and `startsWith`; all database queries parameterized `{ params }` with zero string concatenation.
+      4. *Phase 4 (Business Logic & Financial Integrity)*: Constant-time HMAC verification (`timingSafeStringEqual`); server-side order and tier authority; zero client-supplied tier overrides.
+      5. *Phase 5 (Security Headers, CORS & Dependency Hygiene)*: Strict CSP, HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, strict CORS origin allowlists, zero critical/high CVEs.
+      6. *Phase 6 (Cloudflare Edge & Zero-Trust Architecture)*: Reverse proxy SSL termination, reverse proxy trust (`trust proxy: 1`), rate limiting, zero public exposure of raw backend IPs or dev endpoints.
+      7. *Phase 7 (Advanced Memory & Session Lifecycle Hardening)*: Automatic key map re-hydration (`SEC-KEY-03`) across worker restarts; emergency key revocation epoch checks; input length/type sanitization.
+    - **Strict Gatekeeper Enforcement**: Only when ALL 7 phases pass 100% green with zero critical, high, or medium findings may an agent seek developer approval to merge into `main`. If ANY vulnerability or defect is detected, the agent MUST resolve all findings on the feature branch, re-audit, and verify a clean passing report before merging.
+
 
 
 ---
@@ -599,7 +610,9 @@ pm run build (or equivalent) passes with zero fatal errors.
 
     6. *Accurate Concept Framing*: Zero unauthorized government/institutional claims or fake escrow assertions.
 
-    7. *Persistent Memory Sync*: docs/DEV_SESSION_STATE.md synchronized.
+    7. *Cloudflare 7-Phase Security Audit Pass*: Full diff passes all 7 phases of the Cloudflare Security Audit Playbook with zero unresolved critical, high, or medium findings.
+
+    8. *Persistent Memory Sync*: docs/DEV_SESSION_STATE.md synchronized.
 
 
 
