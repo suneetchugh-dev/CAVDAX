@@ -109,7 +109,7 @@ async function ingestAdr(repoRoot, graph, dryRun) {
   for (const filePath of adrFiles) {
     try {
       if (!ingestAdrFile) throw new Error('CAVDAX ingestion engine (core/ingestion/parser.js) not found');
-      const res = await ingestAdrFile(graph, filePath, { allowedRoot: repoRoot });
+      const res = await ingestAdrFile(graph, filePath, { allowedRoot: repoRoot, isDemo: false });
       const inval = [].concat(res.invalidation || []);
       const hit = inval.flatMap((i) => i.invalidated_decision_ids || []);
       console.log(

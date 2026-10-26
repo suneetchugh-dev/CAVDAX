@@ -126,7 +126,7 @@ export async function cascadeInvalidation(graph, newSourceId, oldSourceId) {
  * Query 3: Act IV Revalidation (Closing the Loop)
  * Archives the old decision, creates the fresh decision, and links it to the active fact.
  */
-export async function revalidateDecision(graph, { newSourceId, oldDecisionId, newDecisionId, newFactId, title }) {
+export async function revalidateDecision(graph, { newSourceId, oldDecisionId, newDecisionId, newFactId, title, isDemo: isDemoOption }) {
   const hrtStart = process.hrtime.bigint();
 
   const cypher = `
@@ -145,8 +145,10 @@ export async function revalidateDecision(graph, { newSourceId, oldDecisionId, ne
     RETURN newDecision.id AS active_decision_id, oldDecision.id AS archived_decision_id
   `;
 
+  // Hosted server: the canonical 4-Act demo ids are tagged as demo data. The npm package passes isDemo=false.
+  const isDemo = isDemoOption ?? Boolean(oldDecisionId?.startsWith('DEC-10') || newDecisionId?.startsWith('DEC-10') || newSourceId === 'ADR-002');
   const result = await graph.query(cypher, {
-    params: { newSourceId, oldDecisionId, newDecisionId, newFactId, title, isDemo: Boolean(oldDecisionId?.startsWith('DEC-10') || newDecisionId?.startsWith('DEC-10') || newSourceId === 'ADR-002') }
+    params: { newSourceId, oldDecisionId, newDecisionId, newFactId, title, isDemo }
   });
   const latencyMs = extractLatencyMs(result, hrtStart);
 

@@ -21,10 +21,13 @@ export class CavdaxMcpServer {
    * @param {string} [options.repoRoot] Directory writes are confined to.
    *   Defaults to the CAVDAX monorepo root; the npm stdio server passes the
    *   user's working directory.
+   * @param {boolean} [options.tagDemo] Tag the canonical demo decisions (DEC-10x) as demo data
+   *   for the hosted plan quota. The npm stdio server passes false.
    */
-  constructor(graph, { repoRoot } = {}) {
+  constructor(graph, { repoRoot, tagDemo = true } = {}) {
     this.graph = graph;
     this.repoRoot = repoRoot ? path.resolve(repoRoot) : REPO_ROOT;
+    this.tagDemo = tagDemo;
   }
 
   /**
@@ -318,7 +321,8 @@ export class CavdaxMcpServer {
       oldDecisionId: args.old_decision_id,
       newDecisionId: args.new_decision_id,
       newFactId: args.new_fact_id,
-      title: args.title
+      title: args.title,
+      ...(this.tagDemo ? {} : { isDemo: false })
     });
 
     return {
