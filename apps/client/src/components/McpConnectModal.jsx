@@ -179,28 +179,41 @@ export default function McpConnectModal({ isOpen, onClose }) {
 
         {/* Available MCP Tools Spec */}
         <div className="space-y-2">
-          <div className="text-[11px] font-mono uppercase font-bold text-slate-400">
-            Exposed MCP Tools:
+          <div className="flex items-center justify-between text-[11px] font-mono uppercase font-bold text-slate-400">
+            <span>Exposed MCP Tools (6 Registered Tools)</span>
+            <span className="text-amber-400/90 lowercase text-[10px]">v1.2.0 spec</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
-            <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-left">
+            <div className="p-2 rounded-lg bg-white/[0.02] border border-white/10">
+              <div className="font-mono text-xs font-bold text-amber-300 mb-0.5">check_intent_clearance</div>
+              <div className="text-[10px] text-slate-400 leading-tight">Pre-flight architectural radar before token burn.</div>
+            </div>
+            <div className="p-2 rounded-lg bg-white/[0.02] border border-white/10">
               <div className="font-mono text-xs font-bold text-white mb-0.5">apply_code_change</div>
-              <div className="text-[10px] text-slate-400">Enclosed disk write with FalkorDB gate check.</div>
+              <div className="text-[10px] text-slate-400 leading-tight">Enclosed disk write with FalkorDB gate check.</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/10">
+            <div className="p-2 rounded-lg bg-white/[0.02] border border-white/10">
               <div className="font-mono text-xs font-bold text-white mb-0.5">revalidate_decision</div>
-              <div className="text-[10px] text-slate-400">Synthesizes decisions grounded in fresh ADRs.</div>
+              <div className="text-[10px] text-slate-400 leading-tight">Synthesizes decisions grounded in fresh ADRs.</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/10">
+            <div className="p-2 rounded-lg bg-white/[0.02] border border-white/10">
+              <div className="font-mono text-xs font-bold text-white mb-0.5">acquire_decision_lock</div>
+              <div className="text-[10px] text-slate-400 leading-tight">Leases atomic lock for multi-agent concurrency.</div>
+            </div>
+            <div className="p-2 rounded-lg bg-white/[0.02] border border-white/10">
+              <div className="font-mono text-xs font-bold text-white mb-0.5">release_decision_lock</div>
+              <div className="text-[10px] text-slate-400 leading-tight">Releases held lock upon task milestone completion.</div>
+            </div>
+            <div className="p-2 rounded-lg bg-white/[0.02] border border-white/10">
               <div className="font-mono text-xs font-bold text-white mb-0.5">query_causal_graph</div>
-              <div className="text-[10px] text-slate-400">Cypher graph state inspection for agents.</div>
+              <div className="text-[10px] text-slate-400 leading-tight">Cypher GraphBLAS inspection of active nodes.</div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-slate-500">
-          <span>Stdio Server: <code className="text-slate-300">core/mcp/stdio.js</code></span>
+          <span>Stdio Daemon: <code className="text-slate-300">npx -y @cavdax/mcp-server</code></span>
           <button
             onClick={() => {
               playClick();
