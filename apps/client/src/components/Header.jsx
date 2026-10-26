@@ -174,7 +174,7 @@ export default function Header({
     <>
       <motion.header
         layoutRoot
-        className={`portfolio-header ${isScrolled ? 'scrolled' : ''} ${isHeaderHidden ? 'header-hidden' : ''} ${animatingTab ? 'no-morph' : ''}`}
+        className={`portfolio-header ${activeTab === 'profile' ? 'profile-tab-header !border-b-transparent border-b-transparent' : ''} ${isScrolled ? 'scrolled' : ''} ${isHeaderHidden ? 'header-hidden' : ''} ${animatingTab ? 'no-morph' : ''}`}
       >
         {/* 1. Left: Brand Logo (Unboxed, completely free, animate-on-hover only) */}
         <div
