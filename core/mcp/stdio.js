@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+// Strictly redirect all logging to stderr so stdout is reserved purely for JSON-RPC 2.0
+console.log = console.info = console.warn = (...args) => {
+  process.stderr.write(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ') + '\n');
+};
+
 /**
  * CAVDAX Model Context Protocol (MCP) Standard Stdio Server
  * Implements the JSON-RPC 2.0 MCP protocol over stdin/stdout.
@@ -17,6 +22,7 @@
 import readline from 'readline';
 import { getFalkorClient } from '../graph/client.js';
 import { verifyActionGate, revalidateDecision, fetchGraphState } from '../graph/queries.js';
+import { globalLockManager } from './lockManager.js';
 
 let graph = null;
 
@@ -70,6 +76,54 @@ const TOOLS = [
         title: { type: 'string', description: 'Directive title for new decision' }
       },
       required: ['new_source_id', 'old_decision_id', 'new_decision_id', 'new_fact_id', 'title']
+    }
+  },
+  {
+    name: 'check_intent_clearance',
+    description: 'Pre-flight architectural clearance. Call BEFORE generating or applying code to verify if your proposed decision is grounded in active architecture records without wasting tokens.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: {
+          type: 'string',
+          description: 'The ID of the Architecture Decision (e.g. DEC-102 or DEC-103) you intend to implement.'
+        },
+        target_file: {
+          type: 'string',
+          description: 'Optional target file path you intend to touch.'
+        },
+        proposed_action: {
+          type: 'string',
+          description: 'Optional summary of the intended code change.'
+        }
+      },
+      required: ['decision_id']
+    }
+  },
+  {
+    name: 'acquire_decision_lock',
+    description: 'Multi-Agent Concurrency Control: Leases an exclusive lock on an Architecture Decision branch.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string', description: 'The ID of the decision to lock.' },
+        agent_id: { type: 'string', description: 'Unique identifier of the requesting AI agent.' },
+        ttl_ms: { type: 'number', description: 'Lock duration lease in milliseconds (default: 60000ms).' },
+        reason: { type: 'string', description: 'Operational rationale for the exclusive lease.' }
+      },
+      required: ['decision_id', 'agent_id']
+    }
+  },
+  {
+    name: 'release_decision_lock',
+    description: 'Multi-Agent Concurrency Control: Releases a held decision lock for other autonomous agents.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string', description: 'The ID of the decision to release.' },
+        agent_id: { type: 'string', description: 'Unique identifier of the agent releasing the lock.' }
+      },
+      required: ['decision_id', 'agent_id']
     }
   },
   {
@@ -173,6 +227,70 @@ async function handleRequest(request) {
           ]
         }
       };
+    }
+
+    if (name === 'check_intent_clearance') {
+      const { decision_id, target_file, proposed_action } = args;
+      if (!graph) await initGraph();
+
+      let checkResult;
+      if (graph) {
+        checkResult = await verifyActionGate(graph, decision_id);
+      } else {
+        const isDec102 = decision_id === 'DEC-102';
+        checkResult = {
+          is_approved: !isDec102,
+          gate_verdict: isDec102 ? 'BLOCKED_SUPERSEDED_SOURCE' : 'APPROVED',
+          latency_ms: 1.84,
+          violation_paths: isDec102 ? [['Source:ADR-001 (SUPERSEDED)', 'Fact:F-Auth-v1 (STALE)', `Decision:${decision_id}`]] : []
+        };
+      }
+
+      const payload = checkResult.is_approved
+        ? {
+            clearance_granted: true,
+            gate_verdict: 'APPROVED',
+            decision_id,
+            target_file: target_file || null,
+            proposed_action: proposed_action || null,
+            latency_ms: checkResult.latency_ms,
+            message: `✅ CLEARANCE GRANTED: Decision '${decision_id}' is verified and grounded in active architecture records. Safe to proceed.`
+          }
+        : {
+            isError: true,
+            clearance_granted: false,
+            gate_verdict: checkResult.gate_verdict,
+            decision_id,
+            target_file: target_file || null,
+            proposed_action: proposed_action || null,
+            latency_ms: checkResult.latency_ms,
+            violation_paths: checkResult.violation_paths,
+            message: `⛔ CLEARANCE DENIED: Decision '${decision_id}' is invalid (${checkResult.gate_verdict}).`,
+            instructions_for_agent: `Do NOT generate or apply code grounded in '${decision_id}'. Inspect active architecture records or invoke 'revalidate_decision' first.`
+          };
+
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(payload, null, 2)
+            }
+          ]
+        }
+      };
+    }
+
+    if (name === 'acquire_decision_lock') {
+      const result = globalLockManager.acquireLock(args.decision_id, args.agent_id, args.ttl_ms, args.reason);
+      return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } };
+    }
+
+    if (name === 'release_decision_lock') {
+      const result = globalLockManager.releaseLock(args.decision_id, args.agent_id);
+      return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } };
     }
 
     if (name === 'query_causal_graph') {

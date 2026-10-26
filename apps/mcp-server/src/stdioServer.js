@@ -67,6 +67,55 @@ export const TOOLS = [
     }
   },
   {
+    name: 'check_intent_clearance',
+    description:
+      'Pre-flight architectural clearance. Call BEFORE generating or applying code to verify if your proposed decision is grounded in active architecture records without wasting tokens.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: {
+          type: 'string',
+          description: 'The ID of the Architecture Decision (e.g. DEC-102 or DEC-103) you intend to implement.'
+        },
+        target_file: {
+          type: 'string',
+          description: 'Optional target file path you intend to touch.'
+        },
+        proposed_action: {
+          type: 'string',
+          description: 'Optional summary of the intended code change.'
+        }
+      },
+      required: ['decision_id']
+    }
+  },
+  {
+    name: 'acquire_decision_lock',
+    description: 'Multi-Agent Concurrency Control: Leases an exclusive lock on an Architecture Decision branch.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string', description: 'The ID of the decision to lock.' },
+        agent_id: { type: 'string', description: 'Unique identifier of the requesting AI agent.' },
+        ttl_ms: { type: 'number', description: 'Lock duration lease in milliseconds (default: 60000ms).' },
+        reason: { type: 'string', description: 'Operational rationale for the exclusive lease.' }
+      },
+      required: ['decision_id', 'agent_id']
+    }
+  },
+  {
+    name: 'release_decision_lock',
+    description: 'Multi-Agent Concurrency Control: Releases a held decision lock for other autonomous agents.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string', description: 'The ID of the decision to release.' },
+        agent_id: { type: 'string', description: 'Unique identifier of the agent releasing the lock.' }
+      },
+      required: ['decision_id', 'agent_id']
+    }
+  },
+  {
     name: 'query_causal_graph',
     description:
       'Inspect the causal dependency graph to verify node statuses and dependency paths before proposing code changes.',
@@ -85,6 +134,9 @@ export const TOOLS = [
 const REQUIRED_ARGS = {
   apply_code_change: ['decision_id', 'file_path', 'code_payload'],
   revalidate_decision: ['new_source_id', 'old_decision_id', 'new_decision_id', 'new_fact_id', 'title'],
+  check_intent_clearance: ['decision_id'],
+  acquire_decision_lock: ['decision_id', 'agent_id'],
+  release_decision_lock: ['decision_id', 'agent_id'],
   query_causal_graph: []
 };
 
@@ -167,6 +219,9 @@ export class CavdaxStdioGateway {
       const result =
         name === 'apply_code_change' ? sim.applyCodeChange(args)
         : name === 'revalidate_decision' ? sim.revalidateDecision(args)
+        : name === 'check_intent_clearance' ? sim.checkIntentClearance(args)
+        : name === 'acquire_decision_lock' ? sim.acquireLock(args)
+        : name === 'release_decision_lock' ? sim.releaseLock(args)
         : sim.queryGraph(args);
       return toolResult({ mode: 'simulation', ...result }, result.isError === true);
     }

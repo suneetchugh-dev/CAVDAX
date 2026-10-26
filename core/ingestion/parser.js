@@ -24,10 +24,81 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
  * The 'supersedes' key specifically may be a scalar string OR a list.
  * Both forms are normalised to an array by ingestAdrFile before use.
  */
-export function parseFrontmatter(fileContent) {
+/**
+ * Zero-Config Heuristic Metadata Extractor
+ * Automatically extracts ADR / RFC metadata from plain, unstructured Markdown without YAML frontmatter.
+ * Supports Michael Nygard, MADR, RFCs, and unstructured issue/Notion formats.
+ */
+export function extractHeuristicMetadata(content, filePath = '') {
+  const metadata = {};
+
+  // 1. Title & ID detection: e.g. "# ADR-002: OAuth2 Token Migration" or "# 1. Record Architecture Decision"
+  const titleMatch = content.match(/^#\s+(?:ADR-)?([A-Za-z0-9-_]+)?[:.]?\s*(.+)$/m);
+  if (titleMatch) {
+    if (titleMatch[1] && /^ADR-\d+$/i.test(titleMatch[1])) {
+      metadata.id = titleMatch[1].toUpperCase();
+    }
+    metadata.title = titleMatch[2].trim();
+  }
+
+  // Fallback ID from filename if not extracted
+  if (!metadata.id && filePath) {
+    const base = path.basename(filePath, path.extname(filePath));
+    const idMatch = base.match(/ADR[-_]?\d+/i);
+    metadata.id = idMatch ? idMatch[0].toUpperCase().replace('_', '-') : base;
+  }
+
+  // 2. Supersedes extraction: e.g. "Supersedes: ADR-001", "Status: Superseded by ADR-001", "Deprecated by ADR-001"
+  const supersedesMatches = content.match(/(?:supersedes|superseded by|deprecated by|replaces)\s*:?\s*(?:\[)?(ADR[-_]?\d+)(?:\])?/gi);
+  if (supersedesMatches) {
+    const ids = [];
+    for (const match of supersedesMatches) {
+      const id = match.match(/ADR[-_]?\d+/i);
+      if (id) {
+        const cleanId = id[0].toUpperCase().replace('_', '-');
+        if (cleanId !== metadata.id && !ids.includes(cleanId)) {
+          ids.push(cleanId);
+        }
+      }
+    }
+    if (ids.length > 0) {
+      metadata.supersedes = ids.length === 1 ? ids[0] : ids;
+    }
+  }
+
+  // 3. Status extraction: e.g. "Status: Active", "Status: Accepted", "Status: Proposed"
+  const statusMatch = content.match(/Status\s*:\s*([A-Za-z]+)/i);
+  if (statusMatch) {
+    const s = statusMatch[1].toUpperCase();
+    if (['ACTIVE', 'ACCEPTED', 'APPROVED', 'VALID'].includes(s)) metadata.status = 'ACTIVE';
+    else if (['SUPERSEDED', 'DEPRECATED', 'REPLACED', 'ARCHIVED'].includes(s)) metadata.status = 'SUPERSEDED';
+  }
+
+  // 4. Decision extraction: e.g. "## Decision\nWe will use OAuth2 tokens..."
+  const decisionMatch = content.match(/##\s+(?:Decision|Directive|Resolution)\s*\r?\n([\s\S]*?)(?=\r?\n##|$)/i);
+  if (decisionMatch) {
+    const cleanDecision = decisionMatch[1].trim().split(/\r?\n/)[0].replace(/^[-*]\s*/, '').slice(0, 120);
+    metadata.decision_title = cleanDecision;
+    metadata.decision_id = `DEC-${metadata.id ? metadata.id.replace('ADR-', '') : 'AUTO'}`;
+  }
+
+  // 5. Fact / Context extraction: e.g. "## Context\nLegacy token auth is vulnerable..."
+  const contextMatch = content.match(/##\s+(?:Context|Problem|Fact|Rationale)\s*\r?\n([\s\S]*?)(?=\r?\n##|$)/i);
+  if (contextMatch) {
+    const cleanContext = contextMatch[1].trim().split(/\r?\n/)[0].replace(/^[-*]\s*/, '').slice(0, 160);
+    metadata.fact_claim = cleanContext;
+    metadata.fact_id = `F-${metadata.id ? metadata.id.replace('ADR-', '') : 'AUTO'}`;
+  }
+
+  return metadata;
+}
+
+export function parseFrontmatter(fileContent, filePath = '') {
   const match = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) {
-    return { frontmatter: {}, body: fileContent };
+    // Zero-Config Fallback: Parse plain unstructured Markdown using heuristic extractor
+    const heuristic = extractHeuristicMetadata(fileContent, filePath);
+    return { frontmatter: heuristic, body: fileContent };
   }
 
   const rawYaml = match[1];
@@ -80,6 +151,14 @@ export function parseFrontmatter(fileContent) {
     }
   }
 
+  // Backfill missing fields with heuristic extraction (hybrid fallback)
+  const heuristic = extractHeuristicMetadata(body, filePath);
+  for (const [k, v] of Object.entries(heuristic)) {
+    if (frontmatter[k] === undefined || frontmatter[k] === null) {
+      frontmatter[k] = v;
+    }
+  }
+
   return { frontmatter, body };
 }
 
@@ -107,7 +186,7 @@ export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootO
   }
 
   const fileContent = fs.readFileSync(absolutePath, 'utf-8');
-  const { frontmatter, body } = parseFrontmatter(fileContent);
+  const { frontmatter, body } = parseFrontmatter(fileContent, absolutePath);
 
   const adrId = frontmatter.id || path.basename(filePath, path.extname(filePath));
 

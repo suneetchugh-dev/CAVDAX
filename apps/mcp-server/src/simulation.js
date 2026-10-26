@@ -21,6 +21,7 @@ const SIM_NOTE =
 export class SimulationEngine {
   constructor({ repoRoot }) {
     this.repoRoot = path.resolve(repoRoot);
+    this.locks = new Map();
     this.decisions = new Map([
       ['DEC-102', { title: 'Generate Checkout Service with TokenAuth v1', status: 'INVALIDATED_NEEDS_REVALIDATION', fact: 'F-Auth-v1' }]
     ]);
@@ -93,6 +94,96 @@ export class SimulationEngine {
       gate_verdict: 'APPROVED',
       file_path: target,
       message: `CAVDAX GATE APPROVED (SIMULATION): '${decision_id}' is valid. File written to ${target}.`
+    };
+  }
+
+  acquireLock({ decision_id, agent_id, ttl_ms = 60000, reason = '' }) {
+    const existing = this.locks.get(decision_id);
+    const now = Date.now();
+    if (existing && existing.expiresAt > now && existing.agentId !== agent_id) {
+      return {
+        simulated: true,
+        acquired: false,
+        gate_verdict: 'BLOCKED_CONCURRENT_AGENT_LOCK',
+        decision_id,
+        locked_by: existing.agentId,
+        expires_in_ms: existing.expiresAt - now,
+        message: `⛔ CONCURRENCY REFUSAL (SIMULATION): Decision '${decision_id}' is locked by agent '${existing.agentId}'.`
+      };
+    }
+    const expiresAt = now + (ttl_ms || 60000);
+    this.locks.set(decision_id, { agentId: agent_id, expiresAt, reason });
+    return {
+      simulated: true,
+      acquired: true,
+      decision_id,
+      agent_id,
+      expires_at: new Date(expiresAt).toISOString(),
+      message: `✅ LOCK ACQUIRED (SIMULATION): Agent '${agent_id}' holds exclusive lease on '${decision_id}'.`
+    };
+  }
+
+  releaseLock({ decision_id, agent_id }) {
+    this.locks.delete(decision_id);
+    return { simulated: true, released: true, decision_id };
+  }
+
+  checkIntentClearance({ decision_id, target_file, proposed_action, agent_id }) {
+    const lock = this.locks.get(decision_id);
+    if (lock && lock.expiresAt > Date.now() && lock.agentId !== agent_id) {
+      return {
+        simulated: true,
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_CONCURRENT_AGENT_LOCK',
+        decision_id,
+        locked_by: lock.agentId,
+        message: `⛔ PRE-FLIGHT CONCURRENCY REFUSAL (SIMULATION): Decision '${decision_id}' is leased by '${lock.agentId}'.`
+      };
+    }
+    const base = { simulated: true, simulated_warning: SIM_NOTE, decision_id, target_file: target_file || null, proposed_action: proposed_action || null };
+    const decision = this.decisions.get(decision_id);
+
+    if (!decision) {
+      return {
+        ...base,
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_DECISION_NOT_FOUND',
+        violation_paths: [],
+        message: `CLEARANCE DENIED (SIMULATION): Decision '${decision_id}' does not exist in architecture graph.`
+      };
+    }
+
+    if (decision.status === 'INVALIDATED_NEEDS_REVALIDATION') {
+      return {
+        ...base,
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_SUPERSEDED_SOURCE',
+        violation_paths: [[`Decision:${decision_id}`, `Fact:${decision.fact}`, 'Source:ADR-001 (SUPERSEDED by ADR-002)']],
+        message: `⛔ CLEARANCE DENIED (SIMULATION): Decision '${decision_id}' is grounded in superseded source ADR-001.`,
+        instructions_for_agent: "Call 'revalidate_decision' (new_source_id ADR-002, new_fact_id F-OAuth2) before generating code."
+      };
+    }
+
+    if (decision.status !== 'VALID') {
+      return {
+        ...base,
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_DECISION_INVALIDATED',
+        violation_paths: [],
+        message: `⛔ CLEARANCE DENIED (SIMULATION): Decision '${decision_id}' has status ${decision.status}.`
+      };
+    }
+
+    return {
+      ...base,
+      isError: false,
+      clearance_granted: true,
+      gate_verdict: 'APPROVED',
+      message: `✅ CLEARANCE GRANTED (SIMULATION): Decision '${decision_id}' is verified and grounded in active records.`
     };
   }
 
