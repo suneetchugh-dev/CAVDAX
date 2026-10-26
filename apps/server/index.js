@@ -292,7 +292,18 @@ function requireAuth(req, res, next) {
     }
   }
 
-  // 3. Transparent local dev fallback strictly in non-production environments
+  // 3. Authenticated Web Session (GitHub OAuth session cookie)
+  if (req.session?.user) {
+    req.authUser = {
+      userId: req.session.user.githubId || req.session.user.login,
+      login: req.session.user.login,
+      tier: req.session.user.tier || 'free',
+      role: 'user'
+    };
+    return next();
+  }
+
+  // 4. Transparent local dev fallback strictly in non-production environments
   if (process.env.NODE_ENV !== 'production' && !API_TOKEN && userApiKeyRegistry.size === 0) {
     return next();
   }

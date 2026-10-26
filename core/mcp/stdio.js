@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+// Strictly redirect all logging to stderr so stdout is reserved purely for JSON-RPC 2.0
+console.log = console.info = console.warn = (...args) => {
+  process.stderr.write(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ') + '\n');
+};
+
 /**
  * CAVDAX Model Context Protocol (MCP) Standard Stdio Server
  * Implements the JSON-RPC 2.0 MCP protocol over stdin/stdout.
