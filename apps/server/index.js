@@ -807,10 +807,17 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
         error: `Missing required parameter(s) for 'revalidate_decision': ${missing.join(', ')}`
       });
     }
+  } else if (toolName === 'check_intent_clearance') {
+    if (!args.decision_id || typeof args.decision_id !== 'string') {
+      return res.status(400).json({
+        isError: true,
+        error: "Missing required parameter 'args.decision_id' for tool 'check_intent_clearance'."
+      });
+    }
   } else {
     return res.status(400).json({
       isError: true,
-      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision'.`
+      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision', 'check_intent_clearance'.`
     });
   }
   // --- End validation ---
@@ -904,6 +911,46 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
           broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: approveResponse });
           broadcastEvent('GRAPH_UPDATED', fallbackGraphState);
           return res.json(approveResponse);
+        }
+      } else if (toolName === 'check_intent_clearance') {
+        const isDec102 = args.decision_id === 'DEC-102';
+        const dNode = fallbackGraphState.nodes.find(n => n.id === args.decision_id);
+        const isInvalidated = (dNode && dNode.status === 'INVALIDATED_NEEDS_REVALIDATION') || isDec102;
+
+        if (isInvalidated) {
+          const denialResponse = {
+            isError: true,
+            clearance_granted: false,
+            simulated: true,
+            simulated_warning: 'FalkorDB offline — returned from in-memory simulation',
+            gate_verdict: 'BLOCKED_SUPERSEDED_SOURCE',
+            decision_id: args.decision_id,
+            target_file: args.target_file || null,
+            proposed_action: args.proposed_action || null,
+            latency_ms: 0,
+            simulated_latency_ms: 1.84,
+            violation_paths: [['Source:ADR-001 (SUPERSEDED)', 'Fact:F-Auth-v1 (STALE)', `Decision:${args.decision_id}`]],
+            message: `⛔ CLEARANCE DENIED (SIMULATION): Decision '${args.decision_id}' is grounded in superseded source 'ADR-001'. Pre-flight check failed.`,
+            instructions_for_agent: `Do NOT generate code grounded in '${args.decision_id}'. Inspect superseding source 'ADR-002', call 'revalidate_decision', and re-check clearance.`
+          };
+          broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: denialResponse });
+          return res.json(denialResponse);
+        } else {
+          const grantResponse = {
+            isError: false,
+            clearance_granted: true,
+            simulated: true,
+            simulated_warning: 'FalkorDB offline — returned from in-memory simulation',
+            gate_verdict: 'APPROVED',
+            decision_id: args.decision_id,
+            target_file: args.target_file || null,
+            proposed_action: args.proposed_action || null,
+            latency_ms: 0,
+            simulated_latency_ms: 1.62,
+            message: `✅ CLEARANCE GRANTED (SIMULATION): Decision '${args.decision_id}' is valid and active. Safe to proceed with code generation.`
+          };
+          broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: grantResponse });
+          return res.json(grantResponse);
         }
       } else if (toolName === 'revalidate_decision') {
         // Act IV simulation

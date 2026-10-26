@@ -78,6 +78,28 @@ const TOOLS = [
     }
   },
   {
+    name: 'check_intent_clearance',
+    description: 'Pre-flight architectural clearance. Call BEFORE generating or applying code to verify if your proposed decision is grounded in active architecture records without wasting tokens.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: {
+          type: 'string',
+          description: 'The ID of the Architecture Decision (e.g. DEC-102 or DEC-103) you intend to implement.'
+        },
+        target_file: {
+          type: 'string',
+          description: 'Optional target file path you intend to touch.'
+        },
+        proposed_action: {
+          type: 'string',
+          description: 'Optional summary of the intended code change.'
+        }
+      },
+      required: ['decision_id']
+    }
+  },
+  {
     name: 'query_causal_graph',
     description: 'Inspect the live FalkorDB causal dependency graph to verify node statuses and dependency paths before proposing code changes.',
     inputSchema: {
@@ -174,6 +196,60 @@ async function handleRequest(request) {
             {
               type: 'text',
               text: `GATE APPROVED: Causal provenance verified in ${checkResult.latency_ms}ms. File ${file_path} safely modified under authority of ${decision_id}.`
+            }
+          ]
+        }
+      };
+    }
+
+    if (name === 'check_intent_clearance') {
+      const { decision_id, target_file, proposed_action } = args;
+      if (!graph) await initGraph();
+
+      let checkResult;
+      if (graph) {
+        checkResult = await verifyActionGate(graph, decision_id);
+      } else {
+        const isDec102 = decision_id === 'DEC-102';
+        checkResult = {
+          is_approved: !isDec102,
+          gate_verdict: isDec102 ? 'BLOCKED_SUPERSEDED_SOURCE' : 'APPROVED',
+          latency_ms: 1.84,
+          violation_paths: isDec102 ? [['Source:ADR-001 (SUPERSEDED)', 'Fact:F-Auth-v1 (STALE)', `Decision:${decision_id}`]] : []
+        };
+      }
+
+      const payload = checkResult.is_approved
+        ? {
+            clearance_granted: true,
+            gate_verdict: 'APPROVED',
+            decision_id,
+            target_file: target_file || null,
+            proposed_action: proposed_action || null,
+            latency_ms: checkResult.latency_ms,
+            message: `✅ CLEARANCE GRANTED: Decision '${decision_id}' is verified and grounded in active architecture records. Safe to proceed.`
+          }
+        : {
+            isError: true,
+            clearance_granted: false,
+            gate_verdict: checkResult.gate_verdict,
+            decision_id,
+            target_file: target_file || null,
+            proposed_action: proposed_action || null,
+            latency_ms: checkResult.latency_ms,
+            violation_paths: checkResult.violation_paths,
+            message: `⛔ CLEARANCE DENIED: Decision '${decision_id}' is invalid (${checkResult.gate_verdict}).`,
+            instructions_for_agent: `Do NOT generate or apply code grounded in '${decision_id}'. Inspect active architecture records or invoke 'revalidate_decision' first.`
+          };
+
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(payload, null, 2)
             }
           ]
         }

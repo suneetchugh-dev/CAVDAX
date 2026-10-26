@@ -58,6 +58,19 @@ export class CavdaxMcpServer {
         }
       },
       {
+        name: 'check_intent_clearance',
+        description: 'Pre-flight architectural clearance. Call BEFORE generating or applying code to verify if your proposed decision is grounded in active, un-superseded architecture records.',
+        parameters: {
+          type: 'object',
+          properties: {
+            decision_id: { type: 'string', description: 'The ID of the Architecture Decision (e.g., DEC-102 or DEC-103) you intend to implement.' },
+            target_file: { type: 'string', description: 'Optional target file path you intend to modify.' },
+            proposed_action: { type: 'string', description: 'Optional summary of the intended implementation or change.' }
+          },
+          required: ['decision_id']
+        }
+      },
+      {
         name: 'revalidate_decision',
         description: 'Act IV Revalidation: Synthesizes a new Decision replacing an invalidated one, grounded in a fresh superseding source.',
         parameters: {
@@ -85,6 +98,8 @@ export class CavdaxMcpServer {
       return await this.executeApplyCodeChange(args);
     } else if (toolName === 'revalidate_decision') {
       return await this.executeRevalidateDecision(args);
+    } else if (toolName === 'check_intent_clearance') {
+      return await this.executeCheckIntentClearance(args);
     } else {
       throw new Error(`Unknown tool: '${toolName}'`);
     }
@@ -190,6 +205,43 @@ export class CavdaxMcpServer {
       latency_ms: checkResult.latency_ms,
       file_path: resolvedPath,
       message: `✅ CAVDAX GATE APPROVED: Full causal provenance verified. File '${file_path}' successfully written to disk.`
+    };
+  }
+
+  /**
+   * Pre-Flight Architectural Clearance Handler
+   * Allows AI agents to verify if a proposed decision is valid and grounded BEFORE writing code.
+   */
+  async executeCheckIntentClearance({ decision_id, target_file, proposed_action }) {
+    console.log(`[MCP Gate] 🔍 Checking pre-flight intent clearance for decision '${decision_id}'...`);
+    const checkResult = await verifyActionGate(this.graph, decision_id);
+
+    if (!checkResult.is_approved) {
+      console.warn(`[MCP Gate] ⛔ PRE-FLIGHT REFUSAL: Clearance DENIED! Verdict: ${checkResult.gate_verdict}`);
+      return {
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: checkResult.gate_verdict,
+        decision_id,
+        target_file: target_file || null,
+        proposed_action: proposed_action || null,
+        latency_ms: checkResult.latency_ms,
+        violation_paths: checkResult.violation_paths,
+        message: `⛔ CLEARANCE DENIED: Decision '${decision_id}' is invalid (verdict: '${checkResult.gate_verdict}'). A supporting fact or source is superseded or stale.`,
+        instructions_for_agent: `Do NOT generate or apply code grounded in '${decision_id}'. Inspect active architecture records or invoke 'revalidate_decision' to create an approved decision first.`
+      };
+    }
+
+    console.log(`[MCP Gate] ✅ PRE-FLIGHT APPROVED: Clearance GRANTED in ${checkResult.latency_ms}ms.`);
+    return {
+      isError: false,
+      clearance_granted: true,
+      gate_verdict: 'APPROVED',
+      decision_id,
+      target_file: target_file || null,
+      proposed_action: proposed_action || null,
+      latency_ms: checkResult.latency_ms,
+      message: `✅ CLEARANCE GRANTED: Decision '${decision_id}' is verified and grounded in active architecture records. Safe to proceed with implementation.`
     };
   }
 

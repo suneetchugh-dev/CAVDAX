@@ -96,6 +96,53 @@ export class SimulationEngine {
     };
   }
 
+  checkIntentClearance({ decision_id, target_file, proposed_action }) {
+    const base = { simulated: true, simulated_warning: SIM_NOTE, decision_id, target_file: target_file || null, proposed_action: proposed_action || null };
+    const decision = this.decisions.get(decision_id);
+
+    if (!decision) {
+      return {
+        ...base,
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_DECISION_NOT_FOUND',
+        violation_paths: [],
+        message: `CLEARANCE DENIED (SIMULATION): Decision '${decision_id}' does not exist in architecture graph.`
+      };
+    }
+
+    if (decision.status === 'INVALIDATED_NEEDS_REVALIDATION') {
+      return {
+        ...base,
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_SUPERSEDED_SOURCE',
+        violation_paths: [[`Decision:${decision_id}`, `Fact:${decision.fact}`, 'Source:ADR-001 (SUPERSEDED by ADR-002)']],
+        message: `⛔ CLEARANCE DENIED (SIMULATION): Decision '${decision_id}' is grounded in superseded source ADR-001.`,
+        instructions_for_agent: "Call 'revalidate_decision' (new_source_id ADR-002, new_fact_id F-OAuth2) before generating code."
+      };
+    }
+
+    if (decision.status !== 'VALID') {
+      return {
+        ...base,
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_DECISION_INVALIDATED',
+        violation_paths: [],
+        message: `⛔ CLEARANCE DENIED (SIMULATION): Decision '${decision_id}' has status ${decision.status}.`
+      };
+    }
+
+    return {
+      ...base,
+      isError: false,
+      clearance_granted: true,
+      gate_verdict: 'APPROVED',
+      message: `✅ CLEARANCE GRANTED (SIMULATION): Decision '${decision_id}' is verified and grounded in active records.`
+    };
+  }
+
   revalidateDecision({ new_source_id, old_decision_id, new_decision_id, new_fact_id, title }) {
     const base = { simulated: true, simulated_warning: SIM_NOTE };
     const old = this.decisions.get(old_decision_id);
