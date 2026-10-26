@@ -31,6 +31,12 @@ import { SimulationEngine } from './simulation.js';
 const { version: PACKAGE_VERSION } = createRequire(import.meta.url)('../package.json');
 const log = (msg) => process.stderr.write(`[cavdax] ${msg}\n`);
 
+// Needed so the holder of a decision lock is not blocked by its own lock.
+const AGENT_ID_PROPERTY = {
+  type: 'string',
+  description: 'Optional. If you hold a lock from acquire_decision_lock, pass the same agent_id here so your own lock does not block you.'
+};
+
 export const TOOLS = [
   {
     name: 'apply_code_change',
@@ -45,7 +51,8 @@ export const TOOLS = [
         },
         file_path: { type: 'string', description: 'Target file path (relative to the repo root) to modify or create.' },
         code_payload: { type: 'string', description: 'Full code content to write to the target file.' },
-        reasoning: { type: 'string', description: 'Technical rationale for this code modification.' }
+        reasoning: { type: 'string', description: 'Technical rationale for this code modification.' },
+        agent_id: AGENT_ID_PROPERTY
       },
       required: ['decision_id', 'file_path', 'code_payload']
     }
@@ -84,7 +91,8 @@ export const TOOLS = [
         proposed_action: {
           type: 'string',
           description: 'Optional summary of the intended code change.'
-        }
+        },
+        agent_id: AGENT_ID_PROPERTY
       },
       required: ['decision_id']
     }

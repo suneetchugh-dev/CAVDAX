@@ -72,6 +72,9 @@ jobs:
           node --check apps/mcp-server/src/checkCommand.js
           node --check apps/mcp-server/src/doctorCommand.js
 
+      - name: Run MCP Server Tests
+        run: node --test apps/mcp-server/test/locks.test.mjs
+
   # ---------------------------------------------------------------------------
   # Job 3: Client build + benchmark (original job, now named clearly)
   # ---------------------------------------------------------------------------
