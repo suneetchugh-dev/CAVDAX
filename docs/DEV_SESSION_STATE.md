@@ -18,6 +18,26 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.19 Latest Session Achievements (October 26, 2026 - Dual-Layer Persistent Session Resilience & Cloudflare Security Audit)
+
+- **Dual-Layer Persistent Session Resilience (`apps/server/index.js`, `docker-compose.yml`, `infra/docker-compose.prod.yml`)**:
+  - *Root Cause Resolution*: In-memory session store (`MemoryStore`) previously evaporated on server restarts during rolling production deployments, returning 401s on `/api/auth/me` and causing unexpected user logout churn.
+  - *Layer 1 (File-Backed Store)*: Implemented `PersistentFileStore` in `apps/server/index.js` subclassing `session.Store`. Writes session states to `data/sessions/<safeSid>.json` with atomic rename semantics and strict alphanumeric regex sanitization (`[^a-zA-Z0-9_-]`) and `path.resolve` directory confinement to defend against OWASP Phase 3 path traversal attacks.
+  - *Layer 2 (Cryptographic Re-Hydration Cookie)*: Generated tamper-proof HMAC-SHA256 signed HTTP-only cookie (`cavdax_auth`) on OAuth completion and billing tier upgrades. Includes `timingSafeEqual` signature verification.
+  - *Auto-Rehydration Middleware*: Injected re-hydration middleware before session routes. If `!req.session?.user`, verifies `cavdax_auth` and instantly reconstructs the session without user interruption.
+  - *Synchronous Logout*: Updated `/api/auth/logout` to clear both `cavdax_auth` and `connect.sid` cookies alongside `req.session.destroy()`.
+  - *Persistent Volume Isolation*: Added `server-sessions:/app/apps/server/data/sessions` volume in both `docker-compose.yml` and `infra/docker-compose.prod.yml`. Added session directories to `.gitignore`.
+- **Cloudflare 7-Phase Security Audit Gate Certified (Rule 25)**:
+  - Audited all 7 phases against the new session architecture:
+    - Phase 1 (Boundary & Trust Mapping): PASS
+    - Phase 2 (Auth & Session Gate Inspection): PASS
+    - Phase 3 (Injection & Path Traversal): PASS (strict regex + path boundary)
+    - Phase 4 (Business Logic & Financial Integrity): PASS
+    - Phase 5 (Security Headers & Dependency Hygiene): PASS (0 external deps)
+    - Phase 6 (Cloudflare Edge & Zero-Trust): PASS
+    - Phase 7 (Advanced Memory & Session Lifecycle): PASS (zero-churn container restarts)
+  - Generated comprehensive certification artifact (`cavdax_cloudflare_security_audit_persistent_sessions.md`).
+
 ## 1.0.18 Latest Session Achievements (October 26, 2026 - Console GitHub OAuth Context Preservation, Professional README Modernization, and Rule 26 Codification)
 
 - **GitHub OAuth Context Preservation on Console (`apps/server/index.js`, `ConnectRepoModal.jsx`, `App.jsx`)**:

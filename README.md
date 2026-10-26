@@ -323,6 +323,7 @@ CAVDAX enforces a mandatory **7-Phase Cloudflare Security & Pen-Test Audit Stand
 * **Boundary & Parameter Sanitization**: All endpoint inputs (`decision_id <= 128`, `target_file <= 256`, `proposed_action <= 500`) are strictly clamped to eliminate ReDoS and memory amplification vectors.
 * **Zero Split-Brain Session Desynchronization (Rule 0j)**: Enforces `credentials: 'include'` and instantaneous 401 unauthenticated session purges across all client endpoints to keep client cookies synchronized with server sessions across deployment restarts.
 * **Context-Preserving GitHub OAuth Routing**: Preserves the user's active page and workflow context (`returnTo`) upon authenticating, automatically reopening repository connection dialogs without disorienting navigation jumps.
+* **Dual-Layer Persistent Session Resilience**: Eliminates post-deployment logout churn through a file-backed `PersistentFileStore` (mounted via Docker volume `server-sessions`) paired with a tamper-proof HMAC-SHA256 signed HTTP-only auth cookie (`cavdax_auth`) with constant-time verification (`timingSafeEqual`) for instant zero-downtime session re-hydration across server restarts.
 
 CAVDAX implements comprehensive defense-in-depth security across both API and runtime layers:
 
