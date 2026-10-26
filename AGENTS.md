@@ -39,10 +39,12 @@ Operational constitution, architecture standards, and safety governance for AI c
 0d. **Concise UI Copy, Zero Wall-of-Text & Dev Integrity Standard**:
    - **Banned Verbose Mechanical Paragraphs**: Never write bloated multi-sentence mechanical paragraphs in security gates, modal confirmations, or terminal prompts (e.g. strictly banning blocks like *"Restricted developer terminal. Hardware IP whitelist matched and authorized GitHub handle detected. Enter your Master Developer Passkey to unlock the causal intercept console."*).
    - **Rule**: Keep security and modal prompts to a single concise, punchy sentence: e.g. *"Authorized session detected. Enter master passkey to unlock the causal console."* or *"This clears active dev tokens, locks the enclave immediately, and returns to the home page."*
-   - **Zero Public Leakage of Dev Endpoints (Strict Inviolable Rule)**:
-     - In production security engineering, internal developer consoles and administrative routes (/devteam, /admin, etc.) must NEVER be advertised, linked, or hinted at on public pages or navigation footers.
-     - Exposing internal gates or consoles on public surfaces completely defeats the purpose of zero-knowledge cloaking and silent 404 security.
-     - Access to /devteam must remain strictly restricted to direct URL navigation, hardware IP whitelisting, and authorized GitHub handles/passkeys without leaving breadcrumbs for public crawlers or visitors.
+   - **Zero Public Leakage of Dev Endpoints & Enclave Cloaking (Strict Inviolable Rule)**:
+     - In production security engineering, internal developer consoles and administrative routes (/devteam, /admin, etc.) must NEVER be advertised, linked, or hinted at on public pages, navigation footers, or client error messages.
+     - **Zero Leakage in Tracked Repo Files (.env.example, README.md, docs/)**: Never document, list, comment, or hint at developer enclave routes (/devteam, /admin), developer IP whitelists (VITE_ALLOWED_DEV_IPS), developer GitHub handles (VITE_AUTHORIZED_DEV_USERS), or master passkeys (VITE_DEV_MASTER_KEY, VITE_DEV_PASSKEY_HASH) in .env.example or ANY tracked public repository files.
+     - .env.example must contain ONLY public application configuration variables (database, MCP tokens, standard OAuth, billing keys). Internal developer configurations belong strictly in private, uncommitted .env files distributed out-of-band via secure channels.
+     - **Universal Ban on Real or Real-Looking IP Addresses**: Never write real public IPs or ISP addresses in tracked code or comments. Only RFC 5737 documentation test nets (192.0.2.1, 198.51.100.1) or localhost (127.0.0.1) may ever appear in examples.
+     - Access to /devteam must remain strictly restricted to direct URL navigation, hardware IP whitelisting, and authorized GitHub handles/passkeys with silent 404 responses for unauthorized visitors without leaving breadcrumbs for public crawlers.
    - **Zero Fake Metrics or Vanity Clutter**: Never display simulated hardcoded numbers (e.g. fake client counts, fake node tallies, simulated latencies). Keep all dev console diagnostics grounded strictly in genuine operational status (e.g. Gateway: ENFORCING, Database: CONNECTED, Session: VERIFIED, Device IP: WHITELISTED).
 
 0e. **Integration Lifecycle, Connected Workspace Monochromy & Zero Clutter Guard**:
@@ -506,6 +508,13 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
     - **Inviolable Documentation Sync Requirement**: Whenever any feature, bugfix, architectural enhancement, MCP tool addition, or security modification is made, the agent MUST evaluate whether project documentation (`docs/`), technical specifications (`docs/MCP_SPECIFICATION.md`, etc.), or `README.md` need to be updated.
     - **Update in the Same Pass**: If any documentation, MD spec, or `README.md` requires synchronization, the agent MUST draft, refine, and commit the documentation updates on the appropriate branch (`docs`) in the same development pass *before* requesting approval, opening pull requests, or merging into `main`.
     - **Never Ship Code Ahead of Documentation**: Code and documentation must move in strict lockstep. It is a fatal governance defect to push code changes while leaving `README.md` or technical specifications describing stale, outdated, or incomplete capabilities.
+
+27. **Mandatory Zero-Knowledge Enclave Cloaking Gate (Pre-Commit Scan)**:
+    - **Inviolable Enclave Cloaking Requirement**: Before any commit or PR is merged into `main`, the agent MUST verify that no tracked files (specifically `.env.example`, `README.md`, `docs/`, public templates, or client assets) leak or mention:
+      1. Internal developer routes: `/devteam`, `/admin`, or internal operational consoles.
+      2. Developer enclave authentication variables: `VITE_ALLOWED_DEV_IPS`, `VITE_AUTHORIZED_DEV_USERS`, `VITE_DEV_MASTER_KEY`, `VITE_DEV_PASSKEY_HASH`.
+      3. Real public IP addresses, cloud VM IPs, or ISP subnet identifiers.
+    - **Strict Gatekeeper Enforcement**: Any hit in tracked repository files is a critical security vulnerability and must be completely purged before staging and merging.
 
 
 
