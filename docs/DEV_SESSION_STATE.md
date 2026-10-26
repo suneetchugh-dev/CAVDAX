@@ -18,6 +18,14 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.20 Latest Session Achievements (October 26, 2026 - Demo Decision Quota Exclusion & Automatic Demo Tagging)
+
+- **Demo Decision Quota Exclusion (`core/ingestion/parser.js`, `core/graph/queries.js`, `apps/server/index.js`)**:
+  - *Root Cause Resolution*: Ingesting `demo-repo/docs/adrs/ADR-002.md` during Act II of the walkthrough generated `DEC-002`. Because the server's quota query only excluded `['DEC-101', 'DEC-102', 'DEC-103']`, `DEC-002` was counted as a user decision, displaying `(1/1,000)` on the Profile page.
+  - *Automatic Demo Tagging*: Updated `ingestAdrFile()` in `core/ingestion/parser.js` to detect demo file paths (`filePath.includes('demo-repo')`) and tag created/merged `:Decision` nodes with `is_demo: true`.
+  - *Act IV & Seed Tagging*: Updated `revalidateDecision()` and `seedDemoGraph()` in `core/graph/queries.js` to set `is_demo: true` on demo nodes.
+  - *Expanded FalkorDB Quota Query*: Updated `/api/user/quota` in `apps/server/index.js` to evaluate `WHERE coalesce(d.is_demo, false) = false AND NOT d.id IN ['DEC-001', 'DEC-002', 'DEC-003', 'DEC-100', 'DEC-101', 'DEC-102', 'DEC-103', 'DEC-201']`, ensuring canonical demo showcases never consume user plan quotas.
+
 ## 1.0.19 Latest Session Achievements (October 26, 2026 - Dual-Layer Persistent Session Resilience & Cloudflare Security Audit)
 
 - **Dual-Layer Persistent Session Resilience (`apps/server/index.js`, `docker-compose.yml`, `infra/docker-compose.prod.yml`)**:
