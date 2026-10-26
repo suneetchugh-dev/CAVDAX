@@ -1724,9 +1724,12 @@ app.post('/api/mcp/messages', requireAuth, async (req, res) => {
 
 const GITHUB_CLIENT_ID     = process.env.GITHUB_CLIENT_ID     || null;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || null;
-const CLIENT_URL           = process.env.CLIENT_URL           || null;
+const isProduction         = process.env.NODE_ENV === 'production';
+const CLIENT_URL           = process.env.CLIENT_URL           || (isProduction ? 'https://cavdax.sahnirmaan.live' : 'http://localhost:5173');
 const GITHUB_CALLBACK_URL  = process.env.GITHUB_CALLBACK_URL
-  || `http://localhost:${PORT}/api/auth/github/callback`;
+  || (isProduction
+      ? 'https://cavdax.sahnirmaan.live/api/auth/github/callback'
+      : `http://localhost:${PORT === 3000 ? 3001 : PORT}/api/auth/github/callback`);
 
 // In-memory CSRF state store (keyed by random state param, TTL 10 min)
 const oauthStateStore = new Map(); // state → { createdAt }
