@@ -60,3 +60,7 @@ graphify-out/*.html
 .puppeteer-user-data/
 screenshot-*.png
 .puppeteer-edge-profile/
+
+# Persistent Server Runtime Sessions
+apps/server/data/
+data/sessions/
