@@ -25,6 +25,8 @@ services:
       - FALKORDB_HOST=falkordb
       - FALKORDB_PORT=6379
       - NODE_ENV=production
+    volumes:
+      - server-sessions:/app/apps/server/data/sessions
     depends_on:
       falkordb:
         condition: service_healthy
@@ -64,4 +66,6 @@ volumes:
   caddy-data:
     driver: local
   caddy-config:
+    driver: local
+  server-sessions:
     driver: local

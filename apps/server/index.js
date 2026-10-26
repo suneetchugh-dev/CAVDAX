@@ -93,22 +93,167 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' }));
 
 // ---------------------------------------------------------------------------
-// SESSION MIDDLEWARE
+// SESSION MIDDLEWARE & PERSISTENT SESSION RESILIENCE
 // ---------------------------------------------------------------------------
-// Used by GitHub OAuth flow to carry the authenticated user across requests.
-// SESSION_SECRET must be set in .env for production.
-// In-memory store is fine for a single-process server; scale to Redis later.
+// Dual-layer session resilience (Industry Standard: Linear/Vercel/Supabase):
+// Layer 1: File-backed persistent session store (survives process/container restarts)
+// Layer 2: Tamper-proof HMAC-SHA256 signed HTTP-only auth cookie (cavdax_auth)
+
+const SESSION_SECRET = process.env.SESSION_SECRET || 'cavdax_session_secret_vault_fallback_2026';
+const SESSIONS_DIR = path.resolve(__dirname, 'data/sessions');
+
+class PersistentFileStore extends session.Store {
+  constructor(options = {}) {
+    super();
+    this.dir = options.dir || SESSIONS_DIR;
+    try {
+      if (!fs.existsSync(this.dir)) {
+        fs.mkdirSync(this.dir, { recursive: true });
+      }
+    } catch (e) {
+      console.warn('[CAVDAX SessionStore] Directory initialization warning:', e.message);
+    }
+  }
+
+  get(sid, cb) {
+    if (!sid || typeof sid !== 'string') return cb(null, null);
+    // Sanitize sid to prevent path traversal (OWASP Phase 3)
+    const safeSid = sid.replace(/[^a-zA-Z0-9_-]/g, '');
+    const filePath = path.join(this.dir, `${safeSid}.json`);
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) return cb(null, null);
+      try {
+        const sessionData = JSON.parse(data);
+        if (sessionData?.cookie?.expires && new Date(sessionData.cookie.expires).getTime() < Date.now()) {
+          this.destroy(sid, () => cb(null, null));
+        } else {
+          cb(null, sessionData);
+        }
+      } catch {
+        cb(null, null);
+      }
+    });
+  }
+
+  set(sid, sessionData, cb) {
+    if (!sid || typeof sid !== 'string') return cb && cb(null);
+    const safeSid = sid.replace(/[^a-zA-Z0-9_-]/g, '');
+    const filePath = path.join(this.dir, `${safeSid}.json`);
+    const tempPath = `${filePath}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
+    const payload = JSON.stringify(sessionData);
+    fs.writeFile(tempPath, payload, 'utf8', (err) => {
+      if (err) return cb && cb(err);
+      fs.rename(tempPath, filePath, (renameErr) => {
+        if (cb) cb(renameErr || null);
+      });
+    });
+  }
+
+  destroy(sid, cb) {
+    if (!sid || typeof sid !== 'string') return cb && cb(null);
+    const safeSid = sid.replace(/[^a-zA-Z0-9_-]/g, '');
+    const filePath = path.join(this.dir, `${safeSid}.json`);
+    fs.unlink(filePath, () => {
+      if (cb) cb(null);
+    });
+  }
+
+  touch(sid, sessionData, cb) {
+    this.set(sid, sessionData, cb);
+  }
+}
+
+// Cryptographic signing & verification helpers (Defense-in-depth)
+function signAuthToken(payload) {
+  try {
+    const json = JSON.stringify(payload);
+    const data = Buffer.from(json, 'utf8').toString('base64url');
+    const sig = createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+    return `${data}.${sig}`;
+  } catch (err) {
+    console.error('[CAVDAX Auth] Error signing auth token:', err.message);
+    return null;
+  }
+}
+
+function verifyAuthToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [data, sig] = parts;
+  if (!data || !sig) return null;
+
+  try {
+    const expectedSig = createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+    const bufSig = Buffer.from(sig);
+    const bufExp = Buffer.from(expectedSig);
+    if (bufSig.length !== bufExp.length || !timingSafeEqual(bufSig, bufExp)) {
+      return null;
+    }
+    const json = Buffer.from(data, 'base64url').toString('utf8');
+    const parsed = JSON.parse(json);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (typeof parsed.login !== 'string' || parsed.login.length > 64) return null;
+    if (parsed.name && typeof parsed.name === 'string' && parsed.name.length > 128) {
+      parsed.name = parsed.name.slice(0, 128);
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function extractAuthCookie(req) {
+  const cookieHeader = req.headers.cookie;
+  if (!cookieHeader) return null;
+  const match = cookieHeader.match(/(?:^|;\s*)cavdax_auth=([^;]+)/);
+  if (!match) return null;
+  return decodeURIComponent(match[1]);
+}
+
+function rehydrateSessionFromCookie(req) {
+  if (req.session?.user) return req.session.user;
+  const rawToken = extractAuthCookie(req);
+  if (!rawToken) return null;
+  const verified = verifyAuthToken(rawToken);
+  if (verified && verified.login && verified.githubId) {
+    if (!req.session) req.session = {};
+    req.session.user = {
+      githubId: verified.githubId,
+      login: verified.login,
+      name: verified.name || verified.login,
+      avatarUrl: verified.avatarUrl || '',
+      accessToken: verified.accessToken || '',
+      tier: verified.tier || 'free'
+    };
+    if (verified.tier) req.session.tier = verified.tier;
+    return req.session.user;
+  }
+  return null;
+}
+
+const sessionStore = new PersistentFileStore();
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'cavdax_session_secret_vault_fallback_2026',
+  store: sessionStore,
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   }
 }));
+
+// Session Re-hydration Middleware (Restores session from signed cookie across restarts)
+app.use((req, res, next) => {
+  if (!req.session?.user) {
+    rehydrateSessionFromCookie(req);
+  }
+  next();
+});
 
 // ---------------------------------------------------------------------------
 // TIER CONFIG & RATE LIMITING
@@ -1693,14 +1838,26 @@ app.get('/api/auth/github/callback', async (req, res) => {
       return res.redirect(`${frontendBase}${returnTo}${sep}oauth_error=user_fetch_failed`);
     }
 
-    // 3. Persist user in session
+    // 3. Persist user in session & sign persistent auth cookie
     req.session.user = {
       githubId:   userData.id,
       login:      userData.login,
       name:       userData.name || userData.login,
       avatarUrl:  userData.avatar_url,
-      accessToken
+      accessToken,
+      tier:       req.session?.tier || 'free'
     };
+
+    // Set signed persistent cookie for instant re-hydration across server restarts
+    const signedAuth = signAuthToken(req.session.user);
+    if (signedAuth) {
+      res.cookie('cavdax_auth', signedAuth, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
+    }
 
     console.log(`[CAVDAX OAuth] User authenticated: ${userData.login} (id: ${userData.id})`);
 
@@ -1898,6 +2055,16 @@ app.post('/api/user/rotate-api-key', keyRotateLimiter, (req, res) => {
  * Destroys the session and redirects to /mcp.
  */
 app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('cavdax_auth', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
+  res.clearCookie('connect.sid', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
   req.session.destroy(err => {
     if (err) console.error('[CAVDAX OAuth] Session destroy error:', err.message);
     res.json({ success: true });
@@ -2124,6 +2291,15 @@ app.post('/api/billing/verify-payment', (req, res) => {
     req.session.tier = authorizedTier;
     if (req.session.user) {
       req.session.user.tier = authorizedTier;
+      const signedAuth = signAuthToken(req.session.user);
+      if (signedAuth) {
+        res.cookie('cavdax_auth', signedAuth, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 30 * 24 * 60 * 60 * 1000
+        });
+      }
     }
   }
 
