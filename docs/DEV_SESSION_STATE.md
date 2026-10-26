@@ -18,6 +18,19 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.22 Latest Session Achievements (October 27, 2026 - MCP Server 1.2.0 Release, Plain-Markdown ADRs & External Ingestion Isolation - PR #57)
+
+- **@cavdax/mcp-server 1.2.0 Release & Dependency Trimming (`apps/mcp-server/package.json`)**:
+  - Bumped `@cavdax/mcp-server` to version `1.2.0`.
+  - Dropped unused `chalk` dependency to reduce CLI package installation footprint and eliminate unnecessary transitive dependencies.
+- **External User ADR Ingestion Isolation (`core/ingestion/parser.js`, `apps/mcp-server/src/ingestCommand.js`)**:
+  - Fixed demo tagging logic so decisions created via `npx cavdax ingest` in external user repositories are never erroneously tagged as demo data (`isDemo: false`).
+  - Added `isDemoOption` parameter to `ingestAdrFile()` and `revalidateDecision()` with fallback (`isDemoOption ?? ...`), preserving canonical 4-Act demo tagging (`DEC-10x`) on the hosted web server while guaranteeing clean production tagging for external users.
+- **Expanded MCP Tool Documentation & Lock Architecture (`apps/mcp-server/README.md`)**:
+  - Documented `check_intent_clearance`, `acquire_decision_lock`, and `release_decision_lock` alongside the complete 6-tool MCP catalog.
+  - Formally specified decision lock lifecycle: leased locks (5s to 5min) held in-memory per stdio process, noting that multi-agent cross-client locking routes through the shared hosted SSE endpoint.
+  - Documented support for plain Markdown ADRs without YAML frontmatter.
+
 ## 1.0.21 Latest Session Achievements (October 26, 2026 - GitHub OAuth RFC 6749 Hardening, Fail-Closed Fallbacks & Cloudflare Security Audit)
 
 - **GitHub OAuth RFC 6749 Redirect URI Hardening (`apps/server/index.js`, `docker-compose.yml`)**:
