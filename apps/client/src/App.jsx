@@ -851,7 +851,7 @@ export default function App() {
       addLog('INGESTION', 'Ingesting git commit containing ADR-002 (supersedes ADR-001)...', 'CASCADE');
       let lat = 2.14;
       try {
-        const res = await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const res = await fetch('/api/ingest', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data.graph) setGraphData(data.graph);
@@ -884,8 +884,9 @@ export default function App() {
       let data;
       try {
         const res = await fetch('/api/mcp/call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ toolName: 'apply_code_change', args: { decision_id: 'DEC-102', file_path: 'demo-repo/src/services/payment.js', code_payload: '// TokenAuth v1 code' } })
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -907,7 +908,7 @@ export default function App() {
       addLog('AGENT', 'Act IV: Agent synthesizes Decision DEC-103 grounded in fresh Source ADR-002...', 'REVALIDATION');
 
       try {
-        const revalRes = await fetch('/api/act-iv-revalidate', { method: 'POST' });
+        const revalRes = await fetch('/api/act-iv-revalidate', { method: 'POST', credentials: 'include' });
         if (!revalRes.ok) throw new Error(`HTTP ${revalRes.status}`);
         const revalData = await revalRes.json();
         if (revalData.graph) setGraphData(revalData.graph);
@@ -935,8 +936,9 @@ export default function App() {
       let execData;
       try {
         const execRes = await fetch('/api/mcp/call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ toolName: 'apply_code_change', args: { decision_id: 'DEC-103', file_path: 'demo-repo/src/services/payment.js', code_payload: oauthCode } })
         });
         if (!execRes.ok) throw new Error(`HTTP ${execRes.status}`);
@@ -993,7 +995,7 @@ export default function App() {
     setIsResetting(true);
     setAgentState('idle');
     try {
-      const res = await fetch('/api/reset', { method: 'POST' });
+      const res = await fetch('/api/reset', { method: 'POST', credentials: 'include' });
       const data = await res.json();
       if (data.graph) setGraphData(data.graph);
 
