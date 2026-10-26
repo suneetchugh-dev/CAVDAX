@@ -1639,7 +1639,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
 
   // User denied access or GitHub returned an error
   if (ghError) {
-    return res.redirect(`${returnTo}?oauth_error=${encodeURIComponent(ghError)}`);
+    const sep = returnTo.includes("?") ? "&" : "?";
+    return res.redirect(`${returnTo}${sep}oauth_error=${encodeURIComponent(ghError)}`);
   }
 
   // CSRF state validation
@@ -1649,7 +1650,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
   oauthStateStore.delete(state);
 
   if (!code) {
-    return res.redirect(`${returnTo}?oauth_error=missing_code`);
+    const sep = returnTo.includes("?") ? "&" : "?";
+    return res.redirect(`${returnTo}${sep}oauth_error=missing_code`);
   }
 
   try {
@@ -1687,7 +1689,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
     const frontendBase = CLIENT_URL || '';
 
     if (!userData.id) {
-      return res.redirect(`${frontendBase}${returnTo}?oauth_error=user_fetch_failed`);
+      const sep = returnTo.includes("?") ? "&" : "?";
+      return res.redirect(`${frontendBase}${returnTo}${sep}oauth_error=user_fetch_failed`);
     }
 
     // 3. Persist user in session
@@ -1702,7 +1705,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
     console.log(`[CAVDAX OAuth] User authenticated: ${userData.login} (id: ${userData.id})`);
 
     // 4. Redirect back to the originating page with user info & success flag
-    const redirectUrl = `${frontendBase}${returnTo}?connected=1&login=${encodeURIComponent(userData.login)}&name=${encodeURIComponent(userData.name || userData.login)}&avatar=${encodeURIComponent(userData.avatar_url || '')}&githubId=${userData.id}`;
+    const sep = returnTo.includes("?") ? "&" : "?";
+    const redirectUrl = `${frontendBase}${returnTo}${sep}connected=1&login=${encodeURIComponent(userData.login)}&name=${encodeURIComponent(userData.name || userData.login)}&avatar=${encodeURIComponent(userData.avatar_url || '')}&githubId=${userData.id}`;
     req.session.save((err) => {
       if (err) console.error('[CAVDAX OAuth] Session save error:', err);
       res.redirect(redirectUrl);
@@ -1711,7 +1715,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
   } catch (err) {
     const frontendBase = CLIENT_URL || '';
     console.error('[CAVDAX OAuth] Callback error:', err.message);
-    res.redirect(`${frontendBase}${returnTo}?oauth_error=${encodeURIComponent('server_error')}`);
+    const sep = returnTo.includes("?") ? "&" : "?";
+    res.redirect(`${frontendBase}${returnTo}${sep}oauth_error=${encodeURIComponent('server_error')}`);
   }
 });
 
