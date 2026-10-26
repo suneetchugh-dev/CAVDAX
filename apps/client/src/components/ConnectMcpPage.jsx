@@ -544,11 +544,11 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
 Before modifying repository code, verify architectural alignment with CAVDAX:
 
-1. Ground all filesystem writes in active Architectural Decisions.
+1. Pre-flight check: Run \`check_intent_clearance\` with your proposed \`decision_id\` (e.g. DEC-103) before generating code to verify active provenance with zero token waste.
 
-2. Route file edits through the \`apply_code_change\` MCP tool with the target \`decision_id\` (e.g., DEC-102).
+2. Enclosed execution: Route file edits through the \`apply_code_change\` MCP tool with the verified \`decision_id\`.
 
-3. If CAVDAX returns 403 BLOCKED_SUPERSEDED_SOURCE, examine the invalidation path and revalidate before writing.`;
+3. Fast revalidation: If CAVDAX returns BLOCKED_SUPERSEDED_SOURCE, invoke \`revalidate_decision\` with the fresh ADR before re-checking clearance.`;
 
 
 

@@ -1,13 +1,28 @@
 import React, { useState } from 'react';
-import { Play, Terminal, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Play, Terminal, AlertTriangle, CheckCircle2, RefreshCw, ShieldCheck, FileCode } from 'lucide-react';
 import { playClick, playRejectBuzz, playApprovalChime } from '../utils/soundFx';
 
 export default function McpActionPlayground({ onRunCustomAction }) {
+  const [activeTool, setActiveTool] = useState('check_intent_clearance'); // 'check_intent_clearance' | 'apply_code_change'
   const [decisionId, setDecisionId] = useState('DEC-102');
   const [filePath, setFilePath] = useState('src/services/payment.js');
+  const [proposedAction, setProposedAction] = useState('Implement TokenAuth v1 checkout handler');
   const [codeSnippet, setCodeSnippet] = useState(`// Proposed code change relying on TokenAuth v1:\napp.post('/api/checkout', (req, res) => {\n  verifyToken(req.headers['authorization']);\n});`);
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState(null);
+
+  const handleToggleDecision = () => {
+    playClick();
+    if (decisionId === 'DEC-102') {
+      setDecisionId('DEC-103');
+      setProposedAction('Implement OAuth2 checkout token validation');
+      setCodeSnippet(`// Updated code change compliant with ADR-002 OAuth2:\napp.post('/api/checkout', (req, res) => {\n  verifyOAuth2Token(req.headers['authorization']);\n});`);
+    } else {
+      setDecisionId('DEC-102');
+      setProposedAction('Implement TokenAuth v1 checkout handler');
+      setCodeSnippet(`// Proposed code change relying on TokenAuth v1:\napp.post('/api/checkout', (req, res) => {\n  verifyToken(req.headers['authorization']);\n});`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,25 +30,41 @@ export default function McpActionPlayground({ onRunCustomAction }) {
     setIsRunning(true);
     setResult(null);
 
-    try {
-      const res = await fetch('/api/mcp/call', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    const isClearance = activeTool === 'check_intent_clearance';
+    const bodyPayload = isClearance
+      ? {
+          toolName: 'check_intent_clearance',
+          args: {
+            decision_id: decisionId,
+            target_file: filePath,
+            proposed_action: proposedAction
+          }
+        }
+      : {
           toolName: 'apply_code_change',
           args: {
             decision_id: decisionId,
             file_path: filePath,
             code_payload: codeSnippet
           }
-        })
+        };
+
+    try {
+      const res = await fetch('/api/mcp/call', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyPayload)
       });
 
       const data = await res.json();
       setResult(data);
 
-      if (data.is_approved) {
+      const isApproved = isClearance
+        ? Boolean(data.clearance_granted || data.gate_verdict === 'APPROVED')
+        : Boolean(data.is_approved || data.gate_verdict === 'APPROVED');
+
+      if (isApproved) {
         playApprovalChime();
       } else {
         playRejectBuzz();
@@ -43,17 +74,39 @@ export default function McpActionPlayground({ onRunCustomAction }) {
         onRunCustomAction(data);
       }
     } catch (err) {
-      setResult({
-        isError: true,
-        gate_verdict: 'GATE_OFFLINE_SIMULATION',
-        latency_ms: 1.84,
-        violation_paths: decisionId === 'DEC-102' ? [['Decision:DEC-102', 'Fact:F-Auth-v1', 'Source:ADR-001']] : []
-      });
-      playRejectBuzz();
+      const isApproved = decisionId === 'DEC-103';
+      const simResult = isClearance
+        ? {
+            isError: !isApproved,
+            clearance_granted: isApproved,
+            gate_verdict: isApproved ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE',
+            latency_ms: 1.84,
+            simulated: true,
+            violation_paths: !isApproved ? [['Decision:DEC-102', 'Fact:F-Auth-v1', 'Source:ADR-001']] : [],
+            message: isApproved
+              ? "CLEARANCE GRANTED: Decision 'DEC-103' is verified and grounded in active architecture records."
+              : "CLEARANCE DENIED: Decision 'DEC-102' is grounded in superseded source 'ADR-001'."
+          }
+        : {
+            isError: !isApproved,
+            is_approved: isApproved,
+            gate_verdict: isApproved ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE',
+            latency_ms: 1.84,
+            simulated: true,
+            violation_paths: !isApproved ? [['Decision:DEC-102', 'Fact:F-Auth-v1', 'Source:ADR-001']] : []
+          };
+      setResult(simResult);
+      if (isApproved) playApprovalChime();
+      else playRejectBuzz();
     } finally {
       setIsRunning(false);
     }
   };
+
+  const isClearanceMode = activeTool === 'check_intent_clearance';
+  const isApprovedResult = result
+    ? Boolean(result.clearance_granted || result.is_approved || result.gate_verdict === 'APPROVED')
+    : false;
 
   return (
     <div className="bezel-card p-4 text-xs font-mono select-none">
@@ -65,8 +118,36 @@ export default function McpActionPlayground({ onRunCustomAction }) {
           </span>
         </div>
         <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400">
-          tool: apply_code_change
+          tool: {activeTool}
         </span>
+      </div>
+
+      {/* Dual Mode Switcher */}
+      <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-black/40 border border-white/10 mb-3">
+        <button
+          type="button"
+          onClick={() => { setActiveTool('check_intent_clearance'); setResult(null); playClick(); }}
+          className={`py-1.5 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+            isClearanceMode
+              ? 'bg-white text-black shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>Pre-Flight Clearance</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setActiveTool('apply_code_change'); setResult(null); playClick(); }}
+          className={`py-1.5 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+            !isClearanceMode
+              ? 'bg-white text-black shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <FileCode className="w-3.5 h-3.5" />
+          <span>Enclosed Code Write</span>
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -86,7 +167,7 @@ export default function McpActionPlayground({ onRunCustomAction }) {
               />
               <button
                 type="button"
-                onClick={() => setDecisionId(decisionId === 'DEC-102' ? 'DEC-103' : 'DEC-102')}
+                onClick={handleToggleDecision}
                 className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-[10px] text-slate-300 whitespace-nowrap"
                 title="Toggle between Stale DEC-102 & Fresh DEC-103"
               >
@@ -104,28 +185,49 @@ export default function McpActionPlayground({ onRunCustomAction }) {
               value={filePath}
               onChange={(e) => setFilePath(e.target.value)}
               className="w-full px-2.5 py-1.5 rounded-lg bg-[#060709] border border-white/10 text-white font-mono focus:outline-none focus:border-white/30 text-xs"
-              placeholder="e.g. src/auth.js"
+              placeholder="e.g. src/services/payment.js"
               required
             />
           </div>
         </div>
 
-        <div>
-          <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">
-            Agent Code Payload:
-          </label>
-          <textarea
-            value={codeSnippet}
-            onChange={(e) => setCodeSnippet(e.target.value)}
-            rows={3}
-            className="w-full p-2.5 rounded-lg bg-[#060709] border border-white/10 text-white font-mono focus:outline-none focus:border-white/30 text-xs leading-relaxed resize-none"
-            required
-          />
-        </div>
+        {isClearanceMode ? (
+          <div>
+            <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">
+              Proposed Agent Intent / Action:
+            </label>
+            <input
+              type="text"
+              value={proposedAction}
+              onChange={(e) => setProposedAction(e.target.value)}
+              className="w-full px-2.5 py-2 rounded-lg bg-[#060709] border border-white/10 text-white font-mono focus:outline-none focus:border-white/30 text-xs"
+              placeholder="Describe proposed implementation before wasting tokens..."
+              required
+            />
+            <span className="text-[10px] text-slate-500 block mt-1">
+              Pre-flight checks verify active provenance before Claude Code or Cursor generates a single line of code.
+            </span>
+          </div>
+        ) : (
+          <div>
+            <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1">
+              Agent Code Payload:
+            </label>
+            <textarea
+              value={codeSnippet}
+              onChange={(e) => setCodeSnippet(e.target.value)}
+              rows={3}
+              className="w-full p-2.5 rounded-lg bg-[#060709] border border-white/10 text-white font-mono focus:outline-none focus:border-white/30 text-xs leading-relaxed resize-none"
+              required
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-1">
           <div className="text-[10px] text-slate-500">
-            FalkorDB verifies causal graph provenance in &lt; 15ms.
+            {isClearanceMode
+              ? 'FalkorDB verifies intent clearance in < 2ms (0 tokens wasted).'
+              : 'FalkorDB verifies causal graph provenance in < 15ms.'}
           </div>
           <button
             type="submit"
@@ -136,6 +238,11 @@ export default function McpActionPlayground({ onRunCustomAction }) {
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 <span>Evaluating DAG...</span>
+              </>
+            ) : isClearanceMode ? (
+              <>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Check Intent Clearance</span>
               </>
             ) : (
               <>
@@ -151,21 +258,25 @@ export default function McpActionPlayground({ onRunCustomAction }) {
       {result && (
         <div
           className={`mt-4 p-3 rounded-xl border text-xs animate-in fade-in ${
-            result.is_approved
+            isApprovedResult
               ? 'bg-[#06261B] border-emerald-500/40 text-emerald-300'
               : 'bg-[#2A080E] border-rose-500/40 text-rose-300'
           }`}
         >
           <div className="flex items-center justify-between font-bold mb-1">
             <span className="flex items-center gap-1.5">
-              {result.is_approved ? (
+              {isApprovedResult ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               ) : (
                 <AlertTriangle className="w-4 h-4 text-rose-400" />
               )}
-              {result.is_approved
-                ? 'MCP GATE APPROVED (200 OK)'
-                : 'MCP GATE REFUSAL (403 HARD REJECT)'}
+              {isClearanceMode
+                ? isApprovedResult
+                  ? 'PRE-FLIGHT CLEARANCE GRANTED (PROCEED)'
+                  : 'PRE-FLIGHT CLEARANCE DENIED (TOKEN DRAIN PREVENTED)'
+                : isApprovedResult
+                  ? 'MCP GATE APPROVED (200 OK)'
+                  : 'MCP GATE REFUSAL (403 HARD REJECT)'}
             </span>
             <span className="text-[10px] font-mono">
               Latency: {result.latency_ms || '< 15'}ms
@@ -173,16 +284,28 @@ export default function McpActionPlayground({ onRunCustomAction }) {
           </div>
 
           <div className="text-[11px] leading-relaxed text-slate-300 mt-1">
-            {result.is_approved ? (
-              <span>
-                Causal chain verified against active ADR-002. Code safely authorized for write to{' '}
-                <code className="text-white font-bold">{filePath}</code>.
-              </span>
+            {isClearanceMode ? (
+              isApprovedResult ? (
+                <span>
+                  Active provenance verified. Decision <code className="text-white font-bold">{decisionId}</code> is grounded in current ADR-002. Clearance granted to begin code generation.
+                </span>
+              ) : (
+                <span>
+                  Clearance rejected before code generation! Decision <code className="text-rose-200 font-bold">{decisionId}</code> depends on superseded source <code className="text-rose-200 font-bold">ADR-001</code>. Agent tokens saved.
+                </span>
+              )
             ) : (
-              <span>
-                Action blocked! Decision <code className="text-rose-200 font-bold">{decisionId}</code> depends
-                on superseded source <code className="text-rose-200 font-bold">ADR-001</code>. Zero disk writes permitted.
-              </span>
+              isApprovedResult ? (
+                <span>
+                  Causal chain verified against active ADR-002. Code safely authorized for write to{' '}
+                  <code className="text-white font-bold">{filePath}</code>.
+                </span>
+              ) : (
+                <span>
+                  Action blocked! Decision <code className="text-rose-200 font-bold">{decisionId}</code> depends
+                  on superseded source <code className="text-rose-200 font-bold">ADR-001</code>. Zero disk writes permitted.
+                </span>
+              )
             )}
           </div>
 
@@ -194,6 +317,13 @@ export default function McpActionPlayground({ onRunCustomAction }) {
                   ↳ {Array.isArray(p) ? p.join(' ➔ ') : p}
                 </div>
               ))}
+            </div>
+          )}
+
+          {result.instructions_for_agent && (
+            <div className="mt-2 p-2 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-amber-300">
+              <span className="text-slate-400 block mb-0.5">Directive for Agent:</span>
+              {result.instructions_for_agent}
             </div>
           )}
         </div>
