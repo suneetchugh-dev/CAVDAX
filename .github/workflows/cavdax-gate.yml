@@ -1,16 +1,16 @@
-name: CAVDAX PR Invalidation Gate
+name: CAVDAX Causal Invalidation Gate
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main, master, frontend, backend]
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   causal-verification:
     runs-on: ubuntu-latest
 
-    # GitHub Actions native service container — starts FalkorDB, waits for
-    # it to pass the healthcheck, then makes it available at localhost:6379
-    # before any steps run. No manual sleep or polling needed.
     services:
       falkordb:
         image: falkordb/falkordb:latest
@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run CAVDAX Gate
+      - name: Run CAVDAX Causal Gatekeeper
         uses: ./
         with:
           falkordb_host: localhost

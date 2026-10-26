@@ -22,6 +22,7 @@ console.log = console.info = console.warn = (...args) => {
 import readline from 'readline';
 import { getFalkorClient } from '../graph/client.js';
 import { verifyActionGate, revalidateDecision, fetchGraphState } from '../graph/queries.js';
+import { globalLockManager } from './lockManager.js';
 
 let graph = null;
 
@@ -97,6 +98,32 @@ const TOOLS = [
         }
       },
       required: ['decision_id']
+    }
+  },
+  {
+    name: 'acquire_decision_lock',
+    description: 'Multi-Agent Concurrency Control: Leases an exclusive lock on an Architecture Decision branch.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string', description: 'The ID of the decision to lock.' },
+        agent_id: { type: 'string', description: 'Unique identifier of the requesting AI agent.' },
+        ttl_ms: { type: 'number', description: 'Lock duration lease in milliseconds (default: 60000ms).' },
+        reason: { type: 'string', description: 'Operational rationale for the exclusive lease.' }
+      },
+      required: ['decision_id', 'agent_id']
+    }
+  },
+  {
+    name: 'release_decision_lock',
+    description: 'Multi-Agent Concurrency Control: Releases a held decision lock for other autonomous agents.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string', description: 'The ID of the decision to release.' },
+        agent_id: { type: 'string', description: 'Unique identifier of the agent releasing the lock.' }
+      },
+      required: ['decision_id', 'agent_id']
     }
   },
   {
@@ -254,6 +281,16 @@ async function handleRequest(request) {
           ]
         }
       };
+    }
+
+    if (name === 'acquire_decision_lock') {
+      const result = globalLockManager.acquireLock(args.decision_id, args.agent_id, args.ttl_ms, args.reason);
+      return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } };
+    }
+
+    if (name === 'release_decision_lock') {
+      const result = globalLockManager.releaseLock(args.decision_id, args.agent_id);
+      return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } };
     }
 
     if (name === 'query_causal_graph') {

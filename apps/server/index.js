@@ -833,10 +833,24 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
       });
     }
     args.decision_id = args.decision_id.trim();
+  } else if (toolName === 'acquire_decision_lock') {
+    if (!args.decision_id || !args.agent_id) {
+      return res.status(400).json({
+        isError: true,
+        error: "Missing required parameters 'args.decision_id' and/or 'args.agent_id' for 'acquire_decision_lock'."
+      });
+    }
+  } else if (toolName === 'release_decision_lock') {
+    if (!args.decision_id || !args.agent_id) {
+      return res.status(400).json({
+        isError: true,
+        error: "Missing required parameters 'args.decision_id' and/or 'args.agent_id' for 'release_decision_lock'."
+      });
+    }
   } else {
     return res.status(400).json({
       isError: true,
-      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision', 'check_intent_clearance'.`
+      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision', 'check_intent_clearance', 'acquire_decision_lock', 'release_decision_lock'.`
     });
   }
   // --- End validation ---
@@ -971,6 +985,26 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
           broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: grantResponse });
           return res.json(grantResponse);
         }
+      } else if (toolName === 'acquire_decision_lock') {
+        const lockResp = {
+          acquired: true,
+          simulated: true,
+          decision_id: args.decision_id,
+          agent_id: args.agent_id,
+          expires_at: new Date(Date.now() + (args.ttl_ms || 60000)).toISOString(),
+          message: `✅ LOCK ACQUIRED (SIMULATION): Agent '${args.agent_id}' holds exclusive lease on '${args.decision_id}'.`
+        };
+        broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: lockResp });
+        return res.json(lockResp);
+      } else if (toolName === 'release_decision_lock') {
+        const unlockResp = {
+          released: true,
+          simulated: true,
+          decision_id: args.decision_id,
+          message: `✅ LOCK RELEASED (SIMULATION): Decision '${args.decision_id}' is available for other agents.`
+        };
+        broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: unlockResp });
+        return res.json(unlockResp);
       } else if (toolName === 'revalidate_decision') {
         // Act IV simulation
         const oldD = fallbackGraphState.nodes.find(n => n.id === args.old_decision_id);

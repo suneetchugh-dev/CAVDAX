@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { verifyActionGate, revalidateDecision } from '../graph/queries.js';
+import { globalLockManager } from './lockManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,6 +85,32 @@ export class CavdaxMcpServer {
           },
           required: ['new_source_id', 'old_decision_id', 'new_decision_id', 'new_fact_id', 'title']
         }
+      },
+      {
+        name: 'acquire_decision_lock',
+        description: 'Multi-Agent Concurrency Control: Acquires an exclusive mutation lock on an Architecture Decision branch, preventing other autonomous agents from stomping on concurrent edits.',
+        parameters: {
+          type: 'object',
+          properties: {
+            decision_id: { type: 'string', description: 'The ID of the decision to lock (e.g., DEC-102 or DEC-103).' },
+            agent_id: { type: 'string', description: 'Unique identifier of the calling agent (e.g., devin-run-41).' },
+            ttl_ms: { type: 'number', description: 'Lock duration lease in milliseconds (default: 60000ms).' },
+            reason: { type: 'string', description: 'Operational rationale for the exclusive lease.' }
+          },
+          required: ['decision_id', 'agent_id']
+        }
+      },
+      {
+        name: 'release_decision_lock',
+        description: 'Multi-Agent Concurrency Control: Releases a held decision lock, making it available for other autonomous agents.',
+        parameters: {
+          type: 'object',
+          properties: {
+            decision_id: { type: 'string', description: 'The ID of the decision being released.' },
+            agent_id: { type: 'string', description: 'Unique identifier of the agent releasing the lock.' }
+          },
+          required: ['decision_id', 'agent_id']
+        }
       }
     ];
   }
@@ -100,6 +127,10 @@ export class CavdaxMcpServer {
       return await this.executeRevalidateDecision(args);
     } else if (toolName === 'check_intent_clearance') {
       return await this.executeCheckIntentClearance(args);
+    } else if (toolName === 'acquire_decision_lock') {
+      return globalLockManager.acquireLock(args.decision_id, args.agent_id, args.ttl_ms, args.reason);
+    } else if (toolName === 'release_decision_lock') {
+      return globalLockManager.releaseLock(args.decision_id, args.agent_id);
     } else {
       throw new Error(`Unknown tool: '${toolName}'`);
     }
@@ -108,8 +139,23 @@ export class CavdaxMcpServer {
   /**
    * Enclosed Execution Wrapper for apply_code_change
    */
-  async executeApplyCodeChange({ decision_id, file_path, code_payload, reasoning }) {
+  async executeApplyCodeChange({ decision_id, file_path, code_payload, reasoning, agent_id }) {
     console.log(`[MCP Gate] 🛡️ Intercepting apply_code_change for '${file_path}'...`);
+
+    // Multi-Agent Concurrency Check: Verify foreign lock
+    const lockCheck = globalLockManager.checkLock(decision_id, agent_id);
+    if (lockCheck.locked && lockCheck.is_foreign) {
+      console.warn(`[MCP Gate] ⛔ CONCURRENCY REFUSAL: Decision '${decision_id}' locked by '${lockCheck.locked_by}'`);
+      return {
+        isError: true,
+        gate_verdict: 'BLOCKED_CONCURRENT_AGENT_LOCK',
+        decision_id,
+        locked_by: lockCheck.locked_by,
+        expires_in_ms: lockCheck.expires_in_ms,
+        message: `⛔ CONCURRENCY REFUSAL: Decision '${decision_id}' is actively locked by autonomous agent '${lockCheck.locked_by}' (${Math.ceil(lockCheck.expires_in_ms / 1000)}s remaining). Write blocked to prevent conflicting branch mutations.`,
+        instructions_for_agent: `Wait for agent '${lockCheck.locked_by}' to release lock, or work on an unlocked decision branch.`
+      };
+    }
     console.log(`[MCP Gate] Running Query 1 against FalkorDB on '${decision_id}'...`);
 
     // 1. RUN INTERNAL FALKORDB VERIFICATION
@@ -212,8 +258,25 @@ export class CavdaxMcpServer {
    * Pre-Flight Architectural Clearance Handler
    * Allows AI agents to verify if a proposed decision is valid and grounded BEFORE writing code.
    */
-  async executeCheckIntentClearance({ decision_id, target_file, proposed_action }) {
+  async executeCheckIntentClearance({ decision_id, target_file, proposed_action, agent_id }) {
     console.log(`[MCP Gate] 🔍 Checking pre-flight intent clearance for decision '${decision_id}'...`);
+
+    // Multi-Agent Concurrency Check: Verify foreign lock
+    const lockCheck = globalLockManager.checkLock(decision_id, agent_id);
+    if (lockCheck.locked && lockCheck.is_foreign) {
+      console.warn(`[MCP Gate] ⛔ PRE-FLIGHT CONCURRENCY REFUSAL: Decision '${decision_id}' locked by '${lockCheck.locked_by}'`);
+      return {
+        isError: true,
+        clearance_granted: false,
+        gate_verdict: 'BLOCKED_CONCURRENT_AGENT_LOCK',
+        decision_id,
+        locked_by: lockCheck.locked_by,
+        expires_in_ms: lockCheck.expires_in_ms,
+        latency_ms: 0.5,
+        message: `⛔ PRE-FLIGHT REFUSAL: Decision '${decision_id}' is currently leased by agent '${lockCheck.locked_by}'. Clearance withheld to prevent race conditions.`,
+        instructions_for_agent: `Another agent is actively modifying code for '${decision_id}'. Please select an alternate architectural branch.`
+      };
+    }
     const checkResult = await verifyActionGate(this.graph, decision_id);
 
     if (!checkResult.is_approved) {
