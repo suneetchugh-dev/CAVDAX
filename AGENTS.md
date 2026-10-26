@@ -40,11 +40,11 @@ Operational constitution, architecture standards, and safety governance for AI c
    - **Banned Verbose Mechanical Paragraphs**: Never write bloated multi-sentence mechanical paragraphs in security gates, modal confirmations, or terminal prompts (e.g. strictly banning blocks like *"Restricted developer terminal. Hardware IP whitelist matched and authorized GitHub handle detected. Enter your Master Developer Passkey to unlock the causal intercept console."*).
    - **Rule**: Keep security and modal prompts to a single concise, punchy sentence: e.g. *"Authorized session detected. Enter master passkey to unlock the causal console."* or *"This clears active dev tokens, locks the enclave immediately, and returns to the home page."*
    - **Zero Public Leakage of Dev Endpoints & Enclave Cloaking (Strict Inviolable Rule)**:
-     - In production security engineering, internal developer consoles and administrative routes (/devteam, /admin, etc.) must NEVER be advertised, linked, or hinted at on public pages, navigation footers, or client error messages.
-     - **Zero Leakage in Tracked Repo Files (.env.example, README.md, docs/)**: Never document, list, comment, or hint at developer enclave routes (/devteam, /admin), developer IP whitelists (VITE_ALLOWED_DEV_IPS), developer GitHub handles (VITE_AUTHORIZED_DEV_USERS), or master passkeys (VITE_DEV_MASTER_KEY, VITE_DEV_PASSKEY_HASH) in .env.example or ANY tracked public repository files.
+     - In production security engineering, internal developer consoles and administrative routes must NEVER be advertised, linked, or hinted at on public pages, navigation footers, or client error messages.
+     - **Zero Leakage in Tracked Repo Files (.env.example, README.md, docs/)**: Never document, list, comment, or hint at developer enclave routes, developer IP whitelists, developer handles, or master passkeys in .env.example or ANY tracked public repository files.
      - .env.example must contain ONLY public application configuration variables (database, MCP tokens, standard OAuth, billing keys). Internal developer configurations belong strictly in private, uncommitted .env files distributed out-of-band via secure channels.
      - **Universal Ban on Real or Real-Looking IP Addresses**: Never write real public IPs or ISP addresses in tracked code or comments. Only RFC 5737 documentation test nets (192.0.2.1, 198.51.100.1) or localhost (127.0.0.1) may ever appear in examples.
-     - Access to /devteam must remain strictly restricted to direct URL navigation, hardware IP whitelisting, and authorized GitHub handles/passkeys with silent 404 responses for unauthorized visitors without leaving breadcrumbs for public crawlers.
+     - Access to the private developer enclave must remain strictly restricted to direct URL navigation, hardware IP whitelisting, and authorized GitHub handles/passkeys with silent 404 responses for unauthorized visitors without leaving breadcrumbs for public crawlers.
    - **Zero Fake Metrics or Vanity Clutter**: Never display simulated hardcoded numbers (e.g. fake client counts, fake node tallies, simulated latencies). Keep all dev console diagnostics grounded strictly in genuine operational status (e.g. Gateway: ENFORCING, Database: CONNECTED, Session: VERIFIED, Device IP: WHITELISTED).
 
 0e. **Integration Lifecycle, Connected Workspace Monochromy & Zero Clutter Guard**:
@@ -70,7 +70,7 @@ Operational constitution, architecture standards, and safety governance for AI c
 
 0g. **Mandatory UI Design System MD Enforcement & Zero Displacement Toast Architecture**:
    - **Mandatory Consultation of `docs/UI_DESIGN_SYSTEM.md`**:
-     Whenever creating, editing, removing, adding, or modifying ANY UI component, panel, modal, badge, button, or layout (specifically including the Developer Enclave `/devteam`, Profile Page, HUD consoles, and tier testing panels), agents MUST first read and dedicatedly adhere to `docs/UI_DESIGN_SYSTEM.md`. No exceptions.
+     Whenever creating, editing, removing, adding, or modifying ANY UI component, panel, modal, badge, button, or layout (specifically including the Developer Enclave, Profile Page, HUD consoles, and tier testing panels), agents MUST first read and dedicatedly adhere to `docs/UI_DESIGN_SYSTEM.md`. No exceptions.
    - **Strict Ban on In-Panel Displacing Banners and Toasts (Zero CLS Guarantee)**:
      - Never render confirmation banners, error notices, or dynamic toasts inline inside cards, above lists, or within grid containers where their appearance or disappearance causes vertical layout displacement, jumping, or layout shifts (CLS > 0) of sibling panels, input fields, or buttons.
      - All operation feedback (e.g. tier toggles, IP whitelisting, roster changes, scenario injection) MUST use non-displacing viewport-fixed overlays (`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none`) or dedicated pre-allocated zero-shift status indicators.
@@ -94,7 +94,7 @@ Operational constitution, architecture standards, and safety governance for AI c
      - Free tiers must be perpetual community tiers with clear resource ceilings; time-limited trials belong as explicit trial windows on paid tiers (e.g. "Includes 7-Day Free Pro Trial").
 
 0i. **Hackathon Evaluation Mode & Real-Time Tier Unlocking Architecture**:
-   - **Developer Enclave Master Control**: The secure Developer Enclave (`/devteam`) must provide an executive `Hackathon Evaluation Mode [ OFF / ON ]` toggle that sets global server state and broadcasts updates via Server-Sent Events (`/api/events`).
+   - **Developer Enclave Master Control**: The secure Developer Enclave must provide an executive `Hackathon Evaluation Mode [ OFF / ON ]` toggle that sets global server state and broadcasts updates via Server-Sent Events (`/api/events`).
    - **Evaluation Pass Capabilities**: When ON, all visitors receive an Evaluation Pass granting full Enterprise Mesh capabilities (unlimited repositories, causal graph inspection, unthrottled quotas). Tier locks are lifted, displaying `EVALUATION PASS` badges and allowing frictionless switching.
    - **Commercial Display Integrity**: Tier cards remain visible with real pricing to prove commercial viability to judges.
    - **Elevated Rate Ceiling**: Expands per-IP rate limits to 1,200 req/min (20 req/sec) to guarantee zero throttling during evaluation, while avoiding `skip: true` to keep the server shielded against bots.
@@ -511,8 +511,8 @@ Whenever your current task touches, modifies, refactors, creates, adds, or **REM
 
 27. **Mandatory Zero-Knowledge Enclave Cloaking Gate (Pre-Commit Scan)**:
     - **Inviolable Enclave Cloaking Requirement**: Before any commit or PR is merged into `main`, the agent MUST verify that no tracked files (specifically `.env.example`, `README.md`, `docs/`, public templates, or client assets) leak or mention:
-      1. Internal developer routes: `/devteam`, `/admin`, or internal operational consoles.
-      2. Developer enclave authentication variables: `VITE_ALLOWED_DEV_IPS`, `VITE_AUTHORIZED_DEV_USERS`, `VITE_DEV_MASTER_KEY`, `VITE_DEV_PASSKEY_HASH`.
+      1. Internal developer routes or internal operational consoles.
+      2. Developer enclave authentication variables or passkey secrets.
       3. Real public IP addresses, cloud VM IPs, or ISP subnet identifiers.
     - **Strict Gatekeeper Enforcement**: Any hit in tracked repository files is a critical security vulnerability and must be completely purged before staging and merging.
 

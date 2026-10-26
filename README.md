@@ -312,7 +312,7 @@ The CAVDAX Web HUD provides a world-class, industrial-brutalist / porcelain oper
 6. **Core Maintainers & Attribution (`/team`)**: Project research attribution, engineering background, and architecture credits.
 7. **Developer Profile & Responsive Dual-Display Engine (`/profile`)**: Live plan quota consumption monitoring, capability tiers, secure MCP key generation, and an adaptive dual-layout engine calibrated for both **HP Victus laptop single-screen viewports (1536×864, zero vertical scrolling)** and **27-inch desktop monitors (1440p/1080p, spacious layout)** with profile-exclusive transparent navbar.
 8. **Community Stewardship & Operational Backing (`/support`)**: Transparent operational resource breakdown and community sponsorship integration.
-9. **Zero-Trust Administrative Enclave (`/devteam`)**: Protected diagnostic console, developer IP whitelisting gate, and system status roster.
+9. **Zero-Trust Administrative Enclave**: Protected diagnostic console, developer IP whitelisting gate, and system status roster.
 
 ---
 
