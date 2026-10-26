@@ -85,13 +85,19 @@ export function parseFrontmatter(fileContent) {
 
 /**
  * Ingests an ADR file and cascades invalidation if a `supersedes` key is detected.
+ *
+ * @param {object} graph
+ * @param {string} filePath
+ * @param {object} [options]
+ * @param {string} [options.allowedRoot] Directory the ADR must live under.
+ *   Defaults to the CAVDAX monorepo root; the npm CLI passes the user's repo.
  */
-export async function ingestAdrFile(graph, filePath) {
+export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootOption } = {}) {
   console.log(`[Ingestion] Reading ADR file: ${filePath}`);
   const absolutePath = path.resolve(filePath);
 
   // Security Confinement: Prevent path traversal outside repository root (OWASP A01/A03)
-  const allowedRoot = path.resolve(REPO_ROOT);
+  const allowedRoot = path.resolve(allowedRootOption || REPO_ROOT);
   if (!absolutePath.startsWith(allowedRoot + path.sep) && absolutePath !== allowedRoot) {
     throw new Error(`Security Violation: Path traversal attempt outside project workspace: ${absolutePath}`);
   }
@@ -115,7 +121,7 @@ export async function ingestAdrFile(graph, filePath) {
     : [];
 
   const title = frontmatter.title || adrId;
-  const relativePath = path.relative(process.cwd(), absolutePath).replace(/\\/g, '/');
+  const relativePath = path.relative(allowedRootOption ? allowedRoot : process.cwd(), absolutePath).replace(/\\/g, '/');
 
   console.log(`[Ingestion] ADR ID: '${adrId}', Supersedes: ${supersedesIds.length ? supersedesIds.join(', ') : 'None'}`);
 
@@ -147,6 +153,25 @@ export async function ingestAdrFile(graph, filePath) {
     `;
     await graph.query(mergeFactCypher, {
       params: { adrId, factId: frontmatter.fact_id, claim: frontmatter.fact_claim }
+    });
+  }
+
+  // 2b. OPTIONAL: `decision_id` (+ `decision_title`) declares an architecture
+  //     decision that depends on this ADR's fact. Without this, a real repo has
+  //     no way to create Decision nodes (only the demo seed did).
+  if (frontmatter.decision_id && frontmatter.fact_id) {
+    const mergeDecisionCypher = `
+      MATCH (f:Fact {id: $factId})
+      MERGE (d:Decision {id: $decisionId})
+      ON CREATE SET d.title = $decisionTitle, d.status = 'VALID', d.created_at = timestamp()
+      MERGE (d)-[:DEPENDS_ON]->(f)
+    `;
+    await graph.query(mergeDecisionCypher, {
+      params: {
+        factId: frontmatter.fact_id,
+        decisionId: frontmatter.decision_id,
+        decisionTitle: frontmatter.decision_title || frontmatter.decision_id
+      }
     });
   }
 

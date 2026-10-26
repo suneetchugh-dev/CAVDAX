@@ -15,19 +15,17 @@
 import fs from 'fs';
 import path from 'path';
 import { glob } from 'glob';
+import { connectGraph, loadCore, describeConnectError, falkorConfig } from './runtime.js';
 
 // ─── FalkorDB connection helper ───────────────────────────────────────────────
-// Uses the same FalkorDB.connect() pattern as core/graph/client.js (v6.x API)
 
 async function connectFalkorDB(host, port) {
   try {
-    const { FalkorDB } = await import('falkordb');
-    const client = await FalkorDB.connect({ socket: { host, port } });
-    const graph = client.selectGraph(process.env.FALKORDB_GRAPH_NAME || 'cavdax_core_graph');
-    console.log(`   Connected to FalkorDB at ${host}:${port}`);
-    return { client, graph };
+    const conn = await connectGraph({ host, port });
+    console.log(`   Connected to FalkorDB at ${host}:${port} (graph: ${conn.graphName})`);
+    return { client: conn.client, graph: conn.graph };
   } catch (err) {
-    console.warn(`   FalkorDB unavailable (${err.message}) — running in dry-run mode`);
+    console.warn(`   ${describeConnectError(err, falkorConfig({ host, port }))} — running in dry-run mode`);
     return { client: null, graph: null };
   }
 }
@@ -46,16 +44,31 @@ async function discoverAdrFiles(repoRoot) {
     const matches = await glob(pattern, { cwd: repoRoot, absolute: true });
     found.push(...matches);
   }
-  return [...new Set(found)];
+  // TEMPLATE.md documents the format; ingesting it would create a bogus "TEMPLATE" Source.
+  return [...new Set(found)].filter((f) => !/^template/i.test(path.basename(f)));
 }
 
-// ─── Source ingestor loader ───────────────────────────────────────────────────
-// Dynamic import so the package works standalone (sources.js may not be present
-// when installed as npx @cavdax/mcp-server outside the monorepo)
+/** Number of ADRs a file supersedes — superseding ADRs must be ingested after the ones they replace. */
+function supersedesCount(filePath) {
+  try {
+    const head = fs.readFileSync(filePath, 'utf-8').match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] || '';
+    const block = head.match(/^supersedes:[ \t]*(.*)\r?\n((?:[ \t]+-[^\n]*\n?)*)/m);
+    if (!block) return 0;
+    const inline = block[1].trim();
+    const items = block[2].split('\n').filter((l) => l.trim().startsWith('-')).length;
+    if (items) return items;
+    if (inline.startsWith('[')) return inline.slice(1, -1).split(',').filter((s) => s.trim()).length;
+    return inline ? 1 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+// ─── Engine loaders (bundled in the tarball, or ../../../core in the monorepo) ──
 
 async function loadSources() {
   try {
-    return await import(new URL('../../../core/ingestion/sources.js', import.meta.url).href);
+    return await loadCore('ingestion/sources.js');
   } catch {
     return null;
   }
@@ -63,8 +76,7 @@ async function loadSources() {
 
 async function loadParser() {
   try {
-    const mod = await import(new URL('../../../core/ingestion/parser.js', import.meta.url).href);
-    return mod.ingestAdrFile || null;
+    return (await loadCore('ingestion/parser.js')).ingestAdrFile || null;
   } catch {
     return null;
   }
@@ -73,7 +85,9 @@ async function loadParser() {
 // ─── Type handlers ────────────────────────────────────────────────────────────
 
 async function ingestAdr(repoRoot, graph, dryRun) {
-  const adrFiles = await discoverAdrFiles(repoRoot);
+  const adrFiles = (await discoverAdrFiles(repoRoot)).sort(
+    (a, b) => supersedesCount(a) - supersedesCount(b) || a.localeCompare(b)
+  );
 
   if (adrFiles.length === 0) {
     console.log('   No ADR files found in .adr/, docs/adr/, or docs/adrs/');
@@ -94,17 +108,14 @@ async function ingestAdr(repoRoot, graph, dryRun) {
 
   for (const filePath of adrFiles) {
     try {
-      if (ingestAdrFile) {
-        await ingestAdrFile(graph, filePath);
-      } else {
-        // Minimal fallback when running outside monorepo
-        const adrId = path.basename(filePath, '.md').toUpperCase();
-        await graph.query(
-          `MERGE (s:Source {id: $id}) ON CREATE SET s.title = $id, s.status = 'ACTIVE', s.type = 'ADR'`,
-          { params: { id: adrId } }
-        );
-      }
-      console.log(`   + Ingested: ${path.relative(repoRoot, filePath)}`);
+      if (!ingestAdrFile) throw new Error('CAVDAX ingestion engine (core/ingestion/parser.js) not found');
+      const res = await ingestAdrFile(graph, filePath, { allowedRoot: repoRoot });
+      const inval = [].concat(res.invalidation || []);
+      const hit = inval.flatMap((i) => i.invalidated_decision_ids || []);
+      console.log(
+        `   + Ingested: ${path.relative(repoRoot, filePath)}` +
+          (res.supersedes ? ` (supersedes ${[].concat(res.supersedes).join(', ')}` + (hit.length ? `; invalidated ${hit.join(', ')})` : ')') : '')
+      );
       processed++;
     } catch (err) {
       console.error(`   x Failed: ${path.relative(repoRoot, filePath)} — ${err.message}`);
@@ -253,8 +264,7 @@ async function ingestIssue(options, graph, dryRun) {
 
 export async function runIngest(options) {
   const repoRoot = path.resolve(options.repo || process.cwd());
-  const host = options.host || process.env.FALKORDB_HOST || 'localhost';
-  const port = parseInt(options.port || process.env.FALKORDB_PORT || '6379', 10);
+  const { host, port } = falkorConfig({ host: options.host, port: options.port });
   const type = (options.type || 'adr').toLowerCase();
 
   console.log(`\nCAVDAX Ingest — type: ${type.toUpperCase()} — repo: ${repoRoot}`);

@@ -3,63 +3,73 @@
  *
  * npx cavdax doctor
  *
- * Runs a full diagnostics suite:
- *   1. Node.js version check (>= 18)
- *   2. FalkorDB TCP connectivity check
- *   3. GraphBLAS matrix health (PING + simple Cypher query)
- *   4. MCP protocol readiness (tools/list self-test)
+ *   1. Node.js version (>= 18)
+ *   2. Docker availability (informational)
+ *   3. FalkorDB connectivity + graph health, using the same client path as the MCP server
+ *   4. Engine bundle present (core/graph, core/mcp, core/ingestion)
+ *   5. MCP server module loads and exposes its tools
+ *
+ * FalkorDB being down is reported as a failure (exit 1) because real enforcement
+ * needs it, but the message states that the MCP server still starts in SIMULATION mode.
  */
 
 import { execSync } from 'child_process';
+import { connectGraph, closeQuietly, describeConnectError, falkorConfig, loadCore } from './runtime.js';
 
 const PASS = '✅';
 const FAIL = '❌';
 const WARN = '⚠️ ';
 
 function checkNodeVersion() {
-  const version = process.version; // e.g. "v20.11.0"
+  const version = process.version;
   const major = parseInt(version.slice(1).split('.')[0], 10);
   if (major >= 18) {
     console.log(`${PASS} Node.js version: ${version} (>= 18 required)`);
     return true;
-  } else {
-    console.error(`${FAIL} Node.js version: ${version} — upgrade to >= 18.0.0`);
+  }
+  console.error(`${FAIL} Node.js version: ${version} — upgrade to >= 18.0.0`);
+  return false;
+}
+
+async function checkFalkorConnection() {
+  const cfg = falkorConfig();
+  let client;
+  try {
+    const conn = await connectGraph();
+    client = conn.client;
+    const result = await conn.graph.query('MATCH (n) RETURN count(n) AS count');
+    const count = result.data?.[0]?.count ?? 0;
+    console.log(`${PASS} FalkorDB connected at ${cfg.host}:${cfg.port}`);
+    console.log(`${PASS} Graph '${cfg.graphName}' query OK: ${count} node(s)${count === 0 ? ' (run "npx cavdax ingest" in your repo)' : ''}`);
+    return true;
+  } catch (err) {
+    console.error(`${FAIL} ${describeConnectError(err, cfg)}`);
+    console.error(`   Tip: docker run -d -p 6379:6379 falkordb/falkordb:latest`);
+    console.error(`   Until then the MCP server runs in SIMULATION mode (in-memory demo graph, not your repo).`);
     return false;
+  } finally {
+    await closeQuietly(client);
   }
 }
 
-async function checkFalkorConnection(host, port) {
+async function checkEngine() {
   try {
-    // FalkorDB v6.x exports the FalkorDB class (not createClient)
-    const { FalkorDB } = await import('falkordb');
-    const client = await FalkorDB.connect({ socket: { host, port } });
-
-    // GraphBLAS health: simple Cypher query
-    const graph = client.selectGraph('CAVDAX');
-    const result = await graph.query('MATCH (n) RETURN count(n) AS count LIMIT 1');
-    const count = result.data?.[0]?.count ?? 0;
-
-    console.log(`${PASS} FalkorDB connected at ${host}:${port}`);
-    console.log(`${PASS} GraphBLAS matrix health: ${count} node(s) in CAVDAX graph`);
-
-    await client.close();
+    await Promise.all([loadCore('graph/queries.js'), loadCore('mcp/server.js'), loadCore('ingestion/parser.js'), loadCore('ingestion/sources.js')]);
+    console.log(`${PASS} CAVDAX engine modules found (graph, mcp, ingestion)`);
     return true;
   } catch (err) {
-    console.error(`${FAIL} FalkorDB unreachable at ${host}:${port} — ${err.message}`);
-    console.error(`   Tip: run 'docker run -d -p 6379:6379 falkordb/falkordb:latest' to start FalkorDB`);
+    console.error(`${FAIL} ${err.message}`);
     return false;
   }
 }
 
 async function checkMcpReadiness() {
-  // Self-test: import stdioServer and verify it loads without errors.
-  // startStdioServer is the only export — we just check the module resolves cleanly.
   try {
     const mod = await import('./stdioServer.js');
-    if (typeof mod.startStdioServer !== 'function') {
-      throw new Error('startStdioServer export not found');
+    if (typeof mod.startStdioServer !== 'function' || !Array.isArray(mod.TOOLS) || mod.TOOLS.length === 0) {
+      throw new Error('stdio server does not export startStdioServer/TOOLS');
     }
-    console.log(`${PASS} MCP stdio server module loads cleanly (startStdioServer exported)`);
+    console.log(`${PASS} MCP stdio server loads (${mod.TOOLS.length} tools: ${mod.TOOLS.map((t) => t.name).join(', ')})`);
     return true;
   } catch (err) {
     console.error(`${FAIL} MCP stdio server failed to load: ${err.message}`);
@@ -71,36 +81,31 @@ function checkDockerAvailability() {
   try {
     execSync('docker --version', { stdio: 'pipe' });
     console.log(`${PASS} Docker is available (needed to run FalkorDB locally)`);
-    return true;
   } catch {
     console.warn(`${WARN} Docker not found — install Docker to run FalkorDB locally`);
-    return false;
   }
 }
 
 export async function runDoctor() {
-  const host = process.env.FALKORDB_HOST || 'localhost';
-  const port = parseInt(process.env.FALKORDB_PORT || '6379', 10);
+  const cfg = falkorConfig();
 
   console.log('\n🩺 CAVDAX Doctor — running diagnostics\n');
-  console.log(`   FalkorDB target: ${host}:${port}`);
+  console.log(`   FalkorDB target: ${cfg.host}:${cfg.port}  graph: ${cfg.graphName}`);
   console.log(`   Node.js: ${process.version}`);
   console.log('');
 
   const results = [];
-
   results.push(checkNodeVersion());
   checkDockerAvailability();
-  results.push(await checkFalkorConnection(host, port));
+  results.push(await checkFalkorConnection());
+  results.push(await checkEngine());
   results.push(await checkMcpReadiness());
 
-  const passed = results.every(Boolean);
-
   console.log('');
-  if (passed) {
-    console.log('✅ All checks passed — CAVDAX is ready for use!\n');
+  if (results.every(Boolean)) {
+    console.log('✅ All checks passed — CAVDAX is ready for live enforcement!\n');
   } else {
-    console.error('⛔ Some checks failed — resolve the issues above before proceeding.\n');
+    console.error('⛔ Some checks failed — resolve the issues above for live enforcement.\n');
     process.exit(1);
   }
 }

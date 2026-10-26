@@ -17,6 +17,7 @@
 
 import { execSync } from 'child_process';
 import path from 'path';
+import { connectGraph, closeQuietly, describeConnectError, falkorConfig, loadCore } from './runtime.js';
 
 // File extensions that are safe to read as UTF-8 text and may contain
 // CAVDAX decision ID references (e.g. DEC-102 in a comment or config).
@@ -69,23 +70,23 @@ function getStagedFiles() {
  * @returns {Promise<boolean>} true if all checks pass, false if any violations found.
  */
 async function verifyFiles(files, options) {
-  const host = process.env.FALKORDB_HOST || 'localhost';
-  const port = parseInt(process.env.FALKORDB_PORT || '6379', 10);
-
+  let client = null;
   let graph = null;
   let verifyActionGate = null;
+  let unreachableReason = null;
 
   try {
-    const { createClient } = await import('falkordb');
-    const client = createClient({ socket: { host, port } });
-    await client.connect();
-    graph = client.graph('CAVDAX');
-    const fns = await import(
-      new URL('../../../core/graph/queries.js', import.meta.url).href
-    ).catch(() => null);
-    if (fns) verifyActionGate = fns.verifyActionGate;
-  } catch {
-    // Simulation mode — no FalkorDB
+    ({ client, graph } = await connectGraph());
+    ({ verifyActionGate } = await loadCore('graph/queries.js'));
+  } catch (err) {
+    unreachableReason = describeConnectError(err, falkorConfig());
+    graph = null;
+  }
+
+  // --strict: an unverifiable gate must not silently pass (use in CI / pre-commit).
+  if (!graph && options.strict) {
+    console.error(`   ⛔ ${unreachableReason}`);
+    console.error('      --strict is set, so unverifiable references are treated as failures.');
   }
 
   let allPassed = true;
@@ -139,8 +140,8 @@ async function verifyFiles(files, options) {
         // reachable (set FALKORDB_HOST + FALKORDB_PORT, or run via docker).
         console.warn(`   ⚠️  FalkorDB unreachable — skipping causal check for ${decId} in ${filePath}`);
         result = {
-          is_approved: true,
-          gate_verdict: 'SKIPPED_NO_FALKORDB',
+          is_approved: !options.strict,
+          gate_verdict: options.strict ? 'BLOCKED_GATE_UNREACHABLE' : 'SKIPPED_NO_FALKORDB',
           violation_paths: []
         };
       }
@@ -156,6 +157,7 @@ async function verifyFiles(files, options) {
     }
   }
 
+  await closeQuietly(client);
   return allPassed;
 }
 
