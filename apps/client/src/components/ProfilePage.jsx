@@ -499,14 +499,14 @@ export default function ProfilePage({
   const mcpRateLimit = currentTier === 'free' ? '30 rpm' : (currentTier === 'pro' ? '100 rpm' : 'Unlimited');
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pt-10 sm:pt-12 lg:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex-1 min-h-0 overflow-y-auto pt-14 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 max-w-6xl mx-auto w-full select-none flex flex-col justify-between [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       
       {/* ── 1. Top Identity & Account State (Frameless, Spacious, Centered Elegance) ── */}
-      <section className="text-center mt-6 sm:mt-8 md:mt-10 pt-4 pb-4 sm:pb-6 relative flex flex-col items-center">
+      <section className="text-center mt-0 sm:mt-1 pt-1 pb-2 sm:pb-2.5 relative flex flex-col items-center shrink-0">
         {/* Large Concentric Avatar (Centered, Frameless, Tier-Ring Halo) */}
-        <div className="relative mb-3 sm:mb-4 flex justify-center">
+        <div className="relative mb-1.5 sm:mb-2 flex justify-center">
           <div className="relative">
-            <div className={`w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden transition-all duration-500 bg-slate-100 dark:bg-white/5 ${tierRingStyles[currentTier] || tierRingStyles.free}`}>
+            <div className={`w-14 h-14 sm:w-16 sm:h-16 lg:w-16 lg:h-16 xl:w-20 xl:h-20 rounded-full overflow-hidden transition-all duration-500 bg-slate-100 dark:bg-white/5 ${tierRingStyles[currentTier] || tierRingStyles.free}`}>
               {(user?.avatar_url || user?.avatarUrl || user?.avatar) ? (
                 <ShimmerImage
                   src={user?.avatar_url || user?.avatarUrl || user?.avatar}
@@ -568,15 +568,15 @@ export default function ProfilePage({
         </div>
 
         {/* Identity & Verified Handle */}
-        <h1 className="text-base sm:text-lg font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
+        <h1 className="text-sm sm:text-base font-bold font-mono tracking-tight text-slate-950 dark:text-white leading-tight">
           {user?.name || user?.login || 'Local Contributor'}
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
           {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
         </p>
 
         {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
-        <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
+        <div className="mt-1.5 sm:mt-2 flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
           {/* Support Us Button with Rose Fluid Wave Fill */}
           <button
             onClick={() => {
@@ -585,7 +585,7 @@ export default function ProfilePage({
             }}
             onMouseEnter={() => setIsSponsorHovered(true)}
             onMouseLeave={() => setIsSponsorHovered(false)}
-            className={`relative overflow-hidden group h-9 min-w-[140px] px-5 flex items-center justify-center gap-2 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
+            className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[125px] sm:min-w-[135px] px-3.5 sm:px-4 flex items-center justify-center gap-2 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
               isSponsorHovered
                 ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
                 : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-rose-400'
@@ -639,7 +639,7 @@ export default function ProfilePage({
               onClick={handleLogout}
               onMouseEnter={() => setIsLogoutHovered(true)}
               onMouseLeave={() => setIsLogoutHovered(false)}
-              className={`relative overflow-hidden group h-9 min-w-[130px] px-5 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
+              className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[120px] sm:min-w-[130px] px-3.5 sm:px-4 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
                 isLogoutHovered
                   ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
                   : 'border-rose-500/50 dark:border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400'
@@ -694,7 +694,7 @@ export default function ProfilePage({
               }}
               onMouseEnter={() => setIsGithubHovered(true)}
               onMouseLeave={() => setIsGithubHovered(false)}
-              className={`relative overflow-hidden group h-9 min-w-[150px] px-5 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
+              className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[135px] sm:min-w-[145px] px-3.5 sm:px-4 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
                 isGithubHovered
                   ? 'border-slate-950 dark:border-white text-white dark:text-slate-950 shadow-slate-950/20 dark:shadow-white/20'
                   : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40'
@@ -747,7 +747,7 @@ export default function ProfilePage({
 
       {/* ── 2. Architecture Tiers & Quotas (Exact 4 Benefits per Tier) ── */}
       <section className="mt-0 mb-0">
-        <div className="flex items-center justify-between mb-3.5 sm:mb-4">
+        <div className="flex items-center justify-between mb-2 sm:mb-2.5">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Subscription Tiers
           </span>
@@ -779,9 +779,9 @@ export default function ProfilePage({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-4 xl:gap-5 items-stretch">
           {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
-          <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
             currentTier === 'free'
               ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10'
               : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30'
@@ -822,13 +822,13 @@ export default function ProfilePage({
                 </span>
               )}
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-950 dark:text-white mb-0.5">
               {currency === 'INR' ? '₹0' : '$0'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-medium mb-3">
+            <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-medium mb-2 sm:mb-2.5">
               Free Forever · No Credit Card
             </div>
-            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+            <ul className="text-[11px] sm:text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
                 <span>1 Connected repository</span>
@@ -851,7 +851,7 @@ export default function ProfilePage({
               disabled={currentTier === 'free'}
               onMouseEnter={() => setHoveredTierBtn('free')}
               onMouseLeave={() => setHoveredTierBtn(null)}
-              className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+              className={`relative overflow-hidden group w-full h-8 flex items-center justify-center rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-300 ${
                 currentTier === 'free'
                   ? 'bg-slate-100 dark:bg-white/5 border-transparent text-slate-500 dark:text-slate-400 cursor-default'
                   : (hoveredTierBtn === 'free'
@@ -893,7 +893,7 @@ export default function ProfilePage({
           </div>
 
           {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
-          <div className={`p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
+          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all duration-300 xl:scale-[1.015] xl:-translate-y-1 xl:hover:-translate-y-2 relative z-10 flex flex-col justify-between shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
             currentTier === 'pro'
               ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
               : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
@@ -937,13 +937,13 @@ export default function ProfilePage({
                 <Lock className="w-3 h-3 text-slate-400" />
               )}
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-950 dark:text-white mb-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-950 dark:text-white mb-0.5">
               {currency === 'INR' ? '₹320' : '$4'} <span className="text-xs font-normal text-slate-500 font-sans">/ mo</span>
             </div>
-            <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold mb-3">
+            <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold mb-2 sm:mb-2.5">
               Includes 7-Day Free Pro Trial
             </div>
-            <ul className="text-xs font-mono space-y-2 mb-6 text-slate-600 dark:text-slate-300">
+            <ul className="text-[11px] sm:text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 text-slate-600 dark:text-slate-300 flex-1">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>10 Connected repositories</span>
@@ -966,7 +966,7 @@ export default function ProfilePage({
               disabled={currentTier === 'pro'}
               onMouseEnter={() => setHoveredTierBtn('pro')}
               onMouseLeave={() => setHoveredTierBtn(null)}
-              className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+              className={`relative overflow-hidden group w-full h-8 flex items-center justify-center rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-300 ${
                 currentTier === 'pro'
                   ? 'bg-amber-400/20 border-transparent text-amber-700 dark:text-amber-400 cursor-default'
                   : (hoveredTierBtn === 'pro'
@@ -1019,7 +1019,7 @@ export default function ProfilePage({
           </div>
 
           {/* Tier 3: Enterprise Mesh (Solid Deep Obsidian Purple Card Background) */}
-          <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
             currentTier === 'enterprise'
               ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
               : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-purple-400/40'
@@ -1063,19 +1063,19 @@ export default function ProfilePage({
                 <Lock className="w-3 h-3 text-slate-400" />
               )}
             </div>
-            <div className={`text-2xl font-bold font-mono mb-1 ${
+            <div className={`text-xl sm:text-2xl font-bold font-mono mb-0.5 ${
               currentTier === 'enterprise' ? 'text-white' : 'text-slate-950 dark:text-white'
             }`}>
               Custom <span className={`text-xs font-normal font-sans ${
                 currentTier === 'enterprise' ? 'text-purple-200/80' : 'text-slate-500'
               }`}>/ SLA</span>
             </div>
-            <div className={`text-[10px] font-mono font-medium mb-3 ${
+            <div className={`text-[10px] font-mono font-medium mb-2 sm:mb-2.5 ${
               currentTier === 'enterprise' ? 'text-purple-200/70' : 'text-purple-500 dark:text-purple-400'
             }`}>
               Tailored Infrastructure &amp; Dedicated VPC
             </div>
-            <ul className={`text-xs font-mono space-y-2 mb-6 ${
+            <ul className={`text-[11px] sm:text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 flex-1 ${
               currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
             }`}>
               <li className="flex items-center gap-2">
@@ -1100,7 +1100,7 @@ export default function ProfilePage({
               disabled={currentTier === 'enterprise'}
               onMouseEnter={() => setHoveredTierBtn('enterprise')}
               onMouseLeave={() => setHoveredTierBtn(null)}
-              className={`relative overflow-hidden group w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold transition-all duration-300 ${
+              className={`relative overflow-hidden group w-full h-8 flex items-center justify-center rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-300 ${
                 currentTier === 'enterprise'
                   ? 'bg-purple-600/30 border-purple-400/60 text-purple-100 font-semibold cursor-default shadow-xs'
                   : (hoveredTierBtn === 'enterprise'
@@ -1153,9 +1153,9 @@ export default function ProfilePage({
       </section>
 
       {/* ── 3. Real-Time Metrics & API Credentials ── */}
-      <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
+      <section className="mt-3 sm:mt-3.5 lg:mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-1 sm:mb-2 shrink-0">
         {/* Plan Quota & Consumption */}
-        <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1168,7 +1168,7 @@ export default function ProfilePage({
               </span>
             </div>
 
-            <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden mb-3 sm:mb-3.5">
+            <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden mb-2 sm:mb-2.5">
               <div
                 className="h-full rounded-full bg-slate-950 dark:bg-white transition-all duration-500"
                 style={{ width: decisionsCapacity === -1 ? '100%' : `${capacityPct}%` }}
@@ -1177,23 +1177,23 @@ export default function ProfilePage({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs font-mono">
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Repos</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
                 {connectedRepoCount} <span className="text-[10px] font-normal text-slate-500">/ {repoLimit}</span>
               </span>
             </div>
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Decisions</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
                 {userDecisionsCount} <span className="text-[10px] font-normal text-slate-500">/ {decisionsCapacity === -1 ? '∞' : decisionsCapacity.toLocaleString()}</span>
               </span>
             </div>
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">MCP Gate</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight truncate">{mcpRateLimit}</span>
             </div>
-            <div className="py-1.5 sm:py-2 px-2.5 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
+            <div className="py-1 sm:py-1.5 px-2 rounded-lg border border-slate-200/60 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex flex-col justify-center">
               <span className="text-[8px] text-slate-500 uppercase tracking-tight block mb-0.5">Cycle</span>
               <span className="text-xs font-bold text-slate-950 dark:text-white leading-tight">
                 {daysRemaining}d <span className="text-[10px] font-normal text-slate-500">left</span>
@@ -1203,7 +1203,7 @@ export default function ProfilePage({
         </div>
 
         {/* API Credentials */}
-        <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1222,7 +1222,7 @@ export default function ProfilePage({
                 </div>
               )}
             </div>
-            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-sans mb-2.5 sm:mb-3 truncate">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-sans mb-2 truncate">
               Bearer authentication key for Cursor, Claude Code, and Windsurf MCP connections.
             </p>
           </div>
@@ -1256,7 +1256,7 @@ export default function ProfilePage({
               </button>
             </div>
           ) : (
-            <div className="py-2.5 px-3.5 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
+            <div className="py-1.5 sm:py-2 px-3 rounded-lg bg-slate-900 text-white font-mono text-xs border border-slate-800 flex items-center justify-between gap-3 shadow-inner">
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <span className="text-slate-500 select-none text-[11px] font-mono">$</span>
                 <code className="truncate text-[11px] font-bold text-amber-300 tracking-wide font-mono">
