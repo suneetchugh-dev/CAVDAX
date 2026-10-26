@@ -44,6 +44,10 @@ function isScannableFile(filePath) {
     return false;
   }
   const ext = path.extname(filePath).toLowerCase();
+  // Exclude documentation and markdown files (they describe examples, not executable code dependencies)
+  if (ext === '.md' || ext === '.mdx' || ext === '.txt') {
+    return false;
+  }
   return SCANNABLE_EXTENSIONS.has(ext);
 }
 

@@ -33,6 +33,25 @@ runs:
     - name: Ingest ADRs & Validate Commits
       shell: bash
       run: |
+        if [ -f "${{ github.action_path }}/core/graph/queries.js" ]; then
+          echo "🌱 Seeding baseline demo decisions in FalkorDB..."
+          node -e "
+            import('${{ github.action_path }}/core/graph/queries.js').then(async m => {
+              const { connectGraph, closeQuietly } = await import('${{ github.action_path }}/apps/mcp-server/src/runtime.js');
+              try {
+                const { client, graph } = await connectGraph();
+                if (graph && m.seedDemoGraph) {
+                  await m.seedDemoGraph(graph);
+                  console.log('   Demo baseline decisions seeded.');
+                }
+                await closeQuietly(client);
+              } catch (e) {
+                console.log('   Seed notice:', e.message);
+              }
+            });
+          " || true
+        fi
+
         echo "🔍 Scanning repository ADRs..."
         node ${{ github.action_path }}/apps/mcp-server/bin/cavdax.js ingest --repo ${{ github.workspace }}
 
