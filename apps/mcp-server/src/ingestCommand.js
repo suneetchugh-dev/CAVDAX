@@ -37,6 +37,8 @@ async function discoverAdrFiles(repoRoot) {
     '.adr/**/*.md',
     'docs/adr/**/*.md',
     'docs/adrs/**/*.md',
+    'demo-repo/docs/adrs/**/*.md',
+    'demo-repo/docs/adr/**/*.md',
     'architecture/**/*.md'
   ];
   const found = [];

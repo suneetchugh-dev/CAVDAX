@@ -20,7 +20,7 @@ import path from 'path';
 import { connectGraph, closeQuietly, describeConnectError, falkorConfig, loadCore } from './runtime.js';
 
 // File extensions that are safe to read as UTF-8 text and may contain
-// CAVDAX decision ID references (e.g. DEC-102 in a comment or config).
+// CAVDAX decision ID references (e.g. DEC-999 in a comment or config).
 // Binary files, images, lock files, and generated bundles are excluded.
 const SCANNABLE_EXTENSIONS = new Set([
   '.js', '.mjs', '.cjs',
@@ -38,12 +38,35 @@ const SCANNABLE_EXTENSIONS = new Set([
  * Excludes lock files explicitly regardless of extension.
  */
 function isScannableFile(filePath) {
-  const basename = path.basename(filePath);
+  const normalized = filePath.replace(/\\/g, '/');
+  const basename = path.basename(normalized);
+
   // Exclude lock files by name pattern regardless of extension
   if (basename.endsWith('.lock') || basename === 'package-lock.json' || basename === 'yarn.lock' || basename === 'pnpm-lock.yaml') {
     return false;
   }
-  const ext = path.extname(filePath).toLowerCase();
+
+  // Exclude documentation and markdown files (they describe examples, not executable code dependencies)
+  const ext = path.extname(normalized).toLowerCase();
+  if (ext === '.md' || ext === '.mdx' || ext === '.txt') {
+    return false;
+  }
+
+  // Exclude CAVDAX internal engine code, test suites, and scripts
+  if (
+    normalized.startsWith('apps/mcp-server/') ||
+    normalized.startsWith('core/') ||
+    normalized.startsWith('apps/server/') ||
+    normalized.startsWith('apps/client/') ||
+    normalized.startsWith('scripts/') ||
+    normalized.startsWith('test/') ||
+    normalized.startsWith('tests/') ||
+    basename.includes('.test.') ||
+    basename.includes('.spec.')
+  ) {
+    return false;
+  }
+
   return SCANNABLE_EXTENSIONS.has(ext);
 }
 
@@ -99,7 +122,7 @@ async function verifyFiles(files, options) {
       continue;
     }
 
-    // Scan for decision ID patterns (e.g. DEC-102)
+    // Scan for decision ID patterns (e.g. DEC-999)
     let decisionIds = [];
     try {
       const { readFileSync } = await import('fs');
@@ -126,12 +149,12 @@ async function verifyFiles(files, options) {
         // FalkorDB is not reachable — skip causal check, do not block.
         //
         // Why: blocking without a live graph causes false positives because
-        // the check command has no way to know whether DEC-102 is actually
+        // the check command has no way to know whether a decision is actually
         // stale in THIS repo's graph — it only knows it's stale in the CAVDAX
-        // demo graph. Any repo that mentions "DEC-102" in a comment or doc
+        // demo graph. Any repo that mentions a decision in a comment or doc
         // would be incorrectly blocked.
         //
-        // The hardcoded DEC-102 simulation below this point is intentionally
+        // The hardcoded decision simulation below this point is intentionally
         // removed. It existed only for the interactive Web HUD demo and must
         // never run in CI where FalkorDB is absent (syntax-check jobs, PRs
         // from forks, cavdax-gate.yml before FalkorDB is healthy, etc.).
