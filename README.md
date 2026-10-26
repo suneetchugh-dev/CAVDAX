@@ -431,13 +431,29 @@ claude mcp add cavdax https://cavdax.sahnirmaan.live/api/mcp/sse
 }
 ```
 
-### Registered Model Context Protocol (MCP) Tools:
+### Registered Model Context Protocol (MCP) Tools (6-Tool Enclosed Catalog)
 1. `check_intent_clearance`: **Proactive Architectural Pre-Flight Radar.** Allows AI coding agents (Claude Code, Devin, Cursor) to verify proposed actions against FalkorDB *prior to generating tokens or editing files*. Eliminates reactive token burn in < 2ms.
 2. `apply_code_change`: **Enclosed Execution Gate.** Intercepts in-flight file write actions and validates decision provenance against the causal graph. Hard-blocks execution if grounding facts are stale (`BLOCKED_SUPERSEDED_SOURCE`).
-3. `acquire_decision_lock`: **Distributed Concurrency Lock.** Prevents race conditions during multi-agent workflows (e.g. concurrent Devin or Claude Code sessions) by leasing atomic locks on specific decision branches.
-4. `release_decision_lock`: **Lease Release.** Voluntarily releases leased locks upon completed task execution.
-5. `query_causal_graph`: Sub-millisecond GraphBLAS BFS Cypher query for active ADRs, dependencies, and invalidation trails.
-6. `verify_decision`: Dry-run decision validation verifying that grounding facts remain fresh.
+3. `revalidate_decision`: **Dynamic Invalidation Recovery.** Synthesizes a new Decision replacing an invalidated or superseded one, automatically linking the new Decision to active Facts extracted from fresh ADRs.
+4. `acquire_decision_lock`: **Distributed Concurrency Lock.** Prevents race conditions during multi-agent workflows (e.g. concurrent Devin or Claude Code sessions) by leasing atomic locks on specific decision branches.
+5. `release_decision_lock`: **Lease Release.** Voluntarily releases leased locks upon completed task milestone execution.
+6. `query_causal_graph`: Sub-millisecond GraphBLAS BFS Cypher query for active ADRs, dependencies, and invalidation trails.
+
+### Universal CLI Daemon (`@cavdax/mcp-server` v1.2.0)
+```bash
+# Start local Model Context Protocol stdio daemon
+npx -y @cavdax/mcp-server
+
+# Diagnose FalkorDB GraphBLAS connection and causal DAG health
+npx cavdax doctor
+
+# Ingest ADRs (supports standard YAML frontmatter and plain Markdown files)
+npx cavdax ingest --repo .
+
+# Validate staged files or PR diffs against active architecture decisions
+npx cavdax check --staged
+npx cavdax check --pr <number>
+```
 
 ---
 
