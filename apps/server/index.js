@@ -808,12 +808,31 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
       });
     }
   } else if (toolName === 'check_intent_clearance') {
-    if (!args.decision_id || typeof args.decision_id !== 'string') {
+    if (!args.decision_id || typeof args.decision_id !== 'string' || args.decision_id.trim().length === 0) {
       return res.status(400).json({
         isError: true,
-        error: "Missing required parameter 'args.decision_id' for tool 'check_intent_clearance'."
+        error: "Missing or empty required parameter 'args.decision_id' for tool 'check_intent_clearance'."
       });
     }
+    if (args.decision_id.length > 128) {
+      return res.status(400).json({
+        isError: true,
+        error: "Parameter 'args.decision_id' exceeds maximum length limit of 128 characters."
+      });
+    }
+    if (args.target_file && (typeof args.target_file !== 'string' || args.target_file.length > 256)) {
+      return res.status(400).json({
+        isError: true,
+        error: "Optional parameter 'args.target_file' must be a string with maximum length of 256 characters."
+      });
+    }
+    if (args.proposed_action && (typeof args.proposed_action !== 'string' || args.proposed_action.length > 500)) {
+      return res.status(400).json({
+        isError: true,
+        error: "Optional parameter 'args.proposed_action' must be a string with maximum length of 500 characters."
+      });
+    }
+    args.decision_id = args.decision_id.trim();
   } else {
     return res.status(400).json({
       isError: true,
