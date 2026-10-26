@@ -1005,7 +1005,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
                 <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
 
-                  v1.0.0
+                  v1.2.0
 
                 </span>
 
