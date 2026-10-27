@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   GitBranch, FolderGit2, FileCode, Plus, CheckCircle2,
   Sparkles, RefreshCw, Terminal, Layers, ArrowRight,
-  ShieldCheck, Play, Database, Check, Trash2
+  ShieldCheck, Play, Database, Check, Trash2, AlertCircle
 } from 'lucide-react';
 import GraphCanvas from './GraphCanvas';
 import SubsystemErrorBoundary from './SubsystemErrorBoundary';
