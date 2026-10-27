@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { isAdrPath } from '../../../core/ingestion/adrPaths.js';
 import { parseFrontmatter } from '../../../core/ingestion/parser.js';
 import {
-  scanRepoAdrs, createAdrPullRequest, buildGraphFromAdrs, buildStarterAdr, detectStack, selectStackFiles, assertRepoName, NEW_ADR_PATH
+  scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, detectUnsyncedSupersessions, applySupersededStatusToAdr, buildGraphFromAdrs, buildStarterAdr, detectStack, selectStackFiles, assertRepoName, NEW_ADR_PATH
 } from '../githubAdr.js';
 
 const json = (body, status = 200) => ({ ok: status < 400, status, json: async () => body, text: async () => JSON.stringify(body) });
@@ -328,4 +328,111 @@ test('buildGraphFromAdrs ignores a supersedes target that does not exist', () =>
   const g = buildGraphFromAdrs([{ id: 'ADR-009', title: 'x', path: 'p', supersedes: ['ADR-404'], fact_id: null, fact_claim: null }]);
   assert.equal(g.nodes.length, 1);
   assert.equal(g.edges.length, 0);
+});
+
+
+test('detectUnsyncedSupersessions finds superseded ADRs still marked ACCEPTED', () => {
+  const adrs = [
+    { id: 'ADR-001', title: 'Old Mongo', status: 'ACCEPTED', path: 'docs/adrs/ADR-001.md', supersedes: [] },
+    { id: 'ADR-002', title: 'New Postgres', status: 'ACCEPTED', path: 'docs/adrs/ADR-002.md', supersedes: ['ADR-001'] }
+  ];
+  const unsynced = detectUnsyncedSupersessions(adrs);
+  assert.equal(unsynced.length, 1);
+  assert.equal(unsynced[0].targetId, 'ADR-001');
+  assert.equal(unsynced[0].supersedingId, 'ADR-002');
+});
+
+test('detectUnsyncedSupersessions ignores ADRs already marked SUPERSEDED', () => {
+  const adrs = [
+    { id: 'ADR-001', title: 'Old Mongo', status: 'SUPERSEDED by ADR-002', path: 'docs/adrs/ADR-001.md', supersedes: [] },
+    { id: 'ADR-002', title: 'New Postgres', status: 'ACCEPTED', path: 'docs/adrs/ADR-002.md', supersedes: ['ADR-001'] }
+  ];
+  const unsynced = detectUnsyncedSupersessions(adrs);
+  assert.equal(unsynced.length, 0);
+});
+
+test('applySupersededStatusToAdr rewrites frontmatter and plain text correctly', () => {
+  const fmAdr = '---\nid: ADR-001\nstatus: ACCEPTED\ntitle: Old\n---\n# ADR-001\n';
+  const updatedFm = applySupersededStatusToAdr(fmAdr, 'ADR-002');
+  assert.match(updatedFm, /status: SUPERSEDED by ADR-002/);
+
+  const plainAdr = '# ADR-001\nNo frontmatter here.\n';
+  const updatedPlain = applySupersededStatusToAdr(plainAdr, 'ADR-002');
+  assert.match(updatedPlain, /status: SUPERSEDED by ADR-002/);
+  assert.match(updatedPlain, /# ADR-001/);
+});
+
+test('syncSupersededAdrPullRequest opens a pull request on a dedicated branch', async () => {
+  const { fetchImpl, calls } = fakeGithub({
+    files: {
+      'docs/adrs/ADR-001.md': ADR1,
+      'docs/adrs/ADR-002.md': ADR2
+    }
+  });
+
+  const res = await syncSupersededAdrPullRequest({
+    token: 't',
+    owner: 'o',
+    repo: 'r',
+    targetId: 'ADR-001',
+    supersedingId: 'ADR-002',
+    fetchImpl
+  });
+
+  assert.equal(res.targetId, 'ADR-001');
+  assert.equal(res.supersedingId, 'ADR-002');
+  assert.equal(res.reused, false);
+  assert.ok(res.branch.startsWith("cavdax/sync-adr-001-status"));
+
+  // Verifies it never wrote to default branch directly
+  const refCall = calls.find((c) => c.method === 'POST' && c.path === '/repos/o/r/git/refs');
+  assert.ok(refCall);
+  assert.equal(refCall.body.ref, `refs/heads/${res.branch}`);
+
+  // Verifies PUT committed to the new branch
+  const putCall = calls.find((c) => c.method === 'PUT' && c.path.includes('ADR-001.md'));
+  assert.ok(putCall);
+  assert.equal(putCall.body.branch, res.branch);
+  const committedText = Buffer.from(putCall.body.content, 'base64').toString('utf-8');
+  assert.match(committedText, /status: SUPERSEDED by ADR-002/);
+
+  // Verifies PR opened
+  const prCall = calls.find((c) => c.method === 'POST' && c.path === '/repos/o/r/pulls');
+  assert.ok(prCall);
+  assert.match(prCall.body.title, /chore\(adr\): mark ADR-001 superseded by ADR-002/);
+});
+
+test('syncSupersededAdrPullRequest is idempotent when PR is already open', async () => {
+  const { fetchImpl } = fakeGithub({
+    files: {
+      'docs/adrs/ADR-001.md': ADR1,
+      'docs/adrs/ADR-002.md': ADR2
+    },
+    openPulls: [{ number: 99, html_url: 'https://github.com/o/r/pull/99', head: { ref: 'cavdax/sync-adr-001-status' } }]
+  });
+
+  const res = await syncSupersededAdrPullRequest({
+    token: 't',
+    owner: 'o',
+    repo: 'r',
+    targetId: 'ADR-001',
+    supersedingId: 'ADR-002',
+    fetchImpl
+  });
+
+  assert.equal(res.reused, true);
+  assert.equal(res.number, 99);
+});
+
+test('syncSupersededAdrPullRequest refuses when target is not superseded', async () => {
+  const { fetchImpl } = fakeGithub({
+    files: {
+      'docs/adrs/ADR-001.md': ADR1
+    }
+  });
+
+  await assert.rejects(
+    () => syncSupersededAdrPullRequest({ token: 't', owner: 'o', repo: 'r', targetId: 'ADR-001', supersedingId: 'ADR-002', fetchImpl }),
+    (e) => e.code === 'SUPERSEDING_NOT_FOUND' && e.status === 404
+  );
 });

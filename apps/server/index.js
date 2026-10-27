@@ -32,7 +32,7 @@ import {
   fetchAuditLog
 } from '../../core/graph/queries.js';
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
-import { scanRepoAdrs, createAdrPullRequest, GithubAdrError } from './githubAdr.js';
+import { scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, GithubAdrError } from './githubAdr.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -2124,6 +2124,73 @@ app.get('/api/github/repos', async (req, res) => {
   } catch (err) {
     console.error('[CAVDAX Repos] Fetch error:', err.message);
     res.status(500).json({ authenticated: true, repos: [], error: err.message });
+  }
+});
+
+/**
+ * GET /api/github/repos/:owner/:repo/adrs
+ * Scans the default branch of a GitHub repository for ADRs and returns them with a causal graph.
+ */
+app.get('/api/github/repos/:owner/:repo/adrs', async (req, res) => {
+  const token = req.session?.user?.accessToken;
+  if (!token) {
+    return res.status(401).json({ success: false, code: 'AUTH_REQUIRED', error: 'GitHub authentication required.' });
+  }
+  const { owner, repo } = req.params;
+  try {
+    const result = await scanRepoAdrs({ token, owner, repo });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    if (err instanceof GithubAdrError) {
+      return res.status(err.status).json({ success: false, code: err.code, error: err.message });
+    }
+    console.error('[CAVDAX /adrs error]:', err);
+    res.status(500).json({ success: false, code: 'INTERNAL_ERROR', error: 'Failed to scan repository ADRs.' });
+  }
+});
+
+/**
+ * POST /api/github/repos/:owner/:repo/init-adr
+ * Opens a starter ADR pull request on branch cavdax/init-adr based on detected stack.
+ */
+app.post('/api/github/repos/:owner/:repo/init-adr', async (req, res) => {
+  const token = req.session?.user?.accessToken;
+  if (!token) {
+    return res.status(401).json({ success: false, code: 'AUTH_REQUIRED', error: 'GitHub authentication required.' });
+  }
+  const { owner, repo } = req.params;
+  try {
+    const pullRequest = await createAdrPullRequest({ token, owner, repo });
+    res.json({ success: true, pullRequest });
+  } catch (err) {
+    if (err instanceof GithubAdrError) {
+      return res.status(err.status).json({ success: false, code: err.code, error: err.message });
+    }
+    console.error('[CAVDAX /init-adr error]:', err);
+    res.status(500).json({ success: false, code: 'INTERNAL_ERROR', error: 'Failed to create starter ADR pull request.' });
+  }
+});
+
+/**
+ * POST /api/github/repos/:owner/:repo/sync-adr-status
+ * Opens a pull request on branch cavdax/sync-<adr>-status updating a superseded ADR's markdown status.
+ */
+app.post('/api/github/repos/:owner/:repo/sync-adr-status', async (req, res) => {
+  const token = req.session?.user?.accessToken;
+  if (!token) {
+    return res.status(401).json({ success: false, code: 'AUTH_REQUIRED', error: 'GitHub authentication required.' });
+  }
+  const { owner, repo } = req.params;
+  const { targetId, supersedingId } = req.body || {};
+  try {
+    const pullRequest = await syncSupersededAdrPullRequest({ token, owner, repo, targetId, supersedingId });
+    res.json({ success: true, pullRequest });
+  } catch (err) {
+    if (err instanceof GithubAdrError) {
+      return res.status(err.status).json({ success: false, code: err.code, error: err.message });
+    }
+    console.error('[CAVDAX /sync-adr-status error]:', err);
+    res.status(500).json({ success: false, code: 'INTERNAL_ERROR', error: 'Failed to create sync ADR pull request.' });
   }
 });
 
