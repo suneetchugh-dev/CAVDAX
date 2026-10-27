@@ -163,31 +163,68 @@ async function scanWithTree({ token, owner, repo, fetchImpl = fetch }) {
 
 // ---------------------------------------------------------------------------
 // Stack detection: the starter ADR describes what the repository actually uses.
-// Only facts that are literally present in a manifest file are claimed.
+// Only facts that are literally present in a file are claimed, and each one records
+// which file it came from. Two kinds of signal are read:
+//   - infrastructure config (docker-compose, Prisma schema, .env.example): states which
+//     service really runs, so it outranks a client library;
+//   - dependency manifests (package.json, go.mod, ...): states which libraries are used.
 // ---------------------------------------------------------------------------
 
+// Dependency manifests -> language (null: a dependency catalogue with no language of its own).
 const MANIFESTS = {
   'package.json': 'Node.js',
   'requirements.txt': 'Python',
   'pyproject.toml': 'Python',
+  'Pipfile': 'Python',
+  'setup.py': 'Python',
   'go.mod': 'Go',
   'Cargo.toml': 'Rust',
   'pom.xml': 'Java',
   'build.gradle': 'Java',
+  'build.gradle.kts': 'Kotlin/Java',
+  'gradle/libs.versions.toml': null,
+  'build.sbt': 'Scala',
   'Gemfile': 'Ruby',
-  'composer.json': 'PHP'
+  'composer.json': 'PHP',
+  'mix.exs': 'Elixir',
+  'pubspec.yaml': 'Dart',
+  'Package.swift': 'Swift'
 };
+const COMPOSE_FILES = new Set(['docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'compose.yaml']);
+// Only example env files are read. The real `.env` holds secrets and is never fetched.
+const ENV_EXAMPLE_FILES = new Set(['.env.example', '.env.sample', '.env.template', '.env.dist']);
+const PRISMA_FILES = new Set(['prisma/schema.prisma', 'schema.prisma']);
 const MAX_MANIFEST_BYTES = 200 * 1024;
+const MAX_STACK_FILES = 12;
+
+const WORKSPACE_FILE = /^(?:apps|packages|services|libs|backend|frontend|server|client)\/[^/]+\/([^/]+)$/;
+
+/** Maps a repo-relative path to the manifest name it stands for: itself, or the file inside a one-level workspace. */
+function manifestName(p) {
+  if (fileKind(p)) return p;
+  const ws = p.match(WORKSPACE_FILE);
+  return ws && fileKind(ws[1]) === 'dependencies' ? ws[1] : null;
+}
+
+/** @returns {'dependencies'|'compose'|'env'|'prisma'|null} how a repo-relative path should be read */
+function fileKind(p) {
+  if (Object.hasOwn(MANIFESTS, p) || /^[^/]+\.csproj$/.test(p)) return 'dependencies';
+  if (COMPOSE_FILES.has(p)) return 'compose';
+  if (ENV_EXAMPLE_FILES.has(p)) return 'env';
+  if (PRISMA_FILES.has(p)) return 'prisma';
+  return null;
+}
 
 // Ordered by architectural weight: a primary database outranks a cache.
 const DATASTORES = [
-  { name: 'PostgreSQL', slug: 'Postgres', tokens: ['pg', 'pg-promise', 'postgres', 'psycopg2', 'psycopg2-binary', 'psycopg', 'asyncpg', 'github.com/lib/pq', 'github.com/jackc/pgx', 'postgresql'] },
-  { name: 'MySQL', slug: 'MySQL', tokens: ['mysql', 'mysql2', 'mysqlclient', 'pymysql', 'github.com/go-sql-driver/mysql', 'mysql-connector-j', 'mysql-connector-java'] },
-  { name: 'MongoDB', slug: 'Mongo', tokens: ['mongodb', 'mongoose', 'pymongo', 'motor', 'mongoengine', 'go.mongodb.org/mongo-driver', 'mongodb-driver-sync'] },
+  { name: 'PostgreSQL', slug: 'Postgres', tokens: ['pg', 'pg-promise', 'postgres', 'psycopg2', 'psycopg2-binary', 'psycopg', 'asyncpg', 'github.com/lib/pq', 'github.com/jackc/pgx', 'postgresql', 'org.postgresql', 'npgsql', 'postgrex', 'postgres-nio'] },
+  { name: 'MySQL', slug: 'MySQL', tokens: ['mysql', 'mysql2', 'mysqlclient', 'pymysql', 'github.com/go-sql-driver/mysql', 'mysql-connector-j', 'mysql-connector-java', 'mysql.data', 'pomelo.entityframeworkcore.mysql', 'myxql'] },
+  { name: 'MariaDB', slug: 'MariaDB', tokens: ['mariadb', 'org.mariadb.jdbc', 'mariadb-java-client'] },
+  { name: 'MongoDB', slug: 'Mongo', tokens: ['mongodb', 'mongoose', 'pymongo', 'motor', 'mongoengine', 'go.mongodb.org/mongo-driver', 'mongodb-driver-sync', 'mongodb.driver', 'mongodb_driver', 'mongo_dart'] },
   { name: 'SQLite', slug: 'SQLite', tokens: ['sqlite3', 'better-sqlite3', 'sqlite-jdbc'] },
   { name: 'DynamoDB', slug: 'DynamoDB', tokens: ['@aws-sdk/client-dynamodb', 'aws-sdk-dynamodb'] },
   { name: 'FalkorDB', slug: 'FalkorDB', tokens: ['falkordb'] },
-  { name: 'Redis', slug: 'Redis', tokens: ['redis', 'ioredis', 'github.com/redis/go-redis', 'jedis', 'spring-boot-starter-data-redis'] }
+  { name: 'Redis', slug: 'Redis', tokens: ['redis', 'ioredis', 'github.com/redis/go-redis', 'jedis', 'spring-boot-starter-data-redis', 'stackexchange.redis', 'redix'] }
 ];
 
 const FRAMEWORKS = [
@@ -202,8 +239,25 @@ const FRAMEWORKS = [
   { name: 'FastAPI', slug: 'FastAPI', tokens: ['fastapi'] },
   { name: 'Spring Boot', slug: 'SpringBoot', tokens: ['spring-boot-starter-web', 'spring-boot-starter'] },
   { name: 'Gin', slug: 'Gin', tokens: ['github.com/gin-gonic/gin'] },
-  { name: 'Rails', slug: 'Rails', tokens: ['rails'] }
+  { name: 'Rails', slug: 'Rails', tokens: ['rails'] },
+  { name: 'Laravel', slug: 'Laravel', tokens: ['laravel/framework'] },
+  { name: 'ASP.NET Core', slug: 'AspNetCore', tokens: ['microsoft.net.sdk.web', 'microsoft.aspnetcore.app'] },
+  { name: 'Phoenix', slug: 'Phoenix', tokens: ['phoenix'] }
 ];
+
+// Infrastructure names -> datastore slug.
+const IMAGE_TO_SLUG = {
+  postgres: 'Postgres', postgis: 'Postgres', postgresql: 'Postgres',
+  mysql: 'MySQL', mariadb: 'MariaDB',
+  mongo: 'Mongo', mongodb: 'Mongo',
+  redis: 'Redis', 'redis-stack': 'Redis', 'redis-stack-server': 'Redis',
+  falkordb: 'FalkorDB'
+};
+const SCHEME_TO_SLUG = {
+  postgres: 'Postgres', postgresql: 'Postgres', mysql: 'MySQL',
+  mongodb: 'Mongo', 'mongodb+srv': 'Mongo', redis: 'Redis', rediss: 'Redis'
+};
+const PRISMA_PROVIDER_TO_SLUG = { postgresql: 'Postgres', mysql: 'MySQL', sqlite: 'SQLite', mongodb: 'Mongo' };
 
 /** Extracts lowercase dependency names from one manifest file. */
 function dependencyNames(fileName, content) {
@@ -221,28 +275,73 @@ function dependencyNames(fileName, content) {
     for (const m of content.matchAll(/<artifactId>\s*([^<\s]+)\s*<\/artifactId>/g)) out.add(m[1].toLowerCase());
     return out;
   }
-  // requirements.txt, pyproject.toml, go.mod, Cargo.toml, build.gradle, Gemfile: tokenise.
+  if (fileName.endsWith('.csproj')) {
+    for (const m of content.matchAll(/(?:Include|Sdk)\s*=\s*"([^"]+)"/gi)) out.add(m[1].toLowerCase());
+    return out;
+  }
+  // requirements.txt, pyproject.toml, Pipfile, setup.py, go.mod, Cargo.toml, build.gradle(.kts),
+  // build.sbt, Gemfile, mix.exs, pubspec.yaml, Package.swift: tokenise.
   for (const m of content.toLowerCase().matchAll(/[a-z0-9@][a-z0-9_.\-/@]*/g)) out.add(m[0]);
   return out;
 }
 
-/**
- * @param {Record<string,string>} manifests fileName -> content, from the repository root
- * @returns {{languages: string[], datastores: object[], frameworks: object[], evidence: string[]}}
- */
-export function detectStack(manifests) {
-  const languages = [];
-  const deps = new Set();
-  const evidence = [];
-  for (const [file, content] of Object.entries(manifests)) {
-    const lang = MANIFESTS[file];
-    if (!lang) continue;
-    if (!languages.includes(lang)) languages.push(lang);
-    evidence.push(file);
-    for (const d of dependencyNames(file, content)) deps.add(d);
+/** Datastore slugs that an infrastructure config file states are in use. */
+function infrastructureSlugs(kind, content) {
+  const slugs = new Set();
+  if (kind === 'compose') {
+    for (const m of content.matchAll(/^[ \t-]*image:[ \t]*["']?([^\s"'#]+)/gm)) {
+      const name = m[1].split('@')[0].split('/').pop().split(':')[0].toLowerCase();
+      if (Object.hasOwn(IMAGE_TO_SLUG, name)) slugs.add(IMAGE_TO_SLUG[name]);
+    }
+  } else if (kind === 'env') {
+    const re = /^[ \t]*(?:export[ \t]+)?[A-Za-z_][A-Za-z0-9_]*[ \t]*=[ \t]*["']?(?:jdbc:)?(postgres(?:ql)?|mysql|mongodb(?:\+srv)?|rediss?):\/\//gim;
+    for (const m of content.matchAll(re)) slugs.add(SCHEME_TO_SLUG[m[1].toLowerCase()]);
+  } else if (kind === 'prisma') {
+    const code = content.replace(/^[ \t]*\/\/.*$/gm, '');
+    for (const m of code.matchAll(/provider\s*=\s*"(postgresql|mysql|sqlite|mongodb)"/g)) slugs.add(PRISMA_PROVIDER_TO_SLUG[m[1]]);
   }
-  const pick = (table) => table.filter((e) => e.tokens.some((t) => deps.has(t)));
-  return { languages, datastores: pick(DATASTORES), frameworks: pick(FRAMEWORKS), evidence };
+  return slugs;
+}
+
+/**
+ * @param {Record<string,string>} files repo-relative path -> content
+ * @returns {{languages: string[], datastores: object[], frameworks: object[], evidence: string[]}}
+ *   Each datastore/framework carries `via` (the files that showed it) and `strong` (true when an
+ *   infrastructure config file, not just a library, showed it). Strong datastores sort first.
+ */
+export function detectStack(files) {
+  const languages = [];
+  const evidence = [];
+  const found = new Map(); // slug -> { via: Set<string>, strong: boolean }
+  const mark = (slug, file, strong) => {
+    const hit = found.get(slug) || { via: new Set(), strong: false };
+    hit.via.add(file);
+    hit.strong = hit.strong || strong;
+    found.set(slug, hit);
+  };
+
+  for (const [file, content] of Object.entries(files)) {
+    const name = manifestName(file);
+    const kind = name && fileKind(name);
+    if (!kind) continue;
+    evidence.push(file);
+    if (kind === 'dependencies') {
+      const lang = name.endsWith('.csproj') ? 'C#' : MANIFESTS[name];
+      if (lang && !languages.includes(lang)) languages.push(lang);
+      const deps = dependencyNames(name, content);
+      for (const entry of [...DATASTORES, ...FRAMEWORKS]) {
+        if (entry.tokens.some((t) => deps.has(t))) mark(entry.slug, file, false);
+      }
+    } else {
+      for (const slug of infrastructureSlugs(kind, content)) mark(slug, file, true);
+    }
+  }
+
+  const collect = (table) => table
+    .filter((e) => found.has(e.slug))
+    .map((e) => ({ ...e, via: [...found.get(e.slug).via], strong: found.get(e.slug).strong }))
+    .sort((a, b) => Number(b.strong) - Number(a.strong)); // stable: ties keep table order
+  return { languages, datastores: collect(DATASTORES), frameworks: collect(FRAMEWORKS), evidence };
 }
 
 function joinList(items) {
@@ -293,7 +392,16 @@ instead of editing history.
   const stack = detection.languages.length ? ` (${joinList(detection.languages)})` : '';
   const kind = isStore ? 'data store' : 'application framework';
   const subject = isStore ? `${primary.name} as the primary data store` : `${primary.name} as the application framework`;
+  const files = (e) => joinList(e.via.map((f) => `\`${f}\``));
   const sources = joinList(detection.evidence.map((f) => `\`${f}\``));
+  // Infrastructure files say a service runs; manifests only say a library is used. Keep them apart.
+  const isInfra = (f) => fileKind(manifestName(f) || f) !== 'dependencies';
+  const infraVia = primary.via.filter(isInfra);
+  const libVia = primary.via.filter((f) => !isInfra(f));
+  const proof = [
+    infraVia.length ? `${files({ via: infraVia })} ${infraVia.length === 1 ? 'runs' : 'run'} ${primary.name} as a service` : '',
+    libVia.length ? `${files({ via: libVia })} ${libVia.length === 1 ? 'depends' : 'depend'} on ${primary.name}` : ''
+  ].filter(Boolean).join('; ');
 
   return `---
 id: ADR-001
@@ -308,7 +416,7 @@ decision_title: Build ${repo} on ${primary.name}
 # ADR-001: Use ${primary.name} as the ${kind} for ${repo}
 
 ## Context
-CAVDAX read ${sources} in ${repo}${stack} and found ${primary.name}${others.length ? `, alongside ${joinList(others.map((e) => e.name))}` : ''}.
+CAVDAX read ${sources} in ${repo}${stack}. ${proof}${others.length ? `, alongside ${joinList(others.map((e) => e.name))}` : ''}.
 This record captures that existing choice so engineers and AI coding agents work against it.
 
 ## Decision
@@ -317,7 +425,7 @@ ${repo} uses **${primary.name}** as its ${kind}. New code follows this choice un
 ## Consequences
 - Agents and engineers scaffold new code against ${primary.name}.
 - To change this, add a new ADR with \`supersedes: ADR-001\`. CAVDAX then marks this decision for revalidation.
-- This ADR was generated from dependency names only. Edit it to match your intent before merging.
+- This ADR was generated from the files listed above, not from the reasoning behind the choice. Edit it to match your intent before merging.
 `;
 }
 
@@ -330,26 +438,37 @@ function pullRequestBody(detection) {
   ];
   const found = detection && [...detection.datastores, ...detection.frameworks];
   if (found && found.length) {
-    lines.push(`Detected from ${joinList(detection.evidence.map((f) => `\`${f}\``))}: ${joinList(found.map((e) => e.name))}.`);
-    lines.push('The ADR records the first of these as the primary technology choice.');
+    lines.push('Detected:');
+    for (const e of found) lines.push(`- ${e.name}, from ${joinList(e.via.map((f) => `\`${f}\``))}${e.strong ? ' (a service the repository runs)' : ' (a library dependency)'}`);
+    lines.push('', 'The ADR records the first of these as the primary technology choice.');
   } else {
-    lines.push('No known data store or framework was found in the manifest files, so the ADR is the standard "record architecture decisions" record.');
+    lines.push('No known data store or framework was found in the files CAVDAX reads, so the ADR is the standard "record architecture decisions" record.');
   }
-  lines.push('', 'This is generated from dependency names only. Edit it to match your intent before merging, or close this pull request to decline.');
+  lines.push('', 'This is generated from file contents only, not from the reasoning behind the choice. Edit it to match your intent before merging, or close this pull request to decline.');
   lines.push('After you merge, CAVDAX reads ADRs from the default branch and builds the decision graph.');
   return lines.join('\n');
 }
 
-/** Reads root-level manifests from the default branch and detects the stack. */
+/** Repo-relative paths worth reading: root files, prisma/, gradle/, and one monorepo level (apps|packages|services|libs|backend|frontend|server|client). */
+export function selectStackFiles(tree) {
+  const picked = tree
+    .filter((e) => e.type === 'blob' && (e.size ?? 0) <= MAX_MANIFEST_BYTES && manifestName(e.path))
+    .map((e) => e.path);
+  // Root files first (they describe the whole repository), then workspaces; stable within a depth.
+  picked.sort((a, b) => (a.split('/').length - b.split('/').length) || a.localeCompare(b));
+  return picked.slice(0, MAX_STACK_FILES);
+}
+
+/** Reads the selected files from the default branch and detects the stack. */
 async function detectRepoStack({ token, owner, repo, branch, tree, fetchImpl }) {
-  const rootFiles = tree.filter((e) => e.type === 'blob' && MANIFESTS[e.path] && (e.size ?? 0) <= MAX_MANIFEST_BYTES);
-  const manifests = {};
-  await Promise.all(rootFiles.map(async (e) => {
-    manifests[e.path] = await gh(fetchImpl, token, 'GET',
-      `/repos/${owner}/${repo}/contents/${enc(e.path)}?ref=${encodeURIComponent(branch)}`,
+  const paths = selectStackFiles(tree);
+  const files = {};
+  await Promise.all(paths.map(async (p) => {
+    files[p] = await gh(fetchImpl, token, 'GET',
+      `/repos/${owner}/${repo}/contents/${enc(p)}?ref=${encodeURIComponent(branch)}`,
       null, 'application/vnd.github.raw+json');
   }));
-  return detectStack(manifests);
+  return detectStack(files);
 }
 
 /** Opens (or returns the already-open) pull request that adds the starter ADR. */
