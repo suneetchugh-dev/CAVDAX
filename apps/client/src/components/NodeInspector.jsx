@@ -2,7 +2,7 @@ import React from 'react';
 import { X, AlertTriangle, CheckCircle2, Database, KeyRound, Clock } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
-export default function NodeInspector({ node, onClose }) {
+export default function NodeInspector({ node, onClose, isFalkorDB }) {
   if (!node) return null;
 
   const isStale =
@@ -10,10 +10,16 @@ export default function NodeInspector({ node, onClose }) {
     node.status === 'INVALIDATED_NEEDS_REVALIDATION' ||
     node.is_stale;
 
+  // Strict Truth-in-Data: differentiate live FalkorDB demo vs GitHub ADR AST
+  const isFalkor = isFalkorDB ?? (
+    node.is_demo === true ||
+    (!node.ref?.includes('docs/adrs') && !node.adr_path && !node.id.startsWith('ADR-') && !node.id.startsWith('F-') && !node.id.startsWith('act-') && node.is_demo !== false)
+  );
+
   return (
-    <div className="absolute top-12 right-4 w-80 max-w-[calc(100%-2rem)] bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-[#1E293B] rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs animate-in fade-in zoom-in-95">
+    <div className="absolute top-12 right-4 w-80 max-w-[calc(100%-2rem)] bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs animate-in fade-in zoom-in-95">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E293B] pb-2.5 mb-3">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/15 pb-2.5 mb-3">
         <div className="flex items-center gap-2">
           {isStale ? (
             <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
@@ -42,7 +48,7 @@ export default function NodeInspector({ node, onClose }) {
         <div className="bezel-inner p-3 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-slate-500 uppercase tracking-wider">Graph Label</span>
-            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-[#161B22] border border-slate-300 dark:border-[#1E293B] text-slate-800 dark:text-slate-300 font-bold text-[10px]">
+            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-[#161B22] border border-slate-300 dark:border-white/15 text-slate-800 dark:text-slate-300 font-bold text-[10px]">
               :{node.label}
             </span>
           </div>
@@ -76,7 +82,7 @@ export default function NodeInspector({ node, onClose }) {
             <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
               Title / Directive
             </span>
-            <div className="text-slate-800 dark:text-slate-200 font-sans text-xs bg-slate-50 dark:bg-[#060709] p-2.5 rounded-lg border border-slate-200 dark:border-[#1E293B] leading-relaxed">
+            <div className="text-slate-800 dark:text-slate-200 font-sans text-xs bg-slate-50 dark:bg-[#060709] p-2.5 rounded-lg border border-slate-200 dark:border-white/15 leading-relaxed">
               {node.title}
             </div>
           </div>
@@ -87,9 +93,20 @@ export default function NodeInspector({ node, onClose }) {
             <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
               Extracted Fact Claim
             </span>
-            <div className="text-slate-800 dark:text-slate-200 font-sans text-xs bg-slate-50 dark:bg-[#060709] p-2.5 rounded-lg border border-slate-200 dark:border-[#1E293B] leading-relaxed italic">
+            <div className="text-slate-800 dark:text-slate-200 font-sans text-xs bg-slate-50 dark:bg-[#060709] p-2.5 rounded-lg border border-slate-200 dark:border-white/15 leading-relaxed italic">
               "{node.claim}"
             </div>
+          </div>
+        )}
+
+        {node.target_file && (
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
+              Target Code File
+            </span>
+            <span className="text-slate-800 hover:text-black dark:text-slate-200 dark:hover:text-white font-mono truncate block text-[11px]">
+              {node.target_file}
+            </span>
           </div>
         )}
 
@@ -104,15 +121,22 @@ export default function NodeInspector({ node, onClose }) {
           </div>
         )}
 
-        {/* Footer Info */}
-        <div className="pt-2.5 border-t border-slate-200 dark:border-[#1E293B] text-[10px] text-slate-500 flex items-center justify-between">
-          <span className="flex items-center gap-1">
+        {node.latency_ms !== undefined && (
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-slate-500">Gate Latency:</span>
+            <span className="font-bold text-slate-900 dark:text-white">{node.latency_ms}ms</span>
+          </div>
+        )}
+
+        {/* Footer Info — Genuine storage provenance per Section 37 Truth in Data */}
+        <div className="pt-2.5 border-t border-slate-200 dark:border-white/15 text-[10px] text-slate-500 flex items-center justify-between">
+          <span className="flex items-center gap-1 font-mono">
             <Database className="w-3 h-3 text-slate-800 dark:text-white" />
-            FalkorDB GraphBLAS
+            {isFalkor ? 'FalkorDB GraphBLAS' : 'GitHub ADR AST'}
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 font-mono">
             <Clock className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-            Live Synced
+            {isFalkor ? 'Live Synced' : 'Branch Head (Git)'}
           </span>
         </div>
       </div>
