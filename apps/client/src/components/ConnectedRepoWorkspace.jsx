@@ -211,13 +211,13 @@ export default function ConnectedRepoWorkspace({
         credentials: 'include',
         body: JSON.stringify({
           decisionId: target.id,
-          targetFile,
-          wantValid
+          targetFile
         })
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
       }
 
       const data = await res.json();
@@ -247,40 +247,8 @@ export default function ConnectedRepoWorkspace({
         addLog('MCP_GATE', `Agent write to ${data.target_file} BLOCKED: grounded in ${target.id} whose source was superseded. Verified in ${latencyMs}ms.`, 'GATE_BLOCK');
       }
     } catch (err) {
-      const localLatency = parseFloat((performance.now() - clientStart).toFixed(2));
-      const actionId = `act-${target.id.toLowerCase()}-${Date.now().toString(36)}`;
-      const actionStatus = wantValid ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
-      const fallbackNode = {
-        id: actionId,
-        label: 'AgentAction',
-        title: `ACT: ${wantValid ? 'Verified Write' : 'Blocked Write'} (${target.id})`,
-        status: actionStatus,
-        target_file: targetFile,
-        decision_id: target.id,
-        timestamp: Date.now(),
-        latency_ms: localLatency,
-        repo: repo.full_name
-      };
-      setScan(prev => {
-        if (!prev || !prev.graph) return prev;
-        const otherNodes = prev.graph.nodes.filter(n => !(n.label === 'AgentAction' && (n.decision_id === target.id || n.id === actionId)));
-        const otherEdges = prev.graph.edges.filter(e => !(e.type === 'GROUNDED_IN' && e.target === target.id));
-        return {
-          ...prev,
-          graph: {
-            nodes: [...otherNodes, fallbackNode],
-            edges: [...otherEdges, { source: actionId, target: target.id, type: 'GROUNDED_IN' }]
-          }
-        };
-      });
-
-      if (wantValid) {
-        playApprovalChime();
-        addLog('MCP_GATE', `Agent write to ${targetFile} APPROVED (grounded in ${target.id}: VALID). Verified in ${localLatency}ms.`, 'GATE_APPROVE');
-      } else {
-        playRejectBuzz();
-        addLog('MCP_GATE', `Agent write to ${targetFile} BLOCKED: grounded in ${target.id} whose source was superseded. Verified in ${localLatency}ms.`, 'GATE_BLOCK');
-      }
+      playRejectBuzz();
+      addLog('MCP_GATE', `Gate verification error: ${err.message}. (Authentic verification requires active server connection)`, 'GATE_BLOCK');
     } finally {
       setIsVerifyingAction(false);
     }
@@ -433,11 +401,11 @@ export default function ConnectedRepoWorkspace({
               <div className="grid grid-cols-2 gap-2">
                 <button disabled={isVerifyingAction} onClick={() => testDecision(true)} className={`${btnBase} border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 disabled:opacity-40`}>
                   <CheckCircle2 className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
-                  <span>Valid decision</span>
+                  <span>Probe Valid ADR</span>
                 </button>
                 <button disabled={isVerifyingAction} onClick={() => testDecision(false)} className={`${btnBase} border-rose-500/40 bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-400 disabled:opacity-40`}>
                   <AlertTriangle className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
-                  <span>Stale decision</span>
+                  <span>Probe Stale ADR</span>
                 </button>
               </div>
             </div>

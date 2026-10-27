@@ -20,11 +20,10 @@ export default function NodeInspector({
     node.status === 'INVALIDATED_NEEDS_REVALIDATION' ||
     node.is_stale;
 
-  // Strict Truth-in-Data: differentiate live FalkorDB demo vs GitHub ADR AST
-  const isFalkor = isFalkorDB ?? (
-    node.is_demo === true ||
-    (!node.ref?.includes('docs/adrs') && !node.adr_path && !node.id.startsWith('ADR-') && !node.id.startsWith('F-') && !node.id.startsWith('act-') && node.is_demo !== false)
-  );
+  // Strict Truth-in-Data: differentiate live FalkorDB demo vs GitHub ADR AST without fuzzy guessing
+  const isFalkor = isFalkorDB !== undefined
+    ? Boolean(isFalkorDB)
+    : Boolean(node.is_demo === true || (node.id?.startsWith('act-') && !node.repo));
 
   const filePath = node.target_file || node.adr_path || (node.ref && !node.ref.includes('://') ? node.ref : null);
   const gitUrl = (repo?.full_name && filePath)

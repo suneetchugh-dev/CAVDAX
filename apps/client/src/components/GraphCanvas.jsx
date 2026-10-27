@@ -174,6 +174,15 @@ export default function GraphCanvas({
     }
   }
 
+  // Count non-fixed nodes per column to compute dynamic vertical scaling
+  const layerTotals = { Source: 0, Fact: 0, Decision: 0 };
+  for (const n of filteredRawNodes) {
+    if (!layoutPositions[n.id] && n.label !== 'AgentAction' && !n.id?.startsWith('act-')) {
+      const lbl = n.label || 'Decision';
+      layerTotals[lbl] = (layerTotals[lbl] || 0) + 1;
+    }
+  }
+
   const columnCounters = {};
 
   const nodes = filteredRawNodes.map((node) => {
@@ -184,9 +193,13 @@ export default function GraphCanvas({
         pos = { x: ACTION_X, y: actionStartY + idx * actionSpacing };
       } else {
         const layerX = { Source: 100, Fact: 320, Decision: 540 }[node.label] ?? 540;
+        const totalInCol = layerTotals[node.label] || 1;
         const layerIdx = columnCounters[node.label] ?? 0;
         columnCounters[node.label] = layerIdx + 1;
-        pos = { x: layerX, y: 100 + layerIdx * 100 };
+        // Dynamically scale vertical spacing so nodes never overflow canvas
+        const colSpacing = totalInCol <= 3 ? 120 : Math.max(55, Math.min(100, 360 / Math.max(1, totalInCol - 1)));
+        const colStartY = totalInCol <= 3 ? 120 : 70;
+        pos = { x: layerX, y: colStartY + layerIdx * colSpacing };
       }
     }
     return { ...node, ...pos };
