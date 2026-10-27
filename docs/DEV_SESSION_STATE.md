@@ -9,6 +9,40 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.34 Latest Session Achievements (October 28, 2026 - Console Truth in Data, SSE Multi-User Protection, Layout Scaling & Authentic Gate Verification)
+
+- **Authentic Decision Lookup & Elimination of \`wantValid\` Gate Inversion (\`apps/server/index.js\`)**:
+  - Completely purged client-controlled \`wantValid\` fallback logic from \`POST /api/github/repos/:owner/:repo/verify-action\`.
+  - When \`decisionId\` is supplied, the gate strictly evaluates that decision's actual topological state (\`decisionNode.status === 'VALID'\`). If missing, it immediately fails closed with 404 rather than client-invented decisions.
+  - If omitted, it defaults to the primary detected decision in the repository graph without bias.
+- **Elimination of Fake Fallback Actions in Connected Workspace (\`apps/client/src/components/ConnectedRepoWorkspace.jsx\`)**:
+  - Removed client-side catch block simulation that fabricated fake \`AgentAction\` nodes with \`APPROVED\` or \`BLOCKED_SUPERSEDED_SOURCE\` status when the server was unreachable.
+  - Verification failures now truthfully report server disconnection errors to the terminal without inventing fake node records.
+  - Renamed probe buttons to "Probe Valid ADR" and "Probe Stale ADR" for semantic clarity.
+- **SSE Multi-User Conflict Isolation (\`apps/client/src/App.jsx\`)**:
+  - Added \`currentActRef\` and \`loadingActRef\` guards to the \`GRAPH_UPDATED\` Server-Sent Events listener.
+  - Remote demo resets or ingests triggered by concurrent evaluators now only update idle Act 1 sessions, completely preventing active multi-step walkthroughs from being unexpectedly wiped.
+- **Truthful Storyboard Framing & Offline Simulation Transparency (\`apps/client/src/components/StoryStepper.jsx\`, \`apps/client/src/App.jsx\`)**:
+  - Added a prominent explanatory storyboard strip atop \`StoryStepper\` clarifying that the 4-act demo is a deterministic architectural scenario walkthrough, noting that live autonomous LLM gates run inside Claude Code / Cursor via \`@cavdax/mcp-server\`.
+  - Stripped fake sub-millisecond latencies (\`1.84ms\`, \`2.14ms\`) from client-side offline fallbacks (\`_simulateAct2\`, \`_simulateAct3Block\`, \`_simulateAct4Approve\`).
+  - Terminal logs now explicitly indicate \`[SIMULATION FALLBACK]\` when the backend is offline, clarifying that FalkorDB was not queried.
+- **Dynamic Auto-Scaling Graph Layout (\`apps/client/src/components/GraphCanvas.jsx\`)**:
+  - Replaced rigid \`100 + layerIdx * 100\` vertical positioning with dynamic column-aware vertical scaling.
+  - Repositories with 4–12 ADRs now automatically scale vertical node spacing from 120px down to 55px, comfortably fitting within the canvas without clipping or overflowing.
+- **Deterministic Storage Provenance Classification (\`apps/client/src/components/NodeInspector.jsx\`)**:
+  - Simplified storage provenance logic to strictly check \`Boolean(isFalkorDB)\` without fuzzy string guessing on reference paths, guaranteeing clean separation between live FalkorDB demo nodes and GitHub ADR AST nodes.
+
+- **Purged Vision OCR Human UI Clutter & Folded Tag Overlays (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Removed the jarring, folded white rectangle overlay from graph nodes and completely removed the `Vision OCR` toggle button from the user-facing canvas. Machine-readable OCR remains encapsulated within the automated `export_graph_image` MCP server tool for PR descriptions.
+  - Restored clean, legible monospace node titles (`dy="-3"`) and status badges.
+- **Framer-Motion Monochromatic Sliding Pillbars (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/components/AuditPage.jsx`)**:
+  - Replaced colorful static filter buttons (green/rose) in `GraphCanvas` with a fluid spring-animated monochromatic sliding pillbar (`layoutId="canvasDriftSlidingPill"`) for `All`, `Grounded`, and `Drifted` views.
+  - Replaced colorful verdict tags in `AuditPage` with a matching spring-animated monochromatic sliding pillbar (`layoutId="auditVerdictSlidingPill"`) for `All Verdicts`, `Blocked Only`, and `Approved Only`.
+- **Direct Vector Graph SVG Download (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Replaced target-blank link with a direct file download trigger that fetches the SVG blob and downloads `cavdax-causal-graph-:repo.svg` directly to the user's filesystem without opening an unwanted browser tab.
+- **Monochromatic Combobox Architecture (`apps/client/src/components/Combobox.jsx`)**:
+  - Purged all amber styling from combobox selected item states and checkmarks, enforcing strict adherence to the monochromatic dark/light design system (`bg-slate-100 dark:bg-white/10`, `text-slate-950 dark:text-white`).
+
 ## 1.0.33 Latest Session Achievements (October 28, 2026 - isDemo Runtime Fix, Session Secret Hardening, Sub-ms Gate Timing & CI Quality Gate)
 
 - **Eliminated ReferenceError on Node Clicks (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/App.jsx`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
