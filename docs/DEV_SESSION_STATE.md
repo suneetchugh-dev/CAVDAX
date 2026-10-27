@@ -9,6 +9,44 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.39 Latest Session Achievements (October 28, 2026 - Comprehensive Security Audit Resolution & Multi-Tenant Hardening)
+
+- **Arbitrary File Write / RCE Prevention (`core/mcp/server.js`, `apps/server/index.js`)**:
+  - Sandboxed `CavdaxMcpServer` and the simulation fallback in `apps/server/index.js` strictly to `demo-repo/` (`path.resolve(REPO_ROOT, 'demo-repo')`).
+  - Added upfront canonical path traversal checks before database query execution or filesystem access, rejecting any attempt to break out with `BLOCKED_PATH_TRAVERSAL` (403 Forbidden).
+  - Guarantees server code (`apps/server/index.js`, `core/`, `package.json`, etc.) can never be modified or overwritten via `/api/mcp/call`.
+- **Tenant Isolation on Public Endpoints (`core/graph/queries.js`, `apps/server/index.js`)**:
+  - Updated `fetchGraphState` and `fetchAuditLog` with explicit `{ repo = null }` filtering.
+  - Unauthenticated public viewers on `/api/graph` and `/api/audit` strictly receive canonical demo data (`coalesce(repo, 'demo') = 'demo'`).
+  - Customer repositories connected via GitHub OAuth (`owner/repo`) are isolated to authenticated sessions and can never leak into public visualizers.
+- **Dynamic Truthful Benchmark Harness (`benchmark/evaluate.js`, Section 37 Compliance)**:
+  - Refactored `evaluate.js` into an authentic, executable benchmark suite that calculates lexical similarity scoring for Vector RAG simulation vs causal DAG traversal for CAVDAX in real time.
+  - Replaced hardcoded strings (`10/10 silent hallucinations`, `~450ms`) with dynamic summary metrics and nanosecond-measured traversal times (`process.hrtime.bigint()`).
+- **Real Execution Latency & Zero Fake Constants (`apps/server/index.js`)**:
+  - Completely purged fake `|| 0.42` fallback in `verify-action`.
+  - Measures pure high-resolution execution time (`Math.max(0.01, ...)`), accurately capturing sub-millisecond nanosecond evaluation and live FalkorDB Cypher execution times.
+- **Persistent Production State Across Deploys (`infra/docker-compose.prod.yml`)**:
+  - Replaced `server-sessions:/app/apps/server/data/sessions` with `server-data:/app/apps/server/data`.
+  - Ensures both user sessions AND `system_state.json` (API keys, dev roster, whitelisted IPs, hackathon mode, and audit records) survive container recreation.
+- **Archive & Secret Exclusion (`.gitignore`)**:
+  - Added `.env*`, `*.zip`, `*.tar.gz`, `*.tgz`, and `*.bak` to `.gitignore` while explicitly preserving `.env.example`.
+  - Verified with `git check-ignore .env.zip` (properly ignored).
+- **Webhook Raw Buffer HMAC Verification (`apps/server/index.js`)**:
+  - Configured `express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } })` to preserve the unaltered raw body buffer.
+  - Updated `POST /api/billing/webhook` to verify `X-Razorpay-Signature` against `req.rawBody`, preventing `TypeError: The "data" argument must be of type string or an instance of Buffer`.
+- **Strict Server-Side Tier Pricing Enforcement (`apps/server/index.js`)**:
+  - Defined canonical pricing table `CANONICAL_TIER_PRICES_PAISE` (`pro: 33900`, `enterprise: 990000`).
+  - Enforced in `POST /api/billing/create-order` so clients cannot submit arbitrary low amounts (e.g. ₹1) to gain paid subscription tiers.
+- **Public SSE Source Code Redaction (`apps/server/index.js`)**:
+  - Added centralized payload sanitization in `broadcastEvent` to redact `code_payload` (`[REDACTED: N chars]`) from public unauthenticated SSE `/api/events` streams.
+- **Simulation Gate Fail-Closed & Edge Deduplication (`apps/server/index.js`, `apps/client/src/App.jsx`)**:
+  - Fixed simulation mode to fail closed (`BLOCKED_NO_GROUNDING`) on unrecognized decision IDs instead of approving unknown actions.
+  - Deduplicated `SUPERSEDES` edges and `AgentAction` nodes in simulation state.
+  - Truthfully updated client terminal logs to indicate `[SIMULATION FALLBACK]` whenever `data.simulated` is true.
+- **Automated Security Test Suite (`apps/server/test/securityAuditHarden.test.mjs`)**:
+  - Added unit test suite covering path confinement, tenant graph isolation, and tenant audit log filtering.
+  - All 45/45 backend tests passing cleanly.
+
 ## 1.0.38 Latest Session Achievements (October 28, 2026 - Comprehensive Architecture Flowcharts, Mermaid Diagrams & Documentation Refresh)
 
 - **Production Interface Showcase Refinement (`README.md`)**:
