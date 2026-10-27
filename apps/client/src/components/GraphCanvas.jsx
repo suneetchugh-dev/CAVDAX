@@ -64,7 +64,9 @@ export default function GraphCanvas({
   branch = 'main',
   unsyncedList = [],
   onOpenSyncPr,
-  isDemo = false
+  isDemo = false,
+  onTestDecision,
+  isVerifyingAction = false
 }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -768,6 +770,23 @@ export default function GraphCanvas({
                 </text>
 
                 {/* Status Subtitle Badge */}
+                {/* Luminous Pulse Feedback Ring on fresh execution */}
+                {node.last_probed_at && (Date.now() - node.last_probed_at < 2500) && (
+                  <rect
+                    x="-38"
+                    y="-28"
+                    width="76"
+                    height="56"
+                    rx="12"
+                    ry="12"
+                    fill="none"
+                    stroke={colors.stroke}
+                    strokeWidth="2.5"
+                    className="animate-pulse"
+                    style={{ filter: `drop-shadow(0 0 10px ${colors.glow})` }}
+                  />
+                )}
+
                 <text
                   textAnchor="middle"
                   dy="11"
@@ -777,7 +796,7 @@ export default function GraphCanvas({
                   fontWeight="bold"
                   className="select-none pointer-events-none"
                 >
-                  {colors.badge}
+                  {colors.badge}{node.probe_count && node.probe_count > 1 ? ` (${node.probe_count}x)` : ''}
                 </text>
 
                 {/* Node Type Label */}
@@ -831,6 +850,8 @@ export default function GraphCanvas({
           isSimulating={simulatedBlastNode?.id === selectedNode.id}
           onOpenSyncPr={onOpenSyncPr}
           hasDrift={Boolean(unsyncedList?.some(u => u.targetId === selectedNode.id))}
+          onTestDecision={onTestDecision}
+          isVerifyingAction={isVerifyingAction}
         />
       )}
     </div>
