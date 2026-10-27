@@ -9,6 +9,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.35 Latest Session Achievements (October 28, 2026 - Decision-Aware Probe Architecture, Node Inspector Gate Trigger & Luminous Execution Counter)
+
+- **Decision-Aware Probe Architecture (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Replaced generic and misleading static "Valid Decision" / "Stale Decision" buttons with repository-aware decision detection.
+  - Dynamically evaluates valid vs stale decisions in the connected repository graph (e.g., `acme-checkout`).
+  - Active valid decisions surface explicit verification buttons (e.g. `Verify: DEC-201 (Valid)`).
+  - When no stale decisions exist in the repository, the button is cleanly disabled with a calm status indicator: `0 Stale Decisions (All decisions currently valid. Commit an ADR superseding DEC-201 to observe gate blocking)`.
+- **Node Inspector Gate Verification Integration (`apps/client/src/components/NodeInspector.jsx`, `apps/client/src/components/GraphCanvas.jsx`)**:
+  - Enabled direct intent verification from the visual canvas: Clicking any `:Decision` node (such as `DEC-201`) displays a primary action in `NodeInspector`: `Verify Agent Write on DEC-201`.
+  - Seamlessly bridges visual graph exploration with real-time causal gate execution.
+- **Visual Activity Feedback & Execution Multiplier Counter (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Solved the visual deduplication confusion where repeated clicks added log entries but canvas nodes appeared static.
+  - Added a persistent execution multiplier counter (`probe_count`) displayed directly in the `AgentAction` node badge (e.g. `APPROVED (3x)` / `BLOCKED (2x)`).
+  - Implemented an animated luminous tactile feedback pulse ring on the `AgentAction` node on every verification run, providing immediate visual confirmation that the action fired.
+
 ## 1.0.34 Latest Session Achievements (October 28, 2026 - Console Truth in Data, SSE Multi-User Protection, Layout Scaling & Authentic Gate Verification)
 
 - **Authentic Decision Lookup & Elimination of \`wantValid\` Gate Inversion (\`apps/server/index.js\`)**:
