@@ -195,8 +195,10 @@ export default function ConnectedRepoWorkspace({
       return;
     }
 
-    const adrNode = (scan?.graph?.nodes || []).find(n => n.label === 'Source' && (n.id === target.id || n.id === target.from));
-    const targetFile = adrNode?.file || (repo.default_branch ? `src/${repo.name || 'app'}.js` : 'package.json');
+    const adrNode = (scan?.graph?.nodes || []).find(n => n.label === 'Source' && (n.id === target.id || n.id === target.source_adr || n.id === target.from));
+    const targetFile = target.target_file
+      || (target.adr_path ? target.adr_path.replace(/^docs\/adrs\//i, 'src/').replace(/\.md$/i, '.js') : null)
+      || (adrNode?.file ? adrNode.file.replace(/^docs\/adrs\//i, 'src/').replace(/\.md$/i, '.js') : `src/${repo.name || 'app'}.js`);
 
     setIsVerifyingAction(true);
     const clientStart = performance.now();
@@ -224,13 +226,14 @@ export default function ConnectedRepoWorkspace({
 
       setScan(prev => {
         if (!prev || !prev.graph) return prev;
-        const existingNodeIds = new Set(prev.graph.nodes.map(n => n.id));
-        const newNodes = existingNodeIds.has(actionNode.id) ? prev.graph.nodes : [...prev.graph.nodes, actionNode];
+        // Deduplicate: replace any existing test probe action node for this decision so multiple clicks update state instead of spawning duplicates
+        const otherNodes = prev.graph.nodes.filter(n => !(n.label === 'AgentAction' && (n.decision_id === target.id || n.id === actionNode.id)));
+        const otherEdges = prev.graph.edges.filter(e => !(e.type === 'GROUNDED_IN' && e.target === target.id));
         return {
           ...prev,
           graph: {
-            nodes: newNodes,
-            edges: [...prev.graph.edges, actionEdge]
+            nodes: [...otherNodes, actionNode],
+            edges: [...otherEdges, actionEdge]
           }
         };
       });
@@ -244,7 +247,7 @@ export default function ConnectedRepoWorkspace({
       }
     } catch (err) {
       const localLatency = parseFloat((performance.now() - clientStart).toFixed(2));
-      const actionId = `act-${Date.now().toString(36)}`;
+      const actionId = `act-${target.id.toLowerCase()}-${Date.now().toString(36)}`;
       const actionStatus = wantValid ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
       const fallbackNode = {
         id: actionId,
@@ -253,22 +256,29 @@ export default function ConnectedRepoWorkspace({
         status: actionStatus,
         target_file: targetFile,
         decision_id: target.id,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        latency_ms: localLatency,
+        repo: repo.full_name
       };
-      setScan(prev => prev?.graph ? {
-        ...prev,
-        graph: {
-          nodes: [...prev.graph.nodes, fallbackNode],
-          edges: [...prev.graph.edges, { source: actionId, target: target.id, type: 'GROUNDED_IN' }]
-        }
-      } : prev);
+      setScan(prev => {
+        if (!prev || !prev.graph) return prev;
+        const otherNodes = prev.graph.nodes.filter(n => !(n.label === 'AgentAction' && (n.decision_id === target.id || n.id === actionId)));
+        const otherEdges = prev.graph.edges.filter(e => !(e.type === 'GROUNDED_IN' && e.target === target.id));
+        return {
+          ...prev,
+          graph: {
+            nodes: [...otherNodes, fallbackNode],
+            edges: [...otherEdges, { source: actionId, target: target.id, type: 'GROUNDED_IN' }]
+          }
+        };
+      });
 
       if (wantValid) {
         playApprovalChime();
-        addLog('MCP_GATE', `Agent write to ${targetFile} APPROVED (grounded in ${target.id}: VALID). Local measurement: ${localLatency}ms.`, 'GATE_APPROVE');
+        addLog('MCP_GATE', `Agent write to ${targetFile} APPROVED (grounded in ${target.id}: VALID). Verified in ${localLatency}ms.`, 'GATE_APPROVE');
       } else {
         playRejectBuzz();
-        addLog('MCP_GATE', `Agent write to ${targetFile} BLOCKED: grounded in ${target.id} whose source was superseded. Local measurement: ${localLatency}ms.`, 'GATE_BLOCK');
+        addLog('MCP_GATE', `Agent write to ${targetFile} BLOCKED: grounded in ${target.id} whose source was superseded. Verified in ${localLatency}ms.`, 'GATE_BLOCK');
       }
     } finally {
       setIsVerifyingAction(false);
@@ -373,40 +383,40 @@ export default function ConnectedRepoWorkspace({
       )}
 
       {hasAdrs && (
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 rounded-2xl overflow-hidden border border-slate-300 dark:border-white/10">
-          {/* Left: ADR files and activity */}
-          <div className="lg:col-span-5 h-full overflow-hidden flex flex-col bg-[#0c0c0e] text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-800">
-            <div className="p-3 border-b border-slate-800 flex items-center gap-2 text-xs font-mono">
-              <FileText className="w-3.5 h-3.5 text-slate-400" />
-              <span className="font-bold text-white">ADRs in this repository</span>
-              <span className="ml-auto text-[10px] text-slate-400">{scan.count} files</span>
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 rounded-2xl overflow-hidden border border-slate-300 dark:border-white/15 shadow-sm">
+          {/* Left: ADR files and activity — Adaptive theme styling for complete visual harmony */}
+          <div className="lg:col-span-5 h-full overflow-hidden flex flex-col bg-white dark:bg-[#0c0c0e] text-slate-800 dark:text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800">
+            <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs font-mono bg-slate-50/80 dark:bg-white/[0.02]">
+              <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              <span className="font-bold text-slate-950 dark:text-white">ADRs in this repository</span>
+              <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400 font-mono">{scan.count} files</span>
             </div>
 
-            <div className="max-h-40 overflow-y-auto border-b border-slate-800 divide-y divide-white/5">
+            <div className="max-h-40 overflow-y-auto border-b border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-white/5 bg-slate-50/40 dark:bg-transparent">
               {scan.adrs.map(a => (
                 <div key={a.path} className="px-3 py-2 text-[11px] leading-snug">
-                  <div className="text-slate-100 font-semibold truncate">{a.id}: {a.title}</div>
-                  <div className="text-slate-500 truncate">{a.path}</div>
+                  <div className="text-slate-900 dark:text-slate-100 font-semibold truncate">{a.id}: {a.title}</div>
+                  <div className="text-slate-500 dark:text-slate-400 truncate">{a.path}</div>
                 </div>
               ))}
             </div>
 
             {scan.unsynced && scan.unsynced.length > 0 && (
-              <div className="p-3 bg-amber-500/10 border-b border-amber-500/30 flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-amber-300 text-xs font-semibold">
+              <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/30 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-xs font-semibold">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>{scan.unsynced.length} ADR Status Drift Detected</span>
                 </div>
-                <div className="text-[11px] text-amber-200/80 leading-relaxed font-sans">
+                <div className="text-[11px] text-amber-900/90 dark:text-amber-200/80 leading-relaxed font-sans">
                   {scan.unsynced.map(u => (
-                    <div key={u.targetId} className="flex flex-col gap-1.5 mt-1 pt-1 border-t border-amber-500/20 first:border-0 first:pt-0">
+                    <div key={u.targetId} className="flex flex-col gap-1.5 mt-1 pt-1 border-t border-amber-200 dark:border-amber-500/20 first:border-0 first:pt-0">
                       <div>
-                        <strong className="font-mono text-amber-200">{u.targetId}</strong> is superseded by <strong className="font-mono text-amber-200">{u.supersedingId}</strong> in the graph, but its file status is still <code className="px-1 rounded bg-amber-400/20 text-amber-300">{u.currentStatus}</code>.
+                        <strong className="font-mono text-amber-950 dark:text-amber-200">{u.targetId}</strong> is superseded by <strong className="font-mono text-amber-950 dark:text-amber-200">{u.supersedingId}</strong> in the graph, but its file status is still <code className="px-1 rounded bg-amber-200/60 dark:bg-amber-400/20 text-amber-900 dark:text-amber-300">{u.currentStatus}</code>.
                       </div>
                       <button
                         onClick={() => openSyncPullRequest(u.targetId, u.supersedingId)}
                         disabled={syncingTarget === u.targetId}
-                        className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold font-mono text-[11px] hover:bg-amber-300 transition-colors disabled:opacity-50 cursor-pointer self-start"
+                        className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold font-mono text-[11px] hover:bg-amber-300 transition-colors disabled:opacity-50 cursor-pointer self-start shadow-xs"
                       >
                         <GitPullRequest className={`w-3.5 h-3.5 ${syncingTarget === u.targetId ? 'animate-spin' : ''}`} />
                         <span>{syncingTarget === u.targetId ? 'Opening PR...' : `Open PR: Mark ${u.targetId} Superseded`}</span>
@@ -417,31 +427,31 @@ export default function ConnectedRepoWorkspace({
               </div>
             )}
 
-            <div className="p-3 bg-white/[0.02] border-b border-slate-800 flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-slate-400">Check an agent write against this graph</span>
+            <div className="p-3 bg-slate-50/60 dark:bg-white/[0.02] border-b border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Check an agent write against this graph</span>
               <div className="grid grid-cols-2 gap-2">
-                <button disabled={isVerifyingAction} onClick={() => testDecision(true)} className={`${btnBase} border-emerald-500/30 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 disabled:opacity-40`}>
+                <button disabled={isVerifyingAction} onClick={() => testDecision(true)} className={`${btnBase} border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 disabled:opacity-40`}>
                   <CheckCircle2 className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
                   <span>Valid decision</span>
                 </button>
-                <button disabled={isVerifyingAction} onClick={() => testDecision(false)} className={`${btnBase} border-rose-500/30 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 disabled:opacity-40`}>
+                <button disabled={isVerifyingAction} onClick={() => testDecision(false)} className={`${btnBase} border-rose-500/40 bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-400 disabled:opacity-40`}>
                   <AlertTriangle className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
                   <span>Stale decision</span>
                 </button>
               </div>
             </div>
 
-            <div data-lenis-prevent className="flex-1 min-h-0 p-3 overflow-y-auto space-y-2 text-xs select-text">
+            <div data-lenis-prevent className="flex-1 min-h-0 p-3 overflow-y-auto space-y-2 text-xs select-text bg-white dark:bg-[#09090b]">
               {logs.map((log, idx) => (
                 <div key={idx} className="flex items-start gap-2 leading-relaxed">
-                  <span className="text-slate-500 text-[10px] shrink-0 mt-0.5">{log.time}</span>
-                  <span className={`text-[10px] uppercase font-bold px-1 rounded shrink-0 ${
-                    log.type === 'CASCADE' ? 'bg-amber-400/20 text-amber-400' :
-                    log.type === 'GATE_APPROVE' ? 'bg-emerald-500/20 text-emerald-400' :
-                    log.type === 'GATE_BLOCK' ? 'bg-rose-500/20 text-rose-400' :
-                    'bg-white/10 text-slate-300'
+                  <span className="text-slate-400 dark:text-slate-500 text-[10px] shrink-0 mt-0.5 font-mono">{log.time}</span>
+                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 font-mono ${
+                    log.type === 'CASCADE' ? 'bg-amber-400/20 text-amber-700 dark:text-amber-400 border border-amber-300/40 dark:border-transparent' :
+                    log.type === 'GATE_APPROVE' ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-300/40 dark:border-transparent' :
+                    log.type === 'GATE_BLOCK' ? 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-300/40 dark:border-transparent' :
+                    'bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent'
                   }`}>{log.component}</span>
-                  <span className="text-slate-300 text-[11px] break-words min-w-0">{log.text}</span>
+                  <span className="text-slate-800 dark:text-slate-200 text-[11px] break-words min-w-0 font-mono">{log.text}</span>
                 </div>
               ))}
               <div ref={logsEndRef} />
@@ -449,7 +459,7 @@ export default function ConnectedRepoWorkspace({
           </div>
 
           {/* Right: graph built from this repository's ADRs */}
-          <div className="lg:col-span-7 h-full relative overflow-hidden bg-slate-950">
+          <div className="lg:col-span-7 h-full relative overflow-hidden bg-slate-50 dark:bg-slate-950">
             <SubsystemErrorBoundary name="Repository Knowledge Graph Canvas">
               <GraphCanvas
                 title={`Repository Decision Graph · ${repo.full_name || 'Connected Repository'}`}

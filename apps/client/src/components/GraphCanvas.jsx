@@ -304,13 +304,13 @@ export default function GraphCanvas({
       className={`h-full flex flex-col bg-slate-50 dark:bg-[#060709] relative overflow-hidden select-none${isFullscreen && isDarkTheme ? ' dark' : ''}`}
     >
       {/* Canvas Top Bar */}
-      <div className="h-10 px-4 bg-slate-100 dark:bg-[#08090A] border-b border-slate-300 dark:border-white/10 flex items-center justify-between text-xs text-slate-800 dark:text-slate-300">
-        <div className="flex items-center gap-2">
-          <Database className="w-3.5 h-3.5 text-slate-900 dark:text-white" />
-          <span className="font-mono font-semibold text-slate-900 dark:text-white">
+      <div className="h-10 px-4 bg-slate-100 dark:bg-[#08090A] border-b border-slate-300 dark:border-white/15 flex items-center justify-between text-xs text-slate-800 dark:text-slate-300">
+        <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+          <Database className="w-3.5 h-3.5 text-slate-900 dark:text-white shrink-0" />
+          <span className="font-mono font-semibold text-slate-900 dark:text-white truncate" title={title}>
             {title}
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-400 font-mono">
+          <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-white/5 border border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-400 font-mono shrink-0">
             {nodes.length} Nodes • {edges.length} Edges
           </span>
         </div>
@@ -569,7 +569,7 @@ export default function GraphCanvas({
         </svg>
 
         {/* Clean Monospace Legend */}
-        <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-[#0B0D11]/90 border border-slate-300 dark:border-white/10 rounded-lg p-3 text-[10px] font-mono space-y-1.5 backdrop-blur-md shadow-md dark:shadow-xl pointer-events-none">
+        <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-[#0B0D11]/90 border border-slate-300 dark:border-white/15 rounded-lg p-3 text-[10px] font-mono space-y-1.5 backdrop-blur-md shadow-md dark:shadow-xl pointer-events-none">
           <div className="text-slate-900 dark:text-white font-bold mb-1">GRAPH TOPOLOGY:</div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded bg-slate-900 dark:bg-white" />
@@ -595,6 +595,8 @@ export default function GraphCanvas({
         <NodeInspector
           node={selectedNode}
           onClose={onCloseNode}
+          isDarkTheme={isDarkTheme}
+          isFalkorDB={isDemo || (title && title.includes('FalkorDB'))}
         />
       )}
     </div>
