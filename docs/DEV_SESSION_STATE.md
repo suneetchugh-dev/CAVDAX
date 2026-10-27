@@ -18,6 +18,20 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.28 Latest Session Achievements (October 27, 2026 - Zero-Mock Compliance, Real Action Latency & Audit Repository Isolation - PR #72, #73 & #74)
+
+- **Elimination of Synthetic Latencies & Real Measured Verification (`POST /api/github/repos/:owner/:repo/verify-action`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Replaced hardcoded strings (`1.14ms` / `0.94ms`) with genuine high-resolution timer measurements (`process.hrtime.bigint()`) on the backend.
+  - Replaced fabricated target file names with authentic repository file paths derived from scanned ADR AST sources.
+  - Mounted `POST /api/github/repos/:owner/:repo/verify-action` to evaluate decisions against the repository graph, create real `AgentAction` records, and stream results back with real measured latency.
+- **Audit Tab True Repository Scope Filtering & Provenance Badges (`apps/client/src/components/AuditPage.jsx`, `core/graph/queries.js`, `apps/server/index.js`)**:
+  - Fixed repository filtering in the Audit tab: `fetchAuditLog` and fallback endpoints now explicitly return `repo: row.repo || 'demo'`.
+  - Selecting `Demo Repository` strictly displays demo actions (`DEC-101`, `DEC-102`, `DEC-103`), while selecting a connected user repository displays actions specific to that repository.
+  - Added repository provenance badges to every row in the Audit ledger table.
+- **Persistent Connected Repo Action DAG Across Rescans (`apps/server/index.js`, `apps/server/systemState.js`)**:
+  - Persisted actions from connected repositories into `apps/server/data/system_state.json` and FalkorDB.
+  - `GET /api/github/repos/:owner/:repo/adrs` re-injects previously recorded actions and `GROUNDED_IN` edges into the graph upon rescanning, preventing actions from vanishing when the repository is refreshed.
+
 ## 1.0.27 Latest Session Achievements (October 27, 2026 - Dark Theme Contrast, Popular Card Kinetic Motion & Server-Client Full State Persistence - PR #69, #70 & #71)
 
 - **Dark Theme Border Contrast & Low-Brightness Legibility (`apps/client/src/components/ProfilePage.jsx`, `apps/client/src/components/SupportPage.jsx`)**:
