@@ -32,6 +32,17 @@
 - **Deterministic Storage Provenance Classification (\`apps/client/src/components/NodeInspector.jsx\`)**:
   - Simplified storage provenance logic to strictly check \`Boolean(isFalkorDB)\` without fuzzy string guessing on reference paths, guaranteeing clean separation between live FalkorDB demo nodes and GitHub ADR AST nodes.
 
+- **Purged Vision OCR Human UI Clutter & Folded Tag Overlays (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Removed the jarring, folded white rectangle overlay from graph nodes and completely removed the `Vision OCR` toggle button from the user-facing canvas. Machine-readable OCR remains encapsulated within the automated `export_graph_image` MCP server tool for PR descriptions.
+  - Restored clean, legible monospace node titles (`dy="-3"`) and status badges.
+- **Framer-Motion Monochromatic Sliding Pillbars (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/components/AuditPage.jsx`)**:
+  - Replaced colorful static filter buttons (green/rose) in `GraphCanvas` with a fluid spring-animated monochromatic sliding pillbar (`layoutId="canvasDriftSlidingPill"`) for `All`, `Grounded`, and `Drifted` views.
+  - Replaced colorful verdict tags in `AuditPage` with a matching spring-animated monochromatic sliding pillbar (`layoutId="auditVerdictSlidingPill"`) for `All Verdicts`, `Blocked Only`, and `Approved Only`.
+- **Direct Vector Graph SVG Download (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Replaced target-blank link with a direct file download trigger that fetches the SVG blob and downloads `cavdax-causal-graph-:repo.svg` directly to the user's filesystem without opening an unwanted browser tab.
+- **Monochromatic Combobox Architecture (`apps/client/src/components/Combobox.jsx`)**:
+  - Purged all amber styling from combobox selected item states and checkmarks, enforcing strict adherence to the monochromatic dark/light design system (`bg-slate-100 dark:bg-white/10`, `text-slate-950 dark:text-white`).
+
 ## 1.0.33 Latest Session Achievements (October 28, 2026 - isDemo Runtime Fix, Session Secret Hardening, Sub-ms Gate Timing & CI Quality Gate)
 
 - **Eliminated ReferenceError on Node Clicks (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/App.jsx`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
