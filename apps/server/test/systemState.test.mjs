@@ -16,6 +16,7 @@ test('systemState: loadSystemState returns clean defaults on initial call', () =
   assert.ok(Array.isArray(state.whitelistedIps));
   assert.ok(Array.isArray(state.devRoster));
   assert.ok(Array.isArray(state.apiKeys));
+  assert.ok(Array.isArray(state.auditEntries));
 });
 
 test('systemState: saveSystemState atomically persists state to disk and reloads accurately', () => {
@@ -25,6 +26,9 @@ test('systemState: saveSystemState atomically persists state to disk and reloads
     devRoster: ['test-architect', 'evaluator-judge'],
     apiKeys: [
       { keyHash: 'hash_abc123', userId: '12345', login: 'test-architect', tier: 'enterprise' }
+    ],
+    auditEntries: [
+      { action_id: 'act-001', repo: 'test/repo', status: 'APPROVED', target_file: 'src/app.js', executed_at: Date.now() }
     ]
   };
 
@@ -38,6 +42,8 @@ test('systemState: saveSystemState atomically persists state to disk and reloads
   assert.deepEqual(loaded.devRoster, ['test-architect', 'evaluator-judge']);
   assert.equal(loaded.apiKeys.length, 1);
   assert.equal(loaded.apiKeys[0].login, 'test-architect');
+  assert.equal(loaded.auditEntries.length, 1);
+  assert.equal(loaded.auditEntries[0].repo, 'test/repo');
 
   // Clean up test file so it does not pollute git index or runtime
   try {

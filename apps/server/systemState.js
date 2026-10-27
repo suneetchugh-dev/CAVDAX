@@ -32,7 +32,8 @@ export function loadSystemState() {
         hackathonMode: typeof parsed.hackathonMode === 'boolean' ? parsed.hackathonMode : (process.env.HACKATHON_MODE === 'true'),
         whitelistedIps: Array.isArray(parsed.whitelistedIps) ? parsed.whitelistedIps : [],
         devRoster: Array.isArray(parsed.devRoster) ? parsed.devRoster : [],
-        apiKeys: Array.isArray(parsed.apiKeys) ? parsed.apiKeys : []
+        apiKeys: Array.isArray(parsed.apiKeys) ? parsed.apiKeys : [],
+        auditEntries: Array.isArray(parsed.auditEntries) ? parsed.auditEntries : []
       };
     }
   } catch (err) {
@@ -42,7 +43,8 @@ export function loadSystemState() {
     hackathonMode: process.env.HACKATHON_MODE === 'true',
     whitelistedIps: [],
     devRoster: [],
-    apiKeys: []
+    apiKeys: [],
+    auditEntries: []
   };
 }
 
@@ -58,6 +60,7 @@ export function saveSystemState(state) {
       whitelistedIps: Array.isArray(state.whitelistedIps) ? state.whitelistedIps : [],
       devRoster: Array.isArray(state.devRoster) ? state.devRoster : [],
       apiKeys: Array.isArray(state.apiKeys) ? state.apiKeys : [],
+      auditEntries: Array.isArray(state.auditEntries) ? state.auditEntries.slice(0, 500) : [],
       updatedAt: new Date().toISOString()
     }, null, 2);
 
