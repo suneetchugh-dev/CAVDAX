@@ -244,7 +244,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
         </span>
 
         {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
-        <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-[10px] font-mono">
+        <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/15 text-[10px] font-mono">
           <button
             type="button"
             onClick={() => toggleCurrency('USD')}
@@ -280,8 +280,8 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
               key={tier.id}
               className={`p-6 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative
                 ${tier.popular
-                  ? 'border-amber-400 dark:border-amber-400/90 ring-1 ring-amber-400/20 bg-slate-50 dark:bg-white/[0.03] xl:scale-[1.035] xl:-translate-y-2.5 shadow-[0_12px_32px_rgba(245,158,11,0.18)] dark:shadow-[0_0_28px_rgba(245,158,11,0.14)] z-10'
-                  : 'border-slate-200/80 dark:border-white/10 bg-transparent hover:border-slate-300 dark:hover:border-white/20'
+                  ? 'border-amber-400 dark:border-amber-400/90 ring-1 ring-amber-400/20 bg-slate-50 dark:bg-white/[0.03] md:scale-[1.02] md:-translate-y-2 md:hover:-translate-y-3.5 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 shadow-[0_12px_32px_rgba(245,158,11,0.18)] hover:shadow-[0_20px_48px_rgba(245,158,11,0.26)] dark:shadow-[0_0_28px_rgba(245,158,11,0.14)] dark:hover:shadow-[0_0_46px_rgba(245,158,11,0.24)] z-10'
+                  : 'border-slate-200/80 dark:border-white/15 bg-transparent hover:border-slate-300 dark:hover:border-white/25'
                 }`}
             >
               {tier.popular && (
@@ -372,7 +372,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
       </section>
 
       {/* ── 3. Capital allocation ── */}
-      <section className="mb-8 p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02]">
+      <section className="mb-8 p-5 rounded-2xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02]">
         <div className="flex items-center gap-2 mb-3">
           <HandHeart className="w-3.5 h-3.5 text-rose-500 shrink-0" />
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
@@ -392,7 +392,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
             { dot: 'bg-indigo-500/70 dark:bg-indigo-400/70',   label: 'Benchmark Nodes',   pct: '35%', note: 'FalkorDB cloud clusters'   },
             { dot: 'bg-slate-400 dark:bg-slate-500',           label: 'Automated CI',       pct: '25%', note: 'Regression & fuzzing'      },
           ].map((row) => (
-            <div key={row.label} className="p-2.5 rounded-xl border border-slate-200/70 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.02] flex sm:flex-col gap-2 sm:gap-1 items-center sm:items-start justify-between">
+            <div key={row.label} className="p-2.5 rounded-xl border border-slate-200/70 dark:border-white/10 bg-slate-100/60 dark:bg-white/[0.02] flex sm:flex-col gap-2 sm:gap-1 items-center sm:items-start justify-between">
               <div className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full shrink-0 ${row.dot}`} />
                 <span className="text-[11px] text-slate-600 dark:text-slate-400">{row.label}</span>

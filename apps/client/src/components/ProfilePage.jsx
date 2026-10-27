@@ -559,7 +559,7 @@ export default function ProfilePage({
               </div>
   
               {/* Micro Tier Badge Floating Over Bottom-Right of Avatar (Authentic Tier SVGs) */}
-              <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm border border-slate-200/80 dark:border-white/10">
+              <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm border border-slate-200/80 dark:border-white/15">
                 <div className="w-5 h-5 rounded-full flex items-center justify-center">
                   {currentTier === 'enterprise' ? (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-purple-500 dark:text-purple-400 shrink-0 transform -rotate-45" aria-hidden="true">
@@ -625,7 +625,7 @@ export default function ProfilePage({
               className={`relative overflow-hidden group h-9 min-w-[140px] px-5 flex items-center justify-center gap-2 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
                 isSponsorHovered
                   ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
-                  : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-rose-400'
+                  : 'bg-slate-100 dark:bg-white/5 border-slate-300/80 dark:border-white/20 text-slate-700 dark:text-slate-300 hover:border-rose-400 dark:hover:border-rose-400'
               }`}
               title="Support the CAVDAX open-source project"
             >
@@ -734,7 +734,7 @@ export default function ProfilePage({
                 className={`relative overflow-hidden group h-9 min-w-[150px] px-5 rounded-lg border text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
                   isGithubHovered
                     ? 'border-slate-950 dark:border-white text-white dark:text-slate-950 shadow-slate-950/20 dark:shadow-white/20'
-                    : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40'
+                    : 'bg-slate-100 dark:bg-white/5 border-slate-300/80 dark:border-white/20 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40'
                 }`}
                 title="Connect with GitHub OAuth"
               >
@@ -790,7 +790,7 @@ export default function ProfilePage({
             </span>
   
             {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
-            <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-[10px] font-mono">
+            <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/15 text-[10px] font-mono">
               <button
                 type="button"
                 onClick={() => toggleCurrency('USD')}
@@ -820,8 +820,8 @@ export default function ProfilePage({
             {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
             <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
               currentTier === 'free'
-                ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10'
-                : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30'
+                ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/15'
+                : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-slate-400 dark:hover:border-white/30'
             }`}>
               <div className="mb-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
@@ -1059,7 +1059,7 @@ export default function ProfilePage({
             <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
               currentTier === 'enterprise'
                 ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
-                : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-purple-400/40'
+                : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-purple-400/40'
             }`}>
               <div className="mb-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
@@ -1192,7 +1192,7 @@ export default function ProfilePage({
         {/* ── 3. Real-Time Metrics & API Credentials ── */}
         <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
           {/* Plan Quota & Consumption */}
-          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1240,7 +1240,7 @@ export default function ProfilePage({
           </div>
   
           {/* API Credentials */}
-          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1381,7 +1381,7 @@ export default function ProfilePage({
             </div>
 
             {/* Micro Tier Badge Floating Over Bottom-Right of Avatar (Authentic Tier SVGs) */}
-            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm border border-slate-200/80 dark:border-white/10">
+            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-1 shadow-sm border border-slate-200/80 dark:border-white/15">
               <div className="w-5 h-5 rounded-full flex items-center justify-center">
                 {currentTier === 'enterprise' ? (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-purple-500 dark:text-purple-400 shrink-0 transform -rotate-45" aria-hidden="true">
@@ -1447,7 +1447,7 @@ export default function ProfilePage({
             className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[125px] sm:min-w-[135px] px-3.5 sm:px-4 flex items-center justify-center gap-2 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none ${
               isSponsorHovered
                 ? 'border-rose-500 dark:border-rose-400 text-white shadow-rose-500/20'
-                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-rose-400'
+                : 'bg-slate-100 dark:bg-white/5 border-slate-300/80 dark:border-white/20 text-slate-700 dark:text-slate-300 hover:border-rose-400 dark:hover:border-rose-400'
             }`}
             title="Support the CAVDAX open-source project"
           >
@@ -1556,7 +1556,7 @@ export default function ProfilePage({
               className={`relative overflow-hidden group h-8 sm:h-8.5 min-w-[135px] sm:min-w-[145px] px-3.5 sm:px-4 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold transition-all duration-500 cursor-pointer tactile-btn shadow-xs select-none flex items-center justify-center gap-2 ${
                 isGithubHovered
                   ? 'border-slate-950 dark:border-white text-white dark:text-slate-950 shadow-slate-950/20 dark:shadow-white/20'
-                  : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40'
+                  : 'bg-slate-100 dark:bg-white/5 border-slate-300/80 dark:border-white/20 text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-white/40'
               }`}
               title="Connect with GitHub OAuth"
             >
@@ -1612,7 +1612,7 @@ export default function ProfilePage({
           </span>
 
           {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
-          <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-[10px] font-mono">
+          <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/15 text-[10px] font-mono">
             <button
               type="button"
               onClick={() => toggleCurrency('USD')}
@@ -1881,7 +1881,7 @@ export default function ProfilePage({
           <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
             currentTier === 'enterprise'
               ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
-              : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-purple-400/40'
+              : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-purple-400/40'
           }`}>
             <div className="mb-2.5 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
@@ -2014,7 +2014,7 @@ export default function ProfilePage({
       {/* ── 3. Real-Time Metrics & API Credentials ── */}
       <section className="mt-3 sm:mt-3.5 lg:mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-1 sm:mb-2 shrink-0">
         {/* Plan Quota & Consumption */}
-        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -2062,7 +2062,7 @@ export default function ProfilePage({
         </div>
 
         {/* API Credentials */}
-        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">

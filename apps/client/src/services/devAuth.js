@@ -332,18 +332,22 @@ export async function fetchGlobalHackathonMode() {
     const res = await fetch('/api/system/hackathon-mode');
     if (res.ok) {
       const data = await res.json();
-      const isEnabled = Boolean(data?.enabled);
+      const serverEnabled = Boolean(data?.enabled);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('cavdax_hackathon_mode', isEnabled ? 'true' : 'false');
-        if (isEnabled) {
+        const localEnabled = localStorage.getItem('cavdax_hackathon_mode') === 'true';
+        // Effective mode: if either server-backed global mode OR local evaluation pass is active, keep active
+        const effectiveMode = serverEnabled || localEnabled;
+        if (effectiveMode) {
+          localStorage.setItem('cavdax_hackathon_mode', 'true');
           localStorage.setItem('cavdax_tier', 'enterprise');
         }
-        window.dispatchEvent(new CustomEvent('cavdax:hackathon-mode-changed', { detail: { enabled: isEnabled } }));
-        if (isEnabled) {
+        window.dispatchEvent(new CustomEvent('cavdax:hackathon-mode-changed', { detail: { enabled: effectiveMode } }));
+        if (effectiveMode) {
           window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'enterprise' } }));
         }
+        return effectiveMode;
       }
-      return isEnabled;
+      return serverEnabled;
     }
   } catch {}
   return isHackathonEvaluationMode();
