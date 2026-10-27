@@ -470,6 +470,7 @@ export default function ConnectedRepoWorkspace({
                 selectedNode={selectedNode}
                 onCloseNode={() => setSelectedNode(null)}
                 isDarkTheme={isDarkTheme}
+                isDemo={false}
                 repo={repo}
                 branch={scan?.branch || repo.default_branch || 'main'}
                 unsyncedList={scan?.unsynced || []}

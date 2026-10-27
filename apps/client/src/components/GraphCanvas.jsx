@@ -62,7 +62,8 @@ export default function GraphCanvas({
   repo,
   branch = 'main',
   unsyncedList = [],
-  onOpenSyncPr
+  onOpenSyncPr,
+  isDemo = false
 }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -814,6 +815,8 @@ export default function GraphCanvas({
           onClose={onCloseNode}
           repo={repo}
           branch={branch}
+          isDarkTheme={isDarkTheme}
+          isFalkorDB={Boolean(isDemo || (typeof title === 'string' && title.includes('FalkorDB')))}
           onToggleSimulate={(n) => setSimulatedBlastNode(curr => curr?.id === n.id ? null : n)}
           isSimulating={simulatedBlastNode?.id === selectedNode.id}
           onOpenSyncPr={onOpenSyncPr}
