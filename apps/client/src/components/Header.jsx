@@ -317,41 +317,40 @@ export default function Header({
             </button>
           </Tooltip>
 
-          {/* Theme Toggle Button */}
+          {/* Theme Toggle Button — Flawless 360 rotation in both fixed & floating navbars */}
           <Tooltip content={isDarkTheme ? 'Switch to Light' : 'Switch to Dark'} position="bottom">
             <button
               onClick={handleToggleTheme}
               className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer border border-slate-200/80 dark:border-white/20 bg-slate-100/80 dark:bg-white/[0.08] hover:bg-slate-200/80 dark:hover:bg-white/15 text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white transition-all shadow-2xs backdrop-blur-md focus:outline-none group shrink-0"
               aria-label="Toggle theme"
             >
-              <div
-                style={{
-                  transform: `rotate(${themeRotation}deg)`,
-                  transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-                className="flex items-center justify-center"
+              <motion.div
+                animate={{ rotate: themeRotation }}
+                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                className="flex items-center justify-center pointer-events-none"
               >
                 {isDarkTheme
-                  ? <Sun className="w-3.5 h-3.5 text-current transition-colors" />
-                  : <Moon className="w-3.5 h-3.5 text-current transition-colors" />}
-              </div>
+                  ? <Sun className="w-3.5 h-3.5 text-current theme-toggle-icon" />
+                  : <Moon className="w-3.5 h-3.5 text-current theme-toggle-icon" />}
+              </motion.div>
             </button>
           </Tooltip>
 
-          {/* System Preferences Settings Button (Desktop md+) */}
+          {/* System Preferences Settings Button — Smooth hover rotation & click spin */}
           <Tooltip content="System Preferences" position="bottom">
             <button
               onClick={handlePreferencesClick}
               className="hidden md:flex w-8 h-8 rounded-full items-center justify-center cursor-pointer border border-slate-200/80 dark:border-white/20 bg-slate-100/80 dark:bg-white/[0.08] hover:bg-slate-200/80 dark:hover:bg-white/15 text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white transition-all shadow-2xs backdrop-blur-md focus:outline-none group shrink-0"
               aria-label="Open System Preferences"
             >
-              <Settings 
-                className="w-3.5 h-3.5 text-current group-hover:rotate-45 transition-transform duration-500" 
-                style={{
-                  transform: `rotate(${gearRotation}deg)`,
-                  transition: 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)'
-                }}
-              />
+              <motion.div
+                animate={{ rotate: gearRotation }}
+                whileHover={{ rotate: gearRotation + 45 }}
+                transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+                className="flex items-center justify-center pointer-events-none"
+              >
+                <Settings className="w-3.5 h-3.5 text-current settings-icon" />
+              </motion.div>
             </button>
           </Tooltip>
 
