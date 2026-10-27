@@ -122,15 +122,181 @@ CAVDAX models engineering knowledge and agent actions using a formal 4-tier Caus
 ### 1. End-to-End System Architecture Flowchart
 ![CAVDAX System Architecture Flowchart](./assets/System-Architecture.svg)
 
+```mermaid
+graph TB
+    subgraph Client_Plane["1. Developer & Presentation Plane"]
+        WebHUD["Web HUD & Visual Console (/overview, /console, /mcp, /audit)"]
+        Canvas["Interactive Temporal DAG Canvas"]
+        NodeInspector["Draggable Node Inspector (Physics Bounds)"]
+        WhatIfBanner["What-If Blast Radius Simulation Engine"]
+        AIAgents["AI Coding Agents (Claude Code, Cursor, Windsurf, Devin)"]
+        WebHUD --> Canvas
+        Canvas --> NodeInspector
+        Canvas --> WhatIfBanner
+    end
+
+    subgraph Gateway_Plane["2. Gateway & Protocol Ingestion Plane"]
+        Server["Express API Server (apps/server/index.js)"]
+        MCPGateway["Enclosed MCP Gateway (core/mcp/server.js)"]
+        GitHubScan["GitHub ADR AST Scanner & Stack Detector (apps/server/githubAdr.js)"]
+        StateStore["Atomic System State Store (apps/server/systemState.js)"]
+        SVGEngine["Standalone SVG & Vision OCR Engine (core/graph/renderSvg.js)"]
+        Server --> MCPGateway
+        Server --> GitHubScan
+        Server --> StateStore
+        Server --> SVGEngine
+    end
+
+    subgraph Causal_Engine["3. FalkorDB GraphBLAS Causal Core"]
+        FalkorDB[("FalkorDB 0.4+ (RedisGraph Sparse Matrix Engine)")]
+        Sources["(:Source {id, title, status, commit})"]
+        Facts["(:Fact {id, claim, is_stale, verified})"]
+        Decisions["(:Decision {id, title, status, rationale})"]
+        AgentActions["(:AgentAction {id, tool, target_file, status})"]
+        FalkorDB --> Sources
+        FalkorDB --> Facts
+        FalkorDB --> Decisions
+        FalkorDB --> AgentActions
+        Sources -. "[:SUPERSEDES]" .-> Sources
+        Facts -. "[:EXTRACTED_FROM]" .-> Sources
+        Decisions -. "[:DEPENDS_ON]" .-> Facts
+        AgentActions -. "[:GROUNDED_IN]" .-> Decisions
+    end
+
+    subgraph Target_Ecosystem["4. Target Codebase & Version Control"]
+        GitHubRepos["External GitHub Repositories (e.g. acme-checkout)"]
+        InitBranch["Isolated Starter Branch (cavdax/init-adr)"]
+        SyncBranch["Isolated Status Patch Branch (cavdax/sync-*)"]
+        ProtectedDisk["Target Local Disk (Sandboxed Writes)"]
+        GitHubRepos --> InitBranch
+        GitHubRepos --> SyncBranch
+    end
+
+    AIAgents <==>|"MCP Stdio / HTTP SSE (apply_code_change, export_graph_image)"| MCPGateway
+    WebHUD <==>|"REST & SSE Events (/api/graph, /api/github/repos)"| Server
+    MCPGateway <==>|"Parameterized Cypher (< 2ms Matrix Traversal)"| FalkorDB
+    GitHubScan <==>|"GitHub REST API (Non-Destructive AST Scan)"| GitHubRepos
+    GitHubScan -->|"Draft Starter ADR / Sync PR"| InitBranch
+    GitHubScan -->|"Draft Superseded Status PR"| SyncBranch
+    MCPGateway -->|"Verified Write on Gate Approval"| ProtectedDisk
+```
+
 ### 2. Multi-Layer Architecture & FalkorDB GraphBLAS Engine Flowchart
 ![CAVDAX Layer Architecture Flowchart](./assets/System-Architecture2.svg)
+
+```mermaid
+graph LR
+    subgraph Ingestion_Layer["Layer 1: Ingestion & Extraction"]
+        ADRDoc["ADR / Markdown Files"] --> ASTParser["AST Frontmatter Parser"]
+        GitCommit["Git Commits / Webhooks"] --> IngestCommit["Commit Ingestion Hook"]
+        StackManifests["Package & Infra Manifests"] --> StackDetector["Smart Stack Detector"]
+    end
+
+    subgraph Causal_Matrix["Layer 2: GraphBLAS Causal DAG (FalkorDB)"]
+        direction TB
+        S1["(:Source {id: 'ADR-001', status: 'SUPERSEDED'})"]
+        S2["(:Source {id: 'ADR-002', status: 'ACTIVE'})"]
+        F1["(:Fact {id: 'F-Auth', is_stale: true})"]
+        F2["(:Fact {id: 'F-OAuth2', is_stale: false})"]
+        D1["(:Decision {id: 'DEC-102', status: 'INVALIDATED'})"]
+        D2["(:Decision {id: 'DEC-103', status: 'VALID'})"]
+        
+        S2 -- "[:SUPERSEDES]" --> S1
+        F1 -- "[:EXTRACTED_FROM]" --> S1
+        F2 -- "[:EXTRACTED_FROM]" --> S2
+        D1 -- "[:DEPENDS_ON]" --> F1
+        D2 -- "[:DEPENDS_ON]" --> F2
+        D2 -. "[:REPLACES]" .-> D1
+    end
+
+    subgraph Gating_Layer["Layer 3: Enclosed MCP Execution Gate"]
+        MCPTool["apply_code_change (decision_id, file, payload)"]
+        GateLogic{"verifyActionGate (BFS Cypher)"}
+        Approved["Verdict: APPROVED (< 2ms)"]
+        Blocked["Verdict: BLOCKED_SUPERSEDED_SOURCE"]
+        DiskWrite["Atomic Filesystem Write"]
+        AuditLedger[("(:AgentAction Audit Node)")]
+
+        MCPTool --> GateLogic
+        GateLogic -- "Grounded in DEC-103 (Fresh)" --> Approved --> DiskWrite --> AuditLedger
+        GateLogic -- "Grounded in DEC-102 (Stale)" --> Blocked --> AuditLedger
+    end
+
+    Ingestion_Layer --> Causal_Matrix
+    Causal_Matrix --> Gating_Layer
+```
 
 ### 3. Enclosed MCP Protocol Execution Gate Flowchart
 ![CAVDAX Enclosed MCP Gate Flowchart](./assets/MCP-FLOWCHART.svg)
 
+```mermaid
+graph TD
+    Start["Agent invokes 'apply_code_change' or 'check_intent_clearance'"] --> Extract["Extract Decision ID (e.g. DEC-102) & Target File"]
+    Extract --> Query["Execute Parameterized Cypher against FalkorDB GraphBLAS"]
+    Query --> Traversal{"Trace Causal Path:
+Decision -> Fact -> Source
+Check if ANY source is SUPERSEDED"}
+    
+    Traversal -- "Active & Valid (0 Superseded Sources)" --> Approved["Gate Verdict: APPROVED (< 2ms)"]
+    Approved --> ConfinementCheck{"Path Confinement Check:
+Target resides within repo root?"}
+    ConfinementCheck -- "Yes (Clean Path)" --> DiskWrite["Atomic Write Code to Protected Disk"]
+    ConfinementCheck -- "No (Path Traversal Detected)" --> PathBlock["Gate Verdict: BLOCKED_PATH_TRAVERSAL
+Zero Bytes Written"]
+    DiskWrite --> LogApproved["Create (:AgentAction {status: 'EXECUTED'}) in FalkorDB"]
+    LogApproved --> ReturnApproved["Return JSON 200 OK + Execution Latency to Agent"]
+
+    Traversal -- "Superseded or Invalidated Path" --> Blocked["Gate Verdict: BLOCKED_SUPERSEDED_SOURCE"]
+    Blocked --> LogBlocked["Create (:AgentAction {status: 'BLOCKED'}) in FalkorDB"]
+    LogBlocked --> ZeroBytes["ZERO BYTES WRITTEN TO DISK"]
+    ZeroBytes --> ReturnBlocked["Return JSON 403 Forbidden with exact violation path
+& Guidance to invoke 'revalidate_decision'"]
+```
+
+### 4. Autonomous Causal Invalidation & Verification Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer / GitHub
+    actor Agent as Autonomous AI Agent
+    participant Web as Visual Console HUD
+    participant Gate as Enclosed MCP Gate
+    participant Graph as FalkorDB (GraphBLAS)
+    participant Repo as Target Repository
+
+    Note over Dev, Graph: ACT I: Baseline Architectural Grounding
+    Dev->>Repo: Merge ADR-001 (TokenAuth v1 accepted)
+    Gate->>Graph: Ingest ADR-001 & Create Decision DEC-102 (status: VALID)
+    Web->>Graph: Fetch Causal DAG & Display Grounded Chain
+
+    Note over Dev, Graph: ACT II: Temporal Invalidation (Superseding Commit)
+    Dev->>Repo: Commit ADR-002 (Mandatory OAuth2; supersedes ADR-001)
+    Gate->>Graph: Ingest ADR-002 -> CREATE (ADR-002)-[:SUPERSEDES]->(ADR-001)
+    Graph->>Graph: GraphBLAS Linear Algebra Invalidation Cascade (2.1ms)
+    Graph-->>Web: SSE Event: ADR-001 -> SUPERSEDED, DEC-102 -> INVALIDATED
+
+    Note over Agent, Repo: ACT III: Stale Agent Execution Intercepted
+    Agent->>Gate: apply_code_change(decision: 'DEC-102', file: 'payment.js')
+    Gate->>Graph: verifyActionGate(decisionId: 'DEC-102')
+    Graph-->>Gate: Verdict: BLOCKED_SUPERSEDED_SOURCE (stale fact detected)
+    Gate-->>Agent: 403 Forbidden: Zero bytes written to disk
+    Gate->>Web: Log BLOCKED attempt on Compliance Audit Ledger
+
+    Note over Agent, Repo: ACT IV: Autonomous Revalidation & Gated Write
+    Agent->>Gate: check_intent_clearance(decision: 'DEC-103')
+    Agent->>Gate: revalidate_decision(new_source: 'ADR-002', old_decision: 'DEC-102', new_decision: 'DEC-103')
+    Graph->>Graph: CREATE (DEC-103:Decision)-[:REPLACES]->(DEC-102)
+    Agent->>Gate: apply_code_change(decision: 'DEC-103', file: 'payment.js', code: 'OAuth2')
+    Gate->>Graph: verifyActionGate(decisionId: 'DEC-103')
+    Graph-->>Gate: Verdict: APPROVED (1.6ms)
+    Gate->>Repo: Atomic write verified OAuth2 implementation to disk
+    Gate-->>Agent: 200 OK: Code written with verified causal provenance
+```
+
 ---
 
-## 📸 Production Interface Showcase (Light Mode)
+## 📸 Production Interface Showcase
 
 Captured directly from our live production deployment at [https://cavdax.sahnirmaan.live/](https://cavdax.sahnirmaan.live/):
 

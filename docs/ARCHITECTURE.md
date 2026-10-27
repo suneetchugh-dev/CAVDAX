@@ -13,28 +13,37 @@ CAVDAX is architected as a high-performance, low-latency polyglot monorepo engin
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                          PRESENTATION & HUD TIER                                │
-│   React 18 + Vite + Tailwind CSS + Lucide + Hardware-Accelerated Vector SVG     │
-│   (CavdaxBrandLoader, CavdaxWordmark, CavdaxAgentStateIndicator, Interactive Canvas)│
+│   React 18 + Vite + Tailwind CSS + Lucide + Framer Motion Kinetic Physics       │
+│   - Interactive Temporal DAG Canvas with dynamic column layout auto-scaling    │
+│   - Draggable & Responsive Node Inspector with container boundary physics       │
+│   - Live What-If Blast Radius Simulation & Downstream Dependency Traversal      │
+│   - Monochromatic Design System, Sound Engine, and Audit Trail Quick-Filters    │
 └──────────────────────────────────────┬──────────────────────────────────────────┘
-                                       │ HTTP / REST & SSE (/api/events)
+                                       │ HTTP REST & SSE (/api/events, /api/graph)
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                        MCP INTERCEPTOR & GATEWAY TIER                           │
-│   Node.js (v20+) + Express + Model Context Protocol (MCP) Standard Server       │
-│   (/api/mcp/call, /api/ingest, /api/act-iv-revalidate, /api/graph, /api/reset)  │
+│   Node.js (v20+) + Express Gateway + MCP Protocol Standard Server               │
+│   - GitHub ADR Scanner & Smart Stack Detector (apps/server/githubAdr.js)        │
+│   - Non-Destructive Pull Request Engine (cavdax/init-adr, cavdax/sync-*)        │
+│   - Standalone SVG & Vision OCR Generator (core/graph/renderSvg.js)             │
+│   - Atomic System State & Session Store (apps/server/systemState.js)            │
+│   - Enclosed Tool Handlers: apply_code_change, export_graph_image, check_intent │
 └──────────────────────────────────────┬──────────────────────────────────────────┘
-                                       │ FalkorDB Client (Redis Protocol / Cypher)
+                                       │ FalkorDB Client (Redis Protocol / Parameterized Cypher)
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                      CAUSAL GRAPHBLAS STORAGE & KERNEL                          │
 │   FalkorDB 0.4+ Container (GraphBLAS Sparse Matrix Linear Algebra Engine)       │
-│   Causal Directed Acyclic Graph (DAG): Sources ──► Facts ──► Decisions          │
+│   Causal Directed Acyclic Graph (DAG): Sources ──► Facts ──► Decisions ──► Actions│
+│   Sub-2ms matrix invalidation traversal via ANY() path reachability             │
 └──────────────────────────────────────┬──────────────────────────────────────────┘
                                        │ Atomic Write-Through on Approved Verdict
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          PROTECTED TARGET CODEBASE                              │
-│   demo-repo/src/services/payment.js (Sandboxed Disk Isolation)                  │
+│                    TARGET CODEBASES & REPOSITORY ECOSYSTEM                      │
+│   - Local Protected Disk: Sandboxed target files (demo-repo/src/services/...)  │
+│   - External GitHub Repos: Zero-touch default branches; dedicated review PRs    │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
