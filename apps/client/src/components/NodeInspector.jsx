@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest } from 'lucide-react';
+import { X, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 export default function NodeInspector({
@@ -11,7 +11,9 @@ export default function NodeInspector({
   onToggleSimulate,
   isSimulating = false,
   onOpenSyncPr,
-  hasDrift = false
+  hasDrift = false,
+  onTestDecision,
+  isVerifyingAction = false
 }) {
   if (!node) return null;
 
@@ -144,6 +146,19 @@ export default function NodeInspector({
 
         {/* Interactive Actions Suite: Blast Radius Simulation & Git Actions */}
         <div className="pt-2 border-t border-slate-200 dark:border-white/15 space-y-2">
+          {node.label === 'Decision' && onTestDecision && (
+            <button
+              onClick={() => {
+                playClick();
+                onTestDecision(node.id);
+              }}
+              disabled={isVerifyingAction}
+              className="w-full py-1.5 px-3 rounded-lg border border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer tactile-btn shadow-xs disabled:opacity-50"
+            >
+              <Zap className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} />
+              <span>{isVerifyingAction ? 'Verifying Gate...' : `Verify Agent Write on ${node.id}`}</span>
+            </button>
+          )}
           {onToggleSimulate && (
             <button
               onClick={() => {

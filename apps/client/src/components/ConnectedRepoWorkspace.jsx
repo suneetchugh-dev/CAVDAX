@@ -186,14 +186,26 @@ export default function ConnectedRepoWorkspace({
 
   const [isVerifyingAction, setIsVerifyingAction] = useState(false);
 
-  const testDecision = async (wantValid) => {
+  const testDecision = async (targetDecisionIdOrWantValid) => {
     const decisions = (scan?.graph?.nodes || []).filter(n => n.label === 'Decision');
-    const target = decisions.find(d => (wantValid ? d.status === 'VALID' : d.status === 'INVALIDATED_NEEDS_REVALIDATION'));
-    if (!target) {
-      addLog('MCP_GATE', wantValid
-        ? 'No valid decision in this repository yet.'
-        : 'No invalidated decision yet. Add an ADR that supersedes an existing one to see a block.');
+    if (decisions.length === 0) {
+      addLog('MCP_GATE', 'No architectural decisions found in this repository yet.');
       return;
+    }
+
+    let target = null;
+    if (typeof targetDecisionIdOrWantValid === 'string') {
+      target = decisions.find(d => d.id === targetDecisionIdOrWantValid) || decisions[0];
+    } else if (typeof targetDecisionIdOrWantValid === 'boolean') {
+      target = decisions.find(d => (targetDecisionIdOrWantValid ? d.status === 'VALID' : (d.status === 'INVALIDATED_NEEDS_REVALIDATION' || d.status === 'SUPERSEDED')));
+      if (!target) {
+        addLog('MCP_GATE', targetDecisionIdOrWantValid
+          ? 'No valid decision found in repository graph.'
+          : 'No superseded decision found. Merge an ADR that supersedes an existing one to test gate rejection.');
+        return;
+      }
+    } else {
+      target = decisions[0];
     }
 
     const adrNode = (scan?.graph?.nodes || []).find(n => n.label === 'Source' && (n.id === target.id || n.id === target.source_adr || n.id === target.from));
@@ -227,13 +239,23 @@ export default function ConnectedRepoWorkspace({
 
       setScan(prev => {
         if (!prev || !prev.graph) return prev;
-        // Deduplicate: replace any existing test probe action node for this decision so multiple clicks update state instead of spawning duplicates
+        const existingAction = prev.graph.nodes.find(n => n.label === 'AgentAction' && (n.decision_id === target.id || n.id === actionNode.id));
+        const previousCount = existingAction?.probe_count || 0;
+        const probeCount = previousCount + 1;
+
+        const updatedActionNode = {
+          ...actionNode,
+          probe_count: probeCount,
+          last_probed_at: Date.now(),
+          title: `ACT: ${actionNode.status === 'APPROVED' ? 'Verified Write' : 'Blocked Write'} (${target.id})${probeCount > 1 ? ` (${probeCount}x)` : ''}`
+        };
+
         const otherNodes = prev.graph.nodes.filter(n => !(n.label === 'AgentAction' && (n.decision_id === target.id || n.id === actionNode.id)));
         const otherEdges = prev.graph.edges.filter(e => !(e.type === 'GROUNDED_IN' && e.target === target.id));
         return {
           ...prev,
           graph: {
-            nodes: [...otherNodes, actionNode],
+            nodes: [...otherNodes, updatedActionNode],
             edges: [...otherEdges, actionEdge]
           }
         };
@@ -396,18 +418,69 @@ export default function ConnectedRepoWorkspace({
               </div>
             )}
 
-            <div className="p-3 bg-slate-50/60 dark:bg-white/[0.02] border-b border-slate-200 dark:border-slate-800 flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Check an agent write against this graph</span>
-              <div className="grid grid-cols-2 gap-2">
-                <button disabled={isVerifyingAction} onClick={() => testDecision(true)} className={`${btnBase} border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 disabled:opacity-40`}>
-                  <CheckCircle2 className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
-                  <span>Probe Valid ADR</span>
-                </button>
-                <button disabled={isVerifyingAction} onClick={() => testDecision(false)} className={`${btnBase} border-rose-500/40 bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-400 disabled:opacity-40`}>
-                  <AlertTriangle className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
-                  <span>Probe Stale ADR</span>
-                </button>
+            {/* Decision-Aware Intent Verification Panel */}
+            <div className="p-3 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono font-bold">
+                  Intent Verification Gate
+                </span>
+                <span className="text-[9px] font-mono text-slate-400">
+                  {decisions.length} {decisions.length === 1 ? 'Decision' : 'Decisions'} Detected
+                </span>
               </div>
+
+              {decisions.length === 0 ? (
+                <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 py-1">
+                  Initialize an ADR baseline to verify agent writes against repository constraints.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* Primary Valid Decision Probe */}
+                    {validDecisions.length > 0 ? (
+                      <button
+                        disabled={isVerifyingAction}
+                        onClick={() => testDecision(validDecisions[0].id)}
+                        className={`${btnBase} border-slate-900 dark:border-white/20 bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-40 shadow-xs cursor-pointer`}
+                      >
+                        <CheckCircle2 className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
+                        <span className="truncate">Verify: {validDecisions[0].id} (Valid)</span>
+                      </button>
+                    ) : (
+                      <div className="p-1.5 rounded-lg border border-dashed border-slate-300 dark:border-white/10 text-[10px] font-mono text-slate-400 text-center">
+                        No valid decision
+                      </div>
+                    )}
+
+                    {/* Stale/Invalidated Decision Probe */}
+                    {staleDecisions.length > 0 ? (
+                      <button
+                        disabled={isVerifyingAction}
+                        onClick={() => testDecision(staleDecisions[0].id)}
+                        className={`${btnBase} border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 disabled:opacity-40 cursor-pointer`}
+                      >
+                        <AlertTriangle className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
+                        <span className="truncate">Verify: {staleDecisions[0].id} (Stale)</span>
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className={`${btnBase} border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02] text-slate-400 dark:text-slate-500 cursor-not-allowed`}
+                        title="Repository has no invalidated decisions. Merge a superseding ADR to test gate blocking."
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5 opacity-40 shrink-0" strokeWidth={2} />
+                        <span className="truncate">0 Stale Decisions</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {staleDecisions.length === 0 && validDecisions.length > 0 && (
+                    <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 leading-normal pt-0.5">
+                      All decisions currently valid. Select a decision node on the canvas to inspect or probe its gate clearance.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div data-lenis-prevent className="flex-1 min-h-0 p-3 overflow-y-auto space-y-2 text-xs select-text bg-white dark:bg-[#09090b]">
@@ -448,6 +521,8 @@ export default function ConnectedRepoWorkspace({
                     openSyncPullRequest(driftItem.targetId, driftItem.supersedingId);
                   }
                 }}
+                onTestDecision={testDecision}
+                isVerifyingAction={isVerifyingAction}
               />
             </SubsystemErrorBoundary>
           </div>
