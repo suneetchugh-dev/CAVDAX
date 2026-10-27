@@ -18,6 +18,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.30 Latest Session Achievements (October 28, 2026 - UI Theme Harmony, Action Probe Deduplication & Section 37 Truth in Data - PR #75, #76 & #77)
+
+- **UI Theme Harmony in ConnectedRepoWorkspace (`apps/client/src/components/ConnectedRepoWorkspace.jsx`, `apps/client/src/components/GraphCanvas.jsx`)**:
+  - Replaced hardcoded pitch-black background (`bg-[#0c0c0e]`) and dark border (`border-slate-800`) on the left column with adaptive, calibrated theme classes (`bg-white dark:bg-[#0c0c0e]`, `border-slate-200 dark:border-slate-800`).
+  - Restyled headers, ADR file listings, verification logs, and status drift cards to seamlessly match both light porcelain and dark OLED themes.
+  - Added truncation and flex constraints to `GraphCanvas` top title bar to eliminate text overlap with zoom and fullscreen controls.
+- **Action Probe Deduplication Across Client Canvas & Server DAG (`apps/client/src/components/ConnectedRepoWorkspace.jsx`, `apps/server/index.js`)**:
+  - Fixed multiple click behavior in `testDecision`: each verification probe now updates the single active `AgentAction` node grounded in that decision on the canvas instead of accumulating duplicate nodes and edges.
+  - Filtered persisted actions on `GET /api/github/repos/:owner/:repo/adrs` by `decision_id` to prevent rescanning from re-injecting duplicate probe nodes.
+  - Cleared previous action nodes for the decision in FalkorDB before creating the latest verification record.
+- **Authentic Target File & Truth-in-Data Provenance in Node Inspector (`apps/server/githubAdr.js`, `apps/client/src/components/NodeInspector.jsx`, `apps/client/src/components/GraphCanvas.jsx`)**:
+  - Retained `from`, `on`, `source_adr`, `adr_path`, and authentic `target_file` on `Decision` nodes in `buildGraphFromAdrs` without field stripping.
+  - Eliminated hardcoded fallback to `services/core.js`; verified write actions now target the authentic repository source file.
+  - Updated `NodeInspector` to accurately identify storage provenance: displays `GitHub ADR AST` and `Branch Head (Git)` for repository graphs, reserving `FalkorDB GraphBLAS` and `Live Synced` exclusively for canonical FalkorDB graphs per Section 37 Truth in Data.
+
 ## 1.0.29 Latest Session Achievements (October 28, 2026 - Custom Combobox Component, Robust GitHub URL Parser & Team Page Grey Outline Contrast - PR #73 & #74)
 
 - **Architectural Custom Combobox Component (`apps/client/src/components/Combobox.jsx`, `apps/client/src/components/AuditPage.jsx`)**:
