@@ -3,7 +3,15 @@ import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Database } from 'luci
 import { playClick } from '../utils/soundFx';
 import NodeInspector from './NodeInspector';
 
-export default function GraphCanvas({ graphData, onSelectNode, selectedNodeId, selectedNode, onCloseNode, isDarkTheme = true }) {
+export default function GraphCanvas({
+  graphData,
+  onSelectNode,
+  selectedNodeId,
+  selectedNode,
+  onCloseNode,
+  isDarkTheme = true,
+  title = 'FalkorDB Temporal Causal Graph'
+}) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -300,7 +308,7 @@ export default function GraphCanvas({ graphData, onSelectNode, selectedNodeId, s
         <div className="flex items-center gap-2">
           <Database className="w-3.5 h-3.5 text-slate-900 dark:text-white" />
           <span className="font-mono font-semibold text-slate-900 dark:text-white">
-            FalkorDB Temporal Causal Graph
+            {title}
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-400 font-mono">
             {nodes.length} Nodes • {edges.length} Edges

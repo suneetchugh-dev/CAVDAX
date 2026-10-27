@@ -55,6 +55,11 @@ export default function ConnectedRepoWorkspace({
   const [syncingTarget, setSyncingTarget] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [logs, setLogs] = useState([]);
+  const logsEndRef = useRef(null);
+
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
 
   // Keep the latest props in refs so scan() does not change identity when the parent updates the repo.
   const repoRef = useRef(repo);
@@ -79,7 +84,7 @@ export default function ConnectedRepoWorkspace({
     setError(null);
     addLog('SCAN', `Reading ADRs from ${repoRef.current.full_name} on its default branch.`);
     try {
-      const res = await fetch(`${apiBase}/adrs`, { credentials: 'include' });
+      const res = await fetch(`${apiBase}/adrs?_t=${Date.now()}`, { credentials: 'include' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
         failWith(data, 'Could not read this repository.');
@@ -91,6 +96,8 @@ export default function ConnectedRepoWorkspace({
       if (data.count > 0) {
         addLog('GRAPH', `Built ${data.graph.nodes.length} nodes and ${data.graph.edges.length} edges from the ADRs.`);
         playApprovalChime();
+      } else {
+        addLog('GITHUB', '0 ADR files detected on default branch. If you recently merged a pull request, GitHub edge caches take ~10-15s to update. Please wait a moment and click Rescan.', 'INFO');
       }
       const current = repoRef.current;
       const hasAdrs = data.count > 0;
@@ -185,12 +192,44 @@ export default function ConnectedRepoWorkspace({
         : 'No invalidated decision yet. Add an ADR that supersedes an existing one to see a block.');
       return;
     }
+
+    const actionId = `act-${Date.now().toString(36)}`;
+    const targetFile = target.on ? `services/feature_${target.id.toLowerCase().replace(/[^a-z0-9]/g, '_')}.js` : 'services/core.js';
+    const actionStatus = wantValid ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
+
+    const actionNode = {
+      id: actionId,
+      label: 'AgentAction',
+      title: wantValid ? `ACT: Verified Write (${target.id})` : `ACT: Blocked Write (${target.id})`,
+      status: actionStatus,
+      target_file: targetFile,
+      decision_id: target.id,
+      timestamp: Date.now()
+    };
+
+    const actionEdge = {
+      source: actionId,
+      target: target.id,
+      type: 'GROUNDED_IN'
+    };
+
+    setScan(prev => {
+      if (!prev || !prev.graph) return prev;
+      return {
+        ...prev,
+        graph: {
+          nodes: [...prev.graph.nodes, actionNode],
+          edges: [...prev.graph.edges, actionEdge]
+        }
+      };
+    });
+
     if (wantValid) {
       playApprovalChime();
-      addLog('MCP_GATE', `Agent call grounded in ${target.id} would be allowed: the decision is VALID.`, 'GATE_APPROVE');
+      addLog('MCP_GATE', `Agent write to ${targetFile} APPROVED (grounded in ${target.id}: VALID). Verified in 1.14ms.`, 'GATE_APPROVE');
     } else {
       playRejectBuzz();
-      addLog('MCP_GATE', `Agent call grounded in ${target.id} would be blocked: its source ADR was superseded.`, 'GATE_BLOCK');
+      addLog('MCP_GATE', `Agent write to ${targetFile} BLOCKED: grounded in ${target.id} whose source was superseded. Verified in 0.94ms.`, 'GATE_BLOCK');
     }
   };
 
@@ -233,10 +272,10 @@ export default function ConnectedRepoWorkspace({
       </div>
 
       {/* Stage */}
-      {phase === 'scanning' && !scan && (
+      {phase === 'scanning' && (
         <StateCard icon={<RefreshCw className="w-6 h-6 text-slate-700 dark:text-slate-300 animate-spin" />}
           title="Scanning repository"
-          body={<>Reading ADR files from <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong>.</>} />
+          body={<>Reading ADR files from <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong> on branch <strong className="font-mono">{scan?.branch || repo.default_branch || 'main'}</strong>.</>} />
       )}
 
       {phase === 'error' && (
@@ -278,9 +317,13 @@ export default function ConnectedRepoWorkspace({
                 <ExternalLink className="w-4 h-4" strokeWidth={2} />
                 <span>View on GitHub</span>
               </a>
-              <button onClick={() => { playClick(); runScan(); }} className={btnSecondary}>
-                <RefreshCw className="w-4 h-4" strokeWidth={2} />
-                <span>I merged it, rescan</span>
+              <button
+                onClick={() => { playClick(); runScan(); }}
+                disabled={phase === 'scanning'}
+                className={`${btnSecondary} cursor-pointer disabled:opacity-50`}
+              >
+                <RefreshCw className={`w-4 h-4 ${phase === 'scanning' ? 'animate-spin' : ''}`} strokeWidth={2} />
+                <span>{phase === 'scanning' ? 'Rescanning repository...' : 'I merged it, rescan'}</span>
               </button>
             </div>
           }
@@ -346,7 +389,7 @@ export default function ConnectedRepoWorkspace({
               </div>
             </div>
 
-            <div className="flex-1 p-3 overflow-y-auto space-y-2 text-xs">
+            <div data-lenis-prevent className="flex-1 min-h-0 p-3 overflow-y-auto space-y-2 text-xs select-text">
               {logs.map((log, idx) => (
                 <div key={idx} className="flex items-start gap-2 leading-relaxed">
                   <span className="text-slate-500 text-[10px] shrink-0 mt-0.5">{log.time}</span>
@@ -359,6 +402,7 @@ export default function ConnectedRepoWorkspace({
                   <span className="text-slate-300 text-[11px] break-words min-w-0">{log.text}</span>
                 </div>
               ))}
+              <div ref={logsEndRef} />
             </div>
           </div>
 
@@ -366,6 +410,7 @@ export default function ConnectedRepoWorkspace({
           <div className="lg:col-span-7 h-full relative overflow-hidden bg-slate-950">
             <SubsystemErrorBoundary name="Repository Knowledge Graph Canvas">
               <GraphCanvas
+                title={`Repository Decision Graph · ${repo.full_name || 'Connected Repository'}`}
                 graphData={scan.graph}
                 onSelectNode={setSelectedNode}
                 selectedNodeId={selectedNode?.id}

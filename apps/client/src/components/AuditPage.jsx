@@ -20,7 +20,7 @@
  *  - Zero-overflow containment (h-full flex flex-col)
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Activity, RefreshCw, FileText, CheckCircle2, Clock, Database } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
@@ -156,6 +156,18 @@ export default function AuditPage() {
   const [simulated, setSimulated]   = useState(false);
   const [limit, setLimit]           = useState(50);
   const [lastFetch, setLastFetch]   = useState(null);
+  const [selectedRepo, setSelectedRepo] = useState('all');
+  const [verdictFilter, setVerdictFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [connectedRepos, setConnectedRepos] = useState(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('cavdax_connected_repos');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const fetchAudit = useCallback(async () => {
     setLoading(true);
@@ -186,6 +198,34 @@ export default function AuditPage() {
   useEffect(() => {
     fetchAudit();
   }, [fetchAudit]);
+
+  const filteredEntries = useMemo(() => {
+    return entries.filter(e => {
+      // 1. Repo scope filter
+      if (selectedRepo !== 'all') {
+        if (selectedRepo === 'demo') {
+          if (e.repo && e.repo !== 'demo') return false;
+        } else {
+          if (e.repo && e.repo !== selectedRepo) return false;
+        }
+      }
+      // 2. Verdict filter
+      const s = (e.status || '').toUpperCase();
+      if (verdictFilter === 'BLOCKED' && !s.startsWith('BLOCKED')) return false;
+      if (verdictFilter === 'APPROVED' && s !== 'EXECUTED' && s !== 'APPROVED') return false;
+
+      // 3. Text search
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchFile = (e.target_file || '').toLowerCase().includes(q);
+        const matchDec = (e.decision_id || '').toLowerCase().includes(q);
+        const matchAct = (e.action_id || '').toLowerCase().includes(q);
+        const matchTitle = (e.decision_title || '').toLowerCase().includes(q);
+        if (!matchFile && !matchDec && !matchAct && !matchTitle) return false;
+      }
+      return true;
+    });
+  }, [entries, selectedRepo, verdictFilter, searchQuery]);
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-3">
@@ -240,6 +280,75 @@ export default function AuditPage() {
         </div>
       </div>
 
+      {/* ── Scope & Quick-Filter Toolbar ── */}
+      <div className="flex-shrink-0 flex flex-wrap items-center justify-between gap-2.5 py-2 px-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02]">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Repository Dropdown */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">Repository:</span>
+            <select
+              value={selectedRepo}
+              onChange={(e) => { playClick(); setSelectedRepo(e.target.value); }}
+              className="text-[11px] font-mono bg-white dark:bg-[#111113] border border-slate-300 dark:border-white/15 rounded-lg px-2.5 py-1 text-slate-900 dark:text-white cursor-pointer shadow-xs"
+            >
+              <option value="all">All Repositories</option>
+              <option value="demo">Demo Sandbox (4-Act Showcase)</option>
+              {connectedRepos.map(r => (
+                <option key={r.id || r.full_name} value={r.full_name || r.name}>
+                  Repo: {r.full_name || r.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">·</span>
+
+          {/* Verdict Filter Pills */}
+          <div className="flex items-center gap-1">
+            {[
+              { id: 'ALL', label: 'All Verdicts' },
+              { id: 'BLOCKED', label: 'Blocked Only' },
+              { id: 'APPROVED', label: 'Approved Only' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => { playClick(); setVerdictFilter(tab.id); }}
+                className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
+                  verdictFilter === tab.id
+                    ? tab.id === 'BLOCKED'
+                      ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold'
+                      : tab.id === 'APPROVED'
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold'
+                      : 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Target File Search */}
+        <div className="flex items-center gap-1.5 w-full sm:w-auto">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Filter by file or decision..."
+            className="w-full sm:w-56 text-[11px] font-mono bg-white dark:bg-[#111113] border border-slate-300 dark:border-white/15 rounded-lg px-2.5 py-1 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-slate-500 dark:focus:border-white/30"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => { playClick(); setSearchQuery(''); }}
+              className="text-[10px] font-mono text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-1 cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ── Clean Minimalist Demonstration Ledger Banner ── */}
       {isFallback && (
         <div className="flex-shrink-0 flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-white/[0.02] text-xs font-mono">
@@ -273,7 +382,7 @@ export default function AuditPage() {
 
       {/* ── Audit table ── */}
       <div className="flex-1 min-h-0 overflow-y-auto" data-lenis-prevent>
-        {entries.length === 0 && !loading ? (
+        {filteredEntries.length === 0 && !loading ? (
           <EmptyState simulated={simulated} />
         ) : (
           <div className="bezel-card overflow-hidden">
@@ -287,12 +396,12 @@ export default function AuditPage() {
             </div>
 
             {/* Table rows */}
-            {loading && entries.length === 0 ? (
+            {loading && filteredEntries.length === 0 ? (
               <div className="px-3 py-6 text-center text-[10px] font-mono text-slate-500 uppercase tracking-wider">
                 Loading...
               </div>
             ) : (
-              entries.map((entry, idx) => (
+              filteredEntries.map((entry, idx) => (
                 <div
                   key={entry.action_id || idx}
                   className="grid grid-cols-[1fr_1.4fr_0.9fr_0.9fr_1.5fr] gap-x-3 px-3 py-2.5 border-b border-slate-100 dark:border-white/5 last:border-0 hover:bg-slate-50/80 dark:hover:bg-white/[0.025] transition-colors"
@@ -335,19 +444,19 @@ export default function AuditPage() {
       </div>
 
       {/* ── Footer metrics ── */}
-      {entries.length > 0 && (
+      {filteredEntries.length > 0 && (
         <div className="flex-shrink-0 flex items-center justify-between pt-1 border-t border-slate-200 dark:border-white/10">
           <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
-            Showing {entries.length} of {total} entries
+            Showing {filteredEntries.length} of {entries.length} loaded ({total} total recorded)
           </span>
           <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 dark:text-slate-400">
             <Activity className="w-3 h-3" />
             <span className="text-emerald-600 dark:text-emerald-400">
-              {entries.filter(e => (e.status || '').toUpperCase() === 'EXECUTED' || (e.status || '').toUpperCase() === 'APPROVED').length} approved
+              {filteredEntries.filter(e => (e.status || '').toUpperCase() === 'EXECUTED' || (e.status || '').toUpperCase() === 'APPROVED').length} approved
             </span>
             <span className="text-slate-400 dark:text-slate-600">·</span>
             <span className="text-rose-600 dark:text-rose-400">
-              {entries.filter(e => (e.status || '').toUpperCase().startsWith('BLOCKED')).length} blocked
+              {filteredEntries.filter(e => (e.status || '').toUpperCase().startsWith('BLOCKED')).length} blocked
             </span>
           </div>
         </div>
