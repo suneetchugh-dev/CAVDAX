@@ -18,6 +18,19 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.26 Latest Session Achievements (October 27, 2026 - Real Graph Attribution, Audit Scope Filter & Anti-Fake Standard - PR #67 & PR #68)
+
+- **Honest Graph Attribution & Live Agent Dynamic Testing (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`) - PR #67**:
+  - Eliminated false FalkorDB attribution when rendering connected repo ADR AST graphs; `GraphCanvas` now accepts a dynamic `title` prop defaulting to `FalkorDB Temporal Causal Graph` only for live database connections, while connected repository AST graphs clearly display `Repository Decision Graph · <owner/repo>` and ADR counts.
+  - Replaced mock `testDecision` static log appends with genuine dynamic `AgentAction` node generation and edge appending into `scan.graph`, dynamically animating and rendering onto `GraphCanvas`.
+  - Added spinning `<RefreshCw className="animate-spin" />` and disabled state (`"Rescanning repository..."`) to "I merged it, rescan" button.
+  - Fixed scanning state rendering so scanning StateCard remains visible during flight, added cache-busting `?_t=${Date.now()}` and propagation notice when GitHub edge cache lags behind.
+  - Fixed left-side log scrolling: added `data-lenis-prevent`, `min-h-0`, and `logsEndRef` smooth auto-scrolling to prevent scroll lock and Lenis hijacking.
+- **Audit Tab Sentry/Vercel-Style Scope & Verdict Filter Toolbar (`apps/client/src/components/AuditPage.jsx`) - PR #67**:
+  - Implemented an industry-standard scope and quick-filter toolbar in the Audit tab: Repository dropdown (`All`, `Demo Repository`, and any connected user repositories), Verdict filter pills (`ALL`, `BLOCKED`, `APPROVED`), and text search against target files and decision titles.
+- **Codification of Section 37 Truth in Data Standard (`docs/UI_DESIGN_SYSTEM.md`) - PR #68**:
+  - Added Section 37 to `docs/UI_DESIGN_SYSTEM.md`: formal ban on fake database attribution, interactive action integrity & zero-mock rule, honest propagation feedback for upstream caches, and mandatory flexbox scroll & Lenis containment armor.
+
 ## 1.0.25 Latest Session Achievements (October 27, 2026 - Real GitHub ADR Scan, Smart Init PR & Sync Superseded ADR PR - PR #63, #64 & #65)
 
 - **Real Repository ADR Ingestion & Starter PR Automation (`apps/server/githubAdr.js`, `core/ingestion/adrPaths.js`) - PR #63**:

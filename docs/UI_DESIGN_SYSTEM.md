@@ -2871,3 +2871,32 @@ Before deploying or approving any component, verify against this 5-point audit:
 3. **Is the micro-copy concise, factual, and free of promotional buzzwords?** If no, rewrite with technical precision.
 4. **Is every interactive element clearly differentiated from static metadata?** If no, adjust affordance cues.
 5. **Does the interface work cleanly on both 1440px desktop displays and mobile viewports without horizontal clipping?** If no, implement fluid responsive breakpoints.
+
+---
+
+## 37. Truth in Data, Graph Provenance & Anti-Fake Simulation Standard
+
+To preserve institutional trust with software architects, enterprise compliance officers, and hackathon judges, CAVDAX strictly enforces absolute honesty between the underlying data layer and the visual UI surface:
+
+### 37.1 Ban on Fake Database Attribution
+1. **Accurate Engine Labeling**:
+   - Never label an in-memory AST parser, synthetic graph, or local JSON representation as `FalkorDB`, `Redis`, or `Neo4j`.
+   - The title `FalkorDB Temporal Causal Graph` is reserved strictly for surfaces backed by a live FalkorDB GraphBLAS instance.
+   - When visualizing repository ADRs parsed directly from GitHub Markdown trees, label the surface accurately: `Repository Decision Graph · <owner/repo>` with metadata indicating `Derived from <N> ADR files`.
+
+### 37.2 Interactive Action Integrity & Zero-Mock Rule
+1. **Real State Mutation**:
+   - Never implement test buttons (such as *"Valid decision"* or *"Stale decision"*) that merely append static, hardcoded text strings to a log.
+   - Any test or simulation action must instantiate a structured `AgentAction` node with real timestamp, target file, and verdict (`APPROVED` vs `BLOCKED_SUPERSEDED_SOURCE`), appending it and its `GROUNDED_IN` causal edge dynamically onto the canvas.
+   - The user must visually see the action node appear in the graph, verifying the causal firewall's behavior in real time.
+
+### 37.3 Resilient Upstream Cache Affordance
+1. **Honest Propagation Feedback**:
+   - Actions depending on third-party APIs (such as GitHub's Git Trees endpoint after a PR merge) must feature immediate loading spinners (`animate-spin`) and disabled button states during network flight.
+   - When GitHub API edge caches lag behind (returning 0 files immediately after a merge), display an informative status note advising the developer of the 10-15s propagation window, rather than freezing the screen or presenting an error.
+
+### 37.4 Mandatory Flexbox Scroll & Lenis Containment
+1. **Three-Point Scroll Armor**:
+   - Any scrollable activity log, terminal feed, or drawer encased in a flex container must strictly specify `min-h-0` on its `flex-1` parent to prevent unbounded flex expansion.
+   - Every inner `overflow-y-auto` container must declare `data-lenis-prevent` to prevent global smooth-scrolling libraries from intercepting mouse wheel events.
+   - High-velocity event logs must implement an auto-scrolling ref (`logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })`) ensuring latest events remain visible.
