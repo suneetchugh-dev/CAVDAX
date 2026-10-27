@@ -1,8 +1,18 @@
 import React from 'react';
-import { X, AlertTriangle, CheckCircle2, Database, KeyRound, Clock } from 'lucide-react';
+import { X, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
-export default function NodeInspector({ node, onClose, isFalkorDB }) {
+export default function NodeInspector({
+  node,
+  onClose,
+  isFalkorDB,
+  repo,
+  branch = 'main',
+  onToggleSimulate,
+  isSimulating = false,
+  onOpenSyncPr,
+  hasDrift = false
+}) {
   if (!node) return null;
 
   const isStale =
@@ -16,18 +26,23 @@ export default function NodeInspector({ node, onClose, isFalkorDB }) {
     (!node.ref?.includes('docs/adrs') && !node.adr_path && !node.id.startsWith('ADR-') && !node.id.startsWith('F-') && !node.id.startsWith('act-') && node.is_demo !== false)
   );
 
+  const filePath = node.target_file || node.adr_path || (node.ref && !node.ref.includes('://') ? node.ref : null);
+  const gitUrl = (repo?.full_name && filePath)
+    ? `https://github.com/${repo.full_name}/blob/${branch}/${filePath.replace(/^\.?\//, '')}`
+    : null;
+
   return (
     <div className="absolute top-12 right-4 w-80 max-w-[calc(100%-2rem)] bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs animate-in fade-in zoom-in-95">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/15 pb-2.5 mb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {isStale ? (
             <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
           ) : (
             <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
           )}
-          <span className="font-bold text-slate-800 dark:text-slate-100">
-            Node Inspector: <span className="text-slate-950 dark:text-white font-bold">{node.id}</span>
+          <span className="font-bold text-slate-800 dark:text-slate-100 truncate">
+            Node: <span className="text-slate-950 dark:text-white font-bold">{node.id}</span>
           </span>
         </div>
         <button
@@ -35,7 +50,7 @@ export default function NodeInspector({ node, onClose, isFalkorDB }) {
             playClick();
             if (onClose) onClose();
           }}
-          className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white transition-colors tactile-btn"
+          className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white transition-colors tactile-btn shrink-0"
           aria-label="Close Inspector"
         >
           <X className="w-4 h-4 text-current transition-colors" />
@@ -115,7 +130,7 @@ export default function NodeInspector({ node, onClose, isFalkorDB }) {
             <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
               Source File Provenance
             </span>
-            <span className="text-slate-800 hover:text-black dark:text-slate-200 dark:hover:text-white font-mono truncate block text-[11px] hover:underline cursor-pointer transition-colors">
+            <span className="text-slate-800 hover:text-black dark:text-slate-200 dark:hover:text-white font-mono truncate block text-[11px]">
               {node.ref}
             </span>
           </div>
@@ -127,6 +142,52 @@ export default function NodeInspector({ node, onClose, isFalkorDB }) {
             <span className="font-bold text-slate-900 dark:text-white">{node.latency_ms}ms</span>
           </div>
         )}
+
+        {/* Interactive Actions Suite: Blast Radius Simulation & Git Actions */}
+        <div className="pt-2 border-t border-slate-200 dark:border-white/15 space-y-2">
+          {onToggleSimulate && (
+            <button
+              onClick={() => {
+                playClick();
+                onToggleSimulate(node);
+              }}
+              className={`w-full py-1.5 px-3 rounded-lg border text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer tactile-btn ${
+                isSimulating
+                  ? 'bg-rose-500 text-white border-rose-600 shadow-sm animate-pulse'
+                  : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 shrink-0" />
+              <span>{isSimulating ? 'Stop Blast Simulation' : 'Simulate Invalidation (What-If)'}</span>
+            </button>
+          )}
+
+          {gitUrl && (
+            <a
+              href={gitUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={playClick}
+              className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
+              <span>View on GitHub</span>
+            </a>
+          )}
+
+          {hasDrift && onOpenSyncPr && (
+            <button
+              onClick={() => {
+                playClick();
+                onOpenSyncPr(node);
+              }}
+              className="w-full py-1.5 px-3 rounded-lg border border-amber-400 bg-amber-400/20 hover:bg-amber-400/30 text-amber-900 dark:text-amber-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn"
+            >
+              <GitPullRequest className="w-3.5 h-3.5 shrink-0 text-amber-700 dark:text-amber-400" />
+              <span>Open Status Sync PR</span>
+            </button>
+          )}
+        </div>
 
         {/* Footer Info — Genuine storage provenance per Section 37 Truth in Data */}
         <div className="pt-2.5 border-t border-slate-200 dark:border-white/15 text-[10px] text-slate-500 flex items-center justify-between">

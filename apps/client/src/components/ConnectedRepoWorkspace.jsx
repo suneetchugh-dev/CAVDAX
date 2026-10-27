@@ -52,6 +52,7 @@ export default function ConnectedRepoWorkspace({
   const [scan, setScan] = useState(null);
   const [error, setError] = useState(null);
   const [isOpeningPr, setIsOpeningPr] = useState(false);
+  const [showInitConfirmModal, setShowInitConfirmModal] = useState(false);
   const [syncingTarget, setSyncingTarget] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [logs, setLogs] = useState([]);
@@ -351,12 +352,12 @@ export default function ConnectedRepoWorkspace({
           title="No Architecture Decision Records found"
           body={<>CAVDAX looked in the usual ADR folders on <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong> and found none. It will read your package manifest, detect the stack you already use, and open a pull request with an ADR that records it. Nothing is committed to <strong className="font-mono">{scan.branch}</strong> until you merge it.</>}
           actions={
-            <button onClick={openPullRequest} disabled={isOpeningPr} className={`${btnPrimary} w-full`}>
+            <button onClick={() => { playClick(); setShowInitConfirmModal(true); }} disabled={isOpeningPr} className={`${btnPrimary} w-full cursor-pointer`}>
               <GitPullRequest className={`w-4 h-4 ${isOpeningPr ? 'animate-spin' : ''}`} strokeWidth={2} />
               <span>{isOpeningPr ? 'Opening pull request' : 'Open pull request with ADR-001'}</span>
             </button>
           }
-          footnote={<>Already have ADRs? Put them in <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/adrs</code>, <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/adr</code> or <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/decisions</code> and rescan.</>} />
+          footnote={<>Already have ADRs? Put them in <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/adrs</code>, <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/adr</code>, root <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">ADR-*.md</code> or <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/decisions</code> and rescan.</>} />
       )}
 
       {noAdrs && pr && (
@@ -469,8 +470,57 @@ export default function ConnectedRepoWorkspace({
                 selectedNode={selectedNode}
                 onCloseNode={() => setSelectedNode(null)}
                 isDarkTheme={isDarkTheme}
+                repo={repo}
+                branch={scan?.branch || repo.default_branch || 'main'}
+                unsyncedList={scan?.unsynced || []}
+                onOpenSyncPr={(node) => {
+                  const driftItem = (scan?.unsynced || []).find(u => u.targetId === node.id);
+                  if (driftItem) {
+                    openSyncPullRequest(driftItem.targetId, driftItem.supersedingId);
+                  }
+                }}
               />
             </SubsystemErrorBoundary>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation modal before opening starter PR on external repo */}
+      {showInitConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-mono animate-in fade-in">
+          <div className="max-w-md w-full bg-white dark:bg-[#0c0d11] border border-slate-300 dark:border-white/15 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-2.5 text-slate-900 dark:text-white">
+              <GitPullRequest className="w-5 h-5 text-sky-500 shrink-0" />
+              <h3 className="font-bold text-sm">Confirm Starter Pull Request</h3>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-sans leading-relaxed">
+              CAVDAX will create branch <code className="font-mono px-1 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200">cavdax/init-adr</code> and open a starter Pull Request on repository <strong className="font-mono text-slate-900 dark:text-white">{repo.full_name}</strong>.
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans leading-relaxed">
+              Detected ecosystem manifests will be parsed to draft your initial Architecture Decision Record (ADR-001). Nothing is committed to <strong className="font-mono text-slate-800 dark:text-slate-200">{scan?.branch || repo.default_branch || 'main'}</strong> until you review and merge on GitHub.
+            </p>
+            <div className="pt-2 flex items-center justify-end gap-2 text-xs">
+              <button
+                onClick={() => {
+                  playClick();
+                  setShowInitConfirmModal(false);
+                }}
+                className={btnSecondary}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowInitConfirmModal(false);
+                  openPullRequest();
+                }}
+                disabled={isOpeningPr}
+                className={btnPrimary}
+              >
+                <GitPullRequest className="w-4 h-4 shrink-0" />
+                <span>Confirm & Open PR</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
