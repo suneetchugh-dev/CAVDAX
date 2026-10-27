@@ -9,6 +9,13 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.37 Latest Session Achievements (October 28, 2026 - Streamlined Empty ADR State Copy & Minimalist Clarity)
+
+- **Concise Empty-State Copy (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Replaced 45-word conversational empty-state copy with a clean, punchy 26-word message: *"No ADRs found in {repo.full_name}. Initialize will inspect your stack and open a starter ADR-001 pull request without committing directly to {scan.branch}."*
+  - Stripped redundant explanations ("looked in the usual ADR folders", "detect the stack you already use, and open a pull request with an ADR that records it") which are already detailed in the confirmation modal.
+  - Aligns with industry-standard empty states (Linear, Vercel, GitHub) by immediately communicating state and branch safety upfront.
+
 ## 1.0.36 Latest Session Achievements (October 28, 2026 - Draggable Responsive Node Inspector, Compact Blast-Radius Banner & Minimalist Story Stepper)
 
 - **Draggable & Repositionable Node Inspector (`apps/client/src/components/NodeInspector.jsx`)**:
