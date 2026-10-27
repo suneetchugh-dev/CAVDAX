@@ -18,6 +18,18 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.31 Latest Session Achievements (October 28, 2026 - Combobox Import Fix, Theme Toggle Harmonization, Settings Hover Kinetic & Preferences Spring Transitions - PR #78 & #79)
+
+- **Combobox Component Import Fix in AuditPage (`apps/client/src/components/AuditPage.jsx`)**:
+  - Resolved `ReferenceError: Combobox is not defined` runtime exception on `/audit` by explicitly importing `Combobox` from `./Combobox`.
+- **Navbar Theme Toggle Animation Harmonization (`apps/client/src/components/Header.jsx`, `apps/client/src/index.css`)**:
+  - Replaced inline CSS transform on theme toggle with Framer Motion `motion.div` (`animate={{ rotate: themeRotation }}`), ensuring identical 360-degree rotation in both unscrolled fixed navbar and scrolled floating pill bar.
+  - Excluded `.theme-toggle-icon` and `.settings-icon` from `.portfolio-header svg { transform: translateZ(0) }` in `index.css` to eliminate WebKit/Blink 3D compositing layer conflicts within `backdrop-filter` containers.
+- **Navbar Settings Icon Kinetic Hover Rotation (`apps/client/src/components/Header.jsx`)**:
+  - Replaced overridden inline CSS with Framer Motion `whileHover={{ rotate: gearRotation + 45 }}`, providing a subtle 45-degree hover rotation that smoothly combines with the 180-degree click spin.
+- **Preferences Panel Smooth Spring Transitions Matching Keyboard Shortcuts (`apps/client/src/components/PreferencesModal.jsx`)**:
+  - Converted `PreferencesModal` to use `AnimatePresence` with spring physics (`damping: 28, stiffness: 360, y: 12`) matching `KeyboardShortcutsModal`, delivering buttery opening and closing transitions.
+
 ## 1.0.30 Latest Session Achievements (October 28, 2026 - UI Theme Harmony, Action Probe Deduplication & Section 37 Truth in Data - PR #75, #76 & #77)
 
 - **UI Theme Harmony in ConnectedRepoWorkspace (`apps/client/src/components/ConnectedRepoWorkspace.jsx`, `apps/client/src/components/GraphCanvas.jsx`)**:
