@@ -124,6 +124,7 @@ export default function ConnectedRepoWorkspace({
       const pr = data.pullRequest;
       playApprovalChime();
       addLog('PULL_REQUEST', `${pr.reused ? 'Pull request already open' : 'Opened pull request'} #${pr.number} from ${pr.branch}.`, 'CASCADE');
+      if (pr.detected?.length) addLog('DETECT', `Detected ${pr.detected.join(', ')} from the repository manifest.`);
       if (onUpdateRepo) {
         onUpdateRepo({ ...repo, adrPr: { number: pr.number, url: pr.url, branch: pr.branch } });
       }
@@ -225,7 +226,7 @@ export default function ConnectedRepoWorkspace({
       {noAdrs && !pr && (
         <StateCard icon={<FolderGit2 className="w-6 h-6 text-slate-700 dark:text-slate-300" />}
           title="No Architecture Decision Records found"
-          body={<>CAVDAX looked in the usual ADR folders on <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong> and found none. It will open a pull request that adds a starter ADR. Nothing is committed to <strong className="font-mono">{scan.branch}</strong> until you merge it.</>}
+          body={<>CAVDAX looked in the usual ADR folders on <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong> and found none. It will read your package manifest, detect the stack you already use, and open a pull request with an ADR that records it. Nothing is committed to <strong className="font-mono">{scan.branch}</strong> until you merge it.</>}
           actions={
             <button onClick={openPullRequest} disabled={isOpeningPr} className={`${btnPrimary} w-full`}>
               <GitPullRequest className={`w-4 h-4 ${isOpeningPr ? 'animate-spin' : ''}`} strokeWidth={2} />

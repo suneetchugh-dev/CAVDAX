@@ -107,7 +107,12 @@ function toArray(v) {
 }
 
 /** Lists the ADRs on the repository's default branch and parses them. */
-export async function scanRepoAdrs({ token, owner, repo, fetchImpl = fetch }) {
+export async function scanRepoAdrs(args) {
+  const { tree: _tree, ...result } = await scanWithTree(args);
+  return result;
+}
+
+async function scanWithTree({ token, owner, repo, fetchImpl = fetch }) {
   assertRepoName(owner, repo);
   const meta = await gh(fetchImpl, token, 'GET', `/repos/${owner}/${repo}`);
   const branch = meta.default_branch;
@@ -146,6 +151,7 @@ export async function scanRepoAdrs({ token, owner, repo, fetchImpl = fetch }) {
   }
 
   return {
+    tree: tree.tree || [],
     repo: `${owner}/${repo}`,
     branch,
     count: parsed.length,
@@ -155,54 +161,202 @@ export async function scanRepoAdrs({ token, owner, repo, fetchImpl = fetch }) {
   };
 }
 
-/** The starter ADR committed by the pull request. Parseable by the CAVDAX ingestion engine. */
-export function buildStarterAdr(date = new Date()) {
+// ---------------------------------------------------------------------------
+// Stack detection: the starter ADR describes what the repository actually uses.
+// Only facts that are literally present in a manifest file are claimed.
+// ---------------------------------------------------------------------------
+
+const MANIFESTS = {
+  'package.json': 'Node.js',
+  'requirements.txt': 'Python',
+  'pyproject.toml': 'Python',
+  'go.mod': 'Go',
+  'Cargo.toml': 'Rust',
+  'pom.xml': 'Java',
+  'build.gradle': 'Java',
+  'Gemfile': 'Ruby',
+  'composer.json': 'PHP'
+};
+const MAX_MANIFEST_BYTES = 200 * 1024;
+
+// Ordered by architectural weight: a primary database outranks a cache.
+const DATASTORES = [
+  { name: 'PostgreSQL', slug: 'Postgres', tokens: ['pg', 'pg-promise', 'postgres', 'psycopg2', 'psycopg2-binary', 'psycopg', 'asyncpg', 'github.com/lib/pq', 'github.com/jackc/pgx', 'postgresql'] },
+  { name: 'MySQL', slug: 'MySQL', tokens: ['mysql', 'mysql2', 'mysqlclient', 'pymysql', 'github.com/go-sql-driver/mysql', 'mysql-connector-j', 'mysql-connector-java'] },
+  { name: 'MongoDB', slug: 'Mongo', tokens: ['mongodb', 'mongoose', 'pymongo', 'motor', 'mongoengine', 'go.mongodb.org/mongo-driver', 'mongodb-driver-sync'] },
+  { name: 'SQLite', slug: 'SQLite', tokens: ['sqlite3', 'better-sqlite3', 'sqlite-jdbc'] },
+  { name: 'DynamoDB', slug: 'DynamoDB', tokens: ['@aws-sdk/client-dynamodb', 'aws-sdk-dynamodb'] },
+  { name: 'FalkorDB', slug: 'FalkorDB', tokens: ['falkordb'] },
+  { name: 'Redis', slug: 'Redis', tokens: ['redis', 'ioredis', 'github.com/redis/go-redis', 'jedis', 'spring-boot-starter-data-redis'] }
+];
+
+const FRAMEWORKS = [
+  { name: 'Express', slug: 'Express', tokens: ['express'] },
+  { name: 'Fastify', slug: 'Fastify', tokens: ['fastify'] },
+  { name: 'NestJS', slug: 'NestJS', tokens: ['@nestjs/core'] },
+  { name: 'Next.js', slug: 'Next', tokens: ['next'] },
+  { name: 'React', slug: 'React', tokens: ['react'] },
+  { name: 'Vue', slug: 'Vue', tokens: ['vue'] },
+  { name: 'Django', slug: 'Django', tokens: ['django'] },
+  { name: 'Flask', slug: 'Flask', tokens: ['flask'] },
+  { name: 'FastAPI', slug: 'FastAPI', tokens: ['fastapi'] },
+  { name: 'Spring Boot', slug: 'SpringBoot', tokens: ['spring-boot-starter-web', 'spring-boot-starter'] },
+  { name: 'Gin', slug: 'Gin', tokens: ['github.com/gin-gonic/gin'] },
+  { name: 'Rails', slug: 'Rails', tokens: ['rails'] }
+];
+
+/** Extracts lowercase dependency names from one manifest file. */
+function dependencyNames(fileName, content) {
+  const out = new Set();
+  if (fileName === 'package.json' || fileName === 'composer.json') {
+    try {
+      const pkg = JSON.parse(content);
+      for (const key of ['dependencies', 'devDependencies', 'require', 'require-dev']) {
+        for (const dep of Object.keys(pkg[key] || {})) out.add(dep.toLowerCase());
+      }
+    } catch { /* malformed manifest: claim nothing from it */ }
+    return out;
+  }
+  if (fileName === 'pom.xml') {
+    for (const m of content.matchAll(/<artifactId>\s*([^<\s]+)\s*<\/artifactId>/g)) out.add(m[1].toLowerCase());
+    return out;
+  }
+  // requirements.txt, pyproject.toml, go.mod, Cargo.toml, build.gradle, Gemfile: tokenise.
+  for (const m of content.toLowerCase().matchAll(/[a-z0-9@][a-z0-9_.\-/@]*/g)) out.add(m[0]);
+  return out;
+}
+
+/**
+ * @param {Record<string,string>} manifests fileName -> content, from the repository root
+ * @returns {{languages: string[], datastores: object[], frameworks: object[], evidence: string[]}}
+ */
+export function detectStack(manifests) {
+  const languages = [];
+  const deps = new Set();
+  const evidence = [];
+  for (const [file, content] of Object.entries(manifests)) {
+    const lang = MANIFESTS[file];
+    if (!lang) continue;
+    if (!languages.includes(lang)) languages.push(lang);
+    evidence.push(file);
+    for (const d of dependencyNames(file, content)) deps.add(d);
+  }
+  const pick = (table) => table.filter((e) => e.tokens.some((t) => deps.has(t)));
+  return { languages, datastores: pick(DATASTORES), frameworks: pick(FRAMEWORKS), evidence };
+}
+
+function joinList(items) {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+/**
+ * The starter ADR committed by the pull request. Parseable by the CAVDAX ingestion engine.
+ * With a detected stack it records the repository's primary technology choice; with nothing
+ * detected it falls back to the standard "record architecture decisions" ADR.
+ */
+export function buildStarterAdr({ date = new Date(), repo = 'this repository', detection = null } = {}) {
   const day = date.toISOString().slice(0, 10);
-  return `---
+  const primary = detection && (detection.datastores[0] || detection.frameworks[0]);
+
+  if (!primary) {
+    return `---
 id: ADR-001
 title: Record architecture decisions
 status: ACCEPTED
 date: ${day}
-fact_id: F-001
-fact_claim: Architecture decisions for this repository are recorded as ADRs in docs/adrs
+fact_id: F-ADR-Process
+fact_claim: Architecture decisions for ${repo} are recorded as ADRs in docs/adrs
 decision_id: DEC-001
 decision_title: Record significant architecture decisions as ADRs
 ---
 # ADR-001: Record architecture decisions
 
 ## Context
-Architecture decisions are made continuously and are easy to lose. AI coding agents and new
-engineers need one place to read what was decided and why.
+CAVDAX could not detect a technology stack from the manifest files in ${repo}.
+Architecture decisions are easy to lose, and AI coding agents need one place to read what was decided.
 
 ## Decision
 Significant architecture decisions are recorded as Markdown files in \`docs/adrs/\`.
-When a decision changes, add a new ADR that sets \`supersedes: ADR-001\` (using the old ADR id)
+When a decision changes, add a new ADR that sets \`supersedes: ADR-001\` (use the old ADR id)
 instead of editing history.
 
 ## Consequences
 - CAVDAX reads these files and builds a causal graph of sources, facts and decisions.
 - Agents are blocked from acting on a decision whose source ADR has been superseded.
-- Replace the placeholder fact and decision above with a real decision from your project.
+- Replace this with a real decision from your project when you have one.
+`;
+  }
+
+  const isStore = detection.datastores[0] === primary;
+  const others = [...detection.datastores, ...detection.frameworks].filter((e) => e !== primary);
+  const stack = detection.languages.length ? ` (${joinList(detection.languages)})` : '';
+  const kind = isStore ? 'data store' : 'application framework';
+  const subject = isStore ? `${primary.name} as the primary data store` : `${primary.name} as the application framework`;
+  const sources = joinList(detection.evidence.map((f) => `\`${f}\``));
+
+  return `---
+id: ADR-001
+title: Use ${primary.name} as the ${kind} for ${repo}
+status: ACCEPTED
+date: ${day}
+fact_id: F-${primary.slug}
+fact_claim: ${repo} uses ${subject}
+decision_id: DEC-001
+decision_title: Build ${repo} on ${primary.name}
+---
+# ADR-001: Use ${primary.name} as the ${kind} for ${repo}
+
+## Context
+CAVDAX read ${sources} in ${repo}${stack} and found ${primary.name}${others.length ? `, alongside ${joinList(others.map((e) => e.name))}` : ''}.
+This record captures that existing choice so engineers and AI coding agents work against it.
+
+## Decision
+${repo} uses **${primary.name}** as its ${kind}. New code follows this choice unless a later ADR supersedes it.
+
+## Consequences
+- Agents and engineers scaffold new code against ${primary.name}.
+- To change this, add a new ADR with \`supersedes: ADR-001\`. CAVDAX then marks this decision for revalidation.
+- This ADR was generated from dependency names only. Edit it to match your intent before merging.
 `;
 }
 
-function pullRequestBody() {
-  return [
+function pullRequestBody(detection) {
+  const lines = [
     'This pull request was opened by CAVDAX on behalf of the repository owner.',
     '',
-    `It adds one file, \`${NEW_ADR_PATH}\`, a starter Architecture Decision Record in MADR style.`,
-    'Nothing else in the repository is changed.',
-    '',
-    'After you merge, CAVDAX reads ADRs from the default branch and builds the decision graph.',
-    'Edit the placeholder fact and decision to describe a real decision before merging, or close this pull request to decline.'
-  ].join('\n');
+    `It adds one file, \`${NEW_ADR_PATH}\`, a starter Architecture Decision Record. Nothing else changes.`,
+    ''
+  ];
+  const found = detection && [...detection.datastores, ...detection.frameworks];
+  if (found && found.length) {
+    lines.push(`Detected from ${joinList(detection.evidence.map((f) => `\`${f}\``))}: ${joinList(found.map((e) => e.name))}.`);
+    lines.push('The ADR records the first of these as the primary technology choice.');
+  } else {
+    lines.push('No known data store or framework was found in the manifest files, so the ADR is the standard "record architecture decisions" record.');
+  }
+  lines.push('', 'This is generated from dependency names only. Edit it to match your intent before merging, or close this pull request to decline.');
+  lines.push('After you merge, CAVDAX reads ADRs from the default branch and builds the decision graph.');
+  return lines.join('\n');
+}
+
+/** Reads root-level manifests from the default branch and detects the stack. */
+async function detectRepoStack({ token, owner, repo, branch, tree, fetchImpl }) {
+  const rootFiles = tree.filter((e) => e.type === 'blob' && MANIFESTS[e.path] && (e.size ?? 0) <= MAX_MANIFEST_BYTES);
+  const manifests = {};
+  await Promise.all(rootFiles.map(async (e) => {
+    manifests[e.path] = await gh(fetchImpl, token, 'GET',
+      `/repos/${owner}/${repo}/contents/${enc(e.path)}?ref=${encodeURIComponent(branch)}`,
+      null, 'application/vnd.github.raw+json');
+  }));
+  return detectStack(manifests);
 }
 
 /** Opens (or returns the already-open) pull request that adds the starter ADR. */
 export async function createAdrPullRequest({ token, owner, repo, fetchImpl = fetch, now = new Date() }) {
   assertRepoName(owner, repo);
 
-  const scan = await scanRepoAdrs({ token, owner, repo, fetchImpl });
+  const scan = await scanWithTree({ token, owner, repo, fetchImpl });
   if (scan.count > 0) {
     throw new GithubAdrError(409, 'ADRS_EXIST', 'This repository already has ADRs. Nothing to initialize.');
   }
@@ -214,6 +368,9 @@ export async function createAdrPullRequest({ token, owner, repo, fetchImpl = fet
   if (existing) {
     return { number: existing.number, url: existing.html_url, branch: existing.head.ref, path: NEW_ADR_PATH, base, reused: true };
   }
+
+  // Read everything we need before writing anything, so a failure cannot leave an orphan branch.
+  const detection = await detectRepoStack({ token, owner, repo, branch: base, tree: scan.tree, fetchImpl });
 
   const baseRef = await gh(fetchImpl, token, 'GET', `/repos/${owner}/${repo}/git/ref/heads/${enc(base)}`);
   const baseSha = baseRef.object.sha;
@@ -230,7 +387,7 @@ export async function createAdrPullRequest({ token, owner, repo, fetchImpl = fet
 
   await gh(fetchImpl, token, 'PUT', `/repos/${owner}/${repo}/contents/${enc(NEW_ADR_PATH)}`, {
     message: 'docs: add starter architecture decision record (ADR-001)',
-    content: Buffer.from(buildStarterAdr(now), 'utf-8').toString('base64'),
+    content: Buffer.from(buildStarterAdr({ date: now, repo: `${owner}/${repo}`, detection }), 'utf-8').toString('base64'),
     branch
   });
 
@@ -238,8 +395,9 @@ export async function createAdrPullRequest({ token, owner, repo, fetchImpl = fet
     title: 'Add starter ADR for CAVDAX (ADR-001)',
     head: branch,
     base,
-    body: pullRequestBody()
+    body: pullRequestBody(detection)
   });
 
-  return { number: pr.number, url: pr.html_url, branch, path: NEW_ADR_PATH, base, reused: false };
+  const detected = [...detection.datastores, ...detection.frameworks].map((e) => e.name);
+  return { number: pr.number, url: pr.html_url, branch, path: NEW_ADR_PATH, base, reused: false, detected };
 }

@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { isAdrPath } from '../../../core/ingestion/adrPaths.js';
 import { parseFrontmatter } from '../../../core/ingestion/parser.js';
 import {
-  scanRepoAdrs, createAdrPullRequest, buildGraphFromAdrs, buildStarterAdr, assertRepoName, NEW_ADR_PATH
+  scanRepoAdrs, createAdrPullRequest, buildGraphFromAdrs, buildStarterAdr, detectStack, assertRepoName, NEW_ADR_PATH
 } from '../githubAdr.js';
 
 const json = (body, status = 200) => ({ ok: status < 400, status, json: async () => body, text: async () => JSON.stringify(body) });
@@ -46,7 +46,10 @@ function fakeGithub({ files = {}, openPulls = [], takenBranch = false, extraTree
     if (method === 'GET' && p.startsWith('/repos/o/r/git/trees/')) {
       return json({ truncated: false, tree: [...Object.keys(files).map((f) => ({ type: 'blob', path: f, size: files[f].length })), ...extraTree] });
     }
-    if (method === 'GET' && p.startsWith('/repos/o/r/contents/')) return text(files[p.replace('/repos/o/r/contents/', '')]);
+    if (method === 'GET' && p.startsWith('/repos/o/r/contents/')) {
+      const content = files[p.replace('/repos/o/r/contents/', '')];
+      return content === undefined ? json({}, 404) : text(content);
+    }
     if (method === 'GET' && p === '/repos/o/r/pulls') return json(openPulls);
     if (method === 'GET' && p === '/repos/o/r/git/ref/heads/main') return json({ object: { sha: 'abc123' } });
     if (method === 'POST' && p === '/repos/o/r/git/refs') return takenBranch && opts.body.includes('"refs/heads/cavdax/init-adr"') ? json({}, 422) : json({});
@@ -112,13 +115,83 @@ test('Initialize opens a PR from a new branch and never writes to the default br
   assert.ok(!calls.some((c) => /heads\/main$/.test(c.path) && c.method !== 'GET'), 'must not modify main');
 });
 
-test('the committed starter ADR parses with the real CAVDAX parser', () => {
-  const { frontmatter } = parseFrontmatter(buildStarterAdr(new Date('2026-01-02T00:00:00Z')), NEW_ADR_PATH);
+test('fallback starter ADR (nothing detected) parses with the real CAVDAX parser', () => {
+  const { frontmatter } = parseFrontmatter(buildStarterAdr({ date: new Date('2026-01-02T00:00:00Z'), repo: 'o/r' }), NEW_ADR_PATH);
   assert.equal(frontmatter.id, 'ADR-001');
-  assert.equal(frontmatter.fact_id, 'F-001');
+  assert.equal(frontmatter.fact_id, 'F-ADR-Process');
   assert.equal(frontmatter.decision_id, 'DEC-001');
   assert.equal(frontmatter.date, '2026-01-02');
   assert.ok(isAdrPath(NEW_ADR_PATH));
+});
+
+test('detectStack reads real dependencies and ranks a database above a cache', () => {
+  const d = detectStack({ 'package.json': JSON.stringify({ dependencies: { express: '^4', redis: '^4', pg: '^8' } }) });
+  assert.deepEqual(d.languages, ['Node.js']);
+  assert.deepEqual(d.datastores.map((s) => s.name), ['PostgreSQL', 'Redis']);
+  assert.deepEqual(d.frameworks.map((s) => s.name), ['Express']);
+  assert.deepEqual(d.evidence, ['package.json']);
+});
+
+test('detectStack reads Python, Go and Java manifests', () => {
+  assert.equal(detectStack({ 'requirements.txt': 'Django==4.2\npsycopg2-binary==2.9\n' }).datastores[0].name, 'PostgreSQL');
+  assert.equal(detectStack({ 'requirements.txt': 'Django==4.2\n' }).frameworks[0].name, 'Django');
+  assert.equal(detectStack({ 'go.mod': 'module x\nrequire go.mongodb.org/mongo-driver v1.1\n' }).datastores[0].name, 'MongoDB');
+  assert.equal(detectStack({ 'pom.xml': '<dependency><artifactId>mysql-connector-j</artifactId></dependency>' }).datastores[0].name, 'MySQL');
+});
+
+test('detectStack claims nothing from unknown, empty or malformed manifests', () => {
+  const none = { datastores: [], frameworks: [] };
+  for (const m of [{}, { 'package.json': '{ not json' }, { 'package.json': '{"dependencies":{"lodash":"1"}}' }, { 'README.md': 'postgres mongodb' }]) {
+    const d = detectStack(m);
+    assert.deepEqual({ datastores: d.datastores, frameworks: d.frameworks }, none);
+  }
+});
+
+test('detectStack does not match substrings (e.g. "pg" inside "upgrade")', () => {
+  assert.equal(detectStack({ 'requirements.txt': 'upgrade-tool==1.0\nredisson==2\n' }).datastores.length, 0);
+});
+
+test('starter ADR describes the repo that was scanned, and parses with the real parser', () => {
+  const detection = detectStack({ 'package.json': JSON.stringify({ dependencies: { mongoose: '8', redis: '4' } }) });
+  const md = buildStarterAdr({ date: new Date('2026-01-02T00:00:00Z'), repo: 'acme/shop', detection });
+  const { frontmatter } = parseFrontmatter(md, NEW_ADR_PATH);
+  assert.equal(frontmatter.id, 'ADR-001');
+  assert.equal(frontmatter.fact_id, 'F-Mongo');
+  assert.match(frontmatter.fact_claim, /acme\/shop uses MongoDB/);
+  assert.match(frontmatter.title, /MongoDB/);
+  assert.match(md, /alongside Redis/);
+  assert.match(md, /`package.json`/);
+  assert.ok(!/PostgreSQL/.test(md), 'must not claim a database that is not in the manifest');
+});
+
+test('Initialize writes an ADR built from the repo manifest', async () => {
+  const { fetchImpl, calls } = fakeGithub({
+    files: { 'package.json': JSON.stringify({ dependencies: { pg: '8', express: '4' } }), 'README.md': '# hi' }
+  });
+  const pr = await createAdrPullRequest({ token: 't', owner: 'o', repo: 'r', fetchImpl });
+  assert.deepEqual(pr.detected, ['PostgreSQL', 'Express']);
+  const put = calls.find((c) => c.method === 'PUT');
+  const md = Buffer.from(put.body.content, 'base64').toString('utf-8');
+  assert.match(md, /fact_id: F-Postgres/);
+  assert.match(md, /o\/r uses PostgreSQL as the primary data store/);
+  const prCall = calls.find((c) => c.method === 'POST' && c.path.endsWith('/pulls'));
+  assert.match(prCall.body.body, /Detected from `package.json`: PostgreSQL and Express/);
+});
+
+test('Initialize reads manifests before creating the branch (no orphan branch on failure)', async () => {
+  const { fetchImpl, calls } = fakeGithub({ files: { 'package.json': '{}', 'README.md': '# hi' } });
+  await createAdrPullRequest({ token: 't', owner: 'o', repo: 'r', fetchImpl });
+  const manifestRead = calls.findIndex((c) => c.method === 'GET' && c.path.endsWith('/contents/package.json'));
+  const branchCreate = calls.findIndex((c) => c.method === 'POST' && c.path.endsWith('/git/refs'));
+  assert.ok(manifestRead >= 0 && manifestRead < branchCreate);
+});
+
+test('Initialize on a repo with no recognised stack falls back to the process ADR', async () => {
+  const { fetchImpl, calls } = fakeGithub({ files: { 'README.md': '# hi' } });
+  const pr = await createAdrPullRequest({ token: 't', owner: 'o', repo: 'r', fetchImpl });
+  assert.deepEqual(pr.detected, []);
+  const md = Buffer.from(calls.find((c) => c.method === 'PUT').body.content, 'base64').toString('utf-8');
+  assert.match(md, /fact_id: F-ADR-Process/);
 });
 
 test('Initialize is idempotent: an open CAVDAX PR is returned, not duplicated', async () => {
