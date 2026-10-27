@@ -9,6 +9,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.36 Latest Session Achievements (October 28, 2026 - Draggable Responsive Node Inspector, Compact Blast-Radius Banner & Minimalist Story Stepper)
+
+- **Draggable & Repositionable Node Inspector (`apps/client/src/components/NodeInspector.jsx`)**:
+  - Converted the fixed `<NodeInspector>` card into a floating `<motion.div>` featuring physics-spring drag mechanics (`drag`, `dragMomentum={false}`) constrained within the canvas bounds (`containerRef`).
+  - Integrated a dedicated `<GripHorizontal>` drag handle in the header bar with smooth grab cursor states, allowing developers to smoothly drag the inspector card out of the way to inspect occluded graph regions.
+- **Adaptive Responsive Card Geometry (`apps/client/src/components/NodeInspector.jsx`)**:
+  - Enforced compact responsive card dimensions (`w-68 sm:w-72` in standard workspace view, expanding to `w-76 sm:w-80` when fullscreen).
+  - Streamlined inner metadata card spacing and typography (`p-2.5`, `text-[11px]`) to reduce screen estate footprint while preserving rich causal metadata.
+- **Collision Prevention & Compact Blast-Radius Banner (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Compacted the What-If Blast Radius notification banner width from `max-w-xl` down to `max-w-xs sm:max-w-sm md:max-w-md`, anchoring it neatly to the top-left canvas perimeter.
+  - Dynamically offsets the default vertical anchor of the inspector card (`top-16` instead of `top-12`) when `hasBlastBanner` is active, guaranteeing zero visual occlusion or overlapping on all viewport sizes.
+- **Minimalist Story Stepper Cleanliness (`apps/client/src/components/StoryStepper.jsx`)**:
+  - Completely purged the top metadata banner strip ("Deterministic Walkthrough" and "@cavdax/mcp-server" callout) in strict accordance with `AGENTS.md` and `UI_DESIGN_SYSTEM.md` anti-clutter directives.
+  - The stepper now renders cleanly directly into the 4-act scenario progression grid without meta-explainer clutter.
+
 ## 1.0.35 Latest Session Achievements (October 28, 2026 - Decision-Aware Probe Architecture, Node Inspector Gate Trigger & Luminous Execution Counter)
 
 - **Decision-Aware Probe Architecture (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
