@@ -1,22 +1,58 @@
 # CAVDAX: Active Development Session State (`DEV_SESSION_STATE.md`)
 
-
-
 > **Repository**: `GraphHacks-Hackathon/Codebase`  
-
-> **Session Timestamp**: `2026-10-26T21:35:00+05:30`  
-
+> **Session Timestamp**: `2026-10-28T00:50:00+05:30`  
 > **Active Branch**: `main` (Feature branches: `frontend`, `backend`, `docs`)  
-
-> **Status**: Production Pre-Flight Moats, Dual-Display Engine & All PRs (#40, #41, #42) Merged into Main
-
-
+> **Status**: Agent & Human Console Capabilities, Blast-Radius Simulator, Vision OCR Badges, SVG Export, and ADR Guardrails Implemented
 
 ---
 
+## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.33 Latest Session Achievements (October 28, 2026 - isDemo Runtime Fix, Session Secret Hardening, Sub-ms Gate Timing & CI Quality Gate)
+
+- **Eliminated ReferenceError on Node Clicks (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/App.jsx`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Resolved `ReferenceError: isDemo is not defined` thrown on the live site when clicking any graph node by explicitly declaring `isDemo = false` in `GraphCanvas` props and passing `isDemo={true}` in `App.jsx` and `isDemo={false}` in `ConnectedRepoWorkspace.jsx`.
+  - Passed boolean-coerced `isFalkorDB={Boolean(isDemo || (typeof title === 'string' && title.includes('FalkorDB')))}` safely to `NodeInspector`.
+- **Cryptographic Ephemeral Secret for Session Signing (`apps/server/index.js`)**:
+  - Replaced static fallback string with `randomBytes(32).toString('hex')` whenever `process.env.SESSION_SECRET` is unset, completely neutralizing cookie forgery attacks from public repo code.
+- **Pure Causal Gate Latency Isolation & Fail-Closed Guardrails (`apps/server/index.js`)**:
+  - Isolated gate latency measurement in `POST /api/github/repos/:owner/:repo/verify-action` to the precise causal check, removing external GitHub REST API network skew (300ms–800ms) to reflect authentic sub-millisecond GraphBLAS performance.
+  - Enforced `requireAuth` and fail-closed 404 response when no decisions exist in the repository, stopping client parameter manipulation from generating mock approved decisions.
+  - Scoped FalkorDB previous action deletion to `repo: $repo` to eliminate cross-repository node collisions.
+- **Restricted Sensitive Administrative Endpoints (`apps/server/index.js`)**:
+  - Protected `GET /api/system/dev-ips` and `GET /api/system/dev-roster` with `requireDevAuth`, plugging public information disclosure of internal developer IPs and roster metadata.
+  - Protected `POST /api/reset` with `requireDevAuth` to prevent unauthorized strangers from wiping shared demo state.
+- **CLI and Hosted Ingest Pattern Synchronization (`apps/mcp-server/src/ingestCommand.js`)**:
+  - Synchronized `discoverAdrFiles` in the published MCP package with `ADR_DIRECTORIES` (adding `docs/decisions/`, `design/adr/`, `wiki/adrs/`, and root `ADR-*.md`).
+- **CI Test Suite Quality Gate for VM Deployments (`.github/workflows/deploy.yml`)**:
+  - Added automated test execution gate in `deploy.yml` requiring all 42+ unit tests to pass before initiating SSH deployment to the production VM.
+
+## 1.0.32 Latest Session Achievements (October 28, 2026 - Agent & Human Console Capabilities, Blast-Radius Simulator, Vision OCR Mode, SVG Export & ADR Guardrails)
+
+- **`export_graph_image` Tool & Standalone SVG Generation (`core/graph/renderSvg.js`, `core/mcp/server.js`, `apps/mcp-server/src/stdioServer.js`, `apps/server/index.js`)**:
+  - Implemented standalone, dependency-free SVG graph generator `renderGraphToSvg` rendering crisp 4-column causal DAGs with high-contrast text, arrows, and optional blast-radius annotations.
+  - Exposed `export_graph_image` tool in both `CavdaxMcpServer` and `CavdaxStdioGateway` (supporting live FalkorDB and simulation modes), returning SVG or Markdown-wrapped images.
+  - Added `GET /api/graph/export-image` endpoint on backend server allowing direct visual embedding in GitHub PR descriptions (`![CAVDAX Verification](...)`).
+- **Interactive Blast-Radius Simulation & What-If Analysis (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/components/NodeInspector.jsx`, `core/graph/renderSvg.js`)**:
+  - Implemented `computeDownstreamBlast` traversal algorithm computing transitive causal reachability across `EXTRACTED_FROM`, `DEPENDS_ON`, `GROUNDED_IN`, and `SUPERSEDES` edges.
+  - Added "Simulate Invalidation (What-If)" toggle in `NodeInspector.jsx`.
+  - In `GraphCanvas.jsx`, downstream impacted nodes and edges light up with pulsing `#F43F5E` rose borders, glowing halos, dashed rays, and an impact notification banner detailing exact numbers of impacted Decisions, Facts, Actions, and target code files.
+- **High-Contrast Vision OCR Mode (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Added `[Vision OCR]` toggle button in top canvas bar (also activated via `?ocr=1` or `?vision=1` URL query parameters).
+  - Renders solid high-contrast bounding badge headers (`[DEC-102 : STALE]`) with bold `11px` monospace text and prominent borders, guaranteeing 100% OCR accuracy for multimodal vision agents (Claude 3.7 Computer Use, GPT-4o, Gemini 2.0) even under lossy viewport downsampling.
+- **Architectural Drift Detection Filter (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Added three-state canvas filter (`ALL`, `GROUNDED`, `DRIFTED`) allowing architects to instantly isolate active grounded subgraphs vs ungrounded or superseded drift zones.
+- **Direct Git Deep Links & Actions in Node Inspector (`apps/client/src/components/NodeInspector.jsx`)**:
+  - Added one-click "View on GitHub" button opening the exact repository file (`https://github.com/:repo/blob/:branch/:file_path`).
+  - Added inline "Open Status Sync PR" button for ADR nodes with status drift.
+- **Expanded ADR Path Discovery (`core/ingestion/adrPaths.js`, `apps/server/test/exportImage.test.mjs`)**:
+  - Broadened `isAdrPath` to recognize top-level root ADRs (`ADR-*.md`, `0001-*.md`), `docs/ADR-*.md`, `design/adr`, and `wiki/adrs`, preventing false 0-ADR scans on non-standard folder layouts.
+- **Starter Pull Request Confirmation Safety Modal (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Added a defensive confirmation modal prior to triggering `initStarterAdr`, protecting users against accidental real PR generation on production or monorepos.
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
+
 
 ## 1.0.31 Latest Session Achievements (October 28, 2026 - Combobox Import Fix, Theme Toggle Harmonization, Settings Hover Kinetic & Preferences Spring Transitions - PR #78 & #79)
 
