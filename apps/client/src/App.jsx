@@ -907,6 +907,7 @@ export default function App() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data.graph) setGraphData(data.graph);
+        if (data.simulated) isSimulated = true;
         lat = data.ingestResult?.invalidation?.latency_ms ?? null;
       } catch {
         // Backend offline — simulate in-browser (roadmap §6.2)
@@ -919,7 +920,7 @@ export default function App() {
       if (isSimulated) {
         addLog(
           'SIMULATION',
-          'In-memory cascade simulated: ADR-001 -> SUPERSEDED, F-Auth-v1 -> STALE, DEC-102 -> INVALIDATED. (Backend offline)',
+          'In-memory cascade simulated: ADR-001 -> SUPERSEDED, F-Auth-v1 -> STALE, DEC-102 -> INVALIDATED. [SIMULATION FALLBACK]',
           'CASCADE'
         );
       } else {
@@ -952,6 +953,7 @@ export default function App() {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         data = await res.json();
+        if (data.simulated) isSimulated = true;
       } catch {
         data = _simulateAct3Block();
         isSimulated = true;
@@ -963,7 +965,7 @@ export default function App() {
       setAgentState('rejected');
       playRejectBuzz();
       if (isSimulated) {
-        addLog('MCP_GATE', `ENCLOSED MCP GATE BLOCKED (Simulation Fallback). Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`, 'GATE_BLOCK', data.violation_paths);
+        addLog('MCP_GATE', `ENCLOSED MCP GATE BLOCKED [SIMULATION FALLBACK]. Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`, 'GATE_BLOCK', data.violation_paths);
       } else {
         addLog('MCP_GATE', `ENCLOSED MCP GATE BLOCKED in ${data.latency_ms}ms! Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`, 'GATE_BLOCK', data.violation_paths);
       }
@@ -979,6 +981,7 @@ export default function App() {
         if (!revalRes.ok) throw new Error(`HTTP ${revalRes.status}`);
         const revalData = await revalRes.json();
         if (revalData.graph) setGraphData(revalData.graph);
+        if (revalData.simulated) isRevalSimulated = true;
       } catch {
         // Simulate revalidation in-browser
         isRevalSimulated = true;
@@ -993,7 +996,7 @@ export default function App() {
         addLog('SYSTEM', 'Notice: Backend offline — simulating revalidation in-browser.', 'INFO');
       }
       if (isRevalSimulated) {
-        addLog('SIMULATION', 'In-memory revalidation simulated: DEC-103 created; DEC-102 archived.', 'REVALIDATION');
+        addLog('SIMULATION', 'In-memory revalidation simulated: DEC-103 created; DEC-102 archived. [SIMULATION FALLBACK]', 'REVALIDATION');
       } else {
         addLog('FALKORDB', 'Query 3 Revalidation complete: DEC-103 created; DEC-102 archived.', 'REVALIDATION');
       }
@@ -1017,6 +1020,7 @@ export default function App() {
         if (!execRes.ok) throw new Error(`HTTP ${execRes.status}`);
         execData = await execRes.json();
         if (execData.graph) setGraphData(execData.graph);
+        if (execData.simulated) isExecSimulated = true;
       } catch {
         execData = _simulateAct4Approve(oauthCode);
         isExecSimulated = true;
@@ -1028,7 +1032,7 @@ export default function App() {
       setAgentState('verified');
       playApprovalChime();
       if (isExecSimulated) {
-        addLog('MCP_GATE', `GATE APPROVED (Simulation Fallback). Full causal provenance chain simulated. File 'payment.js' simulated in-memory.`, 'GATE_APPROVE');
+        addLog('MCP_GATE', `GATE APPROVED [SIMULATION FALLBACK]. Full causal provenance chain simulated. File 'payment.js' simulated in-memory.`, 'GATE_APPROVE');
       } else {
         addLog('MCP_GATE', `GATE APPROVED in ${execData.latency_ms}ms! Full causal provenance chain verified. File 'payment.js' safely written to disk.`, 'GATE_APPROVE');
       }
@@ -1081,12 +1085,16 @@ export default function App() {
       setActiveVerdict(null);
       setSelectedNode(null);
 
+      const resetMsg = data.simulated
+        ? 'Demo repository reset to Act I baseline [SIMULATION FALLBACK].'
+        : 'Demo repository and FalkorDB causal graph reset to Act I baseline.';
+
       setTerminalLogs([
         {
-          component: 'SYSTEM',
+          component: data.simulated ? 'SIMULATION' : 'SYSTEM',
           time: new Date().toLocaleTimeString(),
           type: 'INFO',
-          text: 'Demo repository and FalkorDB causal graph reset to Act I baseline.'
+          text: resetMsg
         }
       ]);
 
