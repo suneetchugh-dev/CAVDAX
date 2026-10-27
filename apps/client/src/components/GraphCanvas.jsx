@@ -570,7 +570,7 @@ export default function GraphCanvas({
 
         {/* What-If Blast Radius Simulation Notification Banner */}
         {simulatedBlastNode && (
-          <div className="absolute top-3 left-3 right-3 sm:right-auto z-20 flex items-center justify-between gap-3 p-2.5 rounded-xl bg-rose-500/15 dark:bg-rose-950/80 border border-rose-500/40 text-rose-800 dark:text-rose-200 backdrop-blur-md shadow-lg animate-in fade-in max-w-xl font-mono text-xs">
+          <div className="absolute top-3 left-3 right-3 sm:right-auto z-20 flex items-center justify-between gap-3 p-2.5 rounded-xl bg-rose-500/15 dark:bg-rose-950/80 border border-rose-500/40 text-rose-800 dark:text-rose-200 backdrop-blur-md shadow-lg animate-in fade-in max-w-xs sm:max-w-sm md:max-w-md font-mono text-xs">
             <div className="flex items-center gap-2 min-w-0">
               <Activity className="w-4 h-4 text-rose-500 animate-pulse shrink-0" />
               <div className="min-w-0 leading-tight">
@@ -852,6 +852,9 @@ export default function GraphCanvas({
           hasDrift={Boolean(unsyncedList?.some(u => u.targetId === selectedNode.id))}
           onTestDecision={onTestDecision}
           isVerifyingAction={isVerifyingAction}
+          isFullscreen={isFullscreen}
+          hasBlastBanner={Boolean(simulatedBlastNode)}
+          containerRef={containerRef}
         />
       )}
     </div>
