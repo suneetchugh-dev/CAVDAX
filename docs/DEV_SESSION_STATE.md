@@ -23,6 +23,9 @@
   - Fully documented `export_graph_image` tool schema and execution sequence for multimodal AI agents (Claude 3.7 Sonnet, GPT-4o) and automated PR verification embeds.
 - **Topological Knowledge Graph Macro Update (`docs/ARCHITECTURE_KNOWLEDGE_GRAPH.md`)**:
   - Updated Macro Topological Architecture Map with GitHub ADR Scanner, SVG/OCR Generator, Draggable Node Inspector, and Target Repo PR isolation subgraphs.
+- **Mermaid Syntax Hardening & Sequence Diagram Fix (`README.md`, `docs/ARCHITECTURE.md`, `docs/MCP_SPECIFICATION.md`)**:
+  - Eliminated statement-terminating semicolons from Mermaid sequence messages (which caused GitHub rich display failure with 'Expecting arrow, got NEWLINE').
+  - Neutralized unescaped HTML angle brackets and raw arrow sequences in message payloads across all 34 markdown documentation files.
 
 ## 1.0.37 Latest Session Achievements (October 28, 2026 - Streamlined Empty ADR State Copy & Minimalist Clarity)
 

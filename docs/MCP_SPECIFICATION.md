@@ -254,7 +254,7 @@ sequenceDiagram
     DB-->>MCP: Return Topological Subgraph (Nodes: 6, Edges: 5)
     MCP->>SVG: computeBlastRadius(nodes, edges, 'DEC-102')
     SVG->>SVG: Layout 4 Columns & Inject High-Contrast OCR Badges
-    SVG-->>MCP: Standalone XML SVG String (<svg ...>)
+    SVG-->>MCP: Standalone XML SVG String
     MCP-->>Agent: Return SVG Payload
     Agent->>PR: Attach Causal SVG Diagram into PR Description Body
 ```

@@ -73,15 +73,15 @@ sequenceDiagram
 
     Note over Dev, Falkor: ACT II: Ingestion of Superseding Commit
     Dev->>MCP: POST /api/ingest (Commit containing ADR-002)
-    MCP->>Falkor: MATCH (old:Source {id:'ADR-001'}), (new:Source {id:'ADR-002'}) CREATE (new)-[:SUPERSEDES]->(old)
-    Falkor->>Falkor: GraphBLAS Invalidation Cascade (ADR-001 -> SUPERSEDED, DEC-102 -> INVALIDATED)
+    MCP->>Falkor: Cypher: CREATE (new:Source {id:'ADR-002'})-[:SUPERSEDES] to (old:Source {id:'ADR-001'})
+    Falkor->>Falkor: GraphBLAS Invalidation Cascade (ADR-001 is SUPERSEDED, DEC-102 is INVALIDATED)
     Falkor-->>MCP: Invalidation Complete in 2.14ms
 
     Note over Agent, Disk: ACT III: Agent Attempts Stale Code Execution
     Agent->>MCP: POST /api/mcp/call (apply_code_change, decision: 'DEC-102')
-    MCP->>Falkor: MATCH (d:Decision {id:'DEC-102'})-[:DEPENDS_ON]->(f:Fact)-[:EXTRACTED_FROM]->(s:Source) RETURN s.status, f.is_stale
+    MCP->>Falkor: Cypher: Check Decision DEC-102 dependency provenance
     Falkor-->>MCP: Return: Source=SUPERSEDED, Fact=STALE
-    MCP-->>Agent: ⛔ 403 FORBIDDEN: BLOCKED_SUPERSEDED_SOURCE (Zero bytes written to disk)
+    MCP-->>Agent: 403 FORBIDDEN: BLOCKED_SUPERSEDED_SOURCE (Zero bytes written to disk)
 
     Note over Agent, Disk: ACT IV: Revalidation & Grounded Write
     Agent->>Falkor: Query Active Sources (Returns ADR-002: OAuth2)
@@ -90,7 +90,7 @@ sequenceDiagram
     MCP->>Falkor: Verify Provenance Path for DEC-103
     Falkor-->>MCP: Return: Source=ACTIVE, Fact=VERIFIED
     MCP->>Disk: Atomic Write Verified OAuth2 Code to payment.js
-    MCP-->>Agent: ✅ 200 OK: GATE APPROVED in 1.62ms
+    MCP-->>Agent: 200 OK: GATE APPROVED in 1.62ms
 ```
 
 ---

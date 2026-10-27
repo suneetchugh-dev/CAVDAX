@@ -271,10 +271,10 @@ sequenceDiagram
     Web->>Graph: Fetch Causal DAG & Display Grounded Chain
 
     Note over Dev, Graph: ACT II: Temporal Invalidation (Superseding Commit)
-    Dev->>Repo: Commit ADR-002 (Mandatory OAuth2; supersedes ADR-001)
-    Gate->>Graph: Ingest ADR-002 -> CREATE (ADR-002)-[:SUPERSEDES]->(ADR-001)
+    Dev->>Repo: Commit ADR-002 (Mandatory OAuth2, supersedes ADR-001)
+    Gate->>Graph: Ingest ADR-002: CREATE (ADR-002)-[:SUPERSEDES] to (ADR-001)
     Graph->>Graph: GraphBLAS Linear Algebra Invalidation Cascade (2.1ms)
-    Graph-->>Web: SSE Event: ADR-001 -> SUPERSEDED, DEC-102 -> INVALIDATED
+    Graph-->>Web: SSE Event: ADR-001 is SUPERSEDED, DEC-102 is INVALIDATED
 
     Note over Agent, Repo: ACT III: Stale Agent Execution Intercepted
     Agent->>Gate: apply_code_change(decision: 'DEC-102', file: 'payment.js')
@@ -286,7 +286,7 @@ sequenceDiagram
     Note over Agent, Repo: ACT IV: Autonomous Revalidation & Gated Write
     Agent->>Gate: check_intent_clearance(decision: 'DEC-103')
     Agent->>Gate: revalidate_decision(new_source: 'ADR-002', old_decision: 'DEC-102', new_decision: 'DEC-103')
-    Graph->>Graph: CREATE (DEC-103:Decision)-[:REPLACES]->(DEC-102)
+    Graph->>Graph: CREATE (DEC-103:Decision)-[:REPLACES] to (DEC-102)
     Agent->>Gate: apply_code_change(decision: 'DEC-103', file: 'payment.js', code: 'OAuth2')
     Gate->>Graph: verifyActionGate(decisionId: 'DEC-103')
     Graph-->>Gate: Verdict: APPROVED (1.6ms)
