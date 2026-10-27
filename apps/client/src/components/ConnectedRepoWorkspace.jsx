@@ -52,6 +52,7 @@ export default function ConnectedRepoWorkspace({
   const [scan, setScan] = useState(null);
   const [error, setError] = useState(null);
   const [isOpeningPr, setIsOpeningPr] = useState(false);
+  const [syncingTarget, setSyncingTarget] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [logs, setLogs] = useState([]);
 
@@ -141,6 +142,37 @@ export default function ConnectedRepoWorkspace({
     if (onUpdateRepo) {
       const { adrPr, ...rest } = repo;
       onUpdateRepo(rest);
+    }
+  };
+
+  const openSyncPullRequest = async (targetId, supersedingId) => {
+    playClick();
+    setSyncingTarget(targetId);
+    setError(null);
+    addLog('SYNC_PR', `Creating branch and opening pull request to mark ${targetId} superseded by ${supersedingId}.`);
+    try {
+      const res = await fetch(`${apiBase}/sync-adr-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ targetId, supersedingId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        failWith(data, 'Could not open the sync pull request.');
+        return;
+      }
+      const pr = data.pullRequest;
+      playApprovalChime();
+      addLog('SYNC_PR', `${pr.reused ? 'Sync pull request already open' : 'Opened sync pull request'} #${pr.number} on branch ${pr.branch}.`, 'CASCADE');
+      setScan(prev => prev ? {
+        ...prev,
+        unsynced: (prev.unsynced || []).filter(u => u.targetId !== targetId)
+      } : prev);
+    } catch {
+      failWith(null, 'Could not reach the CAVDAX server. Check your connection.');
+    } finally {
+      setSyncingTarget(null);
     }
   };
 
@@ -273,6 +305,32 @@ export default function ConnectedRepoWorkspace({
                 </div>
               ))}
             </div>
+
+            {scan.unsynced && scan.unsynced.length > 0 && (
+              <div className="p-3 bg-amber-500/10 border-b border-amber-500/30 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-amber-300 text-xs font-semibold">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{scan.unsynced.length} ADR Status Drift Detected</span>
+                </div>
+                <div className="text-[11px] text-amber-200/80 leading-relaxed font-sans">
+                  {scan.unsynced.map(u => (
+                    <div key={u.targetId} className="flex flex-col gap-1.5 mt-1 pt-1 border-t border-amber-500/20 first:border-0 first:pt-0">
+                      <div>
+                        <strong className="font-mono text-amber-200">{u.targetId}</strong> is superseded by <strong className="font-mono text-amber-200">{u.supersedingId}</strong> in the graph, but its file status is still <code className="px-1 rounded bg-amber-400/20 text-amber-300">{u.currentStatus}</code>.
+                      </div>
+                      <button
+                        onClick={() => openSyncPullRequest(u.targetId, u.supersedingId)}
+                        disabled={syncingTarget === u.targetId}
+                        className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold font-mono text-[11px] hover:bg-amber-300 transition-colors disabled:opacity-50 cursor-pointer self-start"
+                      >
+                        <GitPullRequest className={`w-3.5 h-3.5 ${syncingTarget === u.targetId ? 'animate-spin' : ''}`} />
+                        <span>{syncingTarget === u.targetId ? 'Opening PR...' : `Open PR: Mark ${u.targetId} Superseded`}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="p-3 bg-white/[0.02] border-b border-slate-800 flex flex-col gap-2">
               <span className="text-[10px] uppercase tracking-wider text-slate-400">Check an agent write against this graph</span>
