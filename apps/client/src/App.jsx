@@ -706,7 +706,18 @@ export default function App() {
         if (healthRes.ok) {
           const healthData = await healthRes.json();
           setFalkorLive(healthData.falkordb_connected);
-          if (healthData.tier) setActiveTierKey(healthData.tier);
+          if (healthData.tier) {
+            const hasDevOverride = typeof window !== 'undefined' && localStorage.getItem('cavdax_dev_tier_override') === 'true';
+            const isHackathon = typeof window !== 'undefined' && localStorage.getItem('cavdax_hackathon_mode') === 'true';
+            if (isHackathon) {
+              setActiveTierKey('enterprise');
+            } else if (hasDevOverride) {
+              const savedTier = localStorage.getItem('cavdax_tier');
+              if (savedTier) setActiveTierKey(savedTier);
+            } else {
+              setActiveTierKey(healthData.tier);
+            }
+          }
         }
 
         const graphRes = await fetch('/api/graph');

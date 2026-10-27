@@ -103,7 +103,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
   const [passkeyInput, setPasskeyInput] = useState('');
   const [authError, setAuthError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [activeTab, setActiveTab] = useState('scenarios'); // 'scenarios' | 'diagnostics' | 'tiers' | 'security' | 'audit'
+  const [activeTab, setActiveTab] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('cavdax_dev_active_tab')) || 'scenarios'); // 'scenarios' | 'diagnostics' | 'tiers' | 'security' | 'audit'
 
   // Developer tier override state
   const [activeDevTier, setActiveDevTier] = useState(() => getDevCurrentTier());
@@ -214,7 +214,14 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
   };
 
   // Scenario injection state
-  const [activeScenarios, setActiveScenarios] = useState({});
+  const [activeScenarios, setActiveScenarios] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cavdax_active_scenarios');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [injectionLogs, setInjectionLogs] = useState(() => [
     {
       id: 'log-init',
@@ -325,6 +332,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
       setActiveScenarios((prev) => {
         const next = { ...prev };
         delete next[scen.id];
+        try { localStorage.setItem('cavdax_active_scenarios', JSON.stringify(next)); } catch {}
         return next;
       });
       showPanelToast(`Reverted scenario: ${scen.name}`);
@@ -338,13 +346,17 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
         ...prev,
       ]);
     } else {
-      setActiveScenarios((prev) => ({
-        ...prev,
-        [scen.id]: {
-          injectedAt: Date.now(),
-          details: scen.payload,
-        },
-      }));
+      setActiveScenarios((prev) => {
+        const next = {
+          ...prev,
+          [scen.id]: {
+            injectedAt: Date.now(),
+            details: scen.payload,
+          },
+        };
+        try { localStorage.setItem('cavdax_active_scenarios', JSON.stringify(next)); } catch {}
+        return next;
+      });
       showPanelToast(`Injected scenario: ${scen.name}`);
       setInjectionLogs((prev) => [
         {
@@ -546,6 +558,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               onClick={() => {
                 playClick();
                 setActiveTab(tab.id);
+                try { localStorage.setItem('cavdax_dev_active_tab', tab.id); } catch {}
               }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-mono flex items-center gap-2 transition-all cursor-pointer shrink-0 select-none ${
                 isActive
