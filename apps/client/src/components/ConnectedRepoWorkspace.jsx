@@ -340,7 +340,7 @@ export default function ConnectedRepoWorkspace({
       {noAdrs && !pr && (
         <StateCard icon={<FolderGit2 className="w-6 h-6 text-slate-700 dark:text-slate-300" />}
           title="No Architecture Decision Records found"
-          body={<>CAVDAX looked in the usual ADR folders on <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong> and found none. It will read your package manifest, detect the stack you already use, and open a pull request with an ADR that records it. Nothing is committed to <strong className="font-mono">{scan.branch}</strong> until you merge it.</>}
+          body={<>No ADRs found in <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong>. Initialize will inspect your stack and open a starter ADR-001 pull request without committing directly to <strong className="font-mono">{scan.branch}</strong>.</>}
           actions={
             <button onClick={() => { playClick(); setShowInitConfirmModal(true); }} disabled={isOpeningPr} className={`${btnPrimary} w-full cursor-pointer`}>
               <GitPullRequest className={`w-4 h-4 ${isOpeningPr ? 'animate-spin' : ''}`} strokeWidth={2} />
