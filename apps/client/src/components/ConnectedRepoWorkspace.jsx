@@ -280,6 +280,10 @@ export default function ConnectedRepoWorkspace({
   const noAdrs = phase === 'ready' && scan && scan.count === 0;
   const pr = repo.adrPr;
 
+  const decisions = (scan?.graph?.nodes || []).filter(n => n.label === 'Decision');
+  const validDecisions = decisions.filter(d => d.status === 'VALID');
+  const staleDecisions = decisions.filter(d => d.status === 'INVALIDATED_NEEDS_REVALIDATION' || d.status === 'SUPERSEDED');
+
   return (
     <div className="flex-1 min-h-0 flex flex-col font-mono select-none">
       {/* Repository ribbon */}
