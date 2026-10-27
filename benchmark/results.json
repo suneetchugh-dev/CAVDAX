@@ -1,131 +1,171 @@
 {
-  "timestamp": "2026-10-20T01:32:58.123Z",
+  "timestamp": "2026-10-27T21:26:07.893Z",
   "metrics": {
     "total_scenarios": 10,
-    "rag_failure_rate_percent": 100,
+    "rag_failure_rate_percent": 90,
     "cavdax_protection_rate_percent": 100,
-    "average_latency_ms": 1.65
+    "average_latency_ms": 0.037
   },
   "scenarios": [
     {
       "id": "SCEN-01",
       "category": "Authentication",
       "title": "TokenAuth v1 Deprecation & OAuth2 Migration",
-      "staleDoc": "ADR-001: Adopt TokenAuth v1 for Payment Gateway",
-      "supersedingDoc": "ADR-002: Mandatory Migration to OAuth2; TokenAuth v1 Decommissioned",
-      "ragBehavior": "Retrieves ADR-001 due to keyword match \"TokenAuth\"; Agent executes deprecated auth code.",
-      "cavdaxBehavior": "SUPERSEDES edge invalidates Fact and DEC-102 in 2.1ms; MCP Gate halts code write with BLOCKED_SUPERSEDED_SOURCE.",
+      "query": "implement tokenauth v1 payment gateway authentication service",
+      "ragScores": {
+        "staleDocScore": 0.4285714285714285,
+        "supersedingDocScore": 0.14285714285714285
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.429 vs 0.143); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.84
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.254
     },
     {
       "id": "SCEN-02",
       "category": "API Routing",
       "title": "Checkout API Route Breaking Version Bump (v1 -> v2)",
-      "staleDoc": "PR-104: Expose /api/v1/checkout endpoint",
-      "supersedingDoc": "PR-412: Deprecate /api/v1/checkout in favor of /api/v2/checkout",
-      "ragBehavior": "Vector search returns /api/v1 route; Agent implements old schema endpoint.",
-      "cavdaxBehavior": "Graph flags /api/v1 as SUPERSEDED; MCP gate rejects routing mutation in 1.4ms.",
+      "query": "expose checkout api endpoint schema v1",
+      "ragScores": {
+        "staleDocScore": 0.6666666666666667,
+        "supersedingDocScore": 0.4285714285714285
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.667 vs 0.429); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.42
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.012
     },
     {
       "id": "SCEN-03",
       "category": "Security Vulnerability",
       "title": "Vulnerable Crypto Library Deprecation",
-      "staleDoc": "ADR-014: Use crypto-js for payload hashing",
-      "supersedingDoc": "SEC-ADR-029: CVE-2026-1122 ban on crypto-js; enforce Node crypto.subtle",
-      "ragBehavior": "Similarity search returns crypto-js guide; Agent imports vulnerable dependency.",
-      "cavdaxBehavior": "Causal dependency marked stale; AgentAction blocked before package.json edit.",
+      "query": "use crypto-js for payload hashing and signatures",
+      "ragScores": {
+        "staleDocScore": 0.6666666666666667,
+        "supersedingDocScore": 0.25
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.667 vs 0.250); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.95
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.03
     },
     {
       "id": "SCEN-04",
       "category": "Governance & Ownership",
       "title": "CODEOWNERS Service Routing Shift (@alice -> @bob)",
-      "staleDoc": "CODEOWNERS: /services/payment/* @alice",
-      "supersedingDoc": "Commit #7f91a: Update CODEOWNERS /services/payment/* to @bob",
-      "ragBehavior": "Stale cached team doc assigns PR review to @alice who left team.",
-      "cavdaxBehavior": "SUPERSEDES commit invalidates reviewer cache; assigns verified owner @bob.",
-      "ragSuccess": false,
+      "query": "assign payment service code review to alice",
+      "ragScores": {
+        "staleDocScore": 0.2222222222222222,
+        "supersedingDocScore": 0.25
+      },
+      "ragSuccess": true,
+      "ragBehavior": "Vector search retrieved superseding document.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.15
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.01
     },
     {
       "id": "SCEN-05",
       "category": "DevOps & Containers",
       "title": "Docker Base Image Security Upgrade (node:18 -> node:20-alpine)",
-      "staleDoc": "Dockerfile.base: FROM node:18-bullseye",
-      "supersedingDoc": "ADR-033: Enforce node:20-alpine across all microservices for CVE mitigation",
-      "ragBehavior": "Agent scaffolds new service using node:18 from top similarity doc.",
-      "cavdaxBehavior": "Invalidation wave cascades down to base image fact; halts scaffolding in 1.7ms.",
+      "query": "scaffold microservice with from node:18-bullseye",
+      "ragScores": {
+        "staleDocScore": 0.5,
+        "supersedingDocScore": 0.1
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.500 vs 0.100); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.72
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.014
     },
     {
       "id": "SCEN-06",
       "category": "Database Architecture",
       "title": "NoSQL to Relational Migration (MongoDB -> PostgreSQL)",
-      "staleDoc": "ADR-005: Store transaction records in MongoDB collections",
-      "supersedingDoc": "ADR-041: Migrate payment ledgers to PostgreSQL with ACID isolation",
-      "ragBehavior": "Vector search retrieves MongoDB query snippets; Agent writes Mongoose schema.",
-      "cavdaxBehavior": "Graph detects superseded persistence layer; blocks file creation in 2.3ms.",
+      "query": "store transaction records in mongodb collections with mongoose",
+      "ragScores": {
+        "staleDocScore": 0.7,
+        "supersedingDocScore": 0.08333333333333333
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.700 vs 0.083); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 2.31
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.01
     },
     {
       "id": "SCEN-07",
       "category": "Secret Management",
       "title": "Plaintext Env Var to HashiCorp Vault Transition",
-      "staleDoc": "ENV_GUIDE.md: Read STRIPE_SECRET from process.env",
-      "supersedingDoc": "ADR-052: Enforce HashiCorp Vault SDK; reject plain environment variables",
-      "ragBehavior": "Agent writes process.env.STRIPE_SECRET into production controller.",
-      "cavdaxBehavior": "Decision node invalidated; enclosed tool blocks write and prompts for Vault SDK.",
+      "query": "read stripe secret key from process.env stripe_secret",
+      "ragScores": {
+        "staleDocScore": 0.4545454545454546,
+        "supersedingDocScore": 0
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.455 vs 0.000); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.68
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.01
     },
     {
       "id": "SCEN-08",
       "category": "Feature Flags",
       "title": "Feature Flag Cleanup (FF_NEW_CHECKOUT Permanent Rollout)",
-      "staleDoc": "FLAGS.md: Wrap checkout flow inside if (isFlagEnabled(\"FF_NEW_CHECKOUT\"))",
-      "supersedingDoc": "COMMIT #a42c1: Remove FF_NEW_CHECKOUT; rollout at 100%",
-      "ragBehavior": "Agent re-introduces deprecated flag conditional check in new route.",
-      "cavdaxBehavior": "Flag source flagged SUPERSEDED; MCP gate blocks dead branch code.",
+      "query": "wrap checkout flow with isFlagEnabled ff_new_checkout",
+      "ragScores": {
+        "staleDocScore": 0.5555555555555556,
+        "supersedingDocScore": 0.1111111111111111
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.556 vs 0.111); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.34
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.01
     },
     {
       "id": "SCEN-09",
       "category": "Infrastructure Limits",
       "title": "API Gateway Rate-Limit Throttling Reduction",
-      "staleDoc": "GATEWAY.md: Default burst limit is 1000 req/min",
-      "supersedingDoc": "INCIDENT-POSTMORTEM-88: Lower burst limit to 100 req/min for fraud protection",
-      "ragBehavior": "Agent generates benchmark test script flooding 1000 req/min, tripping alarms.",
-      "cavdaxBehavior": "Rate-limit fact invalidated; agent blocked from submitting test payload.",
+      "query": "set default burst limit 1000 req per min benchmark test",
+      "ragScores": {
+        "staleDocScore": 0.46153846153846156,
+        "supersedingDocScore": 0.36363636363636365
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.462 vs 0.364); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.55
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.01
     },
     {
       "id": "SCEN-10",
       "category": "Open Source Compliance",
       "title": "License Incompatibility Shift (MIT -> Apache-2.0 with Patent Clause)",
-      "staleDoc": "LICENSE: MIT License v1",
-      "supersedingDoc": "LEGAL-ADR-011: Re-license core modules under Apache-2.0",
-      "ragBehavior": "Agent writes MIT license headers in newly created module files.",
-      "cavdaxBehavior": "Provenance check discovers active Apache-2.0 source; rejects MIT header.",
+      "query": "add mit license headers to new module files",
+      "ragScores": {
+        "staleDocScore": 0.30000000000000004,
+        "supersedingDocScore": 0
+      },
       "ragSuccess": false,
+      "ragBehavior": "Vector search ranked stale doc higher (0.300 vs 0.000); Agent executes deprecated architecture.",
       "cavdaxPreventedFailure": true,
-      "latencyMs": 1.49
+      "cavdaxGateVerdict": "BLOCKED_DECISION_INVALIDATED",
+      "cavdaxReason": "Decision is marked invalidated",
+      "latencyMs": 0.01
     }
   ]
 }

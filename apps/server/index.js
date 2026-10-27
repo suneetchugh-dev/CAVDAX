@@ -93,7 +93,13 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, _res, buf) => {
+    // Preserve pristine raw buffer for HMAC signature verification (e.g. Razorpay webhooks)
+    req.rawBody = buf;
+  }
+}));
 
 // ---------------------------------------------------------------------------
 // SESSION MIDDLEWARE & PERSISTENT SESSION RESILIENCE
@@ -512,7 +518,24 @@ setInterval(() => {
   }
 }, 60 * 1000).unref(); // .unref() so the interval doesn't keep the process alive during tests
 
-function broadcastEvent(eventType, payload) {
+function sanitizeBroadcastPayload(eventType, payload) {
+  if (eventType === 'MCP_TOOL_EXECUTED' && payload && typeof payload === 'object') {
+    const sanitized = { ...payload };
+    if (sanitized.args && typeof sanitized.args === 'object') {
+      const sanitizedArgs = { ...sanitized.args };
+      if (sanitizedArgs.code_payload) {
+        // Redact raw source code payload from public unauthenticated SSE broadcasts
+        sanitizedArgs.code_payload = `[REDACTED: ${sanitizedArgs.code_payload.length} chars]`;
+      }
+      sanitized.args = sanitizedArgs;
+    }
+    return sanitized;
+  }
+  return payload;
+}
+
+function broadcastEvent(eventType, rawPayload) {
+  const payload = sanitizeBroadcastPayload(eventType, rawPayload);
   const data = JSON.stringify({ type: eventType, data: payload, timestamp: Date.now() });
   for (const client of sseClients) {
     try {
@@ -535,7 +558,8 @@ async function initDb() {
     const clients = await getFalkorClient();
     db = clients.db;
     graph = clients.graph;
-    mcpServer = new CavdaxMcpServer(graph);
+    const demoSandboxRoot = path.resolve(REPO_ROOT, 'demo-repo');
+    mcpServer = new CavdaxMcpServer(graph, { repoRoot: demoSandboxRoot });
     isFalkorConnected = true;
     console.log('[CAVDAX Server] Successfully connected to FalkorDB.');
   } catch (err) {
@@ -865,11 +889,24 @@ app.get('/api/graph', async (req, res) => {
   try {
     if (!isFalkorConnected) await initDb();
 
+    // Tenant isolation: allow authenticated users to view their connected repo graph;
+    // Unauthenticated public visitors strictly receive canonical demo graph state.
+    const requestedRepo = req.query.repo ? String(req.query.repo).trim() : null;
+    const isSessionAuth = Boolean(req.session?.user || req.authUser);
+    const repoScope = (isSessionAuth && requestedRepo) ? requestedRepo : null;
+
     if (graph) {
-      const graphState = await fetchGraphState(graph);
+      const graphState = await fetchGraphState(graph, { repo: repoScope });
       return res.json(graphState);
     } else {
-      return res.json(fallbackGraphState);
+      // In-memory fallback: filter out non-demo records if not matching scope
+      const filteredNodes = fallbackGraphState.nodes.filter(n => {
+        if (!n.repo || n.repo === 'demo' || n.is_demo) return true;
+        return repoScope && n.repo === repoScope;
+      });
+      const nodeIds = new Set(filteredNodes.map(n => n.id));
+      const filteredEdges = fallbackGraphState.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
+      return res.json({ nodes: filteredNodes, edges: filteredEdges });
     }
   } catch (err) {
     console.error('Fetch Graph Error:', err);
@@ -948,8 +985,13 @@ app.post('/api/ingest', requireAuth, checkNodeLimit, async (req, res) => {
       const d1 = fallbackGraphState.nodes.find(n => n.id === 'DEC-102');
       if (d1) d1.status = 'INVALIDATED_NEEDS_REVALIDATION';
 
-      // Add supersedes edge
-      fallbackGraphState.edges.push({ source: 'ADR-002', target: 'ADR-001', type: 'SUPERSEDES' });
+      // Add supersedes edge (idempotent / deduplicated)
+      const hasEdge = fallbackGraphState.edges.some(
+        e => e.source === 'ADR-002' && e.target === 'ADR-001' && e.type === 'SUPERSEDES'
+      );
+      if (!hasEdge) {
+        fallbackGraphState.edges.push({ source: 'ADR-002', target: 'ADR-001', type: 'SUPERSEDES' });
+      }
 
       broadcastEvent('MUTATION_INGESTED', { adr_id: 'ADR-002', supersedes: 'ADR-001', graph: fallbackGraphState });
       broadcastEvent('GRAPH_UPDATED', fallbackGraphState);
@@ -1004,6 +1046,17 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
       return res.status(400).json({
         isError: true,
         error: "Missing required parameters 'args.file_path' and/or 'args.code_payload'."
+      });
+    }
+
+    // Hosted Demo Security Confinement: writes from /api/mcp/call are strictly confined to demo-repo sandbox
+    const sandboxDir = path.resolve(REPO_ROOT, 'demo-repo');
+    const resolvedPath = path.resolve(sandboxDir, args.file_path);
+    if (!resolvedPath.startsWith(sandboxDir + path.sep) && resolvedPath !== sandboxDir) {
+      return res.status(403).json({
+        isError: true,
+        gate_verdict: 'BLOCKED_PATH_TRAVERSAL',
+        error: 'Access denied: Target file path must reside within the demo-repo sandbox.'
       });
     }
   } else if (toolName === 'revalidate_decision') {
@@ -1081,17 +1134,43 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
       if (toolName === 'apply_code_change') {
         const isDec102 = args.decision_id === 'DEC-102';
         const dNode = fallbackGraphState.nodes.find(n => n.id === args.decision_id);
-        const isInvalidated = dNode && dNode.status === 'INVALIDATED_NEEDS_REVALIDATION';
 
-        if (isInvalidated || isDec102) {
+        // 1. Fail Closed: If decision node does not exist in graph records, reject immediately
+        if (!dNode && !isDec102) {
+          const unknownResponse = {
+            isError: true,
+            simulated: true,
+            simulated_warning: 'FalkorDB offline — returned from in-memory simulation',
+            gate_verdict: 'BLOCKED_NO_GROUNDING',
+            decision_id: args.decision_id,
+            latency_ms: 0,
+            simulated_latency_ms: 1.12,
+            message: `⛔ CAVDAX GATE BLOCKED (SIMULATION): Execution rejected. Decision '${args.decision_id}' does not exist in active architecture records. Zero files written.`,
+            instructions_for_agent: `To resolve this, verify the decision ID or author an Architecture Decision Record (ADR) before submitting code changes.`
+          };
+          broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: unknownResponse });
+          return res.json(unknownResponse);
+        }
+
+        const isInvalidated = (dNode && dNode.status === 'INVALIDATED_NEEDS_REVALIDATION') || isDec102;
+
+        if (isInvalidated) {
           const actionId = `act-${Date.now()}`;
+          // Replace prior action for this decision to prevent duplicate node clutter
+          fallbackGraphState.nodes = fallbackGraphState.nodes.filter(
+            n => !(n.label === 'AgentAction' && n.decision_id === args.decision_id)
+          );
           fallbackGraphState.nodes.push({
             id: actionId,
+            decision_id: args.decision_id,
             label: 'AgentAction',
             target_file: args.file_path,
             status: 'BLOCKED_SUPERSEDED_SOURCE',
             timestamp: Date.now()
           });
+          fallbackGraphState.edges = fallbackGraphState.edges.filter(
+            e => !(e.target === args.decision_id && e.type === 'GROUNDED_IN')
+          );
           fallbackGraphState.edges.push({
             source: actionId,
             target: args.decision_id,
@@ -1113,27 +1192,35 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
           broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: rejectResponse });
           return res.json(rejectResponse);
         } else {
-          // Approved — Security Confinement: verify file target resides within repository root
-          const resolvedRepo = path.resolve(REPO_ROOT);
+          // Approved — Security Confinement: verify file target resides within demo-repo sandbox
+          const resolvedRepo = path.resolve(REPO_ROOT, 'demo-repo');
           const targetPath = path.resolve(resolvedRepo, args.file_path);
           if (!targetPath.startsWith(resolvedRepo + path.sep) && targetPath !== resolvedRepo) {
             return res.status(403).json({
               isError: true,
               gate_verdict: 'BLOCKED_PATH_TRAVERSAL',
-              error: 'Access denied: Target file path must reside within the repository root.'
+              error: 'Access denied: Target file path must reside within the demo-repo sandbox.'
             });
           }
           fs.mkdirSync(path.dirname(targetPath), { recursive: true });
           fs.writeFileSync(targetPath, args.code_payload, 'utf-8');
 
           const actionId = `act-${Date.now()}`;
+          // Replace prior action for this decision to prevent duplicate node clutter
+          fallbackGraphState.nodes = fallbackGraphState.nodes.filter(
+            n => !(n.label === 'AgentAction' && n.decision_id === args.decision_id)
+          );
           fallbackGraphState.nodes.push({
             id: actionId,
+            decision_id: args.decision_id,
             label: 'AgentAction',
             target_file: args.file_path,
             status: 'EXECUTED',
             timestamp: Date.now()
           });
+          fallbackGraphState.edges = fallbackGraphState.edges.filter(
+            e => !(e.target === args.decision_id && e.type === 'GROUNDED_IN')
+          );
           fallbackGraphState.edges.push({
             source: actionId,
             target: args.decision_id,
@@ -1158,6 +1245,27 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
       } else if (toolName === 'check_intent_clearance') {
         const isDec102 = args.decision_id === 'DEC-102';
         const dNode = fallbackGraphState.nodes.find(n => n.id === args.decision_id);
+
+        // Fail closed if decision is unrecognized
+        if (!dNode && !isDec102) {
+          const denialResponse = {
+            isError: true,
+            clearance_granted: false,
+            simulated: true,
+            simulated_warning: 'FalkorDB offline — returned from in-memory simulation',
+            gate_verdict: 'BLOCKED_NO_GROUNDING',
+            decision_id: args.decision_id,
+            target_file: args.target_file || null,
+            proposed_action: args.proposed_action || null,
+            latency_ms: 0,
+            simulated_latency_ms: 1.12,
+            message: `⛔ CLEARANCE DENIED (SIMULATION): Decision '${args.decision_id}' does not exist in architecture records. Pre-flight check failed.`,
+            instructions_for_agent: `Do NOT generate code grounded in '${args.decision_id}'. Verify the decision ID or author an ADR before requesting clearance.`
+          };
+          broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: denialResponse });
+          return res.json(denialResponse);
+        }
+
         const isInvalidated = (dNode && dNode.status === 'INVALIDATED_NEEDS_REVALIDATION') || isDec102;
 
         if (isInvalidated) {
@@ -1396,6 +1504,11 @@ app.get('/api/audit', async (req, res) => {
   const tierCap = activeTier.audit_log_limit;
   const limit = Math.min(parseInt(req.query.limit || '100', 10), tierCap);
 
+  // Tenant isolation: unauthenticated visitors strictly receive demo audit entries.
+  const requestedRepo = req.query.repo ? String(req.query.repo).trim() : null;
+  const isSessionAuth = Boolean(req.session?.user || req.authUser);
+  const repoScope = (isSessionAuth && requestedRepo) ? requestedRepo : null;
+
   try {
     if (!isFalkorConnected) await initDb();
 
@@ -1404,7 +1517,7 @@ app.get('/api/audit', async (req, res) => {
     let totalCount = 0;
 
     if (graph) {
-      const auditData = await fetchAuditLog(graph, limit);
+      const auditData = await fetchAuditLog(graph, limit, { repo: repoScope });
       entries = auditData.entries || [];
       latencyMs = auditData.latency_ms || 0;
       totalCount = auditData.total || entries.length;
@@ -1412,6 +1525,10 @@ app.get('/api/audit', async (req, res) => {
       // Fallback: derive audit entries from in-memory fallbackGraphState
       const fallbackEntries = fallbackGraphState.nodes
         .filter(n => n.label === 'AgentAction')
+        .filter(n => {
+          if (!n.repo || n.repo === 'demo') return true;
+          return repoScope && n.repo === repoScope;
+        })
         .map(n => {
           const edge = fallbackGraphState.edges.find(e => e.source === n.id && e.type === 'GROUNDED_IN');
           const decisionId = edge ? edge.target : null;
@@ -1431,11 +1548,12 @@ app.get('/api/audit', async (req, res) => {
       totalCount = fallbackEntries.length;
     }
 
-    // Merge persistent connected repo audit entries
+    // Merge persistent connected repo audit entries strictly scoped to the authorized repo
     const persistedActions = Array.isArray(savedSystemState.auditEntries) ? savedSystemState.auditEntries : [];
     const seenActionIds = new Set(entries.map(e => e.action_id));
     for (const pa of persistedActions) {
-      if (!seenActionIds.has(pa.action_id)) {
+      const matchRepo = repoScope ? (pa.repo === repoScope) : (!pa.repo || pa.repo === 'demo');
+      if (matchRepo && !seenActionIds.has(pa.action_id)) {
         entries.push(pa);
         seenActionIds.add(pa.action_id);
       }
@@ -2343,38 +2461,21 @@ app.post('/api/github/repos/:owner/:repo/verify-action', requireAuth, async (req
       decisionNode = decisions[0];
     }
 
-    // Measure pure causal gate check execution time
+    // Pure causal gate check execution time (measured with process.hrtime.bigint)
     const gateStart = process.hrtime.bigint();
     const isApproved = decisionNode.status === 'VALID';
     const verdict = isApproved ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
     const gateElapsedNs = process.hrtime.bigint() - gateStart;
-    const latencyMs = parseFloat((Number(gateElapsedNs) / 1_000_000).toFixed(2)) || 0.42;
+    let latencyMs = Math.max(0.01, parseFloat((Number(gateElapsedNs) / 1_000_000).toFixed(3)));
 
     const actionId = `act-${Date.now().toString(36)}`;
     const now = Date.now();
     const resolvedTarget = targetFile || (decisionNode.file ? decisionNode.file : 'src/index.js');
     const repoFullName = `${owner}/${repo}`;
 
-    const actionRecord = {
-      action_id: actionId,
-      target_file: resolvedTarget,
-      status: verdict,
-      repo: repoFullName,
-      decision_id: decisionNode.id,
-      decision_status: decisionNode.status,
-      decision_title: decisionNode.title || decisionNode.id,
-      executed_at: now,
-      latency_ms: latencyMs
-    };
-
-    if (!Array.isArray(savedSystemState.auditEntries)) {
-      savedSystemState.auditEntries = [];
-    }
-    savedSystemState.auditEntries.unshift(actionRecord);
-    syncSystemStateToDisk();
-
     if (isFalkorConnected && graph) {
       try {
+        const falkorGateStart = process.hrtime.bigint();
         // Remove previous test probe actions grounded in this decision to prevent duplicate node accumulation
         await graph.query(`
           MATCH (prevAction:AgentAction {repo: $repo})-[:GROUNDED_IN]->(d:Decision {id: $decisionId})
@@ -2383,7 +2484,7 @@ app.post('/api/github/repos/:owner/:repo/verify-action', requireAuth, async (req
 
         await graph.query(`
           MERGE (d:Decision {id: $decisionId})
-          ON CREATE SET d.title = $decisionTitle, d.status = $decisionStatus
+          ON CREATE SET d.title = $decisionTitle, d.status = $decisionStatus, d.repo = $repo
           CREATE (a:AgentAction {
             id: $actionId,
             target_file: $targetFile,
@@ -2404,10 +2505,31 @@ app.post('/api/github/repos/:owner/:repo/verify-action', requireAuth, async (req
             now
           }
         });
+
+        const falkorGateElapsedNs = process.hrtime.bigint() - falkorGateStart;
+        latencyMs = Math.max(0.05, parseFloat((Number(falkorGateElapsedNs) / 1_000_000).toFixed(2)));
       } catch (falkorErr) {
         console.warn('[CAVDAX verify-action] FalkorDB record notice:', falkorErr.message);
       }
     }
+
+    const actionRecord = {
+      action_id: actionId,
+      target_file: resolvedTarget,
+      status: verdict,
+      repo: repoFullName,
+      decision_id: decisionNode.id,
+      decision_status: decisionNode.status,
+      decision_title: decisionNode.title || decisionNode.id,
+      executed_at: now,
+      latency_ms: latencyMs
+    };
+
+    if (!Array.isArray(savedSystemState.auditEntries)) {
+      savedSystemState.auditEntries = [];
+    }
+    savedSystemState.auditEntries.unshift(actionRecord);
+    syncSystemStateToDisk();
 
     broadcastEvent('AGENT_ACTION_LOGGED', actionRecord);
 
@@ -2501,6 +2623,12 @@ if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
  *
  * Returns: { order_id, amount, currency, receipt }
  */
+// Canonical server-side tier pricing table (paise: ₹1 = 100 paise)
+const CANONICAL_TIER_PRICES_PAISE = Object.freeze({
+  pro: 33900,         // ₹339 / mo ($4/mo)
+  enterprise: 990000  // ₹9,900 / mo ($120/mo)
+});
+
 // In-memory order tracking to prevent tier tampering (OWASP A04 Hardening)
 const pendingBillingOrders = new Map();
 setInterval(() => {
@@ -2527,15 +2655,28 @@ app.post('/api/billing/create-order', async (req, res) => {
     });
   }
 
-  const { amount_paise, receipt, tier } = req.body;
+  const { amount_paise, receipt, tier } = req.body || {};
+  const requestedTier = (tier || '').toLowerCase().trim();
 
-  // Validate amount
-  const amount = parseInt(amount_paise, 10);
-  if (!amount || amount < 100) {
-    return res.status(400).json({
-      success: false,
-      error: { code: 'INVALID_AMOUNT', message: 'amount_paise must be an integer >= 100 (₹1 minimum).' }
-    });
+  let amount = parseInt(amount_paise, 10);
+  let assignedTier = 'free';
+
+  // Server-side pricing enforcement: clients cannot submit arbitrary low amounts for paid tiers
+  if (requestedTier === 'pro') {
+    amount = CANONICAL_TIER_PRICES_PAISE.pro;
+    assignedTier = 'pro';
+  } else if (requestedTier === 'enterprise') {
+    amount = CANONICAL_TIER_PRICES_PAISE.enterprise;
+    assignedTier = 'enterprise';
+  } else {
+    // Supporter / donation tier — must be integer >= 100 (₹1 minimum)
+    if (!amount || amount < 100) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_AMOUNT', message: 'amount_paise must be an integer >= 100 (₹1 minimum).' }
+      });
+    }
+    assignedTier = 'supporter';
   }
 
   try {
@@ -2546,14 +2687,14 @@ app.post('/api/billing/create-order', async (req, res) => {
       payment_capture: 1  // auto-capture
     });
 
-    const targetTier = (tier || 'pro').toLowerCase();
     pendingBillingOrders.set(order.id, {
       amount,
-      tier: targetTier,
+      tier: (assignedTier === 'supporter' ? 'free' : assignedTier),
+      isSupporter: (assignedTier === 'supporter'),
       createdAt: Date.now()
     });
 
-    console.log(`[CAVDAX Razorpay] Order created: ${order.id} | ₹${(amount / 100).toFixed(2)} [Tier: ${targetTier}]`);
+    console.log(`[CAVDAX Razorpay] Order created: ${order.id} | ₹${(amount / 100).toFixed(2)} [Tier: ${assignedTier}]`);
 
     res.json({
       success: true,
@@ -2659,15 +2800,16 @@ app.post('/api/billing/verify-payment', (req, res) => {
  * Webhook secret: set RAZORPAY_WEBHOOK_SECRET in .env (separate from KEY_SECRET).
  * If RAZORPAY_WEBHOOK_SECRET is not set, the endpoint logs but does not validate.
  */
-app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/billing/webhook', (req, res) => {
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
   const signature     = req.headers['x-razorpay-signature'];
 
   // Validate webhook signature if secret is configured
   if (webhookSecret && signature) {
-    const body      = req.body;    // raw Buffer (express.raw middleware)
+    // req.rawBody preserved from express.json verify hook; fallback to string/buffer
+    const rawPayload = req.rawBody || (typeof req.body === 'string' ? req.body : Buffer.isBuffer(req.body) ? req.body : JSON.stringify(req.body));
     const expected  = createHmac('sha256', webhookSecret)
-      .update(body)
+      .update(rawPayload)
       .digest('hex');
 
     if (!timingSafeStringEqual(expected, signature)) {
@@ -2678,11 +2820,13 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), (req
     console.warn('[CAVDAX Razorpay Webhook] RAZORPAY_WEBHOOK_SECRET not set — skipping signature validation.');
   }
 
-  let event;
-  try {
-    event = JSON.parse(req.body.toString());
-  } catch {
-    return res.status(400).json({ success: false, error: 'INVALID_JSON' });
+  let event = req.body;
+  if (Buffer.isBuffer(req.body) || typeof req.body === 'string') {
+    try {
+      event = JSON.parse(req.body.toString());
+    } catch {
+      return res.status(400).json({ success: false, error: 'INVALID_JSON' });
+    }
   }
 
   const eventType  = event?.event;

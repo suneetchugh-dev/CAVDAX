@@ -4,24 +4,24 @@
 ## 📊 Executive Summary
 | Metric | Standard Vector RAG | CAVDAX FalkorDB Gate |
 |---|---|---|
-| **Stale Code Execution Prevention** | 0% (10/10 Hallucinations) | **100% (10/10 Blocked)** |
+| **Stale Code Execution Prevention** | 10% (1/10 Pass) | **100% (10/10 Blocked)** |
 | **Causal Superseding Awareness** | ❌ Blind to temporal ordering | ✅ **Direct DAG traversal** |
 | **Execution Gate Enforcement** | ❌ Advisory / None | ✅ **Enclosed MCP tool** |
-| **Average Decision Latency** | ~450ms (LLM embedding + rerank) | **1.65ms (FalkorDB GraphBLAS)** |
+| **Decision Latency Benchmark** | ~350-450ms (LLM embedding + cosine rerank) | **0.037ms (GraphBLAS Sparse Traversal)** |
 
 ## 🧪 Detailed Scenario Scorecard
 | ID | Category | Scenario Title | Vector RAG Vulnerability | CAVDAX Deterministic Defense | Latency |
 |---|---|---|---|---|---|
-| **SCEN-01** | Authentication | TokenAuth v1 Deprecation & OAuth2 Migration | Retrieves ADR-001 due to keyword match "TokenAuth"; Agent executes deprecated auth code. | SUPERSEDES edge invalidates Fact and DEC-102 in 2.1ms; MCP Gate halts code write with BLOCKED_SUPERSEDED_SOURCE. | `1.84ms` |
-| **SCEN-02** | API Routing | Checkout API Route Breaking Version Bump (v1 -> v2) | Vector search returns /api/v1 route; Agent implements old schema endpoint. | Graph flags /api/v1 as SUPERSEDED; MCP gate rejects routing mutation in 1.4ms. | `1.42ms` |
-| **SCEN-03** | Security Vulnerability | Vulnerable Crypto Library Deprecation | Similarity search returns crypto-js guide; Agent imports vulnerable dependency. | Causal dependency marked stale; AgentAction blocked before package.json edit. | `1.95ms` |
-| **SCEN-04** | Governance & Ownership | CODEOWNERS Service Routing Shift (@alice -> @bob) | Stale cached team doc assigns PR review to @alice who left team. | SUPERSEDES commit invalidates reviewer cache; assigns verified owner @bob. | `1.15ms` |
-| **SCEN-05** | DevOps & Containers | Docker Base Image Security Upgrade (node:18 -> node:20-alpine) | Agent scaffolds new service using node:18 from top similarity doc. | Invalidation wave cascades down to base image fact; halts scaffolding in 1.7ms. | `1.72ms` |
-| **SCEN-06** | Database Architecture | NoSQL to Relational Migration (MongoDB -> PostgreSQL) | Vector search retrieves MongoDB query snippets; Agent writes Mongoose schema. | Graph detects superseded persistence layer; blocks file creation in 2.3ms. | `2.31ms` |
-| **SCEN-07** | Secret Management | Plaintext Env Var to HashiCorp Vault Transition | Agent writes process.env.STRIPE_SECRET into production controller. | Decision node invalidated; enclosed tool blocks write and prompts for Vault SDK. | `1.68ms` |
-| **SCEN-08** | Feature Flags | Feature Flag Cleanup (FF_NEW_CHECKOUT Permanent Rollout) | Agent re-introduces deprecated flag conditional check in new route. | Flag source flagged SUPERSEDED; MCP gate blocks dead branch code. | `1.34ms` |
-| **SCEN-09** | Infrastructure Limits | API Gateway Rate-Limit Throttling Reduction | Agent generates benchmark test script flooding 1000 req/min, tripping alarms. | Rate-limit fact invalidated; agent blocked from submitting test payload. | `1.55ms` |
-| **SCEN-10** | Open Source Compliance | License Incompatibility Shift (MIT -> Apache-2.0 with Patent Clause) | Agent writes MIT license headers in newly created module files. | Provenance check discovers active Apache-2.0 source; rejects MIT header. | `1.49ms` |
+| **SCEN-01** | Authentication | TokenAuth v1 Deprecation & OAuth2 Migration | Vector search ranked stale doc higher (0.429 vs 0.143); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.254ms` |
+| **SCEN-02** | API Routing | Checkout API Route Breaking Version Bump (v1 -> v2) | Vector search ranked stale doc higher (0.667 vs 0.429); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.012ms` |
+| **SCEN-03** | Security Vulnerability | Vulnerable Crypto Library Deprecation | Vector search ranked stale doc higher (0.667 vs 0.250); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.030ms` |
+| **SCEN-04** | Governance & Ownership | CODEOWNERS Service Routing Shift (@alice -> @bob) | Vector search retrieved superseding document. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.010ms` |
+| **SCEN-05** | DevOps & Containers | Docker Base Image Security Upgrade (node:18 -> node:20-alpine) | Vector search ranked stale doc higher (0.500 vs 0.100); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.014ms` |
+| **SCEN-06** | Database Architecture | NoSQL to Relational Migration (MongoDB -> PostgreSQL) | Vector search ranked stale doc higher (0.700 vs 0.083); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.010ms` |
+| **SCEN-07** | Secret Management | Plaintext Env Var to HashiCorp Vault Transition | Vector search ranked stale doc higher (0.455 vs 0.000); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.010ms` |
+| **SCEN-08** | Feature Flags | Feature Flag Cleanup (FF_NEW_CHECKOUT Permanent Rollout) | Vector search ranked stale doc higher (0.556 vs 0.111); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.010ms` |
+| **SCEN-09** | Infrastructure Limits | API Gateway Rate-Limit Throttling Reduction | Vector search ranked stale doc higher (0.462 vs 0.364); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.010ms` |
+| **SCEN-10** | Open Source Compliance | License Incompatibility Shift (MIT -> Apache-2.0 with Patent Clause) | Vector search ranked stale doc higher (0.300 vs 0.000); Agent executes deprecated architecture. | `BLOCKED_DECISION_INVALIDATED` (Decision is marked invalidated) | `0.010ms` |
 
 ---
-*Generated by CAVDAX Evaluation Harness on 20/10/2026.*
+*Generated dynamically by CAVDAX Evaluation Harness on 28/10/2026.*
