@@ -212,7 +212,7 @@ export default function TeamPage({ onLaunchConsole }) {
                 </p>
 
                 {/* Key Architectural Contributions */}
-                <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-white/5 space-y-1.5">
+                <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-white/15 space-y-1.5">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-1">
                     Key Contributions:
                   </div>
@@ -226,11 +226,11 @@ export default function TeamPage({ onLaunchConsole }) {
               </div>
 
               {/* Tags */}
-              <div className="mt-5 pt-4 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-1.5">
+              <div className="mt-5 pt-4 border-t border-slate-100 dark:border-white/15 flex flex-wrap gap-1.5">
                 {member.tags.map((tag) => (
                   <span 
                     key={tag}
-                    className="font-mono text-[9px] px-2 py-0.5 rounded-md bg-slate-100/80 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-white/5"
+                    className="font-mono text-[9px] px-2 py-0.5 rounded-md bg-slate-100/80 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-white/15"
                   >
                     {tag}
                   </span>
@@ -242,7 +242,7 @@ export default function TeamPage({ onLaunchConsole }) {
 
         {/* 3. Platform & System Provenance Credits Bar */}
         <div className="w-full neo-glass-card p-6 sm:p-8 mb-10">
-          <div className="flex items-center gap-2 mb-5 pb-3.5 border-b border-slate-200 dark:border-white/10">
+          <div className="flex items-center gap-2 mb-5 pb-3.5 border-b border-slate-200 dark:border-white/15">
             <Cpu size={16} className="text-slate-700 dark:text-slate-300" />
             <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-950 dark:text-white">
               System Provenance & Open Source Attribution
@@ -254,7 +254,7 @@ export default function TeamPage({ onLaunchConsole }) {
             {SYSTEM_CREDITS.map((item, idx) => (
               <div 
                 key={idx} 
-                className="p-4 sm:p-5 rounded-xl bg-slate-100/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 hover:border-slate-900/30 dark:hover:border-amber-400/30 transition-all duration-300 flex flex-col justify-between"
+                className="p-4 sm:p-5 rounded-xl bg-slate-100/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/15 hover:border-slate-900/30 dark:hover:border-amber-400/30 transition-all duration-300 flex flex-col justify-between"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-2">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
@@ -323,7 +323,7 @@ export default function TeamPage({ onLaunchConsole }) {
               <button
                 type="button"
                 onClick={() => setLightboxMember(null)}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer border border-slate-200 dark:border-white/10 shadow-xs"
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer border border-slate-200 dark:border-white/15 shadow-xs"
                 title="Close photo"
                 aria-label="Close photo"
               >
@@ -354,7 +354,7 @@ export default function TeamPage({ onLaunchConsole }) {
                 }`}
               />
             </div>
-            <div className="p-5 text-center border-t border-slate-200/70 dark:border-white/10">
+            <div className="p-5 text-center border-t border-slate-200/70 dark:border-white/15">
               <h3 className="text-base font-bold text-slate-950 dark:text-white">{lightboxMember.name}</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">{lightboxMember.title}</p>
             </div>

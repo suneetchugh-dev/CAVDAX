@@ -415,10 +415,10 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md rounded-2xl border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-[#070709]/95 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col gap-5"
+          className="w-full max-w-md rounded-2xl border border-slate-300 dark:border-white/15 bg-white/95 dark:bg-[#070709]/95 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col gap-5"
         >
           {/* Header Badge */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/15">
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-slate-900 dark:text-white" />
               <span className="text-xs font-mono font-bold tracking-widest text-slate-900 dark:text-white uppercase">
@@ -435,7 +435,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
           </p>
 
           {/* Diagnostics info box */}
-          <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/60 dark:bg-white/[0.03] p-3 flex flex-col gap-2 font-mono text-[11px]">
+          <div className="rounded-xl border border-slate-200 dark:border-white/15 bg-slate-100/60 dark:bg-white/[0.03] p-3 flex flex-col gap-2 font-mono text-[11px]">
             <div className="flex items-center justify-between">
               <span className="text-slate-500">Client IP Address:</span>
               <span className="text-slate-900 dark:text-white font-semibold">{clientIp}</span>
@@ -490,7 +490,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
   return (
     <div className="flex-1 min-h-0 flex flex-col pt-20 sm:pt-22 px-3 sm:px-6 max-w-[1600px] mx-auto w-full pb-8">
       {/* Top HUD Status Header */}
-      <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/80 dark:bg-[#070709]/80 backdrop-blur-xl p-4 sm:p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+      <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/80 dark:bg-[#070709]/80 backdrop-blur-xl p-4 sm:p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center font-mono font-bold shrink-0">
             <Terminal className="w-5 h-5 text-current" />
@@ -512,7 +512,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
 
         {/* User Pill & Lockout Action */}
         <div className="flex items-center gap-2.5">
-          <div className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/70 dark:bg-white/[0.04] flex items-center gap-2">
+          <div className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-100/70 dark:bg-white/[0.04] flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-mono text-slate-900 dark:text-white font-medium">
               @{session.user}
@@ -533,7 +533,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
 
           <button
             onClick={handleSignOut}
-            className="w-9 h-9 rounded-xl border border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
+            className="w-9 h-9 rounded-xl border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
             title="Lock Session"
           >
             <Lock className="w-4 h-4" />
@@ -542,7 +542,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
       </div>
 
       {/* Tab Navigation Pill Strip */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/10 pb-3 mb-6 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/15 pb-3 mb-6 overflow-x-auto">
         {[
           { id: 'scenarios', label: 'Causal Scenarios', icon: Play, count: CAUSAL_SCENARIOS.length },
           { id: 'diagnostics', label: 'Agent Diagnostics', icon: Cpu },
@@ -593,7 +593,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                 className={`rounded-2xl border p-5 transition-all flex flex-col justify-between ${
                   isRunning
                     ? 'border-slate-800 dark:border-white/30 bg-slate-100/80 dark:bg-white/[0.05] shadow-md'
-                    : 'border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 hover:border-slate-400 dark:hover:border-white/20'
+                    : 'border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 hover:border-slate-400 dark:hover:border-white/20'
                 }`}
               >
                 <div className="flex flex-col gap-3">
@@ -610,7 +610,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                     {scen.name}
                   </h3>
 
-                  <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02] p-3 flex flex-col gap-1.5 font-mono text-[11px]">
+                  <div className="rounded-xl border border-slate-200 dark:border-white/15 bg-slate-100/50 dark:bg-white/[0.02] p-3 flex flex-col gap-1.5 font-mono text-[11px]">
                     <div className="text-slate-500">
                       Trigger Rule: <span className="text-slate-800 dark:text-slate-200">{scen.triggerRule}</span>
                     </div>
@@ -625,7 +625,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
+                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/15 flex items-center justify-between">
                   <span className="text-[11px] font-mono text-slate-500">
                     Status: {isRunning ? 'Active In Matrix' : 'Standby'}
                   </span>
@@ -659,7 +659,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
       {/* ── TAB 2: AGENT DIAGNOSTICS & SYSTEM STATUS ── */}
       {activeTab === 'diagnostics' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">MCP Protocol Stream</span>
               <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
@@ -670,7 +670,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">FalkorDB Engine</span>
               <Database className="w-4 h-4 text-slate-400" />
@@ -681,7 +681,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Session Vault</span>
               <Key className="w-4 h-4 text-slate-400" />
@@ -692,7 +692,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Hardware Gateway</span>
               <Globe className="w-4 h-4 text-slate-400" />
@@ -707,8 +707,8 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
 
       {/* ── TAB 3: TIER TESTING & ENTITLEMENT OVERRIDE ── */}
       {activeTab === 'tiers' && (
-        <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-6 flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-white/10">
+        <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-6 flex flex-col gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-white/15">
             <div>
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-slate-900 dark:text-white" />
@@ -730,7 +730,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
           </div>
 
           {/* Hackathon Evaluation Master Switch — Strictly Monochromatic */}
-          <div className="rounded-xl border border-slate-300 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="rounded-xl border border-slate-300 dark:border-white/15 bg-slate-100/50 dark:bg-white/[0.02] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
@@ -762,7 +762,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             <div className={`rounded-xl border p-5 flex flex-col justify-between transition-all ${
               activeDevTier === 'free'
                 ? 'border-slate-900 dark:border-white bg-slate-100/80 dark:bg-white/[0.06] shadow-sm'
-                : 'border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]'
+                : 'border-slate-200 dark:border-white/15 bg-slate-50/50 dark:bg-white/[0.02]'
             }`}>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -787,7 +787,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             <div className={`rounded-xl border p-5 flex flex-col justify-between transition-all ${
               activeDevTier === 'pro'
                 ? 'border-slate-900 dark:border-white bg-slate-100/80 dark:bg-white/[0.06] shadow-sm'
-                : 'border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]'
+                : 'border-slate-200 dark:border-white/15 bg-slate-50/50 dark:bg-white/[0.02]'
             }`}>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -812,7 +812,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             <div className={`rounded-xl border p-5 flex flex-col justify-between transition-all ${
               activeDevTier === 'enterprise'
                 ? 'border-slate-900 dark:border-white bg-slate-100/80 dark:bg-white/[0.06] shadow-sm'
-                : 'border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]'
+                : 'border-slate-200 dark:border-white/15 bg-slate-50/50 dark:bg-white/[0.02]'
             }`}>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -840,8 +840,8 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
       {activeTab === 'security' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Whitelisted IPs */}
-          <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10">
+          <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/15">
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-slate-500" />
                 <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
@@ -887,7 +887,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                 const isCustom = getCustomWhitelistedIps().includes(ip);
                 const isCurrent = ip === clientIp.toLowerCase() || (clientIp === '127.0.0.1' && ip === 'localhost');
                 return (
-                  <div key={ip} className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02]">
+                  <div key={ip} className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-100/50 dark:bg-white/[0.02]">
                     <div className="flex items-center gap-2">
                       <span className="text-slate-400">0{idx + 1}.</span>
                       <span className="font-semibold text-slate-900 dark:text-white">{ip}</span>
@@ -921,8 +921,8 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
           </div>
 
           {/* Authorized GitHub Team Roster */}
-          <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10">
+          <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/15">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-slate-500" />
                 <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
@@ -953,7 +953,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
 
             <div className="flex flex-col gap-2 font-mono text-xs max-h-[220px] overflow-y-auto pr-1">
               {rosterList.map((u, idx) => (
-                <div key={u} className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02]">
+                <div key={u} className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-100/50 dark:bg-white/[0.02]">
                   <div className="flex items-center gap-2">
                     <span className="text-slate-400">0{idx + 1}.</span>
                     <span className="font-semibold text-slate-900 dark:text-white">@{u}</span>
@@ -977,7 +977,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
             </div>
 
             {/* Emergency Killswitches & Invalidation triggers */}
-            <div className="mt-2 pt-3 border-t border-slate-200 dark:border-white/10 flex flex-col gap-3">
+            <div className="mt-2 pt-3 border-t border-slate-200 dark:border-white/15 flex flex-col gap-3">
               <button
                 onClick={() => setIsKillswitchModalOpen(true)}
                 className="w-full py-2.5 rounded-xl border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white text-xs font-mono font-bold hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-500 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
@@ -1021,8 +1021,8 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
 
       {/* ── TAB 5: AUDIT LOG STREAM ── */}
       {activeTab === 'audit' && (
-        <div className="rounded-2xl border border-slate-300 dark:border-white/10 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col gap-3">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10">
+        <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white/70 dark:bg-[#070709]/70 p-5 flex flex-col gap-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/15">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-slate-500" />
               <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
@@ -1035,7 +1035,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                   playClick();
                   setInjectionLogs([]);
                 }}
-                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/10 text-[10px] font-mono text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/15 text-[10px] font-mono text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
               >
                 Clear Stream
               </button>
@@ -1051,7 +1051,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               injectionLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-2.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02] flex items-start gap-3"
+                  className="p-2.5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-100/50 dark:bg-white/[0.02] flex items-start gap-3"
                 >
                   <span className="text-[10px] text-slate-400 shrink-0 mt-0.5">{log.timestamp}</span>
                   <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0 ${
@@ -1102,7 +1102,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
                   onClick={() => setIsKillswitchModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-mono text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-white/15 text-xs font-mono text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1142,7 +1142,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
               className="w-full max-w-lg rounded-2xl border border-rose-500/50 bg-white dark:bg-[#070709] p-6 shadow-2xl flex flex-col gap-4"
             >
               {/* Step Indicator Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/15">
                 <div className="flex items-center gap-2.5 text-rose-500">
                   <AlertTriangle className="w-5 h-5 shrink-0" />
                   <span className="text-xs font-mono font-bold tracking-wider uppercase">
@@ -1187,7 +1187,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                         setRevokeStep(1);
                         setRevokeConfirmInput('');
                       }}
-                      className="px-4 py-2 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-mono text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white cursor-pointer"
+                      className="px-4 py-2 rounded-xl border border-slate-300 dark:border-white/15 text-xs font-mono text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -1237,7 +1237,7 @@ export default function DevTeamPanel({ githubUser, onNavigateHome }) {
                         setRevokeConfirmInput('');
                       }}
                       disabled={isRevokingAll}
-                      className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-white/10 text-xs font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-white/15 text-xs font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer disabled:opacity-50"
                     >
                       Back to Advisory
                     </button>
