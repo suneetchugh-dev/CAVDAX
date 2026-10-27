@@ -163,25 +163,41 @@ export async function revalidateDecision(graph, { newSourceId, oldDecisionId, ne
 /**
  * Query 4: Fetch Entire Graph State for Web HUD
  * Returns formatted nodes and edges for react-force-graph-2d / Cytoscape.
+ *
+ * @param {object} graph - FalkorDB graph instance
+ * @param {object} [options]
+ * @param {string|null} [options.repo] - Optional repository full name (owner/repo).
+ *   If omitted, queries are isolated strictly to canonical demo nodes to prevent
+ *   leakage of private customer repositories on unauthenticated endpoints.
  */
-export async function fetchGraphState(graph) {
+export async function fetchGraphState(graph, { repo = null } = {}) {
   // Both queries are bounded to 500 rows. An unbounded MATCH (n) on a large graph
   // causes a full table scan and returns a payload the Web HUD cannot usefully render.
   // 500 nodes is well above the visual threshold of the canvas; this is a safety cap.
+  const repoFilter = repo
+    ? `WHERE n.repo = $repo`
+    : `WHERE n.repo IS NULL OR n.repo = 'demo' OR n.is_demo = true`;
+
+  const edgeFilter = repo
+    ? `WHERE (a.repo = $repo OR a.repo IS NULL) AND (b.repo = $repo OR b.repo IS NULL)`
+    : `WHERE (a.repo IS NULL OR a.repo = 'demo' OR a.is_demo = true) AND (b.repo IS NULL OR b.repo = 'demo' OR b.is_demo = true)`;
+
   const nodesResult = await graph.query(`
     MATCH (n)
+    ${repoFilter}
     RETURN id(n) AS internal_id, labels(n)[0] AS label, properties(n) AS props
     LIMIT 500
-  `);
+  `, repo ? { params: { repo } } : {});
 
   const edgesResult = await graph.query(`
     MATCH (a)-[r]->(b)
+    ${edgeFilter}
     RETURN id(a) AS source_internal, id(b) AS target_internal,
            coalesce(a.id, a.ref) AS source_id,
            coalesce(b.id, b.ref) AS target_id,
            type(r) AS rel_type
     LIMIT 500
-  `);
+  `, repo ? { params: { repo } } : {});
 
   const nodes = (nodesResult.data || []).map(row => ({
     id: row.props.id || row.props.ref || String(row.internal_id),
@@ -288,13 +304,22 @@ export async function seedDemoGraph(graph) {
  *
  * @param {object} graph - FalkorDB graph instance
  * @param {number} [limit=100] - Maximum number of entries to return
+ * @param {object} [options]
+ * @param {string|null} [options.repo] - Optional repository full name (owner/repo).
+ *   If omitted, queries are isolated strictly to canonical demo actions to prevent
+ *   leakage of private customer repositories on unauthenticated endpoints.
  * @returns {Promise<{entries: object[], total: number}>}
  */
-export async function fetchAuditLog(graph, limit = 100) {
+export async function fetchAuditLog(graph, limit = 100, { repo = null } = {}) {
   const hrtStart = process.hrtime.bigint();
+
+  const repoFilter = repo
+    ? `WHERE a.repo = $repo`
+    : `WHERE a.repo IS NULL OR a.repo = 'demo'`;
 
   const cypher = `
     MATCH (a:AgentAction)
+    ${repoFilter}
     OPTIONAL MATCH (a)-[:GROUNDED_IN]->(d:Decision)
     RETURN
       a.id           AS action_id,
@@ -309,10 +334,16 @@ export async function fetchAuditLog(graph, limit = 100) {
     LIMIT $limit
   `;
 
-  const countResult = await graph.query(`MATCH (a:AgentAction) RETURN count(a) AS total`);
+  const countCypher = `
+    MATCH (a:AgentAction)
+    ${repoFilter}
+    RETURN count(a) AS total
+  `;
+
+  const countResult = await graph.query(countCypher, repo ? { params: { repo } } : {});
   const total = countResult.data?.[0]?.total ?? 0;
 
-  const result = await graph.query(cypher, { params: { limit } });
+  const result = await graph.query(cypher, { params: repo ? { limit, repo } : { limit } });
   const latencyMs = extractLatencyMs(result, hrtStart);
 
   const entries = (result.data || []).map(row => ({

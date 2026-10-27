@@ -20,14 +20,16 @@ export class CavdaxMcpServer {
    * @param {object} graph FalkorDB graph
    * @param {object} [options]
    * @param {string} [options.repoRoot] Directory writes are confined to.
-   *   Defaults to the CAVDAX monorepo root; the npm stdio server passes the
-   *   user's working directory.
+   *   Defaults to demo-repo/ if present to sandbox hosted demo execution;
+   *   the npm stdio server passes the user's explicit working directory.
    * @param {boolean} [options.tagDemo] Tag the canonical demo decisions (DEC-10x) as demo data
    *   for the hosted plan quota. The npm stdio server passes false.
    */
   constructor(graph, { repoRoot, tagDemo = true } = {}) {
     this.graph = graph;
-    this.repoRoot = repoRoot ? path.resolve(repoRoot) : REPO_ROOT;
+    const demoDir = path.resolve(REPO_ROOT, 'demo-repo');
+    const defaultRepoRoot = fs.existsSync(demoDir) ? demoDir : REPO_ROOT;
+    this.repoRoot = repoRoot ? path.resolve(repoRoot) : defaultRepoRoot;
     this.tagDemo = tagDemo;
   }
 
@@ -174,6 +176,19 @@ export class CavdaxMcpServer {
         instructions_for_agent: `Wait for agent '${lockCheck.locked_by}' to release lock, or work on an unlocked decision branch.`
       };
     }
+    // Security Confinement: Prevent path traversal upfront (OWASP A01/A03 Hardening)
+    const resolvedRepo = path.resolve(this.repoRoot);
+    const resolvedPath = path.resolve(resolvedRepo, file_path);
+    if (!resolvedPath.startsWith(resolvedRepo + path.sep) && resolvedPath !== resolvedRepo) {
+      console.warn(`[MCP Gate] ⛔ PATH TRAVERSAL ATTEMPT BLOCKED: '${file_path}' attempts to escape sandbox root.`);
+      return {
+        isError: true,
+        gate_verdict: 'BLOCKED_PATH_TRAVERSAL',
+        decision_id,
+        error: 'Access denied: Target file path must reside within the sandbox repository root.'
+      };
+    }
+
     console.log(`[MCP Gate] Running Query 1 against FalkorDB on '${decision_id}'...`);
 
     // 1. RUN INTERNAL FALKORDB VERIFICATION
@@ -222,19 +237,6 @@ export class CavdaxMcpServer {
 
     // 3. ENFORCEMENT BRANCH B: APPROVED (WRITE TO DISK)
     console.log(`[MCP Gate] ✅ GATE APPROVED: Causal provenance verified in ${checkResult.latency_ms}ms.`);
-
-    // Security Confinement: Prevent path traversal (OWASP A01/A03 Hardening)
-    const resolvedRepo = path.resolve(this.repoRoot);
-    const resolvedPath = path.resolve(resolvedRepo, file_path);
-    if (!resolvedPath.startsWith(resolvedRepo + path.sep) && resolvedPath !== resolvedRepo) {
-      console.warn(`[MCP Gate] ⛔ PATH TRAVERSAL ATTEMPT BLOCKED: '${file_path}' attempts to escape repo root.`);
-      return {
-        isError: true,
-        gate_verdict: 'BLOCKED_PATH_TRAVERSAL',
-        decision_id,
-        error: 'Access denied: Target file path must reside within the repository root.'
-      };
-    }
 
     const dir = path.dirname(resolvedPath);
 
