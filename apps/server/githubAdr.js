@@ -106,6 +106,60 @@ function toArray(v) {
   return (Array.isArray(v) ? v : [v]).filter(Boolean).map(String);
 }
 
+/**
+ * Finds ADRs in the repository that have been superseded by a newer ADR according
+ * to frontmatter "supersedes" declarations, but whose own file status does not yet
+ * indicate that they are superseded (e.g. still says "ACCEPTED" or "PROPOSED").
+ */
+export function detectUnsyncedSupersessions(adrs) {
+  const byId = new Map(adrs.map((a) => [a.id, a]));
+  const unsynced = [];
+
+  for (const adr of adrs) {
+    for (const oldId of (adr.supersedes || [])) {
+      const target = byId.get(oldId);
+      if (!target || target.id === adr.id) continue;
+
+      const currentStatus = String(target.status || "").toUpperCase();
+      // If the target file status doesn't clearly reflect that it has been superseded
+      if (!currentStatus.includes("SUPERSEDED")) {
+        unsynced.push({
+          targetId: target.id,
+          targetPath: target.path,
+          targetTitle: target.title,
+          currentStatus: target.status || "ACCEPTED",
+          supersedingId: adr.id,
+          supersedingPath: adr.path,
+          supersedingTitle: adr.title
+        });
+      }
+    }
+  }
+
+  return unsynced;
+}
+
+/**
+ * Updates an ADR file text to reflect that it has been superseded by a newer ADR.
+ * Updates the frontmatter status: line, or inserts one if missing.
+ */
+export function applySupersededStatusToAdr(text, supersedingId) {
+  const fmMatch = text.match(/^---\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const rawFm = fmMatch[1];
+    let newFm;
+    if (/^status\s*:/im.test(rawFm)) {
+      newFm = rawFm.replace(/^status\s*:.*$/im, "status: SUPERSEDED by " + supersedingId);
+    } else {
+      newFm = rawFm + "\nstatus: SUPERSEDED by " + supersedingId;
+    }
+    return text.replace(fmMatch[0], "---\n" + newFm.trim() + "\n---");
+  }
+
+  // Plain markdown without YAML frontmatter
+  return "---\nstatus: SUPERSEDED by " + supersedingId + "\n---\n\n> **Note:** This decision has been superseded by [" + supersedingId + "].\n\n" + text;
+}
+
 /** Lists the ADRs on the repository's default branch and parses them. */
 export async function scanRepoAdrs(args) {
   const { tree: _tree, ...result } = await scanWithTree(args);
@@ -157,7 +211,8 @@ async function scanWithTree({ token, owner, repo, fetchImpl = fetch }) {
     count: parsed.length,
     truncated: Boolean(tree.truncated) || capped,
     adrs: parsed.map(({ path: p, id, title, status, supersedes }) => ({ path: p, id, title, status, supersedes })),
-    graph: buildGraphFromAdrs(parsed)
+    graph: buildGraphFromAdrs(parsed),
+    unsynced: detectUnsyncedSupersessions(parsed)
   };
 }
 
@@ -519,4 +574,110 @@ export async function createAdrPullRequest({ token, owner, repo, fetchImpl = fet
 
   const detected = [...detection.datastores, ...detection.frameworks].map((e) => e.name);
   return { number: pr.number, url: pr.html_url, branch, path: NEW_ADR_PATH, base, reused: false, detected };
+}
+
+
+/**
+ * Opens (or returns the already-open) pull request that marks a superseded ADR as SUPERSEDED.
+ * Strictly non-destructive: creates a branch, commits the updated file, and opens a PR.
+ * Never touches the default branch directly.
+ */
+export async function syncSupersededAdrPullRequest({ token, owner, repo, targetId, supersedingId, fetchImpl = fetch, now = new Date() }) {
+  assertRepoName(owner, repo);
+  if (!targetId || !supersedingId) {
+    throw new GithubAdrError(400, "INVALID_PARAMS", "targetId and supersedingId are required.");
+  }
+
+  const scan = await scanWithTree({ token, owner, repo, fetchImpl });
+  const target = scan.adrs.find((a) => a.id === targetId);
+  if (!target) {
+    throw new GithubAdrError(404, "TARGET_NOT_FOUND", "Target ADR " + targetId + " was not found in the repository.");
+  }
+
+  const superseding = scan.adrs.find((a) => a.id === supersedingId);
+  if (!superseding) {
+    throw new GithubAdrError(404, "SUPERSEDING_NOT_FOUND", "Superseding ADR " + supersedingId + " was not found in the repository.");
+  }
+
+  if (!superseding.supersedes.includes(targetId)) {
+    throw new GithubAdrError(400, "NOT_SUPERSEDED", supersedingId + " does not declare that it supersedes " + targetId + ".");
+  }
+
+  const base = scan.branch;
+  const syncBranchBase = "cavdax/sync-" + targetId.toLowerCase().replace(/[^a-z0-9]/g, "-") + "-status";
+
+  // Idempotent: check if pull request is already open for this sync branch
+  const open = await gh(fetchImpl, token, "GET", "/repos/" + owner + "/" + repo + "/pulls?state=open&per_page=100");
+  const existing = (Array.isArray(open) ? open : []).find((p) => typeof p.head?.ref === "string" && p.head.ref.startsWith(syncBranchBase));
+  if (existing) {
+    return {
+      number: existing.number,
+      url: existing.html_url,
+      branch: existing.head.ref,
+      path: target.path,
+      targetId,
+      supersedingId,
+      base,
+      reused: true
+    };
+  }
+
+  // Fetch the current file raw content and blob metadata
+  const originalText = await gh(fetchImpl, token, "GET",
+    "/repos/" + owner + "/" + repo + "/contents/" + enc(target.path) + "?ref=" + encodeURIComponent(base),
+    null, "application/vnd.github.raw+json");
+
+  const fileMeta = await gh(fetchImpl, token, "GET",
+    "/repos/" + owner + "/" + repo + "/contents/" + enc(target.path) + "?ref=" + encodeURIComponent(base));
+
+  const updatedText = applySupersededStatusToAdr(originalText, supersedingId);
+
+  // Get base branch SHA
+  const baseRef = await gh(fetchImpl, token, "GET", "/repos/" + owner + "/" + repo + "/git/ref/heads/" + enc(base));
+  const baseSha = baseRef.object.sha;
+
+  let branch = syncBranchBase;
+  try {
+    await gh(fetchImpl, token, "POST", "/repos/" + owner + "/" + repo + "/git/refs", { ref: "refs/heads/" + branch, sha: baseSha });
+  } catch (err) {
+    if (err.code !== "UNPROCESSABLE") throw err;
+    branch = syncBranchBase + "-" + now.getTime().toString(36);
+    await gh(fetchImpl, token, "POST", "/repos/" + owner + "/" + repo + "/git/refs", { ref: "refs/heads/" + branch, sha: baseSha });
+  }
+
+  // Commit the file change to the new branch
+  await gh(fetchImpl, token, "PUT", "/repos/" + owner + "/" + repo + "/contents/" + enc(target.path), {
+    message: "chore(adr): mark " + targetId + " superseded by " + supersedingId,
+    content: Buffer.from(updatedText, "utf-8").toString("base64"),
+    sha: fileMeta.sha,
+    branch
+  });
+
+  // Open Pull Request
+  const pr = await gh(fetchImpl, token, "POST", "/repos/" + owner + "/" + repo + "/pulls", {
+    title: "chore(adr): mark " + targetId + " superseded by " + supersedingId,
+    head: branch,
+    base,
+    body: [
+      "This pull request was opened by CAVDAX on behalf of the repository owner.",
+      "",
+      "In the repository architecture graph, **" + supersedingId + "** (*" + superseding.title + "*) supersedes **" + targetId + "**.",
+      "However, `" + target.path + "` was still listed with status `" + (target.status || "ACCEPTED") + "`.",
+      "",
+      "This PR synchronizes the markdown file status so human developers and tools see that **" + targetId + "** has been superseded.",
+      "",
+      "Review the diff and merge when ready."
+    ].join("\n")
+  });
+
+  return {
+    number: pr.number,
+    url: pr.html_url,
+    branch,
+    path: target.path,
+    targetId,
+    supersedingId,
+    base,
+    reused: false
+  };
 }
