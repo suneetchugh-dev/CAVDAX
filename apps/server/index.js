@@ -2308,7 +2308,7 @@ app.post('/api/github/repos/:owner/:repo/init-adr', async (req, res) => {
 app.post('/api/github/repos/:owner/:repo/verify-action', requireAuth, async (req, res) => {
   const token = req.session?.user?.accessToken;
   const { owner, repo } = req.params;
-  const { decisionId, targetFile, wantValid } = req.body || {};
+  const { decisionId, targetFile } = req.body || {};
 
   try {
     let currentGraph = null;
@@ -2322,17 +2322,25 @@ app.post('/api/github/repos/:owner/:repo/verify-action', requireAuth, async (req
     }
 
     const nodes = currentGraph?.nodes || [];
-    let decisionNode = nodes.find(n => n.id === decisionId);
-    if (!decisionNode) {
-      const decisions = nodes.filter(n => n.label === 'Decision');
-      if (decisions.length === 0) {
+    const decisions = nodes.filter(n => n.label === 'Decision');
+    if (decisions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: `No Architecture Decisions found in repository ${owner}/${repo}. Please ingest or initialize ADRs first.`
+      });
+    }
+
+    let decisionNode = null;
+    if (decisionId) {
+      decisionNode = nodes.find(n => n.id === decisionId);
+      if (!decisionNode) {
         return res.status(404).json({
           success: false,
-          error: `No Architecture Decisions found in repository ${owner}/${repo}. Please ingest or initialize ADRs first.`
+          error: `Architecture Decision '${decisionId}' not found in repository ${owner}/${repo} graph.`
         });
       }
-      decisionNode = decisions.find(d => (wantValid !== false ? d.status === 'VALID' : d.status === 'INVALIDATED_NEEDS_REVALIDATION'))
-        || decisions[0];
+    } else {
+      decisionNode = decisions[0];
     }
 
     // Measure pure causal gate check execution time
