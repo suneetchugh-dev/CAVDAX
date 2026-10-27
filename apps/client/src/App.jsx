@@ -87,6 +87,10 @@ export default function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [currentAct, setCurrentAct] = useState(1);
   const [loadingAct, setLoadingAct] = useState(null);
+  const currentActRef = useRef(1);
+  const loadingActRef = useRef(null);
+  useEffect(() => { currentActRef.current = currentAct; }, [currentAct]);
+  useEffect(() => { loadingActRef.current = loadingAct; }, [loadingAct]);
   const [isResetting, setIsResetting] = useState(false);
   const [agentState, setAgentState] = useState('idle'); // 'idle' | 'reasoning' | 'executing' | 'verified' | 'rejected'
   const [isTourOpen, setIsTourOpen] = useState(false);
@@ -759,7 +763,12 @@ export default function App() {
         evtSource.addEventListener('GRAPH_UPDATED', (e) => {
           try {
             const updated = JSON.parse(e.data);
-            if (updated && updated.data) setGraphData(updated.data);
+            if (updated && updated.data) {
+              // Multi-user conflict protection: only accept remote graph resets if current session is idle at Act 1
+              if (currentActRef.current === 1 && loadingActRef.current === null) {
+                setGraphData(updated.data);
+              }
+            }
           } catch {}
         });
 
@@ -835,8 +844,7 @@ export default function App() {
   // -------------------------------------------------------------------------
 
   // Client-side simulation fallback — roadmap §6.2
-  // Jab backend 502/offline ho tab bhi 4-Act demo poora chalega in-browser.
-  // Yeh functions graphData ko directly mutate karte hain (same shape as server responses).
+  // When backend is offline/502, mutate in-memory state transparently with explicit offline labeling.
   function _simulateAct2() {
     setGraphData(prev => {
       const nodes = prev.nodes.map(n => {
@@ -848,7 +856,7 @@ export default function App() {
       const edges = [...prev.edges, { source: 'ADR-002', target: 'ADR-001', type: 'SUPERSEDES' }];
       return { nodes, edges };
     });
-    return { latency_ms: 2.14, simulated: true };
+    return { simulated: true };
   }
 
   function _simulateAct3Block() {
@@ -857,8 +865,11 @@ export default function App() {
       nodes: [...prev.nodes, { id: actionId, label: 'AgentAction', target_file: 'demo-repo/src/services/payment.js', status: 'BLOCKED_SUPERSEDED_SOURCE', timestamp: Date.now() }],
       edges: [...prev.edges, { source: actionId, target: 'DEC-102', type: 'GROUNDED_IN' }]
     }));
-    return { latency_ms: 1.84, gate_verdict: 'BLOCKED_SUPERSEDED_SOURCE', simulated: true,
-      violation_paths: [['Source:ADR-001 (SUPERSEDED)', 'Fact:F-Auth-v1 (STALE)', 'Decision:DEC-102']] };
+    return {
+      gate_verdict: 'BLOCKED_SUPERSEDED_SOURCE',
+      simulated: true,
+      violation_paths: [['Source:ADR-001 (SUPERSEDED)', 'Fact:F-Auth-v1 (STALE)', 'Decision:DEC-102']]
+    };
   }
 
   function _simulateAct4Approve(oauthCode) {
@@ -874,7 +885,7 @@ export default function App() {
       ];
       return { nodes: newNodes, edges: newEdges };
     });
-    return { latency_ms: 1.62, gate_verdict: 'APPROVED', simulated: true };
+    return { gate_verdict: 'APPROVED', simulated: true };
   }
 
   // Core act executor — contains the actual API calls and state mutations for
@@ -889,26 +900,35 @@ export default function App() {
       // ACT II: Ingest Commit Mutation — ADR-002 supersedes ADR-001
       setAgentState('reasoning');
       addLog('INGESTION', 'Ingesting git commit containing ADR-002 (supersedes ADR-001)...', 'CASCADE');
-      let lat = 2.14;
+      let lat = null;
+      let isSimulated = false;
       try {
         const res = await fetch('/api/ingest', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data.graph) setGraphData(data.graph);
-        lat = data.ingestResult?.invalidation?.latency_ms || 2.14;
+        lat = data.ingestResult?.invalidation?.latency_ms ?? null;
       } catch {
         // Backend offline — simulate in-browser (roadmap §6.2)
-        const sim = _simulateAct2();
-        lat = sim.latency_ms;
-        addLog('SYSTEM', 'Backend offline — running client-side simulation.', 'INFO');
+        _simulateAct2();
+        isSimulated = true;
+        addLog('SYSTEM', 'Notice: Backend server offline — running in-memory demo simulation. FalkorDB was not queried.', 'INFO');
       }
       setLatestLatency(lat);
 
-      addLog(
-        'FALKORDB',
-        `Query 2 Cascade completed in ${lat}ms. SUPERSEDES edge established. ADR-001 -> SUPERSEDED, F-Auth-v1 -> STALE, DEC-102 -> INVALIDATED_NEEDS_REVALIDATION.`,
-        'CASCADE'
-      );
+      if (isSimulated) {
+        addLog(
+          'SIMULATION',
+          'In-memory cascade simulated: ADR-001 -> SUPERSEDED, F-Auth-v1 -> STALE, DEC-102 -> INVALIDATED. (Backend offline)',
+          'CASCADE'
+        );
+      } else {
+        addLog(
+          'FALKORDB',
+          `Query 2 Cascade completed in ${lat ?? '<1'}ms. SUPERSEDES edge established. ADR-001 -> SUPERSEDED, F-Auth-v1 -> STALE, DEC-102 -> INVALIDATED_NEEDS_REVALIDATION.`,
+          'CASCADE'
+        );
+      }
       setActiveVerdict('BLOCKED');
       setAgentState('idle');
     } else if (actNumber === 3) {
@@ -922,6 +942,7 @@ export default function App() {
       });
 
       let data;
+      let isSimulated = false;
       try {
         const res = await fetch('/api/mcp/call', {
         method: 'POST',
@@ -933,20 +954,26 @@ export default function App() {
         data = await res.json();
       } catch {
         data = _simulateAct3Block();
-        addLog('SYSTEM', 'Backend offline — simulating MCP gate block.', 'INFO');
+        isSimulated = true;
+        addLog('SYSTEM', 'Notice: Backend offline — gate block simulated in-browser. Zero server queries executed.', 'INFO');
       }
 
-      setLatestLatency(data.latency_ms || 1.84);
+      setLatestLatency(data.latency_ms || null);
       setActiveVerdict('BLOCKED');
       setAgentState('rejected');
       playRejectBuzz();
-      addLog('MCP_GATE', `ENCLOSED MCP GATE BLOCKED in ${data.latency_ms || 1.84}ms! Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`, 'GATE_BLOCK', data.violation_paths);
+      if (isSimulated) {
+        addLog('MCP_GATE', `ENCLOSED MCP GATE BLOCKED (Simulation Fallback). Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`, 'GATE_BLOCK', data.violation_paths);
+      } else {
+        addLog('MCP_GATE', `ENCLOSED MCP GATE BLOCKED in ${data.latency_ms}ms! Verdict: ${data.gate_verdict}. Write rejected. Zero files modified.`, 'GATE_BLOCK', data.violation_paths);
+      }
 
     } else if (actNumber === 4) {
       // ACT IV: Revalidation & Safe Execution — DEC-103 synthesized, OAuth2 written
       setAgentState('reasoning');
       addLog('AGENT', 'Act IV: Agent synthesizes Decision DEC-103 grounded in fresh Source ADR-002...', 'REVALIDATION');
 
+      let isRevalSimulated = false;
       try {
         const revalRes = await fetch('/api/act-iv-revalidate', { method: 'POST', credentials: 'include' });
         if (!revalRes.ok) throw new Error(`HTTP ${revalRes.status}`);
@@ -954,6 +981,7 @@ export default function App() {
         if (revalData.graph) setGraphData(revalData.graph);
       } catch {
         // Simulate revalidation in-browser
+        isRevalSimulated = true;
         setGraphData(prev => {
           const nodes = prev.nodes.map(n => n.id === 'DEC-102' ? { ...n, status: 'REPLACED_ARCHIVED' } : n);
           const hasD103 = nodes.some(n => n.id === 'DEC-103');
@@ -962,9 +990,13 @@ export default function App() {
             edges: [...prev.edges, { source: 'DEC-103', target: 'F-OAuth2', type: 'DEPENDS_ON' }, { source: 'DEC-103', target: 'DEC-102', type: 'REPLACES' }]
           };
         });
-        addLog('SYSTEM', 'Backend offline — simulating revalidation.', 'INFO');
+        addLog('SYSTEM', 'Notice: Backend offline — simulating revalidation in-browser.', 'INFO');
       }
-      addLog('FALKORDB', 'Query 3 Revalidation complete: DEC-103 created; DEC-102 archived.', 'REVALIDATION');
+      if (isRevalSimulated) {
+        addLog('SIMULATION', 'In-memory revalidation simulated: DEC-103 created; DEC-102 archived.', 'REVALIDATION');
+      } else {
+        addLog('FALKORDB', 'Query 3 Revalidation complete: DEC-103 created; DEC-102 archived.', 'REVALIDATION');
+      }
 
       setAgentState('executing');
       addLog('AGENT', 'Agent re-submits `apply_code_change` using verified DEC-103...', 'INFO');
@@ -974,6 +1006,7 @@ export default function App() {
       setLatestAction({ filePath: 'demo-repo/src/services/payment.js', decisionId: 'DEC-103', codeSnippet: oauthCode });
 
       let execData;
+      let isExecSimulated = false;
       try {
         const execRes = await fetch('/api/mcp/call', {
         method: 'POST',
@@ -986,14 +1019,19 @@ export default function App() {
         if (execData.graph) setGraphData(execData.graph);
       } catch {
         execData = _simulateAct4Approve(oauthCode);
-        addLog('SYSTEM', 'Backend offline — simulating gate approval.', 'INFO');
+        isExecSimulated = true;
+        addLog('SYSTEM', 'Notice: Backend offline — gate approval simulated in-browser.', 'INFO');
       }
 
-      setLatestLatency(execData.latency_ms || 1.62);
+      setLatestLatency(execData.latency_ms || null);
       setActiveVerdict('APPROVED');
       setAgentState('verified');
       playApprovalChime();
-      addLog('MCP_GATE', `GATE APPROVED in ${execData.latency_ms || 1.62}ms! Full causal provenance chain verified. File 'payment.js' safely written to disk.`, 'GATE_APPROVE');
+      if (isExecSimulated) {
+        addLog('MCP_GATE', `GATE APPROVED (Simulation Fallback). Full causal provenance chain simulated. File 'payment.js' simulated in-memory.`, 'GATE_APPROVE');
+      } else {
+        addLog('MCP_GATE', `GATE APPROVED in ${execData.latency_ms}ms! Full causal provenance chain verified. File 'payment.js' safely written to disk.`, 'GATE_APPROVE');
+      }
     }
   }
 

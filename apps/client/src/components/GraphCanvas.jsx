@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import React, { useState, useRef, useEffect } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Database, Scan, Activity, Download, Filter } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
@@ -72,13 +73,7 @@ export default function GraphCanvas({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [simulatedBlastNode, setSimulatedBlastNode] = useState(null);
   const [driftFilter, setDriftFilter] = useState('ALL'); // 'ALL' | 'GROUNDED' | 'DRIFTED'
-  const [isVisionOcr, setIsVisionOcr] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const p = new URLSearchParams(window.location.search);
-      return p.get('ocr') === '1' || p.get('vision') === '1';
-    }
-    return false;
-  });
+
 
   const containerRef = useRef(null);
 
@@ -174,6 +169,15 @@ export default function GraphCanvas({
     }
   }
 
+  // Count non-fixed nodes per column to compute dynamic vertical scaling
+  const layerTotals = { Source: 0, Fact: 0, Decision: 0 };
+  for (const n of filteredRawNodes) {
+    if (!layoutPositions[n.id] && n.label !== 'AgentAction' && !n.id?.startsWith('act-')) {
+      const lbl = n.label || 'Decision';
+      layerTotals[lbl] = (layerTotals[lbl] || 0) + 1;
+    }
+  }
+
   const columnCounters = {};
 
   const nodes = filteredRawNodes.map((node) => {
@@ -184,9 +188,13 @@ export default function GraphCanvas({
         pos = { x: ACTION_X, y: actionStartY + idx * actionSpacing };
       } else {
         const layerX = { Source: 100, Fact: 320, Decision: 540 }[node.label] ?? 540;
+        const totalInCol = layerTotals[node.label] || 1;
         const layerIdx = columnCounters[node.label] ?? 0;
         columnCounters[node.label] = layerIdx + 1;
-        pos = { x: layerX, y: 100 + layerIdx * 100 };
+        // Dynamically scale vertical spacing so nodes never overflow canvas
+        const colSpacing = totalInCol <= 3 ? 120 : Math.max(55, Math.min(100, 360 / Math.max(1, totalInCol - 1)));
+        const colStartY = totalInCol <= 3 ? 120 : 70;
+        pos = { x: layerX, y: colStartY + layerIdx * colSpacing };
       }
     }
     return { ...node, ...pos };
@@ -403,6 +411,31 @@ export default function GraphCanvas({
 
   const exportSvgUrl = `/api/graph/export-image?theme=${isDarkTheme ? 'dark' : 'light'}${simulatedBlastNode ? `&node_id=${simulatedBlastNode.id}&blast=1` : ''}`;
 
+  const handleDownloadGraph = async () => {
+    playClick();
+    try {
+      const res = await fetch(exportSvgUrl);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `cavdax-causal-graph-${repo?.name || 'topology'}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      // Fallback
+      const link = document.createElement('a');
+      link.href = exportSvgUrl;
+      link.download = `cavdax-causal-graph.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -420,59 +453,49 @@ export default function GraphCanvas({
           </span>
         </div>
 
-        {/* Feature Controls: Drift Filter, Vision OCR, SVG Export, Zoom, Fullscreen */}
-        <div className="flex items-center gap-1.5 shrink-0 font-mono">
-          {/* Architectural Drift Filter */}
-          <div className="flex items-center bg-white dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-md p-0.5 text-[10px]">
-            <Filter className="w-3 h-3 text-slate-500 mx-1 shrink-0" />
-            <button
-              onClick={() => { playClick(); setDriftFilter('ALL'); }}
-              className={`px-1.5 py-0.5 rounded transition-colors ${driftFilter === 'ALL' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'}`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => { playClick(); setDriftFilter('GROUNDED'); }}
-              className={`px-1.5 py-0.5 rounded transition-colors ${driftFilter === 'GROUNDED' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'}`}
-            >
-              Grounded
-            </button>
-            <button
-              onClick={() => { playClick(); setDriftFilter('DRIFTED'); }}
-              className={`px-1.5 py-0.5 rounded transition-colors ${driftFilter === 'DRIFTED' ? 'bg-rose-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'}`}
-            >
-              Drifted
-            </button>
+        {/* Feature Controls: Monochromatic Drift Filter, Direct SVG Download, Zoom, Fullscreen */}
+        <div className="flex items-center gap-2 shrink-0 font-mono">
+          {/* Monochromatic Architectural Drift Filter (Framer Motion Sliding Pillbar) */}
+          <div className="relative flex items-center bg-slate-200/60 dark:bg-white/5 border border-slate-300/70 dark:border-white/10 rounded-lg p-0.5 text-[10px] select-none">
+            <Filter className="w-3 h-3 text-slate-400 mx-1 shrink-0" />
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'GROUNDED', label: 'Grounded' },
+              { id: 'DRIFTED', label: 'Drifted' },
+            ].map((tab) => {
+              const active = driftFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { playClick(); setDriftFilter(tab.id); }}
+                  className={`relative px-2 py-0.5 rounded-md transition-colors cursor-pointer z-10 ${
+                    active
+                      ? 'text-slate-950 dark:text-white font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="canvasDriftSlidingPill"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      className="absolute inset-0 bg-white dark:bg-white/15 rounded-md shadow-xs border border-slate-300/60 dark:border-white/10 -z-10"
+                    />
+                  )}
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* High-Contrast Vision OCR Mode */}
+          {/* Direct Graph SVG Download */}
           <button
-            onClick={() => {
-              playClick();
-              setIsVisionOcr(v => !v);
-            }}
-            className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors flex items-center gap-1 cursor-pointer tactile-btn ${
-              isVisionOcr
-                ? 'bg-sky-500 text-white border-sky-600 shadow-xs'
-                : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/15 hover:bg-slate-200 dark:hover:bg-white/10'
-            }`}
-            title="Toggle High-Contrast Machine-Readable Vision OCR Badges"
-          >
-            <Scan className="w-3 h-3 shrink-0" />
-            <span className="hidden md:inline">Vision OCR</span>
-          </button>
-
-          {/* Standalone SVG Export Link */}
-          <a
-            href={exportSvgUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={playClick}
-            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white transition-colors tactile-btn"
-            title="Export Standalone Graph Image (SVG)"
+            type="button"
+            onClick={handleDownloadGraph}
+            className="p-1.5 rounded-lg hover:bg-slate-200/80 dark:hover:bg-white/10 text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white transition-colors tactile-btn cursor-pointer"
+            title="Download Vector Graph (SVG)"
           >
             <Download className="w-3.5 h-3.5 text-current transition-colors" />
-          </a>
+          </button>
 
           {/* Zoom & Fullscreen Controls */}
           <div className="flex items-center gap-0.5 border-l border-slate-300 dark:border-white/15 pl-1.5">
@@ -731,25 +754,12 @@ export default function GraphCanvas({
                   className="transition-all duration-150 group-hover:brightness-95 dark:group-hover:brightness-110"
                 />
 
-                {/* High-Contrast Vision OCR Machine-Readable Overlay */}
-                {isVisionOcr && (
-                  <rect
-                    x="-30"
-                    y="-20"
-                    width="60"
-                    height="12"
-                    rx="3"
-                    fill={inBlast ? '#E11D48' : (isDarkTheme ? '#FFFFFF' : '#0F172A')}
-                    className="pointer-events-none"
-                  />
-                )}
-
                 {/* Node ID Label */}
                 <text
                   textAnchor="middle"
-                  dy={isVisionOcr ? "-2" : "-3"}
-                  fill={isVisionOcr ? (isDarkTheme ? '#000000' : '#FFFFFF') : colors.text}
-                  fontSize={isVisionOcr ? "10.5" : "9.5"}
+                  dy="-3"
+                  fill={colors.text}
+                  fontSize="9.5"
                   fontFamily="monospace"
                   fontWeight="bold"
                   className="select-none pointer-events-none"

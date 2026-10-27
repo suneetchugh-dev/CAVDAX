@@ -148,8 +148,8 @@ export default function Combobox({
                     onClick={() => handleSelect(opt.value)}
                     className={`w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-mono transition-colors flex items-center justify-between gap-2 cursor-pointer ${
                       isSelected
-                        ? 'bg-amber-400/10 dark:bg-amber-400/15 text-amber-600 dark:text-amber-400 font-semibold'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'
+                        ? 'bg-slate-100 dark:bg-white/10 text-slate-950 dark:text-white font-bold border border-slate-300/60 dark:border-white/15 shadow-2xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/5 border border-transparent'
                     }`}
                   >
                     <div className="min-w-0 flex flex-col">

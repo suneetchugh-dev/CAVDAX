@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 /**
  * AuditPage.jsx — CAVDAX Agent Action Audit Log
  *
@@ -310,29 +311,35 @@ export default function AuditPage() {
 
           <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">·</span>
 
-          {/* Verdict Filter Pills */}
-          <div className="flex items-center gap-1">
+          {/* Monochromatic Verdict Sliding Pillbar (Framer Motion) */}
+          <div className="relative flex items-center bg-slate-200/60 dark:bg-white/5 border border-slate-300/70 dark:border-white/10 rounded-lg p-0.5 text-[10px] font-mono select-none">
             {[
               { id: 'ALL', label: 'All Verdicts' },
               { id: 'BLOCKED', label: 'Blocked Only' },
               { id: 'APPROVED', label: 'Approved Only' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => { playClick(); setVerdictFilter(tab.id); }}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
-                  verdictFilter === tab.id
-                    ? tab.id === 'BLOCKED'
-                      ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold'
-                      : tab.id === 'APPROVED'
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold'
-                      : 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            ].map(tab => {
+              const active = verdictFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { playClick(); setVerdictFilter(tab.id); }}
+                  className={`relative px-2.5 py-0.5 rounded-md uppercase tracking-wider transition-colors cursor-pointer z-10 ${
+                    active
+                      ? 'text-slate-950 dark:text-white font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="auditVerdictSlidingPill"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      className="absolute inset-0 bg-white dark:bg-white/15 rounded-md shadow-xs border border-slate-300/60 dark:border-white/10 -z-10"
+                    />
+                  )}
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
