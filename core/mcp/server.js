@@ -7,7 +7,8 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { verifyActionGate, revalidateDecision } from '../graph/queries.js';
+import { verifyActionGate, revalidateDecision, fetchGraphState } from '../graph/queries.js';
+import { renderGraphToSvg, computeBlastRadius } from '../graph/renderSvg.js';
 import { globalLockManager } from './lockManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -114,6 +115,18 @@ export class CavdaxMcpServer {
           },
           required: ['decision_id', 'agent_id']
         }
+      },
+      {
+        name: 'export_graph_image',
+        description: 'Generates a standalone SVG/visual image of the CAVDAX causal architecture graph for PR descriptions, documentation, or visual inspection.',
+        parameters: {
+          type: 'object',
+          properties: {
+            node_id: { type: 'string', description: 'Optional target node ID (e.g. DEC-102 or ADR-001) to center or inspect.' },
+            highlight_blast_radius: { type: 'boolean', description: 'When true and node_id is provided, highlights downstream invalidated dependencies in pulsing warning colors.' },
+            format: { type: 'string', enum: ['svg', 'markdown'], description: 'Output format (default: "svg").' }
+          }
+        }
       }
     ];
   }
@@ -134,6 +147,8 @@ export class CavdaxMcpServer {
       return globalLockManager.acquireLock(args.decision_id, args.agent_id, args.ttl_ms, args.reason);
     } else if (toolName === 'release_decision_lock') {
       return globalLockManager.releaseLock(args.decision_id, args.agent_id);
+    } else if (toolName === 'export_graph_image') {
+      return await this.executeExportGraphImage(args);
     } else {
       throw new Error(`Unknown tool: '${toolName}'`);
     }
@@ -329,6 +344,50 @@ export class CavdaxMcpServer {
       isError: false,
       message: `✅ REVALIDATION COMPLETE: Decision '${args.new_decision_id}' is now ACTIVE and replaces '${args.old_decision_id}'. Gate is now open for updated code execution.`,
       result
+    };
+  }
+
+  /**
+   * Generates a standalone SVG or Markdown-wrapped visual representation of the causal DAG.
+   */
+  async executeExportGraphImage({ node_id, highlight_blast_radius, format = 'svg' } = {}) {
+    let graphState = { nodes: [], edges: [] };
+    if (this.graph) {
+      try {
+        graphState = await fetchGraphState(this.graph);
+      } catch (err) {
+        console.warn('[MCP Gate] Could not fetch graph state from FalkorDB, using fallback:', err.message);
+      }
+    }
+
+    const { blastNodeIds, summary } = (node_id && highlight_blast_radius)
+      ? computeBlastRadius(graphState.nodes, graphState.edges, node_id)
+      : { blastNodeIds: new Set(), summary: { facts: 0, decisions: 0, actions: 0, files: [] } };
+
+    const svg = renderGraphToSvg(graphState, {
+      nodeId: node_id,
+      highlightBlastRadius: Boolean(highlight_blast_radius)
+    });
+
+    if (format === 'markdown') {
+      const summaryText = (node_id && highlight_blast_radius)
+        ? `Blast Radius for ${node_id}: ${summary.decisions} decisions, ${summary.facts} facts, ${summary.actions} actions, ${summary.files.length} target files.`
+        : `CAVDAX Causal DAG: ${graphState.nodes.length} nodes, ${graphState.edges.length} edges.`;
+      return {
+        format: 'markdown',
+        markdown: `### CAVDAX Architecture Verification\n\n${summaryText}\n\n\`\`\`xml\n${svg}\n\`\`\``,
+        node_count: graphState.nodes.length,
+        edge_count: graphState.edges.length,
+        blast_radius: summary
+      };
+    }
+
+    return {
+      format: 'svg',
+      svg,
+      node_count: graphState.nodes.length,
+      edge_count: graphState.edges.length,
+      blast_radius: summary
     };
   }
 }

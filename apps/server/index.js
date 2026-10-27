@@ -34,6 +34,7 @@ import {
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
 import { scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, GithubAdrError } from './githubAdr.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
+import { renderGraphToSvg, computeBlastRadius } from '../../core/graph/renderSvg.js';
 import { loadSystemState, saveSystemState } from './systemState.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -873,6 +874,37 @@ app.get('/api/graph', async (req, res) => {
   }
 });
 
+// 4b. Export Standalone Graph Image (SVG) for MCP Agents & Markdown Embeds
+app.get('/api/graph/export-image', async (req, res) => {
+  try {
+    if (!isFalkorConnected) await initDb();
+    const graphState = graph ? await fetchGraphState(graph) : fallbackGraphState;
+    const nodeId = req.query.node_id || req.query.nodeId || null;
+    const highlightBlastRadius = req.query.blast === '1' || req.query.highlight_blast_radius === 'true';
+    const isDarkTheme = req.query.theme !== 'light';
+
+    const svg = renderGraphToSvg(graphState, {
+      nodeId,
+      highlightBlastRadius,
+      isDarkTheme
+    });
+
+    if (req.query.format === 'json') {
+      const { summary } = (nodeId && highlightBlastRadius)
+        ? computeBlastRadius(graphState.nodes, graphState.edges, nodeId)
+        : { summary: { facts: 0, decisions: 0, actions: 0, files: [] } };
+      return res.json({ success: true, svg, blast_radius: summary });
+    }
+
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'no-cache');
+    return res.send(svg);
+  } catch (err) {
+    console.error('Export Graph Image Error:', err);
+    res.status(500).json({ success: false, error: 'Could not render graph SVG.' });
+  }
+});
+
 // 5. Ingest ADR / Commit Mutation (Act II)
 // checkNodeLimit runs before the handler — rejects if tier node_limit is reached
 app.post('/api/ingest', requireAuth, checkNodeLimit, async (req, res) => {
@@ -1020,10 +1052,12 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
         error: "Missing required parameters 'args.decision_id' and/or 'args.agent_id' for 'release_decision_lock'."
       });
     }
+  } else if (toolName === 'export_graph_image') {
+    // optional parameters, no mandatory fields required
   } else {
     return res.status(400).json({
       isError: true,
-      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision', 'check_intent_clearance', 'acquire_decision_lock', 'release_decision_lock'.`
+      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision', 'check_intent_clearance', 'acquire_decision_lock', 'release_decision_lock', 'export_graph_image'.`
     });
   }
   // --- End validation ---
@@ -1174,10 +1208,21 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
           released: true,
           simulated: true,
           decision_id: args.decision_id,
-          message: `✅ LOCK RELEASED (SIMULATION): Decision '${args.decision_id}' is available for other agents.`
+          message: `LOCK RELEASED (SIMULATION): Decision '${args.decision_id}' is available for other agents.`
         };
         broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: unlockResp });
         return res.json(unlockResp);
+      } else if (toolName === 'export_graph_image') {
+        const { summary } = (args.node_id && args.highlight_blast_radius)
+          ? computeBlastRadius(fallbackGraphState.nodes, fallbackGraphState.edges, args.node_id)
+          : { summary: { facts: 0, decisions: 0, actions: 0, files: [] } };
+        const svg = renderGraphToSvg(fallbackGraphState, {
+          nodeId: args.node_id,
+          highlightBlastRadius: Boolean(args.highlight_blast_radius)
+        });
+        const exportResp = { format: args.format || 'svg', svg, node_count: fallbackGraphState.nodes.length, edge_count: fallbackGraphState.edges.length, blast_radius: summary };
+        broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: exportResp });
+        return res.json(exportResp);
       } else if (toolName === 'revalidate_decision') {
         // Act IV simulation
         const oldD = fallbackGraphState.nodes.find(n => n.id === args.old_decision_id);
