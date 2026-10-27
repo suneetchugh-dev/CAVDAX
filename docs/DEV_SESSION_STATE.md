@@ -18,6 +18,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.27 Latest Session Achievements (October 27, 2026 - Dark Theme Contrast, Popular Card Kinetic Motion & Server-Client Full State Persistence - PR #69, #70 & #71)
+
+- **Dark Theme Border Contrast & Low-Brightness Legibility (`apps/client/src/components/ProfilePage.jsx`, `apps/client/src/components/SupportPage.jsx`)**:
+  - Upgraded interactive button borders ("Support Us" and "Account State") from `dark:border-white/10` to `dark:border-white/20` (`border-slate-300/80` for light theme) with `dark:hover:border-rose-400`.
+  - Elevated structural card outlines, billing switches, and metrics panels from `dark:border-white/10` to `dark:border-white/15`, preventing outline disappearance on dim laptop/OLED displays while avoiding harsh white retinal halation.
+- **Popular Card Kinetic Motion & Responsive Elevation (`apps/client/src/components/SupportPage.jsx`)**:
+  - Removed strict `xl:` lock, enabling 3-column responsive elevation starting at `md:` (`md:scale-[1.02] md:-translate-y-2`) through `xl:` (`xl:scale-[1.035] xl:-translate-y-2.5`).
+  - Added kinetic hover elevation (`md:hover:-translate-y-3.5 xl:hover:-translate-y-4`) with elevated amber ambient glow shadows (`hover:shadow-[0_20px_48px_rgba(245,158,11,0.26)]`).
+- **Full-Stack System State & Evaluation Mode Persistence (`apps/server/systemState.js`, `apps/server/index.js`, `apps/client/src/services/devAuth.js`, `apps/client/src/App.jsx`, `apps/client/src/components/DevTeamPanel.jsx`)**:
+  - Resolved automatic Evaluation Mode reset upon `git push origin main` deployments by introducing atomic file-backed persistent store `apps/server/data/system_state.json`.
+  - Persisted `globalHackathonMode`, `globalWhitelistedIps`, `globalDevRoster`, and `userApiKeyRegistry` across server container restarts and code pushes.
+  - Eliminated client overwrite bug in `fetchGlobalHackathonMode()` and protected active tier in `App.jsx` health polling against reset when developer tier override or Evaluation Mode is active.
+  - Persisted Dev Panel active tab and scenario injection switches in `localStorage`.
+  - Added 2 new server unit tests in `apps/server/test/systemState.test.mjs` verifying clean defaults and atomic tmp-file rename safety.
+
 ## 1.0.26 Latest Session Achievements (October 27, 2026 - Real Graph Attribution, Audit Scope Filter & Anti-Fake Standard - PR #67 & PR #68)
 
 - **Honest Graph Attribution & Live Agent Dynamic Testing (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`) - PR #67**:
