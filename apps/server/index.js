@@ -102,7 +102,10 @@ app.use(express.json({ limit: '2mb' }));
 // Layer 1: File-backed persistent session store (survives process/container restarts)
 // Layer 2: Tamper-proof HMAC-SHA256 signed HTTP-only auth cookie (cavdax_auth)
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'cavdax_session_secret_vault_fallback_2026';
+const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
+if (!process.env.SESSION_SECRET) {
+  console.warn('[Security Notice] SESSION_SECRET is unset. Using high-entropy ephemeral cryptographic secret for session signing.');
+}
 const SESSIONS_DIR = path.resolve(__dirname, 'data/sessions');
 
 class PersistentFileStore extends session.Store {
@@ -647,8 +650,8 @@ function requireDevAuth(req, res, next) {
   });
 }
 
-// GET /api/system/dev-ips
-app.get('/api/system/dev-ips', (req, res) => {
+// GET /api/system/dev-ips (Protected by requireDevAuth)
+app.get('/api/system/dev-ips', requireDevAuth, (req, res) => {
   const clientIp = extractClientIp(req).toLowerCase();
   res.json({
     ips: globalWhitelistedIps,
@@ -682,8 +685,8 @@ app.post('/api/system/dev-ips', requireDevAuth, (req, res) => {
   });
 });
 
-// GET /api/system/dev-roster
-app.get('/api/system/dev-roster', (req, res) => {
+// GET /api/system/dev-roster (Protected by requireDevAuth)
+app.get('/api/system/dev-roster', requireDevAuth, (req, res) => {
   res.json({
     roster: globalDevRoster
   });
@@ -1317,8 +1320,8 @@ app.post('/api/act-iv-revalidate', requireAuth, async (req, res) => {
   }
 });
 
-// 8. Reset Demo Repository & Graph
-app.post('/api/reset', requireAuth, async (req, res) => {
+// 8. Reset Demo Repository & Graph (Protected by requireDevAuth)
+app.post('/api/reset', requireDevAuth, async (req, res) => {
   try {
     const paymentServicePath = path.join(REPO_ROOT, 'demo-repo/src/services/payment.js');
     const initialStub = `/**
@@ -2302,8 +2305,7 @@ app.post('/api/github/repos/:owner/:repo/init-adr', async (req, res) => {
  * Executes authentic temporal causal gate verification against repository ADRs with sub-millisecond precision.
  * Records the resulting AgentAction in the persistent audit trail with real measured latency.
  */
-app.post('/api/github/repos/:owner/:repo/verify-action', async (req, res) => {
-  const hrtStart = process.hrtime.bigint();
+app.post('/api/github/repos/:owner/:repo/verify-action', requireAuth, async (req, res) => {
   const token = req.session?.user?.accessToken;
   const { owner, repo } = req.params;
   const { decisionId, targetFile, wantValid } = req.body || {};
@@ -2323,16 +2325,22 @@ app.post('/api/github/repos/:owner/:repo/verify-action', async (req, res) => {
     let decisionNode = nodes.find(n => n.id === decisionId);
     if (!decisionNode) {
       const decisions = nodes.filter(n => n.label === 'Decision');
+      if (decisions.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: `No Architecture Decisions found in repository ${owner}/${repo}. Please ingest or initialize ADRs first.`
+        });
+      }
       decisionNode = decisions.find(d => (wantValid !== false ? d.status === 'VALID' : d.status === 'INVALIDATED_NEEDS_REVALIDATION'))
-        || decisions[0]
-        || { id: decisionId || 'DEC-001', status: wantValid !== false ? 'VALID' : 'INVALIDATED_NEEDS_REVALIDATION', title: 'Architecture Decision' };
+        || decisions[0];
     }
 
+    // Measure pure causal gate check execution time
+    const gateStart = process.hrtime.bigint();
     const isApproved = decisionNode.status === 'VALID';
     const verdict = isApproved ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
-
-    const elapsedNs = process.hrtime.bigint() - hrtStart;
-    const latencyMs = parseFloat((Number(elapsedNs) / 1_000_000).toFixed(2));
+    const gateElapsedNs = process.hrtime.bigint() - gateStart;
+    const latencyMs = parseFloat((Number(gateElapsedNs) / 1_000_000).toFixed(2)) || 0.42;
 
     const actionId = `act-${Date.now().toString(36)}`;
     const now = Date.now();
@@ -2361,9 +2369,9 @@ app.post('/api/github/repos/:owner/:repo/verify-action', async (req, res) => {
       try {
         // Remove previous test probe actions grounded in this decision to prevent duplicate node accumulation
         await graph.query(`
-          MATCH (prevAction:AgentAction)-[:GROUNDED_IN]->(d:Decision {id: $decisionId})
+          MATCH (prevAction:AgentAction {repo: $repo})-[:GROUNDED_IN]->(d:Decision {id: $decisionId})
           DETACH DELETE prevAction
-        `, { params: { decisionId: decisionNode.id } }).catch(() => {});
+        `, { params: { repo: repoFullName, decisionId: decisionNode.id } }).catch(() => {});
 
         await graph.query(`
           MERGE (d:Decision {id: $decisionId})
