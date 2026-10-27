@@ -1410,6 +1410,7 @@ export default function App() {
                       selectedNode={selectedNode}
                       onCloseNode={() => setSelectedNode(null)}
                       isDarkTheme={isDarkTheme}
+                      isDemo={true}
                     />
                   </SubsystemErrorBoundary>
                 </div>
