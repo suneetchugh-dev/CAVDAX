@@ -203,10 +203,11 @@ export default function AuditPage() {
     return entries.filter(e => {
       // 1. Repo scope filter
       if (selectedRepo !== 'all') {
+        const itemRepo = (e.repo || 'demo').toLowerCase();
         if (selectedRepo === 'demo') {
-          if (e.repo && e.repo !== 'demo') return false;
+          if (itemRepo !== 'demo') return false;
         } else {
-          if (e.repo && e.repo !== selectedRepo) return false;
+          if (itemRepo !== selectedRepo.toLowerCase()) return false;
         }
       }
       // 2. Verdict filter
@@ -406,10 +407,15 @@ export default function AuditPage() {
                   key={entry.action_id || idx}
                   className="grid grid-cols-[1fr_1.4fr_0.9fr_0.9fr_1.5fr] gap-x-3 px-3 py-2.5 border-b border-slate-100 dark:border-white/5 last:border-0 hover:bg-slate-50/80 dark:hover:bg-white/[0.025] transition-colors"
                 >
-                  {/* Action ID */}
-                  <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 truncate" title={entry.action_id}>
-                    {entry.action_id || '—'}
-                  </span>
+                  {/* Action ID & Repo attribution badge */}
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 truncate" title={entry.action_id}>
+                      {entry.action_id || '—'}
+                    </span>
+                    <span className="text-[8px] font-mono text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                      {entry.repo && entry.repo !== 'demo' ? entry.repo : 'demo'}
+                    </span>
+                  </div>
 
                   {/* Target file */}
                   <span className="text-[10px] font-mono text-slate-800 dark:text-slate-300 truncate flex items-center gap-1" title={entry.target_file}>

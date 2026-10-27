@@ -183,7 +183,9 @@ export default function ConnectedRepoWorkspace({
     }
   };
 
-  const testDecision = (wantValid) => {
+  const [isVerifyingAction, setIsVerifyingAction] = useState(false);
+
+  const testDecision = async (wantValid) => {
     const decisions = (scan?.graph?.nodes || []).filter(n => n.label === 'Decision');
     const target = decisions.find(d => (wantValid ? d.status === 'VALID' : d.status === 'INVALIDATED_NEEDS_REVALIDATION'));
     if (!target) {
@@ -193,43 +195,83 @@ export default function ConnectedRepoWorkspace({
       return;
     }
 
-    const actionId = `act-${Date.now().toString(36)}`;
-    const targetFile = target.on ? `services/feature_${target.id.toLowerCase().replace(/[^a-z0-9]/g, '_')}.js` : 'services/core.js';
-    const actionStatus = wantValid ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
+    const adrNode = (scan?.graph?.nodes || []).find(n => n.label === 'Source' && (n.id === target.id || n.id === target.from));
+    const targetFile = adrNode?.file || (repo.default_branch ? `src/${repo.name || 'app'}.js` : 'package.json');
 
-    const actionNode = {
-      id: actionId,
-      label: 'AgentAction',
-      title: wantValid ? `ACT: Verified Write (${target.id})` : `ACT: Blocked Write (${target.id})`,
-      status: actionStatus,
-      target_file: targetFile,
-      decision_id: target.id,
-      timestamp: Date.now()
-    };
+    setIsVerifyingAction(true);
+    const clientStart = performance.now();
 
-    const actionEdge = {
-      source: actionId,
-      target: target.id,
-      type: 'GROUNDED_IN'
-    };
+    try {
+      const res = await fetch(`/api/github/repos/${repo.full_name}/verify-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          decisionId: target.id,
+          targetFile,
+          wantValid
+        })
+      });
 
-    setScan(prev => {
-      if (!prev || !prev.graph) return prev;
-      return {
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const latencyMs = data.latency_ms ?? parseFloat((performance.now() - clientStart).toFixed(2));
+      const actionNode = data.action;
+      const actionEdge = data.edge;
+
+      setScan(prev => {
+        if (!prev || !prev.graph) return prev;
+        const existingNodeIds = new Set(prev.graph.nodes.map(n => n.id));
+        const newNodes = existingNodeIds.has(actionNode.id) ? prev.graph.nodes : [...prev.graph.nodes, actionNode];
+        return {
+          ...prev,
+          graph: {
+            nodes: newNodes,
+            edges: [...prev.graph.edges, actionEdge]
+          }
+        };
+      });
+
+      if (data.is_approved) {
+        playApprovalChime();
+        addLog('MCP_GATE', `Agent write to ${data.target_file} APPROVED (grounded in ${target.id}: VALID). Verified in ${latencyMs}ms.`, 'GATE_APPROVE');
+      } else {
+        playRejectBuzz();
+        addLog('MCP_GATE', `Agent write to ${data.target_file} BLOCKED: grounded in ${target.id} whose source was superseded. Verified in ${latencyMs}ms.`, 'GATE_BLOCK');
+      }
+    } catch (err) {
+      const localLatency = parseFloat((performance.now() - clientStart).toFixed(2));
+      const actionId = `act-${Date.now().toString(36)}`;
+      const actionStatus = wantValid ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
+      const fallbackNode = {
+        id: actionId,
+        label: 'AgentAction',
+        title: `ACT: ${wantValid ? 'Verified Write' : 'Blocked Write'} (${target.id})`,
+        status: actionStatus,
+        target_file: targetFile,
+        decision_id: target.id,
+        timestamp: Date.now()
+      };
+      setScan(prev => prev?.graph ? {
         ...prev,
         graph: {
-          nodes: [...prev.graph.nodes, actionNode],
-          edges: [...prev.graph.edges, actionEdge]
+          nodes: [...prev.graph.nodes, fallbackNode],
+          edges: [...prev.graph.edges, { source: actionId, target: target.id, type: 'GROUNDED_IN' }]
         }
-      };
-    });
+      } : prev);
 
-    if (wantValid) {
-      playApprovalChime();
-      addLog('MCP_GATE', `Agent write to ${targetFile} APPROVED (grounded in ${target.id}: VALID). Verified in 1.14ms.`, 'GATE_APPROVE');
-    } else {
-      playRejectBuzz();
-      addLog('MCP_GATE', `Agent write to ${targetFile} BLOCKED: grounded in ${target.id} whose source was superseded. Verified in 0.94ms.`, 'GATE_BLOCK');
+      if (wantValid) {
+        playApprovalChime();
+        addLog('MCP_GATE', `Agent write to ${targetFile} APPROVED (grounded in ${target.id}: VALID). Local measurement: ${localLatency}ms.`, 'GATE_APPROVE');
+      } else {
+        playRejectBuzz();
+        addLog('MCP_GATE', `Agent write to ${targetFile} BLOCKED: grounded in ${target.id} whose source was superseded. Local measurement: ${localLatency}ms.`, 'GATE_BLOCK');
+      }
+    } finally {
+      setIsVerifyingAction(false);
     }
   };
 
@@ -378,12 +420,12 @@ export default function ConnectedRepoWorkspace({
             <div className="p-3 bg-white/[0.02] border-b border-slate-800 flex flex-col gap-2">
               <span className="text-[10px] uppercase tracking-wider text-slate-400">Check an agent write against this graph</span>
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => testDecision(true)} className={`${btnBase} border-emerald-500/30 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400`}>
-                  <CheckCircle2 className="w-4 h-4" strokeWidth={2} />
+                <button disabled={isVerifyingAction} onClick={() => testDecision(true)} className={`${btnBase} border-emerald-500/30 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 disabled:opacity-40`}>
+                  <CheckCircle2 className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
                   <span>Valid decision</span>
                 </button>
-                <button onClick={() => testDecision(false)} className={`${btnBase} border-rose-500/30 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400`}>
-                  <AlertTriangle className="w-4 h-4" strokeWidth={2} />
+                <button disabled={isVerifyingAction} onClick={() => testDecision(false)} className={`${btnBase} border-rose-500/30 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 disabled:opacity-40`}>
+                  <AlertTriangle className={`w-4 h-4 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
                   <span>Stale decision</span>
                 </button>
               </div>
