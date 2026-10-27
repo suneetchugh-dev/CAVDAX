@@ -274,7 +274,7 @@ select, label, [onclick], .cursor-pointer {
 }
 
 /* Hardware-accelerated subpixel stabilization to eliminate SVG line twitching during morph */
-.portfolio-header svg {
+.portfolio-header svg:not(.theme-toggle-icon):not(.settings-icon) {
   transform: translateZ(0);
   shape-rendering: geometricPrecision;
   -webkit-backface-visibility: hidden;

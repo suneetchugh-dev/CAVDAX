@@ -23,6 +23,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Activity, RefreshCw, FileText, CheckCircle2, Clock, Database } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
+import Combobox from './Combobox';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 

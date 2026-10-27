@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, 
   PauseCircle, 
@@ -194,17 +195,33 @@ export default function PreferencesModal({
       : 'max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-top 0.25s ease'
   });
 
-  if (!isOpen) return null;
-
   return (
-    <div 
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      {/* Modal Dialog Card (Ported from CAVDAX Luxury Architectural Shell) */}
-      <div className="relative w-full max-w-lg max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto custom-scrollbar bg-white/95 dark:bg-[#0A0D12] border border-slate-200/90 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.6)] backdrop-blur-2xl animate-in zoom-in-95 duration-250 p-4 sm:p-7">
+    <AnimatePresence>
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-6"
+        >
+          {/* Backdrop Blur matching KeyboardShortcutsModal */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => {
+              playClick();
+              onClose();
+            }}
+            className="absolute inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md"
+          />
+
+          {/* Modal Dialog Card with smooth spring physics entry and exit */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 360 }}
+            className="relative w-full max-w-lg max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto custom-scrollbar bg-white/95 dark:bg-[#0A0D12] border border-slate-200/90 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.6)] backdrop-blur-2xl p-4 sm:p-7 z-10"
+          >
         
         {/* Close Button */}
         <button
@@ -436,7 +453,9 @@ export default function PreferencesModal({
           
         </div>
 
-      </div>
+      </motion.div>
     </div>
+      )}
+    </AnimatePresence>
   );
 }
