@@ -34,6 +34,7 @@ import {
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
 import { scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, GithubAdrError } from './githubAdr.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
+import { loadSystemState, saveSystemState } from './systemState.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -264,8 +265,20 @@ app.use((req, res, next) => {
 // Previously the limits were hardcoded here and only shown in tier-check —
 // now both read from the same source of truth.
 
+// Load file-backed persistent system state (preserves Evaluation Mode, roster, IPs, API keys across deploys)
+const savedSystemState = loadSystemState();
+
+function syncSystemStateToDisk() {
+  saveSystemState({
+    hackathonMode: globalHackathonMode,
+    whitelistedIps: globalWhitelistedIps,
+    devRoster: globalDevRoster,
+    apiKeys: Array.from(userApiKeyRegistry.values())
+  });
+}
+
 const CAVDAX_TIER = (process.env.CAVDAX_TIER || 'free').toLowerCase();
-let globalHackathonMode = process.env.HACKATHON_MODE === 'true';
+let globalHackathonMode = process.env.HACKATHON_MODE === 'true' || Boolean(savedSystemState.hackathonMode);
 
 const TIER_CONFIG = {
   free: {
@@ -335,7 +348,8 @@ let globalWhitelistedIps = Array.from(new Set([
   ...(process.env.VITE_ALLOWED_DEV_IPS || process.env.ALLOWED_DEV_IPS || '')
     .split(',')
     .map(s => s.trim().toLowerCase())
-    .filter(Boolean)
+    .filter(Boolean),
+  ...(Array.isArray(savedSystemState.whitelistedIps) ? savedSystemState.whitelistedIps : [])
 ]));
 
 // -1 means unlimited — pass a very large max so express-rate-limit is effectively off
@@ -388,6 +402,13 @@ app.use('/api/mcp/', mcpLimiter);      // tighter limit on MCP routes (overrides
 // Raw keys follow format: cvdx_live_<login>_<48-hex-entropy> (192 bits of entropy)
 const API_TOKEN = process.env.MCP_API_TOKEN || null;
 const userApiKeyRegistry = new Map();
+if (Array.isArray(savedSystemState.apiKeys)) {
+  for (const k of savedSystemState.apiKeys) {
+    if (k && k.keyHash) {
+      userApiKeyRegistry.set(k.keyHash, k);
+    }
+  }
+}
 let globalKeyRevocationEpoch = 0;
 
 function hashApiKey(rawKey) {
@@ -589,7 +610,8 @@ let globalDevRoster = Array.from(new Set([
   ...(process.env.VITE_AUTHORIZED_DEV_USERS || process.env.AUTHORIZED_DEV_USERS || '')
     .split(',')
     .map(s => s.trim().toLowerCase().replace(/^@/, ''))
-    .filter(Boolean)
+    .filter(Boolean),
+  ...(Array.isArray(savedSystemState.devRoster) ? savedSystemState.devRoster : [])
 ]));
 
 // Middleware enforcing developer authorization on administrative endpoints (OWASP A01 Hardening)
@@ -650,6 +672,7 @@ app.post('/api/system/dev-ips', requireDevAuth, (req, res) => {
     }
   }
 
+  syncSystemStateToDisk();
   broadcastEvent('DEV_IPS_UPDATED', { ips: globalWhitelistedIps });
   res.json({
     success: true,
@@ -683,6 +706,7 @@ app.post('/api/system/dev-roster', requireDevAuth, (req, res) => {
     }
   }
 
+  syncSystemStateToDisk();
   broadcastEvent('DEV_ROSTER_UPDATED', { roster: globalDevRoster });
   res.json({
     success: true,
@@ -702,6 +726,7 @@ app.get('/api/system/hackathon-mode', (req, res) => {
 app.post('/api/system/hackathon-mode', requireDevAuth, (req, res) => {
   const { enabled } = req.body || {};
   globalHackathonMode = Boolean(enabled);
+  syncSystemStateToDisk();
   console.log(`[CAVDAX] Global Hackathon Evaluation Mode updated: ${globalHackathonMode ? 'ENABLED (ENTERPRISE UNLOCKED GLOBALLY)' : 'DISABLED'}`);
   broadcastEvent('HACKATHON_MODE_CHANGED', {
     enabled: globalHackathonMode,
@@ -728,6 +753,7 @@ app.post('/api/system/revoke-all-keys', requireDevAuth, (req, res) => {
   const revokedCount = userApiKeyRegistry.size;
   globalKeyRevocationEpoch = Date.now();
   userApiKeyRegistry.clear();
+  syncSystemStateToDisk();
 
   const auditRecord = {
     action: 'EMERGENCY_GLOBAL_KEY_REVOCATION',
@@ -1985,6 +2011,7 @@ app.get('/api/user/api-key', (req, res) => {
     req.session.keyHash = keyHash;
     req.session.keyCreatedAt = now;
   }
+  syncSystemStateToDisk();
 
   res.json({
     success: true,
@@ -2044,6 +2071,7 @@ app.post('/api/user/rotate-api-key', keyRotateLimiter, (req, res) => {
     req.session.keyHash = newHash;
     req.session.keyCreatedAt = now;
   }
+  syncSystemStateToDisk();
 
   console.log(`[CAVDAX Auth] Cryptographic API key rotated for: ${login}`);
 
