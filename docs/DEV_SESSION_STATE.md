@@ -9,6 +9,25 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.33 Latest Session Achievements (October 28, 2026 - isDemo Runtime Fix, Session Secret Hardening, Sub-ms Gate Timing & CI Quality Gate)
+
+- **Eliminated ReferenceError on Node Clicks (`apps/client/src/components/GraphCanvas.jsx`, `apps/client/src/App.jsx`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Resolved `ReferenceError: isDemo is not defined` thrown on the live site when clicking any graph node by explicitly declaring `isDemo = false` in `GraphCanvas` props and passing `isDemo={true}` in `App.jsx` and `isDemo={false}` in `ConnectedRepoWorkspace.jsx`.
+  - Passed boolean-coerced `isFalkorDB={Boolean(isDemo || (typeof title === 'string' && title.includes('FalkorDB')))}` safely to `NodeInspector`.
+- **Cryptographic Ephemeral Secret for Session Signing (`apps/server/index.js`)**:
+  - Replaced static fallback string with `randomBytes(32).toString('hex')` whenever `process.env.SESSION_SECRET` is unset, completely neutralizing cookie forgery attacks from public repo code.
+- **Pure Causal Gate Latency Isolation & Fail-Closed Guardrails (`apps/server/index.js`)**:
+  - Isolated gate latency measurement in `POST /api/github/repos/:owner/:repo/verify-action` to the precise causal check, removing external GitHub REST API network skew (300ms–800ms) to reflect authentic sub-millisecond GraphBLAS performance.
+  - Enforced `requireAuth` and fail-closed 404 response when no decisions exist in the repository, stopping client parameter manipulation from generating mock approved decisions.
+  - Scoped FalkorDB previous action deletion to `repo: $repo` to eliminate cross-repository node collisions.
+- **Restricted Sensitive Administrative Endpoints (`apps/server/index.js`)**:
+  - Protected `GET /api/system/dev-ips` and `GET /api/system/dev-roster` with `requireDevAuth`, plugging public information disclosure of internal developer IPs and roster metadata.
+  - Protected `POST /api/reset` with `requireDevAuth` to prevent unauthorized strangers from wiping shared demo state.
+- **CLI and Hosted Ingest Pattern Synchronization (`apps/mcp-server/src/ingestCommand.js`)**:
+  - Synchronized `discoverAdrFiles` in the published MCP package with `ADR_DIRECTORIES` (adding `docs/decisions/`, `design/adr/`, `wiki/adrs/`, and root `ADR-*.md`).
+- **CI Test Suite Quality Gate for VM Deployments (`.github/workflows/deploy.yml`)**:
+  - Added automated test execution gate in `deploy.yml` requiring all 42+ unit tests to pass before initiating SSH deployment to the production VM.
+
 ## 1.0.32 Latest Session Achievements (October 28, 2026 - Agent & Human Console Capabilities, Blast-Radius Simulator, Vision OCR Mode, SVG Export & ADR Guardrails)
 
 - **`export_graph_image` Tool & Standalone SVG Generation (`core/graph/renderSvg.js`, `core/mcp/server.js`, `apps/mcp-server/src/stdioServer.js`, `apps/server/index.js`)**:
