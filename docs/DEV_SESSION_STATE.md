@@ -18,6 +18,33 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.29 Latest Session Achievements (October 28, 2026 - Custom Combobox Component, Robust GitHub URL Parser & Team Page Grey Outline Contrast - PR #73 & #74)
+
+- **Architectural Custom Combobox Component (`apps/client/src/components/Combobox.jsx`, `apps/client/src/components/AuditPage.jsx`)**:
+  - Replaced browser-native `<select>` tags in `AuditPage.jsx` with a bespoke, accessible `Combobox` matching `docs/UI_DESIGN_SYSTEM.md`.
+  - Implemented light/dark calibrated theme borders (`dark:border-white/20`), search query filtering for large repo lists, click-outside and `Escape` keyboard dismissal, tactile sound effects (`playClick()`), and selected state indicator checkmarks.
+- **Robust Multi-Format GitHub URL Parser (`apps/client/src/components/ConnectRepoModal.jsx`)**:
+  - Fixed 404 NOT_FOUND errors in `handleConnectCustom` when users enter URLs matching the input placeholder (`github.com/owner/repository`), without `https://`, with trailing slashes, or with branch paths (e.g. `/tree/main`).
+  - Implemented regex extraction capturing `owner` and `repoName` reliably, preventing `github.com` from erroneously being set as the repository owner.
+- **Dark Theme Grey Outline Calibration for Dev Team & Global Cards (`apps/client/src/components/TeamPage.jsx`, `apps/client/src/components/DevTeamPanel.jsx`, `apps/client/src/components/ConnectRepoModal.jsx`, `apps/client/src/components/AuditPage.jsx`, `apps/client/src/index.css`)**:
+  - Elevated subtle borders in `TeamPage.jsx` and `DevTeamPanel.jsx` to `dark:border-white/15` and `dark:border-white/20`.
+  - Boosted global card border opacity in `apps/client/src/index.css` (`.dark .bezel-card`, `.neo-glass-card`, `.state-card`, `.terminal-window`) from `0.08` to `0.16`.
+  - Upgraded table and toolbar borders in `AuditPage.jsx` and modal frames in `ConnectRepoModal.jsx` to `dark:border-white/15`, ensuring crisp outlines on low-brightness displays.
+
+## 1.0.28 Latest Session Achievements (October 27, 2026 - Zero-Mock Compliance, Real Action Latency & Audit Repository Isolation - PR #72, #73 & #74)
+
+- **Elimination of Synthetic Latencies & Real Measured Verification (`POST /api/github/repos/:owner/:repo/verify-action`, `apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Replaced hardcoded strings (`1.14ms` / `0.94ms`) with genuine high-resolution timer measurements (`process.hrtime.bigint()`) on the backend.
+  - Replaced fabricated target file names with authentic repository file paths derived from scanned ADR AST sources.
+  - Mounted `POST /api/github/repos/:owner/:repo/verify-action` to evaluate decisions against the repository graph, create real `AgentAction` records, and stream results back with real measured latency.
+- **Audit Tab True Repository Scope Filtering & Provenance Badges (`apps/client/src/components/AuditPage.jsx`, `core/graph/queries.js`, `apps/server/index.js`)**:
+  - Fixed repository filtering in the Audit tab: `fetchAuditLog` and fallback endpoints now explicitly return `repo: row.repo || 'demo'`.
+  - Selecting `Demo Repository` strictly displays demo actions (`DEC-101`, `DEC-102`, `DEC-103`), while selecting a connected user repository displays actions specific to that repository.
+  - Added repository provenance badges to every row in the Audit ledger table.
+- **Persistent Connected Repo Action DAG Across Rescans (`apps/server/index.js`, `apps/server/systemState.js`)**:
+  - Persisted actions from connected repositories into `apps/server/data/system_state.json` and FalkorDB.
+  - `GET /api/github/repos/:owner/:repo/adrs` re-injects previously recorded actions and `GROUNDED_IN` edges into the graph upon rescanning, preventing actions from vanishing when the repository is refreshed.
+
 ## 1.0.27 Latest Session Achievements (October 27, 2026 - Dark Theme Contrast, Popular Card Kinetic Motion & Server-Client Full State Persistence - PR #69, #70 & #71)
 
 - **Dark Theme Border Contrast & Low-Brightness Legibility (`apps/client/src/components/ProfilePage.jsx`, `apps/client/src/components/SupportPage.jsx`)**:
