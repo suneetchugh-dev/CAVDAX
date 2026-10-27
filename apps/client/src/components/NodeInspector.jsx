@@ -1,5 +1,6 @@
+import { motion } from 'framer-motion';
 import React from 'react';
-import { X, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest } from 'lucide-react';
+import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 export default function NodeInspector({
@@ -13,7 +14,10 @@ export default function NodeInspector({
   onOpenSyncPr,
   hasDrift = false,
   onTestDecision,
-  isVerifyingAction = false
+  isVerifyingAction = false,
+  isFullscreen = false,
+  hasBlastBanner = false,
+  containerRef
 }) {
   if (!node) return null;
 
@@ -33,16 +37,28 @@ export default function NodeInspector({
     : null;
 
   return (
-    <div className="absolute top-12 right-4 w-80 max-w-[calc(100%-2rem)] bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs animate-in fade-in zoom-in-95">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/15 pb-2.5 mb-3">
-        <div className="flex items-center gap-2 min-w-0">
+    <motion.div
+      drag
+      dragMomentum={false}
+      dragConstraints={containerRef || false}
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      className={`absolute ${hasBlastBanner ? 'top-16' : 'top-12'} right-3 sm:right-4 ${
+        isFullscreen ? 'w-76 sm:w-80' : 'w-68 sm:w-72'
+      } max-w-[calc(100%-1.5rem)] max-h-[calc(100%-4rem)] overflow-y-auto bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs select-text`}
+      data-lenis-prevent
+    >
+      {/* Header with Draggable Handle */}
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/15 pb-2 mb-2.5">
+        <div className="flex items-center gap-1.5 min-w-0 cursor-grab active:cursor-grabbing" title="Drag to reposition inspector card">
+          <GripHorizontal className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 hover:text-slate-800 dark:hover:text-white transition-colors" />
           {isStale ? (
-            <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
+            <AlertTriangle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
           ) : (
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
           )}
-          <span className="font-bold text-slate-800 dark:text-slate-100 truncate">
+          <span className="font-bold text-slate-800 dark:text-slate-100 truncate text-[11px]">
             Node: <span className="text-slate-950 dark:text-white font-bold">{node.id}</span>
           </span>
         </div>
@@ -51,17 +67,17 @@ export default function NodeInspector({
             playClick();
             if (onClose) onClose();
           }}
-          className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white transition-colors tactile-btn shrink-0"
+          className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white transition-colors tactile-btn shrink-0 cursor-pointer"
           aria-label="Close Inspector"
         >
-          <X className="w-4 h-4 text-current transition-colors" />
+          <X className="w-3.5 h-3.5 text-current transition-colors" />
         </button>
       </div>
 
       {/* Node Properties Grid */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {/* Double-bezel inner metadata card */}
-        <div className="bezel-inner p-3 space-y-2.5">
+        <div className="bezel-inner p-2.5 space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-slate-500 uppercase tracking-wider">Graph Label</span>
             <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-[#161B22] border border-slate-300 dark:border-white/15 text-slate-800 dark:text-slate-300 font-bold text-[10px]">
@@ -215,6 +231,6 @@ export default function NodeInspector({
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

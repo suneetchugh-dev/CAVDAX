@@ -35,19 +35,6 @@ export default function StoryStepper({ currentAct, onSelectAct, loadingAct }) {
 
   return (
     <div className="bg-slate-50 dark:bg-[#0B0D11] border-b border-slate-300 dark:border-white/10 px-6 py-3 select-none">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2.5 pb-2 border-b border-slate-200 dark:border-white/5">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold">
-            Interactive Scenario Storyboard
-          </span>
-          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-300">
-            Deterministic Walkthrough
-          </span>
-        </div>
-        <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-          Live autonomous agent gate executes via <code className="text-slate-800 dark:text-slate-200 font-bold">@cavdax/mcp-server</code> in Claude Code / Cursor
-        </span>
-      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {acts.map((item) => {
           const Icon = item.icon;
