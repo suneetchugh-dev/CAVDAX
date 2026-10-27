@@ -136,6 +136,29 @@ export const TOOLS = [
         }
       }
     }
+  },
+  {
+    name: 'export_graph_image',
+    description:
+      'Generates a standalone SVG/visual image of the CAVDAX causal architecture graph for PR descriptions, documentation, or visual inspection.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        node_id: {
+          type: 'string',
+          description: 'Optional target node ID (e.g. DEC-102 or ADR-001) to center or inspect.'
+        },
+        highlight_blast_radius: {
+          type: 'boolean',
+          description: 'When true and node_id is provided, highlights downstream invalidated dependencies in pulsing warning colors.'
+        },
+        format: {
+          type: 'string',
+          enum: ['svg', 'markdown'],
+          description: 'Output format (default: "svg").'
+        }
+      }
+    }
   }
 ];
 
@@ -145,7 +168,8 @@ const REQUIRED_ARGS = {
   check_intent_clearance: ['decision_id'],
   acquire_decision_lock: ['decision_id', 'agent_id'],
   release_decision_lock: ['decision_id', 'agent_id'],
-  query_causal_graph: []
+  query_causal_graph: [],
+  export_graph_image: []
 };
 
 const toolResult = (payload, isError = false) => ({
@@ -224,13 +248,25 @@ export class CavdaxStdioGateway {
     if (mode === 'simulation') {
       this.announce('simulation');
       const sim = this.getSim();
-      const result =
-        name === 'apply_code_change' ? sim.applyCodeChange(args)
-        : name === 'revalidate_decision' ? sim.revalidateDecision(args)
-        : name === 'check_intent_clearance' ? sim.checkIntentClearance(args)
-        : name === 'acquire_decision_lock' ? sim.acquireLock(args)
-        : name === 'release_decision_lock' ? sim.releaseLock(args)
-        : sim.queryGraph(args);
+      let result;
+      if (name === 'apply_code_change') result = sim.applyCodeChange(args);
+      else if (name === 'revalidate_decision') result = sim.revalidateDecision(args);
+      else if (name === 'check_intent_clearance') result = sim.checkIntentClearance(args);
+      else if (name === 'acquire_decision_lock') result = sim.acquireLock(args);
+      else if (name === 'release_decision_lock') result = sim.releaseLock(args);
+      else if (name === 'export_graph_image') {
+        const [{ renderGraphToSvg, computeBlastRadius }] = await Promise.all([loadCore('graph/renderSvg.js')]);
+        const { blastNodeIds, summary } = (args.node_id && args.highlight_blast_radius)
+          ? computeBlastRadius(sim.nodes, sim.edges, args.node_id)
+          : { blastNodeIds: new Set(), summary: { facts: 0, decisions: 0, actions: 0, files: [] } };
+        const svg = renderGraphToSvg({ nodes: sim.nodes, edges: sim.edges }, {
+          nodeId: args.node_id,
+          highlightBlastRadius: Boolean(args.highlight_blast_radius)
+        });
+        result = { format: args.format || 'svg', svg, node_count: sim.nodes.length, edge_count: sim.edges.length, blast_radius: summary };
+      } else {
+        result = sim.queryGraph(args);
+      }
       return toolResult({ mode: 'simulation', ...result }, result.isError === true);
     }
 

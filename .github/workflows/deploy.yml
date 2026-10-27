@@ -10,6 +10,18 @@ jobs:
     name: Production Deployment
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Quality Gate Tests
+        run: |
+          node --test apps/server/test/*.mjs
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -48,14 +60,15 @@ jobs:
               echo "==> Building client container..."
               docker compose -f infra/docker-compose.prod.yml build client
               echo "==> Performing rolling container recreation..."
-              docker compose -f infra/docker-compose.prod.yml up -d --remove-orphans
+              docker compose -f infra/docker-compose.prod.yml up -d --no-deps server
+              docker compose -f infra/docker-compose.prod.yml up -d --no-deps client
             else
-              echo "==> Building server container..."
+              echo "==> Building with legacy docker-compose..."
               docker-compose -f infra/docker-compose.prod.yml build server
-              echo "==> Building client container..."
               docker-compose -f infra/docker-compose.prod.yml build client
-              docker-compose -f infra/docker-compose.prod.yml up -d --remove-orphans
+              docker-compose -f infra/docker-compose.prod.yml up -d --no-deps server
+              docker-compose -f infra/docker-compose.prod.yml up -d --no-deps client
             fi
-            echo "==> Pruning dangling docker images..."
-            docker image prune -f || true
-            echo "==> Deployment successfully finished with zero downtime!"
+            echo "==> Cleaning up dangling build images to preserve disk space..."
+            docker image prune -f
+            echo "==> CAVDAX Deployment successfully completed!"

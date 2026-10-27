@@ -35,11 +35,26 @@ async function connectFalkorDB(host, port) {
 async function discoverAdrFiles(repoRoot) {
   const patterns = [
     '.adr/**/*.md',
+    'adr/**/*.md',
+    'adrs/**/*.md',
+    'doc/adr/**/*.md',
+    'doc/adrs/**/*.md',
     'docs/adr/**/*.md',
     'docs/adrs/**/*.md',
+    'docs/decisions/**/*.md',
+    'docs/architecture/decisions/**/*.md',
+    'architecture/decisions/**/*.md',
+    'architecture/**/*.md',
+    'decisions/**/*.md',
+    'design/adr/**/*.md',
+    'design/adrs/**/*.md',
+    'design/decisions/**/*.md',
+    'wiki/adr/**/*.md',
+    'wiki/adrs/**/*.md',
     'demo-repo/docs/adrs/**/*.md',
     'demo-repo/docs/adr/**/*.md',
-    'architecture/**/*.md'
+    'ADR-*.md',
+    'docs/ADR-*.md'
   ];
   const found = [];
   for (const pattern of patterns) {

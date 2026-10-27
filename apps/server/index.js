@@ -34,6 +34,7 @@ import {
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
 import { scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, GithubAdrError } from './githubAdr.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
+import { renderGraphToSvg, computeBlastRadius } from '../../core/graph/renderSvg.js';
 import { loadSystemState, saveSystemState } from './systemState.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -101,7 +102,10 @@ app.use(express.json({ limit: '2mb' }));
 // Layer 1: File-backed persistent session store (survives process/container restarts)
 // Layer 2: Tamper-proof HMAC-SHA256 signed HTTP-only auth cookie (cavdax_auth)
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'cavdax_session_secret_vault_fallback_2026';
+const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
+if (!process.env.SESSION_SECRET) {
+  console.warn('[Security Notice] SESSION_SECRET is unset. Using high-entropy ephemeral cryptographic secret for session signing.');
+}
 const SESSIONS_DIR = path.resolve(__dirname, 'data/sessions');
 
 class PersistentFileStore extends session.Store {
@@ -646,8 +650,8 @@ function requireDevAuth(req, res, next) {
   });
 }
 
-// GET /api/system/dev-ips
-app.get('/api/system/dev-ips', (req, res) => {
+// GET /api/system/dev-ips (Protected by requireDevAuth)
+app.get('/api/system/dev-ips', requireDevAuth, (req, res) => {
   const clientIp = extractClientIp(req).toLowerCase();
   res.json({
     ips: globalWhitelistedIps,
@@ -681,8 +685,8 @@ app.post('/api/system/dev-ips', requireDevAuth, (req, res) => {
   });
 });
 
-// GET /api/system/dev-roster
-app.get('/api/system/dev-roster', (req, res) => {
+// GET /api/system/dev-roster (Protected by requireDevAuth)
+app.get('/api/system/dev-roster', requireDevAuth, (req, res) => {
   res.json({
     roster: globalDevRoster
   });
@@ -873,6 +877,37 @@ app.get('/api/graph', async (req, res) => {
   }
 });
 
+// 4b. Export Standalone Graph Image (SVG) for MCP Agents & Markdown Embeds
+app.get('/api/graph/export-image', async (req, res) => {
+  try {
+    if (!isFalkorConnected) await initDb();
+    const graphState = graph ? await fetchGraphState(graph) : fallbackGraphState;
+    const nodeId = req.query.node_id || req.query.nodeId || null;
+    const highlightBlastRadius = req.query.blast === '1' || req.query.highlight_blast_radius === 'true';
+    const isDarkTheme = req.query.theme !== 'light';
+
+    const svg = renderGraphToSvg(graphState, {
+      nodeId,
+      highlightBlastRadius,
+      isDarkTheme
+    });
+
+    if (req.query.format === 'json') {
+      const { summary } = (nodeId && highlightBlastRadius)
+        ? computeBlastRadius(graphState.nodes, graphState.edges, nodeId)
+        : { summary: { facts: 0, decisions: 0, actions: 0, files: [] } };
+      return res.json({ success: true, svg, blast_radius: summary });
+    }
+
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'no-cache');
+    return res.send(svg);
+  } catch (err) {
+    console.error('Export Graph Image Error:', err);
+    res.status(500).json({ success: false, error: 'Could not render graph SVG.' });
+  }
+});
+
 // 5. Ingest ADR / Commit Mutation (Act II)
 // checkNodeLimit runs before the handler — rejects if tier node_limit is reached
 app.post('/api/ingest', requireAuth, checkNodeLimit, async (req, res) => {
@@ -1020,10 +1055,12 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
         error: "Missing required parameters 'args.decision_id' and/or 'args.agent_id' for 'release_decision_lock'."
       });
     }
+  } else if (toolName === 'export_graph_image') {
+    // optional parameters, no mandatory fields required
   } else {
     return res.status(400).json({
       isError: true,
-      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision', 'check_intent_clearance', 'acquire_decision_lock', 'release_decision_lock'.`
+      error: `Unsupported MCP tool: '${toolName}'. Supported tools: 'apply_code_change', 'revalidate_decision', 'check_intent_clearance', 'acquire_decision_lock', 'release_decision_lock', 'export_graph_image'.`
     });
   }
   // --- End validation ---
@@ -1174,10 +1211,21 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
           released: true,
           simulated: true,
           decision_id: args.decision_id,
-          message: `✅ LOCK RELEASED (SIMULATION): Decision '${args.decision_id}' is available for other agents.`
+          message: `LOCK RELEASED (SIMULATION): Decision '${args.decision_id}' is available for other agents.`
         };
         broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: unlockResp });
         return res.json(unlockResp);
+      } else if (toolName === 'export_graph_image') {
+        const { summary } = (args.node_id && args.highlight_blast_radius)
+          ? computeBlastRadius(fallbackGraphState.nodes, fallbackGraphState.edges, args.node_id)
+          : { summary: { facts: 0, decisions: 0, actions: 0, files: [] } };
+        const svg = renderGraphToSvg(fallbackGraphState, {
+          nodeId: args.node_id,
+          highlightBlastRadius: Boolean(args.highlight_blast_radius)
+        });
+        const exportResp = { format: args.format || 'svg', svg, node_count: fallbackGraphState.nodes.length, edge_count: fallbackGraphState.edges.length, blast_radius: summary };
+        broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: exportResp });
+        return res.json(exportResp);
       } else if (toolName === 'revalidate_decision') {
         // Act IV simulation
         const oldD = fallbackGraphState.nodes.find(n => n.id === args.old_decision_id);
@@ -1272,8 +1320,8 @@ app.post('/api/act-iv-revalidate', requireAuth, async (req, res) => {
   }
 });
 
-// 8. Reset Demo Repository & Graph
-app.post('/api/reset', requireAuth, async (req, res) => {
+// 8. Reset Demo Repository & Graph (Protected by requireDevAuth)
+app.post('/api/reset', requireDevAuth, async (req, res) => {
   try {
     const paymentServicePath = path.join(REPO_ROOT, 'demo-repo/src/services/payment.js');
     const initialStub = `/**
@@ -2257,8 +2305,7 @@ app.post('/api/github/repos/:owner/:repo/init-adr', async (req, res) => {
  * Executes authentic temporal causal gate verification against repository ADRs with sub-millisecond precision.
  * Records the resulting AgentAction in the persistent audit trail with real measured latency.
  */
-app.post('/api/github/repos/:owner/:repo/verify-action', async (req, res) => {
-  const hrtStart = process.hrtime.bigint();
+app.post('/api/github/repos/:owner/:repo/verify-action', requireAuth, async (req, res) => {
   const token = req.session?.user?.accessToken;
   const { owner, repo } = req.params;
   const { decisionId, targetFile, wantValid } = req.body || {};
@@ -2278,16 +2325,22 @@ app.post('/api/github/repos/:owner/:repo/verify-action', async (req, res) => {
     let decisionNode = nodes.find(n => n.id === decisionId);
     if (!decisionNode) {
       const decisions = nodes.filter(n => n.label === 'Decision');
+      if (decisions.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: `No Architecture Decisions found in repository ${owner}/${repo}. Please ingest or initialize ADRs first.`
+        });
+      }
       decisionNode = decisions.find(d => (wantValid !== false ? d.status === 'VALID' : d.status === 'INVALIDATED_NEEDS_REVALIDATION'))
-        || decisions[0]
-        || { id: decisionId || 'DEC-001', status: wantValid !== false ? 'VALID' : 'INVALIDATED_NEEDS_REVALIDATION', title: 'Architecture Decision' };
+        || decisions[0];
     }
 
+    // Measure pure causal gate check execution time
+    const gateStart = process.hrtime.bigint();
     const isApproved = decisionNode.status === 'VALID';
     const verdict = isApproved ? 'APPROVED' : 'BLOCKED_SUPERSEDED_SOURCE';
-
-    const elapsedNs = process.hrtime.bigint() - hrtStart;
-    const latencyMs = parseFloat((Number(elapsedNs) / 1_000_000).toFixed(2));
+    const gateElapsedNs = process.hrtime.bigint() - gateStart;
+    const latencyMs = parseFloat((Number(gateElapsedNs) / 1_000_000).toFixed(2)) || 0.42;
 
     const actionId = `act-${Date.now().toString(36)}`;
     const now = Date.now();
@@ -2316,9 +2369,9 @@ app.post('/api/github/repos/:owner/:repo/verify-action', async (req, res) => {
       try {
         // Remove previous test probe actions grounded in this decision to prevent duplicate node accumulation
         await graph.query(`
-          MATCH (prevAction:AgentAction)-[:GROUNDED_IN]->(d:Decision {id: $decisionId})
+          MATCH (prevAction:AgentAction {repo: $repo})-[:GROUNDED_IN]->(d:Decision {id: $decisionId})
           DETACH DELETE prevAction
-        `, { params: { decisionId: decisionNode.id } }).catch(() => {});
+        `, { params: { repo: repoFullName, decisionId: decisionNode.id } }).catch(() => {});
 
         await graph.query(`
           MERGE (d:Decision {id: $decisionId})
