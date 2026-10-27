@@ -32,6 +32,7 @@ import {
   fetchAuditLog
 } from '../../core/graph/queries.js';
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
+import { scanRepoAdrs, createAdrPullRequest, GithubAdrError } from './githubAdr.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
 
 const __filename = fileURLToPath(import.meta.url);

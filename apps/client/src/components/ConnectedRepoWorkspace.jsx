@@ -1,269 +1,295 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  GitBranch, FolderGit2, FileCode, Plus, CheckCircle2,
-  Sparkles, RefreshCw, Terminal, Layers, ArrowRight,
-  ShieldCheck, Play, Database, Check, Trash2, AlertCircle
+  GitBranch, FolderGit2, FileText, RefreshCw, Terminal, GitPullRequest,
+  CheckCircle2, AlertTriangle, ExternalLink, Trash2
 } from 'lucide-react';
 import GraphCanvas from './GraphCanvas';
 import SubsystemErrorBoundary from './SubsystemErrorBoundary';
 import { playClick, playApprovalChime, playRejectBuzz } from '../utils/soundFx';
 
 /**
- * ConnectedRepoWorkspace.jsx — Multi-Tenant Live Repository Causal Environment
+ * ConnectedRepoWorkspace.jsx — Live view of a connected GitHub repository.
  *
- * Implements Section 5.3 of FUTURE_ROADMAP.md:
- * - Isolated keyspace: cavdax_tenant_<repoId>
- * - Zero-ADR empty state with 1-click scaffolding (MADR format).
- * - Live causal AST verification gate on real connected repositories.
+ * Flow:
+ *   1. Scan   GET  /api/github/repos/:owner/:repo/adrs   reads the default branch, parses ADRs, returns the graph.
+ *   2. Empty  POST /api/github/repos/:owner/:repo/init-adr   opens a pull request with a starter ADR.
+ *             Nothing is committed to the default branch; the owner reviews and merges on GitHub.
+ *   3. Rescan after merge, the real ADR graph renders.
  */
+
+const btnBase =
+  'h-9 px-3 rounded-xl border text-xs font-mono font-bold uppercase tracking-wide flex items-center justify-center gap-1.5 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+const btnSecondary =
+  `${btnBase} border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white`;
+const btnPrimary =
+  `${btnBase} border-slate-900 dark:border-white bg-slate-950 text-white dark:bg-white dark:text-slate-950 hover:opacity-90`;
+
+const ERROR_COPY = {
+  AUTH_REQUIRED: 'Your GitHub session has expired. Sign in again to continue.',
+  AUTH_EXPIRED: 'Your GitHub session has expired. Sign in again to continue.',
+  NOT_FOUND: 'This repository was not found, or your GitHub account cannot access it.',
+  FORBIDDEN: 'GitHub denied the request. Opening a pull request needs write access to this repository.',
+  REPO_EMPTY: 'This repository has no commits yet. Push a first commit, then scan again.',
+  RATE_LIMITED: 'Too many requests. Wait a few minutes and try again.',
+  ADRS_EXIST: 'This repository already has ADRs. Scan again to load them.'
+};
+
+function splitFullName(fullName = '') {
+  const [owner, ...rest] = fullName.split('/');
+  return { owner, name: rest.join('/') };
+}
+
 export default function ConnectedRepoWorkspace({
   repo,
   isDarkTheme,
-  onSwitchToDemo,
   onUpdateRepo,
   onDisconnectRepo
 }) {
-  const [hasScaffolded, setHasScaffolded] = useState(repo.hasAdrs || false);
-  const [isScaffolding, setIsScaffolding] = useState(false);
-  const [isIngestingCommits, setIsIngestingCommits] = useState(false);
+  const { owner, name } = splitFullName(repo.full_name);
+  const apiBase = `/api/github/repos/${encodeURIComponent(owner || '')}/${encodeURIComponent(name || '')}`;
+
+  const [phase, setPhase] = useState('scanning'); // scanning | ready | error
+  const [scan, setScan] = useState(null);
+  const [error, setError] = useState(null);
+  const [isOpeningPr, setIsOpeningPr] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [terminalLogs, setTerminalLogs] = useState([
-    {
-      component: 'TENANT_ROUTER',
-      time: new Date().toLocaleTimeString(),
-      type: 'INFO',
-      text: `Initialized keyspaced tenant session for [${repo.full_name}]. FalkorDB graph: cavdax_${repo.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+  const [logs, setLogs] = useState([]);
+
+  // Keep the latest props in refs so scan() does not change identity when the parent updates the repo.
+  const repoRef = useRef(repo);
+  repoRef.current = repo;
+  const onUpdateRepoRef = useRef(onUpdateRepo);
+  onUpdateRepoRef.current = onUpdateRepo;
+
+  const addLog = useCallback((component, text, type = 'INFO') => {
+    setLogs(prev => [...prev, { component, text, type, time: new Date().toLocaleTimeString() }]);
+  }, []);
+
+  const failWith = useCallback((data, fallback) => {
+    const message = ERROR_COPY[data?.code] || data?.error || fallback;
+    setError({ code: data?.code || 'ERROR', message });
+    setPhase('error');
+    playRejectBuzz();
+    addLog('GITHUB', message, 'GATE_BLOCK');
+  }, [addLog]);
+
+  const runScan = useCallback(async () => {
+    setPhase('scanning');
+    setError(null);
+    addLog('SCAN', `Reading ADRs from ${repoRef.current.full_name} on its default branch.`);
+    try {
+      const res = await fetch(`${apiBase}/adrs`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        failWith(data, 'Could not read this repository.');
+        return;
+      }
+      setScan(data);
+      setPhase('ready');
+      addLog('PARSER', `Found ${data.count} ADR file${data.count === 1 ? '' : 's'} on branch ${data.branch}.`, data.count ? 'CASCADE' : 'INFO');
+      if (data.count > 0) {
+        addLog('GRAPH', `Built ${data.graph.nodes.length} nodes and ${data.graph.edges.length} edges from the ADRs.`);
+        playApprovalChime();
+      }
+      const current = repoRef.current;
+      const hasAdrs = data.count > 0;
+      if (onUpdateRepoRef.current && current.hasAdrs !== hasAdrs) {
+        onUpdateRepoRef.current({ ...current, hasAdrs });
+      }
+    } catch {
+      failWith(null, 'Could not reach the CAVDAX server. Check your connection and try again.');
     }
-  ]);
-  const [simulatedVerdict, setSimulatedVerdict] = useState(null);
+  }, [apiBase, addLog, failWith]);
 
-  // Initial scaffolded tenant graph
-  const [repoGraph, setRepoGraph] = useState(() => ({
-    nodes: [
-      {
-        id: 'ADR-001',
-        label: 'Source',
-        title: 'ADR-001: Foundational Architecture & Schema Contracts',
-        status: 'ACTIVE',
-        file: 'docs/adrs/0001-architectural-baseline.md'
-      },
-      {
-        id: 'F-Core-v1',
-        label: 'Fact',
-        title: 'PostgreSQL + Redis Session Storage Contract',
-        status: 'VALID',
-        is_stale: false
-      },
-      {
-        id: 'DEC-201',
-        label: 'Decision',
-        title: 'Enforce RS256 JWT Authorization Headers on Internal APIs',
-        status: 'VALID'
-      }
-    ],
-    edges: [
-      { source: 'F-Core-v1', target: 'ADR-001', type: 'EXTRACTED_FROM' },
-      { source: 'DEC-201', target: 'F-Core-v1', type: 'DEPENDS_ON' }
-    ]
-  }));
+  // Scan once per repository. Keyed on full_name so parent state updates never retrigger it.
+  useEffect(() => {
+    setScan(null);
+    setSelectedNode(null);
+    setLogs([]);
+    runScan();
+  }, [repo.full_name, runScan]);
 
-  const addLog = (component, text, type = 'INFO') => {
-    setTerminalLogs(prev => [
-      ...prev,
-      {
-        component,
-        time: new Date().toLocaleTimeString(),
-        type,
-        text
-      }
-    ]);
-  };
-
-  // 1-Click ADR-001 Scaffolding
-  const handleScaffoldAdr = async () => {
+  const openPullRequest = async () => {
     playClick();
-    setIsScaffolding(true);
-    addLog('SCAFFOLD', 'Generating docs/adrs/0001-architectural-baseline.md following MADR 3.0.0...', 'INFO');
-
-    setTimeout(() => {
-      setHasScaffolded(true);
-      setIsScaffolding(false);
+    setIsOpeningPr(true);
+    setError(null);
+    addLog('PULL_REQUEST', 'Creating a branch and opening a pull request with a starter ADR.');
+    try {
+      const res = await fetch(`${apiBase}/init-adr`, { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        failWith(data, 'Could not open the pull request.');
+        return;
+      }
+      const pr = data.pullRequest;
       playApprovalChime();
-      addLog('PARSER', 'Synthesized 1 Architectural Record, 1 Fact Node, and 1 Active Decision Node.', 'CASCADE');
-      addLog('FALKORDB', `Ingested 3 vertices into keyspace [cavdax_${repo.name.toLowerCase()}]. Semiring ready.`, 'INFO');
-
+      addLog('PULL_REQUEST', `${pr.reused ? 'Pull request already open' : 'Opened pull request'} #${pr.number} from ${pr.branch}.`, 'CASCADE');
+      if (pr.detected?.length) addLog('DETECT', `Detected ${pr.detected.join(', ')} from the repository manifest.`);
       if (onUpdateRepo) {
-        onUpdateRepo({ ...repo, hasAdrs: true });
+        onUpdateRepo({ ...repo, adrPr: { number: pr.number, url: pr.url, branch: pr.branch } });
       }
-    }, 700);
+      setPhase('ready');
+    } catch {
+      failWith(null, 'Could not reach the CAVDAX server. Check your connection and try again.');
+    } finally {
+      setIsOpeningPr(false);
+    }
   };
 
-  // Ingest Recent Commits
-  const handleIngestCommits = () => {
+  const forgetPullRequest = () => {
     playClick();
-    setIsIngestingCommits(true);
-    addLog('GIT_INGEST', `Scanning git commit DAG on branch [${repo.default_branch || 'main'}]...`, 'INFO');
-
-    setTimeout(() => {
-      setIsIngestingCommits(false);
-      playApprovalChime();
-      const commitNodeId = `COMMIT-${Date.now().toString().slice(-4)}`;
-      setRepoGraph(prev => ({
-        nodes: [
-          ...prev.nodes,
-          {
-            id: commitNodeId,
-            label: 'Source',
-            title: `Commit c9a4f21: Merge PR #12 - Update API Gateway Spec`,
-            status: 'ACTIVE',
-            file: 'git:commit/c9a4f21'
-          }
-        ],
-        edges: [
-          ...prev.edges,
-          { source: 'DEC-201', target: commitNodeId, type: 'DERIVED_FROM' }
-        ]
-      }));
-      addLog('GIT_INGEST', `Linked commit c9a4f21 to Decision DEC-201. Graph enriched.`, 'CASCADE');
-    }, 800);
+    if (onUpdateRepo) {
+      const { adrPr, ...rest } = repo;
+      onUpdateRepo(rest);
+    }
   };
 
-  // Test Agent Tool Call
-  const handleTestAgentCall = (verdict) => {
-    if (verdict === 'approve') {
+  const testDecision = (wantValid) => {
+    const decisions = (scan?.graph?.nodes || []).filter(n => n.label === 'Decision');
+    const target = decisions.find(d => (wantValid ? d.status === 'VALID' : d.status === 'INVALIDATED_NEEDS_REVALIDATION'));
+    if (!target) {
+      addLog('MCP_GATE', wantValid
+        ? 'No valid decision in this repository yet.'
+        : 'No invalidated decision yet. Add an ADR that supersedes an existing one to see a block.');
+      return;
+    }
+    if (wantValid) {
       playApprovalChime();
-      setSimulatedVerdict('APPROVED');
-      addLog('MCP_GATE', `AGENT TOOL CALL APPROVED (1.42ms): Action references valid DEC-201 provenance. Write permitted.`, 'GATE_APPROVE');
+      addLog('MCP_GATE', `Agent call grounded in ${target.id} would be allowed: the decision is VALID.`, 'GATE_APPROVE');
     } else {
       playRejectBuzz();
-      setSimulatedVerdict('BLOCKED');
-      addLog('MCP_GATE', `AGENT TOOL CALL BLOCKED (1.89ms): Action attempts modification without grounded ADR context! Zero writes allowed.`, 'GATE_BLOCK');
+      addLog('MCP_GATE', `Agent call grounded in ${target.id} would be blocked: its source ADR was superseded.`, 'GATE_BLOCK');
     }
   };
+
+  const hasAdrs = phase === 'ready' && scan && scan.count > 0;
+  const noAdrs = phase === 'ready' && scan && scan.count === 0;
+  const pr = repo.adrPr;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col font-mono select-none">
-      {/* 1. Repository Workspace Subheader Ribbon */}
+      {/* Repository ribbon */}
       <div className="flex-shrink-0 py-2 px-3 sm:px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/15 text-slate-800 dark:text-slate-200 flex items-center justify-center shrink-0">
             <GitBranch className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
-            <div>
-              <span className="text-xs font-bold text-slate-950 dark:text-white truncate block">
-                {repo.full_name}
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans truncate block mt-0.5">
-                Branch: {repo.default_branch || 'main'}
-              </span>
-            </div>
+            <span className="text-xs font-bold text-slate-950 dark:text-white truncate block">{repo.full_name}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans truncate block mt-0.5">
+              Branch: {scan?.branch || repo.default_branch || 'main'}
+            </span>
           </div>
         </div>
 
-        {/* Toolbar Controls */}
         <div className="flex items-center gap-2 shrink-0">
-          {hasScaffolded && (
-            <button
-              onClick={handleIngestCommits}
-              disabled={isIngestingCommits}
-              className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <RefreshCw className={`w-3 h-3 ${isIngestingCommits ? 'animate-spin' : ''}`} />
-              <span>Ingest Commits</span>
-            </button>
-          )}
-
+          <button onClick={() => { playClick(); runScan(); }} disabled={phase === 'scanning'} className={btnSecondary}>
+            <RefreshCw className={`w-4 h-4 ${phase === 'scanning' ? 'animate-spin' : ''}`} strokeWidth={2} />
+            <span>Rescan</span>
+          </button>
           {onDisconnectRepo && (
             <button
-              onClick={() => {
-                playClick();
-                onDisconnectRepo(repo.id);
-              }}
-              className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-600 dark:hover:text-rose-400 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              onClick={() => { playClick(); onDisconnectRepo(repo.id); }}
+              className={`${btnSecondary} hover:bg-rose-500/10 hover:border-rose-500/30`}
               title="Disconnect this repository"
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-4 h-4" strokeWidth={2} />
               <span>Disconnect</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* 2. Main Stage: Zero-ADR Onboarding vs Live Graph */}
-      {!hasScaffolded ? (
-        /* Zero-ADR Empty State Scaffolding Card */
-        <div className="flex-1 min-h-0 flex items-center justify-center p-4">
-          <div className="max-w-xl w-full p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] shadow-xl text-center space-y-5">
-            <div className="w-12 h-12 rounded-2xl bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/15 text-slate-900 dark:text-white flex items-center justify-center mx-auto shadow-inner">
-              <FolderGit2 className="w-6 h-6 text-slate-700 dark:text-slate-300" />
-            </div>
+      {/* Stage */}
+      {phase === 'scanning' && !scan && (
+        <StateCard icon={<RefreshCw className="w-6 h-6 text-slate-700 dark:text-slate-300 animate-spin" />}
+          title="Scanning repository"
+          body={<>Reading ADR files from <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong>.</>} />
+      )}
 
-            <div>
-              <h3 className="text-base font-bold text-slate-950 dark:text-white mb-1.5">
-                No Architecture Decision Records (ADRs) Detected
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 font-sans leading-relaxed max-w-md mx-auto">
-                Repository <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong> currently has no <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded text-slate-800 dark:text-slate-200">docs/adrs/*.md</code> files. CAVDAX requires documented architectural decisions to synthesize causal verification gates.
-              </p>
+      {phase === 'error' && (
+        <StateCard icon={<AlertTriangle className="w-6 h-6 text-rose-500" />}
+          title="Could not complete the request"
+          body={error?.message}
+          actions={
+            <div className="grid grid-cols-2 gap-2">
+              {error?.code === 'AUTH_REQUIRED' || error?.code === 'AUTH_EXPIRED' ? (
+                <a href={`/api/auth/github?returnTo=${encodeURIComponent('/console')}`} className={`${btnPrimary} no-underline`}>Sign in</a>
+              ) : (
+                <button onClick={() => { playClick(); runScan(); }} className={btnPrimary}>Try again</button>
+              )}
+              <button onClick={() => { playClick(); onDisconnectRepo?.(repo.id); }} className={btnSecondary}>Disconnect</button>
             </div>
+          } />
+      )}
 
-            <div className="pt-2 max-w-sm mx-auto space-y-3">
-              <button
-                onClick={handleScaffoldAdr}
-                disabled={isScaffolding}
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-900 dark:border-white bg-slate-950 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-all font-mono text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
-              >
-                <Plus className={`w-3.5 h-3.5 ${isScaffolding ? "animate-spin" : ""}`} />
-                <span>{isScaffolding ? "Scaffolding Architecture Baseline..." : "Initialize Architecture Baseline (ADR-001)"}</span>
+      {noAdrs && !pr && (
+        <StateCard icon={<FolderGit2 className="w-6 h-6 text-slate-700 dark:text-slate-300" />}
+          title="No Architecture Decision Records found"
+          body={<>CAVDAX looked in the usual ADR folders on <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong> and found none. It will read your package manifest, detect the stack you already use, and open a pull request with an ADR that records it. Nothing is committed to <strong className="font-mono">{scan.branch}</strong> until you merge it.</>}
+          actions={
+            <button onClick={openPullRequest} disabled={isOpeningPr} className={`${btnPrimary} w-full`}>
+              <GitPullRequest className={`w-4 h-4 ${isOpeningPr ? 'animate-spin' : ''}`} strokeWidth={2} />
+              <span>{isOpeningPr ? 'Opening pull request' : 'Open pull request with ADR-001'}</span>
+            </button>
+          }
+          footnote={<>Already have ADRs? Put them in <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/adrs</code>, <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/adr</code> or <code className="font-mono bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded">docs/decisions</code> and rescan.</>} />
+      )}
+
+      {noAdrs && pr && (
+        <StateCard icon={<GitPullRequest className="w-6 h-6 text-slate-700 dark:text-slate-300" />}
+          title={`Pull request #${pr.number} is waiting for review`}
+          body={<>Review the starter ADR on GitHub and merge it into <strong className="font-mono text-slate-950 dark:text-white">{scan.branch}</strong>. Then rescan and CAVDAX will build the decision graph from it.</>}
+          actions={
+            <div className="grid grid-cols-2 gap-2">
+              <a href={pr.url} target="_blank" rel="noopener noreferrer" className={`${btnPrimary} no-underline`}>
+                <ExternalLink className="w-4 h-4" strokeWidth={2} />
+                <span>View on GitHub</span>
+              </a>
+              <button onClick={() => { playClick(); runScan(); }} className={btnSecondary}>
+                <RefreshCw className="w-4 h-4" strokeWidth={2} />
+                <span>I merged it, rescan</span>
               </button>
-
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
-                Or initialize via CLI in your project root: <code className="font-mono text-slate-900 dark:text-slate-100 bg-slate-200 dark:bg-white/10 px-1.5 py-0.5 rounded">npx cavdax ingest --repo .</code>
-              </div>
             </div>
-          </div>
-        </div>
-      ) : (
-        /* Live Tenant Connected Graph & Testing Split */
+          }
+          footnote={<>Closed the pull request? <button onClick={forgetPullRequest} className="underline cursor-pointer text-slate-700 dark:text-slate-200">Open a new one</button>.</>} />
+      )}
+
+      {hasAdrs && (
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 rounded-2xl overflow-hidden border border-slate-300 dark:border-white/10">
-          {/* Left: Tenant Terminal & Gate Test HUD (5 Cols) */}
+          {/* Left: ADR files and activity */}
           <div className="lg:col-span-5 h-full overflow-hidden flex flex-col bg-[#0c0c0e] text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-800">
-            {/* Header */}
-            <div className="p-3 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-3.5 h-3.5 text-slate-400" />
-                <span className="font-bold text-white">Tenant Causal Terminal</span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono">GRAPHBLAS 2.1ms</span>
+            <div className="p-3 border-b border-slate-800 flex items-center gap-2 text-xs font-mono">
+              <FileText className="w-3.5 h-3.5 text-slate-400" />
+              <span className="font-bold text-white">ADRs in this repository</span>
+              <span className="ml-auto text-[10px] text-slate-400">{scan.count} files</span>
             </div>
 
-            {/* Test Action Panel */}
+            <div className="max-h-40 overflow-y-auto border-b border-slate-800 divide-y divide-white/5">
+              {scan.adrs.map(a => (
+                <div key={a.path} className="px-3 py-2 text-[11px] leading-snug">
+                  <div className="text-slate-100 font-semibold truncate">{a.id}: {a.title}</div>
+                  <div className="text-slate-500 truncate">{a.path}</div>
+                </div>
+              ))}
+            </div>
+
             <div className="p-3 bg-white/[0.02] border-b border-slate-800 flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-slate-400">
-                Simulate MCP Agent Write Tool Call
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleTestAgentCall('approve')}
-                  className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Test Valid Call</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-400">Check an agent write against this graph</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => testDecision(true)} className={`${btnBase} border-emerald-500/30 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400`}>
+                  <CheckCircle2 className="w-4 h-4" strokeWidth={2} />
+                  <span>Valid decision</span>
                 </button>
-                <button
-                  onClick={() => handleTestAgentCall('block')}
-                  className="flex-1 py-1.5 px-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
-                >
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span>Test Stale Write</span>
+                <button onClick={() => testDecision(false)} className={`${btnBase} border-rose-500/30 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400`}>
+                  <AlertTriangle className="w-4 h-4" strokeWidth={2} />
+                  <span>Stale decision</span>
                 </button>
               </div>
             </div>
 
-            {/* Logs stream */}
             <div className="flex-1 p-3 overflow-y-auto space-y-2 text-xs">
-              {terminalLogs.map((log, idx) => (
+              {logs.map((log, idx) => (
                 <div key={idx} className="flex items-start gap-2 leading-relaxed">
                   <span className="text-slate-500 text-[10px] shrink-0 mt-0.5">{log.time}</span>
                   <span className={`text-[10px] uppercase font-bold px-1 rounded shrink-0 ${
@@ -271,20 +297,18 @@ export default function ConnectedRepoWorkspace({
                     log.type === 'GATE_APPROVE' ? 'bg-emerald-500/20 text-emerald-400' :
                     log.type === 'GATE_BLOCK' ? 'bg-rose-500/20 text-rose-400' :
                     'bg-white/10 text-slate-300'
-                  }`}>
-                    {log.component}
-                  </span>
-                  <span className="text-slate-300 text-[11px] break-all">{log.text}</span>
+                  }`}>{log.component}</span>
+                  <span className="text-slate-300 text-[11px] break-words min-w-0">{log.text}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Right: Tenant Graph Canvas (7 Cols) */}
+          {/* Right: graph built from this repository's ADRs */}
           <div className="lg:col-span-7 h-full relative overflow-hidden bg-slate-950">
-            <SubsystemErrorBoundary name="Tenant Knowledge Graph Canvas">
+            <SubsystemErrorBoundary name="Repository Knowledge Graph Canvas">
               <GraphCanvas
-                graphData={repoGraph}
+                graphData={scan.graph}
                 onSelectNode={setSelectedNode}
                 selectedNodeId={selectedNode?.id}
                 selectedNode={selectedNode}
@@ -295,6 +319,37 @@ export default function ConnectedRepoWorkspace({
           </div>
         </div>
       )}
+
+      {/* Activity log for the empty and error states */}
+      {!hasAdrs && phase !== 'scanning' && logs.length > 0 && (
+        <div className="flex-shrink-0 mt-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] p-2.5 max-h-24 overflow-y-auto space-y-1">
+          {logs.slice(-4).map((log, idx) => (
+            <div key={idx} className="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+              <Terminal className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
+              <span className="font-bold uppercase text-[10px] shrink-0">{log.component}</span>
+              <span className="break-words min-w-0">{log.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StateCard({ icon, title, body, actions, footnote }) {
+  return (
+    <div className="flex-1 min-h-0 flex items-center justify-center p-4">
+      <div className="max-w-xl w-full p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] shadow-xl text-center space-y-5">
+        <div className="w-12 h-12 rounded-2xl bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/15 flex items-center justify-center mx-auto">
+          {icon}
+        </div>
+        <div>
+          <h3 className="text-base font-bold text-slate-950 dark:text-white mb-1.5">{title}</h3>
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-sans leading-relaxed max-w-md mx-auto">{body}</p>
+        </div>
+        {actions && <div className="pt-1 max-w-sm mx-auto">{actions}</div>}
+        {footnote && <div className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">{footnote}</div>}
+      </div>
     </div>
   );
 }
