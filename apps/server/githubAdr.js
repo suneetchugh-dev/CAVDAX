@@ -76,7 +76,17 @@ export function buildGraphFromAdrs(adrs) {
 
   for (const adr of adrs) {
     if (adr.decision_id && adr.fact_id && facts.has(adr.fact_id)) {
-      decisions.set(adr.decision_id, { id: adr.decision_id, label: 'Decision', title: adr.decision_title || adr.decision_id, status: 'VALID', on: adr.fact_id });
+      const derivedTarget = adr.target_file || (adr.path ? adr.path.replace(/^docs\/adrs\//i, 'src/').replace(/\.md$/i, '.js') : 'src/app.js');
+      decisions.set(adr.decision_id, {
+        id: adr.decision_id,
+        label: 'Decision',
+        title: adr.decision_title || adr.decision_id,
+        status: 'VALID',
+        on: adr.fact_id,
+        source_adr: adr.id,
+        adr_path: adr.path,
+        target_file: derivedTarget
+      });
       edges.push({ source: adr.decision_id, target: adr.fact_id, type: 'DEPENDS_ON' });
     }
   }
@@ -97,7 +107,8 @@ export function buildGraphFromAdrs(adrs) {
     }
   }
 
-  const nodes = [...sources.values(), ...facts.values(), ...decisions.values()].map(({ from, on, ...clean }) => clean);
+  // Preserve 'from', 'on', 'source_adr', 'target_file' so causal graph inspection has full provenance
+  const nodes = [...sources.values(), ...facts.values(), ...decisions.values()];
   return { nodes, edges };
 }
 

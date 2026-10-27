@@ -2190,7 +2190,14 @@ app.get('/api/github/repos/:owner/:repo/adrs', async (req, res) => {
     const repoFullName = `${owner}/${repo}`;
     const persistedRepoActions = (savedSystemState.auditEntries || []).filter(e => e.repo?.toLowerCase() === repoFullName.toLowerCase());
     if (result?.graph && Array.isArray(result.graph.nodes) && Array.isArray(result.graph.edges)) {
+      // Deduplicate actions by decision_id: display at most 1 active/latest action node per decision on the canvas
+      const latestActionByDecision = new Map();
       for (const a of persistedRepoActions) {
+        if (a.decision_id && !latestActionByDecision.has(a.decision_id)) {
+          latestActionByDecision.set(a.decision_id, a);
+        }
+      }
+      for (const a of latestActionByDecision.values()) {
         result.graph.nodes.push({
           id: a.action_id,
           label: 'AgentAction',
@@ -2199,6 +2206,7 @@ app.get('/api/github/repos/:owner/:repo/adrs', async (req, res) => {
           target_file: a.target_file,
           decision_id: a.decision_id,
           timestamp: a.executed_at,
+          latency_ms: a.latency_ms,
           repo: a.repo
         });
         result.graph.edges.push({
@@ -2306,6 +2314,12 @@ app.post('/api/github/repos/:owner/:repo/verify-action', async (req, res) => {
 
     if (isFalkorConnected && graph) {
       try {
+        // Remove previous test probe actions grounded in this decision to prevent duplicate node accumulation
+        await graph.query(`
+          MATCH (prevAction:AgentAction)-[:GROUNDED_IN]->(d:Decision {id: $decisionId})
+          DETACH DELETE prevAction
+        `, { params: { decisionId: decisionNode.id } }).catch(() => {});
+
         await graph.query(`
           MERGE (d:Decision {id: $decisionId})
           ON CREATE SET d.title = $decisionTitle, d.status = $decisionStatus
