@@ -179,18 +179,49 @@ export default function ConnectRepoModal({
 
   const handleConnectCustom = (e) => {
     e.preventDefault();
-    if (!customRepoUrl.trim()) return;
+    const rawInput = customRepoUrl.trim();
+    if (!rawInput) return;
 
     playApprovalChime();
-    let name = customRepoUrl.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
-    if (!name.includes('/')) name = `workspace/${name}`;
-    const parts = name.split('/');
+
+    // Robust extraction supporting:
+    // - https://github.com/owner/repo
+    // - http://github.com/owner/repo
+    // - github.com/owner/repo
+    // - www.github.com/owner/repo
+    // - owner/repo
+    // - trailing slashes or subpaths (e.g. /tree/main)
+    let owner = '';
+    let repoName = '';
+
+    const cleanInput = rawInput.replace(/\.git$/i, '').trim();
+    const githubUrlMatch = cleanInput.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/\s]+)\/([^\/\s\?#]+)/i);
+
+    if (githubUrlMatch) {
+      owner = githubUrlMatch[1];
+      repoName = githubUrlMatch[2];
+    } else {
+      const stripped = cleanInput.replace(/^https?:\/\//i, '').replace(/^\/+|\/+$/g, '');
+      const segments = stripped.split('/').filter(Boolean);
+      if (segments.length >= 2) {
+        owner = segments[0];
+        repoName = segments[1];
+      } else if (segments.length === 1) {
+        owner = 'workspace';
+        repoName = segments[0];
+      } else {
+        owner = 'custom';
+        repoName = 'repo';
+      }
+    }
+
+    const fullName = `${owner}/${repoName}`;
 
     onConnectRepo({
       id: `custom-${Date.now()}`,
-      name: parts[1] || parts[0],
-      full_name: name,
-      owner: parts[0] || 'custom',
+      name: repoName,
+      full_name: fullName,
+      owner: owner,
       private: false,
       default_branch: 'main',
       description: 'Custom linked git workspace',
@@ -218,11 +249,11 @@ export default function ConnectRepoModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
       <div
-        className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#111113] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] font-mono select-none"
+        className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#111113] border border-slate-200 dark:border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] font-mono select-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/15 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center shrink-0">
               <Github className="w-4 h-4" />
@@ -259,7 +290,7 @@ export default function ConnectRepoModal({
                   placeholder="Search your repositories..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-8 pl-8 pr-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-white/5 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                  className="w-full h-8 pl-8 pr-3 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-100/60 dark:bg-white/5 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                 />
               </div>
 
@@ -289,7 +320,7 @@ export default function ConnectRepoModal({
                       onPointerDown={handlePointerDown}
                       className={`absolute right-0.5 top-1 bottom-1 w-3 z-30 transition-all duration-200 select-none cursor-pointer flex justify-center ${
                         isHolding
-                          ? 'opacity-100 bg-slate-900/10 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-full backdrop-blur-xs'
+                          ? 'opacity-100 bg-slate-900/10 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-full backdrop-blur-xs'
                           : 'opacity-40 hover:opacity-90 bg-transparent'
                       }`}
                       title="Hold to scrub repository list"
@@ -322,7 +353,7 @@ export default function ConnectRepoModal({
                       return (
                         <div
                           key={repo.id}
-                          className="p-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/20 transition-all flex items-center justify-between gap-3 group"
+                          className="p-2.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-50/50 dark:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/20 transition-all flex items-center justify-between gap-3 group"
                         >
                           <div className="min-w-0 flex items-start gap-2.5">
                             <div className="mt-0.5 w-6 h-6 rounded-md bg-slate-200 dark:bg-white/10 flex items-center justify-center shrink-0 text-slate-600 dark:text-slate-300">
@@ -353,7 +384,7 @@ export default function ConnectRepoModal({
                                     playClick();
                                     onDisconnectRepo(repo.id);
                                   }}
-                                  className="px-2 py-1 rounded-md text-[11px] font-mono text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-300/80 dark:border-white/10 transition-colors cursor-pointer"
+                                  className="px-2 py-1 rounded-md text-[11px] font-mono text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-300/80 dark:border-white/15 transition-colors cursor-pointer"
                                   title="Disconnect repository"
                                 >
                                   Disconnect
@@ -373,7 +404,7 @@ export default function ConnectRepoModal({
                       );
                     })
                   ) : (
-                    <div className="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-white/10 rounded-xl">
+                    <div className="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-white/15 rounded-xl">
                       {authExpired ? (
                       <div className="p-4 text-center border border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl space-y-2">
                         <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400 text-xs font-mono font-medium">
@@ -392,7 +423,7 @@ export default function ConnectRepoModal({
                         </a>
                       </div>
                     ) : (
-                      <div className="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-white/10 rounded-xl">
+                      <div className="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-white/15 rounded-xl">
                         {isLoading ? 'Loading repositories...' : 'No repositories found.'}
                       </div>
                     )}
@@ -418,7 +449,7 @@ export default function ConnectRepoModal({
             </>
           ) : (
             /* Unauthenticated Prompt */
-            <div className="p-5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] text-center space-y-3">
+            <div className="p-5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50/50 dark:bg-white/[0.02] text-center space-y-3">
               <p className="text-xs text-slate-600 dark:text-slate-400 font-sans">
                 Sign in with GitHub to view and connect your private and public repositories.
               </p>
@@ -433,7 +464,7 @@ export default function ConnectRepoModal({
           )}
 
           {/* Manual URL Link */}
-          <form onSubmit={handleConnectCustom} className="pt-3 border-t border-slate-200 dark:border-white/10">
+          <form onSubmit={handleConnectCustom} className="pt-3 border-t border-slate-200 dark:border-white/15">
             <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1.5">
               Link Public Repository URL
             </label>
@@ -443,7 +474,7 @@ export default function ConnectRepoModal({
                 placeholder="e.g. github.com/owner/repository"
                 value={customRepoUrl}
                 onChange={(e) => setCustomRepoUrl(e.target.value)}
-                className="flex-1 h-8 px-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-white/5 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                className="flex-1 h-8 px-3 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-100/60 dark:bg-white/5 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
               />
               <button
                 type="submit"
