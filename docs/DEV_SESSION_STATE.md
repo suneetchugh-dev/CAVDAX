@@ -18,6 +18,23 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.25 Latest Session Achievements (October 27, 2026 - Real GitHub ADR Scan, Smart Init PR & Sync Superseded ADR PR - PR #63, #64 & #65)
+
+- **Real Repository ADR Ingestion & Starter PR Automation (`apps/server/githubAdr.js`, `core/ingestion/adrPaths.js`) - PR #63**:
+  - Implemented `scanRepoAdrs` to scan connected repositories on their default branches, searching standardized ADR folders (`docs/adrs`, `docs/adr`, `doc/adr`, `.adr`, `docs/decisions`).
+  - Added multi-ecosystem manifest stack detection (`package.json`, `requirements.txt`, `go.mod`, `Cargo.toml`, `pom.xml`, `docker-compose`, `prisma/schema.prisma`) to infer active technologies and author customized initial Architecture Decision Records.
+  - Implemented `createAdrPullRequest` to open non-destructive starter ADR pull requests on branch `cavdax/init-adr` with zero-touch default branch safety.
+- **Architectural Status Drift Detection & Automated Sync PR (`apps/server/githubAdr.js`, `apps/server/index.js`) - PR #64**:
+  - Addressed the real-world problem where historical ADRs remain labeled `status: ACCEPTED` on disk even after superseding ADRs have invalidated them in the causal graph.
+  - Implemented `detectUnsyncedSupersessions` and `applySupersededStatusToAdr` to detect when physical ADR files lag behind graph state.
+  - Added `syncSupersededAdrPullRequest` to open pull requests (`chore(adr): mark <target> superseded by <superseding>`) on branch `cavdax/sync-<target>-status`.
+  - Mounted `GET /api/github/repos/:owner/:repo/adrs`, `POST /api/github/repos/:owner/:repo/init-adr`, and `POST /api/github/repos/:owner/:repo/sync-adr-status` in `apps/server/index.js`.
+  - Expanded unit test suite to **35 passing tests** covering multi-language detection, branch isolation, and drift reconciliation.
+- **Connected Repo Workspace Status Drift Alert & One-Click Sync (`apps/client/src/components/ConnectedRepoWorkspace.jsx`) - PR #65**:
+  - Rendered an alert banner when ADR status drift is detected between the physical repository files and the FalkorDB causal DAG.
+  - Added a one-click `Open PR: Mark <ID> Superseded` action allowing repository owners to reconcile file status with standard GitHub peer-review flow.
+  - Verified with clean production build (26.50s) and green CI checks across all 4 workflows.
+
 ## 1.0.24 Latest Session Achievements (October 27, 2026 - MCP Client Tool Catalog Synchronization & Documentation Coherence - PR #61 & PR #62)
 
 - **MCP Client UI Synchronization (`apps/client/src/components/ConnectMcpPage.jsx`, `apps/client/src/components/McpConnectModal.jsx`) - PR #61**:
