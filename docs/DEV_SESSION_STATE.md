@@ -9,6 +9,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.38 Latest Session Achievements (October 28, 2026 - Comprehensive Architecture Flowcharts, Mermaid Diagrams & Documentation Refresh)
+
+- **Production Interface Showcase Refinement (`README.md`)**:
+  - Removed outdated `(Light Mode)` qualifier from the showcase header: `## 📸 Production Interface Showcase`.
+- **Full Architecture & Execution Flowchart Modernization (`README.md`, `docs/ARCHITECTURE.md`)**:
+  - Integrated 4 interactive native Mermaid diagrams directly into `README.md` alongside high-resolution SVGs:
+    1. *End-to-End System Architecture Flowchart*: Dual-plane topology linking GitHub repos, Express gateway, Enclosed MCP server, and FalkorDB GraphBLAS sparse matrix storage.
+    2. *Multi-Layer Architecture Flowchart*: Ingestion layer, 4-tier Causal DAG matrix layer, and gated write execution layer.
+    3. *Enclosed MCP Protocol Execution Gate Flowchart*: Parameterized Cypher query evaluation, path confinement checks, and zero-byte write interception.
+    4. *Autonomous Causal Invalidation & Verification Sequence*: 4-act loop sequence detailing baseline grounding, superseding commit invalidation, agent interception, and revalidation.
+- **MCP Specification & Tool 6 Documentation (`docs/MCP_SPECIFICATION.md`, `docs/ARCHITECTURE.md`)**:
+  - Fully documented `export_graph_image` tool schema and execution sequence for multimodal AI agents (Claude 3.7 Sonnet, GPT-4o) and automated PR verification embeds.
+- **Topological Knowledge Graph Macro Update (`docs/ARCHITECTURE_KNOWLEDGE_GRAPH.md`)**:
+  - Updated Macro Topological Architecture Map with GitHub ADR Scanner, SVG/OCR Generator, Draggable Node Inspector, and Target Repo PR isolation subgraphs.
+
 ## 1.0.37 Latest Session Achievements (October 28, 2026 - Streamlined Empty ADR State Copy & Minimalist Clarity)
 
 - **Concise Empty-State Copy (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:

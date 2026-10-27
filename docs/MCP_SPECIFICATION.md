@@ -232,6 +232,61 @@ Releases the held lease when an agent finishes its milestone or aborts its task.
 
 ---
 
+### 3.6 Tool 6: `export_graph_image` (Visual PR Artifact & Vision OCR Generator)
+Generates a standalone, self-contained SVG image of the CAVDAX causal architecture graph with optional blast-radius annotations and high-contrast Vision OCR badges for multimodal AI models and human PR reviewers.
+
+#### Why Vision OCR & Standalone SVG Matters for Autonomous Agents
+When an autonomous AI agent finishes modifying code or resolving an architectural migration, human reviewers require deterministic proof that the change respects the causal graph. The agent invokes `export_graph_image` with `highlight_blast_radius: true` and attaches the rendered SVG directly into the GitHub Pull Request description. Additionally, multimodal models (Claude 3.7 Sonnet, GPT-4o) inspecting the visual canvas benefit from high-contrast Vision OCR badges, ensuring 100% token accuracy under downsampled viewport inspection.
+
+#### Tool Execution Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Agent as Autonomous AI Agent
+    participant MCP as CAVDAX MCP Server
+    participant DB as FalkorDB (GraphBLAS)
+    participant SVG as Standalone SVG Generator
+    participant PR as GitHub Pull Request
+
+    Agent->>MCP: export_graph_image(node_id: 'DEC-102', highlight_blast_radius: true)
+    MCP->>DB: Query Causal Nodes, Edges & Downstream Dependents
+    DB-->>MCP: Return Topological Subgraph (Nodes: 6, Edges: 5)
+    MCP->>SVG: computeBlastRadius(nodes, edges, 'DEC-102')
+    SVG->>SVG: Layout 4 Columns & Inject High-Contrast OCR Badges
+    SVG-->>MCP: Standalone XML SVG String (<svg ...>)
+    MCP-->>Agent: Return SVG Payload
+    Agent->>PR: Attach Causal SVG Diagram into PR Description Body
+```
+
+#### Input Schema
+```json
+{
+  "name": "export_graph_image",
+  "description": "Generates a standalone, self-contained SVG image of the CAVDAX causal architecture graph with optional blast-radius highlighting and high-contrast Vision OCR badges for PR descriptions or visual inspection.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "node_id": {
+        "type": "string",
+        "description": "Optional target node ID (e.g. 'DEC-102' or 'ADR-001') to center, highlight, or inspect."
+      },
+      "highlight_blast_radius": {
+        "type": "boolean",
+        "description": "When true and node_id is provided, highlights downstream invalidated dependencies in pulsing warning colors."
+      },
+      "format": {
+        "type": "string",
+        "enum": ["svg", "markdown"],
+        "description": "Output payload format (default: 'svg')."
+      }
+    }
+  }
+}
+```
+
+---
+
 ## 4. Client Configuration Guides (Drop-In Integration)
 
 Connecting an AI coding agent to CAVDAX requires zero modification to agent core logic. Drop the corresponding configuration into your client:

@@ -26,45 +26,64 @@ graph TB
         Falkor[("FalkorDB GraphBLAS (Redis :6379)")]
         Cypher["Cypher Queries (Q1 Invalidate, Q2 Verify, Q3 Revalidate)"]
         AST["AST Parser (core/ingestion/parser.js)"]
+        GitHubScan["GitHub ADR & Stack Scanner (apps/server/githubAdr.js)"]
+        SVGEngine["SVG & Vision OCR Engine (core/graph/renderSvg.js)"]
         Falkor <--> Cypher
         AST --> Cypher
+        GitHubScan --> Cypher
+        SVGEngine <--> Falkor
     end
 
     subgraph Security_Gate["2. Enclosed MCP Protocol Firewall"]
         MCP_Proxy["Enclosed Proxy (core/mcp/server.js)"]
         Transports["Dual Transport: Local Stdio & HTTP SSE"]
         AuditLog[("Persistent AgentAction Audit Trail")]
+        LockManager["Decision Lease Concurrency Lock"]
         MCP_Proxy <--> Cypher
         MCP_Proxy --> Transports
         MCP_Proxy --> AuditLog
+        MCP_Proxy --> LockManager
     end
 
-    subgraph Frontend_HUD["3. Web HUD, 3D Geometry & Sound"]
+    subgraph Frontend_HUD["3. Web HUD, Kinetic Canvas & Tools"]
         App["App.jsx (Central Orchestrator)"]
-        Scroller["3D Cylindrical Solution Scroller"]
-        Radar["Continuous Causal Provenance Radar"]
+        Canvas["Interactive Temporal DAG Canvas"]
+        Inspector["Draggable Node Inspector (Physics Bounds)"]
+        WhatIf["What-If Blast Radius Simulation"]
         Sound["soundFx.js (Acoustic Feedback Engine)"]
-        App --> Scroller
-        App --> Radar
+        App --> Canvas
+        Canvas --> Inspector
+        Canvas --> WhatIf
         App --> Sound
     end
 
-    subgraph Production_Infra["4. Cloud Infrastructure & Mesh"]
-        Docker["Docker Compose Mesh (infra/docker-compose.yml)"]
-        Caddy["Caddy Reverse Proxy (Auto-TLS, RFC-7807 Error Envelope)"]
-        Docker --> Caddy
+    subgraph Target_Ecosystem["4. Target Repositories & Non-Destructive PRs"]
+        GitHubRepos["Connected Customer Repositories (GitHub REST)"]
+        InitPR["Starter ADR-001 PR (cavdax/init-adr)"]
+        SyncPR["Automated Superseded Sync PR (cavdax/sync-*)"]
+        GitHubRepos --> InitPR
+        GitHubRepos --> SyncPR
     end
 
-    subgraph Governance_DevSecOps["5. DevSecOps & Governance"]
+    subgraph Production_Infra["5. Cloud Infrastructure & Mesh"]
+        Docker["Docker Compose Mesh (infra/docker-compose.yml)"]
+        Caddy["Caddy Reverse Proxy (Auto-TLS, RFC-7807 Error Envelope)"]
+        StateStore[("Atomic System State (system_state.json)")]
+        Docker --> Caddy
+        Docker --> StateStore
+    end
+
+    subgraph Governance_DevSecOps["6. DevSecOps & Security Hardening"]
         AgentsMD["AGENTS.md (Canonical Governance Rules)"]
         SecretGuard["Pre-Commit Staged Secret Guard"]
-        DataSovereignty["LocalStorage vs Cloud Sync Contract"]
+        CloudflareEdge["Cloudflare Edge Zero-Trust & Anti-Loopback"]
         AgentsMD --> SecretGuard
-        AgentsMD --> DataSovereignty
+        AgentsMD --> CloudflareEdge
     end
 
     Core_Cognition <==> Security_Gate
     Security_Gate <==> Frontend_HUD
+    Target_Ecosystem <==> GitHubScan
     Production_Infra -.-> Core_Cognition
     Production_Infra -.-> Security_Gate
     Governance_DevSecOps -.-> Core_Cognition
