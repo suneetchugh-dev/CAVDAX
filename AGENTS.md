@@ -110,6 +110,30 @@ Operational constitution, architecture standards, and safety governance for AI c
    - **Never Render Misleading "Empty Data" on Authentication Failures**: When an authenticated fetch (such as listing GitHub repositories or reading API keys) fails due to session expiration (401 / unauthenticated), NEVER silently swallow the error and render misleading empty copy like *"No repositories found."* Always render an informative session-expiration state informing the user that the backend process was updated, along with a direct 1-click re-authentication button (`[ Reconnect GitHub ]`).
    - **Stable Deployment Session Secrets**: In production or containerized environments, Express session middleware (`express-session`) must NEVER generate ephemeral in-memory random secrets (`randomBytes(32)`) on boot without a stable persistent fallback. Random secret regeneration invalidates all signed cookies across process restarts, causing widespread session desynchronization after every production deployment.
 
+0k. **Inviolable Guard: Zero Hardcoded Benchmark Strings or Fake Latency Fallbacks (Section 37 Truth-in-Data Standard)**:
+   - **Absolute Ban on Fake Latency Constants & Fallback Coercion**:
+     - Never use synthetic numerical constants or logical OR fallbacks for elapsed times, latencies, or response durations (e.g. `parseFloat(elapsed.toFixed(2)) || 0.42`, `res.latency || 0.5`, `const latency = "1.2ms"`).
+     - When an operation completes in sub-millisecond or sub-microsecond time (e.g. in-memory or cached lookups taking nanoseconds), measure and report true high-resolution execution delta using `process.hrtime.bigint()` (or `performance.now()`) converted cleanly without artificial floors:
+       ```javascript
+       const startNs = process.hrtime.bigint();
+       // ... execution ...
+       const elapsedMs = Number(process.hrtime.bigint() - startNs) / 1e6;
+       ```
+     - If a measurement is `0.00ms` or sub-millisecond, report the true measured metric (or exact microsecond/nanosecond values like `0.01ms` or `667ns`). NEVER substitute an arbitrary constant like `0.42ms` to "look realistic" in logs or UI badges.
+   - **Absolute Ban on Hardcoded Benchmark Outcomes & Results**:
+     - Never hardcode synthetic failure or success rates in benchmark runners, evaluation scripts, or test harnesses (e.g. hardcoding `ragSuccess: false`, `accuracy: 0.10`, `"10/10 silent hallucinations"`, `~450ms RAG latency`).
+     - All benchmark comparisons, stress tests, and evaluation harnesses must execute genuine programmatic evaluations, actual vector similarity checks, real token consumption calculations, and live graph traversal queries.
+     - If a scenario or test case fails or succeeds, it must be the true runtime outcome of the executed algorithm. External judges, auditors, and technical reviewers inspect source code; hardcoding results destroys project credibility and violates Section 37 truth-in-data hackathon integrity.
+   - **Fail-Closed Gate Traversal vs Fictitious Fallback Approvals**:
+     - Never simulate or bypass database graph queries with hardcoded client-side mocks or unchecked pass-throughs when validating actions against architecture decisions.
+     - Invalidation checks must verify real graph nodes in FalkorDB (or the real in-memory DAG); if an unknown or malformed decision ID is supplied, the gate must fail closed (`REJECT / 404 / 403`), never fail open with a mocked approval.
+   - **Automated Static Analysis & Grep Audit Verification**:
+     - Enforce pre-commit and CI scans for suspicious fake-metric patterns:
+       ```bash
+       grep -rnE '\|\|\s*0\.[0-9]+|"10/10|ragSuccess:\s*false' .
+       ```
+     - Any commit introducing hardcoded benchmark strings or fake latency constants will be rejected at pre-commit.
+
 0c. **Production Deployment & Docker Parity Guard (Zero 502 Bad Gateway Standard)**:
 
    - **Mandatory Dockerfile Dependency Parity**:

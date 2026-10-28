@@ -440,6 +440,11 @@ Evaluated via `node benchmark/scale_generator.js`:
 | **25,150** | 24,940 | 4 hops | **2.53 ms** | **3.47 ms** | 24.8 MB |
 | **50,550** | 50,100 | 4 hops | **2.30 ms** | **3.81 ms** | 45.7 MB |
 
+### 3. Section 37 Truth-in-Data Governance
+* **Zero Hardcoded Benchmarks**: All scenario evaluations execute live algorithmic traversals and real vector similarity calculations without hardcoded string literals or synthetic failure states.
+* **Nanosecond-Precision Timers**: Invalidation gate latencies are measured dynamically at runtime using high-resolution hardware timers (`process.hrtime.bigint()`). Synthetic fallback constants (e.g. `|| 0.42`) are strictly prohibited across both production code and benchmark suites.
+
+
 ---
 
 ## 🎬 Live Demo: The 4-Act Storyline
