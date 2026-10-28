@@ -14,8 +14,8 @@ export default function McpConnectModal({ isOpen, onClose }) {
     {
       mcpServers: {
         cavdax: {
-          command: "node",
-          args: ["/path/to/cavdax/core/mcp/stdio.js"],
+          command: "npx",
+          args: ["-y", "cavdax", "mcp"],
           env: {
             FALKORDB_HOST: "localhost",
             FALKORDB_PORT: "6379"
@@ -31,8 +31,8 @@ export default function McpConnectModal({ isOpen, onClose }) {
     {
       mcpServers: {
         cavdax: {
-          command: "node",
-          args: ["/path/to/cavdax/core/mcp/stdio.js"]
+          command: "npx",
+          args: ["-y", "cavdax", "mcp"]
         }
       }
     },
@@ -40,7 +40,7 @@ export default function McpConnectModal({ isOpen, onClose }) {
     2
   );
 
-  const claudeCodeCmd = `claude mcp add cavdax node /path/to/cavdax/core/mcp/stdio.js`;
+  const claudeCodeCmd = `claude mcp add cavdax npx -y cavdax mcp`;
 
   const handleCopy = (key, text) => {
     playClick();
