@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Production Deployment
@@ -54,14 +58,30 @@ jobs:
               free -m
             fi
             echo "==> Building updated containers sequentially (zero-downtime rolling reload)..."
+            
+            deploy_service() {
+              local svc="$1"
+              local count=0
+              echo "==> Deploying $svc container..."
+              until docker compose -f infra/docker-compose.prod.yml up -d --no-deps "$svc" 2>/dev/null || [ $count -ge 4 ]; do
+                echo "==> Docker daemon busy removing $svc, waiting 3s for unmount before retry $((count + 1))/4..."
+                sleep 3
+                count=$((count + 1))
+              done
+              if [ $count -ge 4 ]; then
+                # Final attempt without error suppression if all retries failed
+                docker compose -f infra/docker-compose.prod.yml up -d --no-deps "$svc"
+              fi
+            }
+
             if docker compose version >/dev/null 2>&1; then
               echo "==> Building server container..."
               docker compose -f infra/docker-compose.prod.yml build server
               echo "==> Building client container..."
               docker compose -f infra/docker-compose.prod.yml build client
               echo "==> Performing rolling container recreation..."
-              docker compose -f infra/docker-compose.prod.yml up -d --no-deps server
-              docker compose -f infra/docker-compose.prod.yml up -d --no-deps client
+              deploy_service server
+              deploy_service client
             else
               echo "==> Building with legacy docker-compose..."
               docker-compose -f infra/docker-compose.prod.yml build server
