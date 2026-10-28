@@ -260,7 +260,15 @@ CAVDAX implements layered security across client, gateway, and kernel boundaries
 4. **Transport Security Headers**:
    - Injects `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Strict-Transport-Security`.
 5. **Cryptographic Order Tier Binding**:
-   - Razorpay order creation binds subscription tier attributes in server memory (`pendingBillingOrders`), rejecting mismatched confirmation payloads.
+   - Razorpay order creation binds subscription tier attributes in server memory (`pendingBillingOrders`), rejecting mismatched confirmation payloads with canonical server-side pricing (`CANONICAL_TIER_PRICES_PAISE`).
+6. **Tool Sandbox Confinement (`demo-repo/`)**:
+   - Tool execution (`apply_code_change`) is confined to `demo-repo/` root; path traversal attempts outside the sandbox trigger immediate 403 blocks with zero byte writes.
+7. **Multi-Tenant Scoped Graph Query Isolation**:
+   - Graph queries (`/api/graph`, `/api/audit`) enforce parameterized tenant scoping (`WHERE coalesce(d.repo, 'demo') = $repoScope`); unauthenticated callers strictly see canonical demo data.
+8. **Section 37 Truth-in-Data Standard (Zero Hardcoded Benchmark Strings or Fake Latency Fallbacks)**:
+   - Absolute ban on synthetic numerical constants or logical OR fallbacks for elapsed times (e.g. `parseFloat(...) || 0.42` eliminated); pure execution time is measured dynamically with nanosecond precision (`process.hrtime.bigint()`). Benchmark evaluation suites run real dynamic vector similarity and DAG traversals rather than hardcoded mock strings.
+
+
 
 ### 7.2 Web HUD Route Topology (9 Operational Surfaces)
 The client application provides 9 dedicated routes:
