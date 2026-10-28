@@ -28,6 +28,7 @@ import SubsystemErrorBoundary from './components/SubsystemErrorBoundary.jsx';
 import ConnectRepoModal from './components/ConnectRepoModal.jsx';
 import ConnectedRepoWorkspace from './components/ConnectedRepoWorkspace.jsx';
 import SEOHead from './components/SEOHead.jsx';
+import PageAscentTransition from './components/PageAscentTransition.jsx';
 import { playClick, playRejectBuzz, playApprovalChime, initGlobalClickSound } from './utils/soundFx.js';
 
 // Helper function to resolve tab from clean URL path with fallback to hash
@@ -1163,7 +1164,13 @@ export default function App() {
         user={githubUser}
       />
 
-      {/* 2. Main Viewport Switcher */}
+      {/* 2. Main Viewport Switcher with Fluid Page Ascent */}
+      <PageAscentTransition
+        routeKey={activeTab}
+        distance={22}
+        duration={550}
+        className="flex-1 min-h-0 flex flex-col w-full"
+      >
       {activeTab === 'landing' ? (
         /* Full Product Landing Page (footer particles live here, not in console §1.6) */
         <SubsystemErrorBoundary name="Landing Viewport">
@@ -1482,6 +1489,8 @@ export default function App() {
           />
         </div>
       )}
+
+      </PageAscentTransition>
 
       {/* 3. System Preferences Modal (Ported from CAVDAX) */}
       <PreferencesModal
