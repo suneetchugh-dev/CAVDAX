@@ -936,3 +936,35 @@ Every AI coding agent must treat the **6 Canonical Context Files** as the persis
 - **Strict Ban on Gateway Badge Clutter**: Never include generic payment gateway badges, trust seals, or payment method enumerations (e.g., `Secure · Razorpay · UPI · Cards · Net Banking`, `Powered by Stripe`, or similar badge lists).
 - **Production Developer Aesthetics**: All payment interfaces (Sponsor and Tier Cards) must strictly maintain high-end, uncluttered, monochromatic developer console aesthetics.
 - **Dynamic Key Resolution**: Never hardcode or statically inline fallback Test Mode keys in production builds. Always resolve payment keys dynamically from backend orders or verified production environment configurations.
+
+
+## 14. CI/CD Deployment Concurrency & Container Daemon Race Protection Protocol
+
+- **Mandatory Workflow Concurrency Lock**:
+  - Every GitHub Actions / GitLab CI production deployment workflow executing over SSH or managing container infrastructure MUST explicitly define a top-level concurrency block:
+    ```yaml
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    ```
+  - **Zero Parallel SSH Deployments**: NEVER allow two or more concurrent workflow triggers (e.g. back-to-back PR merges) to SSH into the same VM and run container management commands simultaneously. Concurrent runs create race collisions where multiple processes attempt to remove or bind the same container name simultaneously.
+- **Elimination of "Removal of container is already in progress" Daemon Collisions**:
+  - When using Docker Compose with explicit `container_name:` declarations on cloud instances (e.g. AWS EC2 t3.micro), `containerd` takes 1–3 seconds to unmount overlayfs storage layers and network endpoints.
+  - Automated deployment scripts must NEVER execute a naked `docker compose up -d` that fails immediately on transient unmount locks. Wrap rolling container recreations in a resilient backoff retry loop (e.g. 3–4 retries with 3-second sleep backoff):
+    ```bash
+    deploy_service() {
+      local svc="$1"
+      local count=0
+      until docker compose -f infra/docker-compose.prod.yml up -d --no-deps "$svc" 2>/dev/null || [ $count -ge 4 ]; do
+        echo "==> Docker daemon unmounting previous '$svc' layer, retrying in 3s ($((count + 1))/4)..."
+        sleep 3
+        count=$((count + 1))
+      done
+      if [ $count -ge 4 ]; then
+        docker compose -f infra/docker-compose.prod.yml up -d --no-deps "$svc"
+      fi
+    }
+    ```
+- **Absolute Ban on Pre-Build Service Termination (Cloudflare Error 521 Prevention)**:
+  - Never execute `docker rm -f`, `docker kill`, or `docker down` before building container images. Reverse proxies (Caddy, Nginx) must stay alive and listening on ports 80/443 while builds compile in the background.
+  - Only perform in-place, sequential container swaps once image builds have succeeded 100%.
