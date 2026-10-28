@@ -97,11 +97,21 @@ export async function ingestGitCommit(graph, { sha, message, author = 'unknown',
   // Detect supersedes targets from commit message body
   // Patterns: "supersedes: ADR-001, ADR-002" or "breaks: DEC-102"
   const supersedesIds = [];
-  const supersedesMatches = message.matchAll(/(?:supersedes|breaks)[:\s]+([A-Z]+-\d+(?:\s*,\s*[A-Z]+-\d+)*)/gi);
+  const breaksDecisionIds = [];
+  const supersedesMatches = message.matchAll(/supersedes[:\s]+([A-Z]+-\d+(?:\s*,\s*[A-Z]+-\d+)*)/gi);
   for (const match of supersedesMatches) {
     match[1].split(',').map(s => s.trim()).filter(Boolean).forEach(id => supersedesIds.push(id));
   }
-
+  const breaksMatches = message.matchAll(/breaks[:\s]+([A-Z]+-\d+(?:\s*,\s*[A-Z]+-\d+)*)/gi);
+  for (const match of breaksMatches) {
+    match[1].split(',').map(s => s.trim()).filter(Boolean).forEach(id => {
+      if (id.startsWith('DEC-')) {
+        breaksDecisionIds.push(id);
+      } else {
+        supersedesIds.push(id);
+      }
+    });
+  }
   // Detect conventional commit breaking change (feat!: / fix!: / refactor!:)
   const isBreaking = /^[a-z]+!:/i.test(title);
   const factId = `F-commit-${shortSha}`;
@@ -119,6 +129,17 @@ export async function ingestGitCommit(graph, { sha, message, author = 'unknown',
   await mergeFact(graph, { sourceId, factId, claim: factClaim });
 
   const invalidationResults = await cascadeAll(graph, sourceId, supersedesIds);
+  for (const decId of breaksDecisionIds) {
+    console.log(`[Sources] Breaking decision directly: '${decId}' by '${sourceId}'...`);
+    await graph.query(
+      `MATCH (d:Decision {id: $decId})
+       SET d.status = 'INVALIDATED_NEEDS_REVALIDATION', d.invalidated_at = timestamp()
+       MERGE (s:Source {id: $sourceId})
+       MERGE (s)-[:BREAKS]->(d)`,
+      { params: { decId, sourceId } }
+    ).catch(() => {});
+    invalidationResults.push({ breaks_decision: decId, status: 'INVALIDATED_NEEDS_REVALIDATION' });
+  }
 
   return {
     source_id: sourceId,
@@ -391,7 +412,7 @@ export async function ingestGitHubIssue(graph, { issueNumber, title, htmlUrl, bo
 
   // Scan body for additional supersedes references
   const bodyRefs = [];
-  const bodyMatches = body.matchAll(/(?:supersedes|closes|fixes|resolves)[:\s]+([A-Z]+-\d+(?:\s*,\s*[A-Z]+-\d+)*)/gi);
+  const bodyMatches = body.matchAll(/(?:supersedes|deprecates|breaks)[:\s]+([A-Z]+-\d+(?:\s*,\s*[A-Z]+-\d+)*)/gi);
   for (const match of bodyMatches) {
     match[1].split(',').map(s => s.trim()).filter(Boolean).forEach(id => bodyRefs.push(id));
   }

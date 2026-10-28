@@ -45,17 +45,34 @@ export function extractHeuristicMetadata(content, filePath = '') {
   if (!metadata.id && filePath) {
     const base = path.basename(filePath, path.extname(filePath));
     const idMatch = base.match(/ADR[-_]?\d+/i);
-    metadata.id = idMatch ? idMatch[0].toUpperCase().replace('_', '-') : base;
+    const numMatch = base.match(/^(\d{3,4})[-_]/);
+    if (idMatch) {
+      metadata.id = idMatch[0].toUpperCase().replace('_', '-');
+    } else if (numMatch) {
+      metadata.id = `ADR-${numMatch[1]}`;
+    } else {
+      metadata.id = base;
+    }
   }
 
-  // 2. Supersedes extraction: e.g. "Supersedes: ADR-001", "Status: Superseded by ADR-001", "Deprecated by ADR-001"
-  const supersedesMatches = content.match(/(?:supersedes|superseded by|deprecated by|replaces)\s*:?\s*(?:\[)?(ADR[-_]?\d+)(?:\])?/gi);
-  if (supersedesMatches) {
+  // 2a. Passive supersession detection: e.g. "Status: Superseded by ADR-002", "superseded by [ADR-002]"
+  // This marks THIS file as the victim/superseded target, NOT the active superseder.
+  const passiveMatches = content.match(/(?:superseded\s+by|deprecated\s+by|replaced\s+by)\s*:?\s*(?:\[)?([A-Za-z0-9-_]+)(?:\])?/i);
+  if (passiveMatches) {
+    metadata.status = 'SUPERSEDED';
+    metadata.superseded_by = passiveMatches[1].toUpperCase().replace('_', '-');
+  }
+
+  // 2b. Active supersedes extraction: e.g. "Supersedes: ADR-001", "replaces: ADR-001"
+  // Negative lookbehind ensures we never extract "superseded by ADR-001" as active supersession.
+  const activeMatches = content.match(/(?<!(?:superseded|deprecated|replaced)\s+)(?:supersedes|replaces)\s*:?\s*(?:\[)?([A-Za-z0-9-_]+)(?:\])?/gi);
+  if (activeMatches) {
     const ids = [];
-    for (const match of supersedesMatches) {
-      const id = match.match(/ADR[-_]?\d+/i);
+    for (const match of activeMatches) {
+      const id = match.match(/(?:ADR[-_]?\d+|\d{3,4})/i);
       if (id) {
-        const cleanId = id[0].toUpperCase().replace('_', '-');
+        let cleanId = id[0].toUpperCase().replace('_', '-');
+        if (/^\d{3,4}$/.test(cleanId)) cleanId = `ADR-${cleanId}`;
         if (cleanId !== metadata.id && !ids.includes(cleanId)) {
           ids.push(cleanId);
         }
@@ -65,7 +82,6 @@ export function extractHeuristicMetadata(content, filePath = '') {
       metadata.supersedes = ids.length === 1 ? ids[0] : ids;
     }
   }
-
   // 3. Status extraction: e.g. "Status: Active", "Status: Accepted", "Status: Proposed"
   const statusMatch = content.match(/Status\s*:\s*([A-Za-z]+)/i);
   if (statusMatch) {
@@ -230,7 +246,8 @@ export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootO
     const mergeFactCypher = `
       MATCH (s:Source {id: $adrId})
       MERGE (f:Fact {id: $factId})
-      ON CREATE SET f.claim = $claim, f.is_stale = false, f.verified = true
+      ON CREATE SET f.claim = $claim, f.is_stale = CASE WHEN s.status = 'SUPERSEDED' THEN true ELSE false END, f.verified = true
+      ON MATCH SET f.is_stale = CASE WHEN s.status = 'SUPERSEDED' THEN true ELSE f.is_stale END
       MERGE (f)-[:EXTRACTED_FROM]->(s)
     `;
     await graph.query(mergeFactCypher, {
@@ -245,7 +262,8 @@ export async function ingestAdrFile(graph, filePath, { allowedRoot: allowedRootO
     const mergeDecisionCypher = `
       MATCH (f:Fact {id: $factId})
       MERGE (d:Decision {id: $decisionId})
-      ON CREATE SET d.title = $decisionTitle, d.status = 'VALID', d.is_demo = $isDemo, d.created_at = timestamp()
+      ON CREATE SET d.title = $decisionTitle, d.status = CASE WHEN f.is_stale = true THEN 'INVALIDATED_NEEDS_REVALIDATION' ELSE 'VALID' END, d.is_demo = $isDemo, d.created_at = timestamp()
+      ON MATCH SET d.status = CASE WHEN f.is_stale = true THEN 'INVALIDATED_NEEDS_REVALIDATION' ELSE d.status END, d.is_demo = CASE WHEN $isDemo THEN true ELSE d.is_demo END
       ON MATCH SET d.is_demo = CASE WHEN $isDemo THEN true ELSE d.is_demo END
       MERGE (d)-[:DEPENDS_ON]->(f)
     `;
