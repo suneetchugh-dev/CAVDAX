@@ -2,29 +2,26 @@ import React, { useEffect, useState } from 'react';
 
 /**
  * PageAscentTransition
- * Ultra-lightweight, GPU-composited page ascent transition component.
- * Produces the signature fluid entry: subtle upward translation + fade-in easing.
- * 
- * @param {React.ReactNode} children - Content of the page/view to animate
- * @param {string|number} routeKey - Unique key representing current route/tab (triggers animation on change)
- * @param {number} distance - Pixels to translate on Y axis during mount (default: 10px)
- * @param {number} duration - Animation duration in milliseconds (default: 240ms)
- * @param {string} className - Optional Tailwind or custom CSS classes
+ * Exact WaveTone kinetic motion profile:
+ * - Exponential spring curve: cubic-bezier(0.22, 1, 0.36, 1)
+ * - Cinematic duration: 550ms
+ * - Fluid translation distance: 22px
+ * - Zero-flicker fill-mode: both
  */
 export default function PageAscentTransition({
   children,
   routeKey,
-  distance = 10,
-  duration = 240,
+  distance = 22,
+  duration = 550,
   className = ''
 }) {
-  const [animating, setAnimating] = useState(true);
+  const [willChangeActive, setWillChangeActive] = useState(true);
 
   useEffect(() => {
-    setAnimating(true);
+    setWillChangeActive(true);
     const timer = setTimeout(() => {
-      setAnimating(false);
-    }, duration);
+      setWillChangeActive(false);
+    }, duration + 150);
     return () => clearTimeout(timer);
   }, [routeKey, duration]);
 
@@ -41,10 +38,8 @@ export default function PageAscentTransition({
       key={routeKey}
       className={`page-ascent-wrapper w-full ${className}`}
       style={{
-        animation: animating
-          ? `cavdaxPageAscentIn ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) both`
-          : 'none',
-        willChange: animating ? 'opacity, transform' : 'auto'
+        animation: `cavdaxPageAscentIn ${duration}ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+        willChange: willChangeActive ? 'opacity, transform' : 'auto'
       }}
     >
       <style>{`
