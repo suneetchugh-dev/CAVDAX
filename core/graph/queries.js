@@ -41,25 +41,29 @@ export async function verifyActionGate(graph, decisionId) {
   const cypher = `
     MATCH (d:Decision {id: $decisionId})
     WITH d, d.status AS decision_status
-    OPTIONAL MATCH path = (d)-[:DEPENDS_ON*1..4]->(f:Fact)-[:EXTRACTED_FROM]->(s:Source)
+    OPTIONAL MATCH p = (d)-[:DEPENDS_ON*1..4]->(f:Fact)
+    OPTIONAL MATCH (f)-[:EXTRACTED_FROM]->(s:Source)
     WITH d, decision_status,
-         collect({
-           path_nodes: [n IN nodes(path) | labels(n)[0] + ':' + coalesce(n.id, n.ref)],
+         [dep IN collect(CASE WHEN p IS NULL THEN null ELSE {
+           path_nodes: [n IN nodes(p) | labels(n)[0] + ':' + coalesce(n.id, n.ref)] + (CASE WHEN s IS NOT NULL THEN ['Source:' + coalesce(s.id, s.ref)] ELSE [] END),
            fact_stale: coalesce(f.is_stale, false),
-           source_status: coalesce(s.status, 'ACTIVE'),
-           has_invalid_decision: ANY(n IN nodes(path) WHERE (n:Decision) AND n.status <> 'VALID')
-         }) AS dependencies
+           has_source: (s IS NOT NULL),
+           source_status: CASE WHEN s IS NOT NULL THEN coalesce(s.status, 'ACTIVE') ELSE 'MISSING' END,
+           has_invalid_decision: ANY(n IN nodes(p) WHERE (n:Decision) AND n.id <> d.id AND n.status <> 'VALID')
+         } END) WHERE dep IS NOT NULL] AS dependencies
     RETURN d.id AS decision_id,
            decision_status,
            CASE
              WHEN decision_status = 'INVALIDATED_NEEDS_REVALIDATION' THEN 'BLOCKED_DECISION_INVALIDATED'
+             WHEN decision_status <> 'VALID' THEN 'BLOCKED_DECISION_INVALID'
              WHEN size(dependencies) = 0 THEN 'BLOCKED_NO_GROUNDING'
              WHEN ANY(dep IN dependencies WHERE dep.has_invalid_decision = true) THEN 'BLOCKED_INTERMEDIATE_DECISION_INVALIDATED'
              WHEN ANY(dep IN dependencies WHERE dep.fact_stale = true) THEN 'BLOCKED_STALE_FACT'
              WHEN ANY(dep IN dependencies WHERE dep.source_status = 'SUPERSEDED') THEN 'BLOCKED_SUPERSEDED_SOURCE'
+             WHEN ANY(dep IN dependencies WHERE dep.has_source = false) THEN 'BLOCKED_NO_GROUNDING'
              ELSE 'APPROVED'
            END AS gate_verdict,
-           [dep IN dependencies WHERE dep.has_invalid_decision = true OR dep.fact_stale = true OR dep.source_status = 'SUPERSEDED' | dep.path_nodes] AS violation_paths
+           [dep IN dependencies WHERE dep.has_invalid_decision = true OR dep.fact_stale = true OR dep.source_status = 'SUPERSEDED' OR dep.has_source = false | dep.path_nodes] AS violation_paths
   `;
 
   const result = await graph.query(cypher, { params: { decisionId } });
@@ -94,17 +98,17 @@ export async function cascadeInvalidation(graph, newSourceId, oldSourceId) {
   const hrtStart = process.hrtime.bigint();
 
   const cypher = `
-    MATCH (newSource:Source {id: $newSourceId})
-    MATCH (oldSource:Source {id: $oldSourceId})
+    MERGE (newSource:Source {id: $newSourceId})
+    MERGE (oldSource:Source {id: $oldSourceId})
     MERGE (newSource)-[:SUPERSEDES]->(oldSource)
     SET oldSource.status = 'SUPERSEDED',
         oldSource.superseded_at = timestamp()
     WITH oldSource
-    MATCH (oldSource)<-[:EXTRACTED_FROM]-(staleFact:Fact)
-    SET staleFact.is_stale = true, 
+    OPTIONAL MATCH (oldSource)<-[:EXTRACTED_FROM]-(staleFact:Fact)
+    SET staleFact.is_stale = true,
         staleFact.invalidated_at = timestamp()
     WITH staleFact
-    MATCH (d:Decision)-[:DEPENDS_ON*1..4]->(staleFact)
+    OPTIONAL MATCH (d:Decision)-[:DEPENDS_ON*1..4]->(staleFact)
     SET d.status = 'INVALIDATED_NEEDS_REVALIDATION',
         d.invalidated_at = timestamp()
     RETURN count(DISTINCT d) AS affected_decisions, 

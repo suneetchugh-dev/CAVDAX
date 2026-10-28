@@ -19,8 +19,8 @@ const SIM_NOTE =
   'Start FalkorDB and run "npx cavdax ingest" for real enforcement.';
 
 export class SimulationEngine {
-  constructor({ repoRoot }) {
-    this.repoRoot = path.resolve(repoRoot);
+  constructor({ repoRoot = process.cwd() } = {}) {
+    this.repoRoot = path.resolve(repoRoot || process.cwd());
     this.locks = new Map();
     this.decisions = new Map([
       ['DEC-102', { title: 'Generate Checkout Service with TokenAuth v1', status: 'INVALIDATED_NEEDS_REVALIDATION', fact: 'F-Auth-v1' }]
@@ -124,6 +124,19 @@ export class SimulationEngine {
   }
 
   releaseLock({ decision_id, agent_id }) {
+    const existing = this.locks.get(decision_id);
+    if (!existing) {
+      return { simulated: true, released: true, decision_id, message: "No active lock found." };
+    }
+    if (existing.agentId && agent_id && existing.agentId !== agent_id) {
+      return {
+        simulated: true,
+        released: false,
+        isError: true,
+        decision_id,
+        message: `Cannot release lock: held by agent '${existing.agentId}', not '${agent_id}'.`
+      };
+    }
     this.locks.delete(decision_id);
     return { simulated: true, released: true, decision_id };
   }
@@ -192,6 +205,22 @@ export class SimulationEngine {
     const old = this.decisions.get(old_decision_id);
     if (!old) {
       return { ...base, isError: true, message: `Cannot revalidate: old decision '${old_decision_id}' does not exist.` };
+    }
+    const sourceNode = this.nodes.find(n => n.id === new_source_id && n.label === 'Source');
+    if (sourceNode && sourceNode.status === 'SUPERSEDED') {
+      return {
+        ...base,
+        isError: true,
+        message: `Cannot revalidate: target source '${new_source_id}' is itself SUPERSEDED.`
+      };
+    }
+    const factNode = this.nodes.find(n => n.id === new_fact_id && n.label === 'Fact');
+    if (factNode && factNode.is_stale) {
+      return {
+        ...base,
+        isError: true,
+        message: `Cannot revalidate: target fact '${new_fact_id}' is stale.`
+      };
     }
     old.status = 'REPLACED_ARCHIVED';
     this.decisions.set(new_decision_id, { title, status: 'VALID', fact: new_fact_id });
