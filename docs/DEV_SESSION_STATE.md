@@ -9,6 +9,31 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.42 Latest Session Achievements (October 28, 2026 - Devil's Advocate Forensic Audit Remediation: Fail-Closed Gate, Order-Independent Ingestion & Hardened MCP)
+
+- **Fail-Closed Causal Gate Verification (`core/graph/queries.js`)**:
+  - Remediated Cypher null aggregation flaw where ungrounded decisions (`DEC-ORPHAN`) and decisions depending on stale facts lacking sources (`DEC-NOSRC`) previously fell through to `APPROVED`.
+  - Guaranteed that decisions with missing grounding or broken fact extraction immediately evaluate to `BLOCKED_NO_GROUNDING` or `BLOCKED_STALE_FACT`.
+- **Order-Independent Ingestion & Cascade Invalidation (`core/graph/queries.js`, `core/ingestion/parser.js`)**:
+  - Replaced strict `MATCH (oldSource)` in `cascadeInvalidation` with idempotent `MERGE` stubs, ensuring that out-of-order ADR ingestion (e.g. `ADR-002` ingested before `ADR-001`) preserves supersession relationships and invalidates downstream facts and decisions automatically upon arrival.
+  - Parser preserves `SUPERSEDED` status on retroactive ADR ingestion and cascades invalidations to facts and decisions.
+- **Heuristic Parser Anti-Inversion (`core/ingestion/parser.js`)**:
+  - Differentiated passive supersession statements (`Status: Superseded by ADR-002`, `> Note: Superseded by [ADR-002]`) from active supersession statements (`Supersedes: ADR-001`).
+  - Completely eliminated reverse/circular supersession bugs where superseded ADRs were erroneously treated as superseding their replacements.
+- **Legacy Stdio Server Hardening & Fake Latency Elimination (`core/mcp/stdio.js`, `apps/client/src/components/McpConnectModal.jsx`)**:
+  - Deprecated legacy fallback logic in `core/mcp/stdio.js` that previously approved arbitrary fake decisions (`DEC-MADEUP-999`) with hardcoded 1.84ms latency when FalkorDB was offline.
+  - Re-routed `core/mcp/stdio.js` directly through `apps/mcp-server/src/stdioServer.js`, enforcing fail-closed semantics across all execution modes.
+  - Modernized connection commands in `McpConnectModal.jsx` to use official `npx -y cavdax mcp`.
+- **Simulation Engine & Sources Hardening (`apps/mcp-server/src/simulation.js`, `core/ingestion/sources.js`)**:
+  - Hardened `revalidateDecision` in simulation mode to verify target source is active and target fact is fresh.
+  - Hardened `releaseLock` to require matching `agent_id` lease holder.
+  - Fixed `breaks: DEC-xxx` in git commits to invalidate decisions directly in FalkorDB.
+  - Restricted GitHub issue supersession detection to explicit supersession keywords, preventing standard issue resolution tags from causing spurious invalidations.
+- **Transparent Benchmark Projection Model (`benchmark/scale_generator.js`)**:
+  - Enforced Section 37 Truth-in-Data by replacing fake `Math.random()` latency formulas with transparently labeled `[PROJECTION]` mode and true high-resolution hardware execution when FalkorDB is online.
+- **Comprehensive Verification Suite (`apps/server/test/devilAdvocateAudit.test.mjs`)**:
+  - Added dedicated unit tests covering heuristic parsing, simulation revalidation barriers, and agent lock leases; all 51 tests across the monorepo pass cleanly.
+
 ## 1.0.41 Latest Session Achievements (October 28, 2026 - Fluid Page Ascent Transition & Reusable Micro-Interaction Architecture)
 
 - **Fluid Page Ascent Transition Engine (`PageAscentTransition.jsx`, `App.jsx`)**:
