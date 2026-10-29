@@ -138,13 +138,7 @@ const PROFILE_TOUR_STEPS = [
   },
 ];
 
-const TOUR_STEP_REGISTRY = {
-  console: CONSOLE_TOUR_STEPS,
-  dev: CONSOLE_TOUR_STEPS,
-  mcp: MCP_TOUR_STEPS,
-  audit: AUDIT_TOUR_STEPS,
-  profile: PROFILE_TOUR_STEPS,
-};
+
 
 const MCP_TOUR_STEPS = [
   {
@@ -181,6 +175,14 @@ const MCP_TOUR_STEPS = [
     scrollBlock: 'center',
   },
 ];
+
+const TOUR_STEP_REGISTRY = {
+  console: CONSOLE_TOUR_STEPS,
+  dev: CONSOLE_TOUR_STEPS,
+  mcp: MCP_TOUR_STEPS,
+  audit: AUDIT_TOUR_STEPS,
+  profile: PROFILE_TOUR_STEPS,
+};
 
 export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
