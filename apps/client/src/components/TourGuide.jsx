@@ -5,6 +5,19 @@ import { playClick } from '../utils/soundFx';
 
 const TOUR_STORAGE_KEY = 'cavdax.tour.completed';
 
+export const getTourStorageKey = (mode = 'console') => `cavdax.tour.completed.${mode}`;
+
+export const resetAllTours = () => {
+  try {
+    localStorage.removeItem('cavdax.tour.completed');
+    localStorage.removeItem('cavdax.tour.completed.console');
+    localStorage.removeItem('cavdax.tour.completed.dev');
+    localStorage.removeItem('cavdax.tour.completed.mcp');
+    localStorage.removeItem('cavdax.tour.completed.audit');
+    localStorage.removeItem('cavdax.tour.completed.profile');
+  } catch {}
+};
+
 const CONSOLE_TOUR_STEPS = [
   {
     id: 'story-stepper',
@@ -52,6 +65,87 @@ const CONSOLE_TOUR_STEPS = [
   },
 ];
 
+
+const AUDIT_TOUR_STEPS = [
+  {
+    id: 'audit-header',
+    target: '[data-tour="audit-header"]',
+    title: 'FalkorDB Audit & Verification Stream',
+    badge: 'STEP 1 OF 3',
+    description:
+      'Real-time verification telemetry recorded directly into FalkorDB. Every agent write attempt is evaluated against the Causal Dependency Graph, displaying total recorded actions and live GraphBLAS lookup latency.',
+    tip: 'Average traversal and gate evaluation completes in sub-15ms via Sparse BLAS matrix multiplication.',
+    placement: 'bottom-center',
+    scrollBlock: 'start',
+  },
+  {
+    id: 'audit-filter',
+    target: '[data-tour="audit-filter"]',
+    title: 'Multi-Repo Scope & Forensic Verdict Filters',
+    badge: 'STEP 2 OF 3',
+    description:
+      'Filter recorded agent actions across connected GitHub repositories or the 4-Act demo sandbox. Slice logs instantly by BLOCKED (stale/revoked ADR dependencies) or APPROVED verdicts.',
+    tip: 'Use the text search box to filter by specific target file path or ADR decision ID.',
+    placement: 'bottom-center',
+    scrollBlock: 'start',
+  },
+  {
+    id: 'audit-ledger',
+    target: '[data-tour="audit-ledger"]',
+    title: 'Tamper-Evident Action Audit Ledger',
+    badge: 'STEP 3 OF 3',
+    description:
+      'Detailed ledger tracking Action ID, Target File, Decision Status, and Execution Timestamp. Blocked writes highlight exact architectural divergence before any filesystem corruption occurs.',
+    tip: 'Compare executed actions with terminal logs to trace deterministic invalidation cascades.',
+    placement: 'top-center',
+    scrollBlock: 'center',
+  },
+];
+
+const PROFILE_TOUR_STEPS = [
+  {
+    id: 'profile-tiers',
+    target: '[data-tour="profile-tiers"]',
+    title: 'Architecture Tiers & Quota Allocation',
+    badge: 'STEP 1 OF 3',
+    description:
+      'Review your active developer tier and entitlement matrix (Free Sandbox, Pro Enclave, or Enterprise Node). Each tier allocates dedicated GraphBLAS traversal capacity and MCP gate concurrency.',
+    tip: 'Sandbox tiers operate on local in-memory FalkorDB instances for zero-friction evaluation.',
+    placement: 'bottom-center',
+    scrollBlock: 'start',
+  },
+  {
+    id: 'profile-quotas',
+    target: '[data-tour="profile-quotas"]',
+    title: 'Live GraphBLAS Traversal & Usage Gauges',
+    badge: 'STEP 2 OF 3',
+    description:
+      'Real-time consumption meters tracking Cypher matrix traversals, decision validations, and storage nodes. Live usage syncs with your developer identity.',
+    tip: 'Traversals scale with ADR graph depth during causal invalidation dependency resolution.',
+    placement: 'top-center',
+    scrollBlock: 'center',
+  },
+  {
+    id: 'profile-api-key',
+    target: '[data-tour="profile-api-key"]',
+    title: 'Cryptographic MCP Agent API Key',
+    badge: 'STEP 3 OF 3',
+    description:
+      'Manage SHA-256 hashed bearer tokens for authenticating autonomous coding agents (Claude Code, Cursor IDE, Windsurf) through the CAVDAX stdio proxy and HTTP gates.',
+    tip: 'Rotate keys instantly with one click if an agent deployment credential is retired.',
+    placement: 'top-center',
+    scrollBlock: 'center',
+  },
+];
+
+const TOUR_STEP_REGISTRY = {
+  console: CONSOLE_TOUR_STEPS,
+  dev: CONSOLE_TOUR_STEPS,
+  mcp: MCP_TOUR_STEPS,
+  audit: AUDIT_TOUR_STEPS,
+  profile: PROFILE_TOUR_STEPS,
+};
+
 const MCP_TOUR_STEPS = [
   {
     id: 'mcp-overview',
@@ -94,7 +188,7 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
   const [cardPos, setCardPos] = useState({ top: 100, left: 100, placement: 'bottom' });
   const cardRef = useRef(null);
 
-  const steps = mode === 'mcp' ? MCP_TOUR_STEPS : CONSOLE_TOUR_STEPS;
+  const steps = TOUR_STEP_REGISTRY[mode] || CONSOLE_TOUR_STEPS;
   const step = steps[currentStepIndex] || steps[0];
 
   useEffect(() => {
@@ -313,6 +407,7 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
   const handleComplete = () => {
     playClick();
     localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+    localStorage.setItem(getTourStorageKey(mode), 'true');
     if (onClose) onClose();
   };
 

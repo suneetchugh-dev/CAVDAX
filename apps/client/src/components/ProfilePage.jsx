@@ -783,7 +783,7 @@ export default function ProfilePage({
         </section>
   
         {/* ── 2. Architecture Tiers & Quotas (Exact 4 Benefits per Tier) ── */}
-        <section className="mt-0 mb-0">
+        <section data-tour="profile-tiers" className="mt-0 mb-0">
           <div className="flex items-center justify-between mb-3.5 sm:mb-4">
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Subscription Tiers
@@ -1192,7 +1192,7 @@ export default function ProfilePage({
         {/* ── 3. Real-Time Metrics & API Credentials ── */}
         <section className="mt-6 sm:mt-8 lg:mt-10 xl:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mb-3 sm:mb-4">
           {/* Plan Quota & Consumption */}
-          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+          <div data-tour="profile-quotas" className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1240,7 +1240,7 @@ export default function ProfilePage({
           </div>
   
           {/* API Credentials */}
-          <div className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+          <div data-tour="profile-api-key" className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -1605,7 +1605,7 @@ export default function ProfilePage({
       </section>
 
       {/* ── 2. Architecture Tiers & Quotas (Exact 4 Benefits per Tier) ── */}
-      <section className="mt-0 mb-0">
+      <section data-tour="profile-tiers" className="mt-0 mb-0">
         <div className="flex items-center justify-between mb-2 sm:mb-2.5">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Subscription Tiers
@@ -2014,7 +2014,7 @@ export default function ProfilePage({
       {/* ── 3. Real-Time Metrics & API Credentials ── */}
       <section className="mt-3 sm:mt-3.5 lg:mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-1 sm:mb-2 shrink-0">
         {/* Plan Quota & Consumption */}
-        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div data-tour="profile-quotas" className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -2062,7 +2062,7 @@ export default function ProfilePage({
         </div>
 
         {/* API Credentials */}
-        <div className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
+        <div data-tour="profile-api-key" className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">

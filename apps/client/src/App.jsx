@@ -312,6 +312,30 @@ export default function App() {
       }
     } catch {}
   };
+  const handleOpenTour = (targetMode) => {
+    const mode = targetMode || activeTab;
+    if (['console', 'dev', 'mcp', 'audit', 'profile'].includes(mode)) {
+      if (mode !== activeTab && mode !== 'dev') {
+        handleSelectTab(mode);
+        setTimeout(() => setIsTourOpen(true), 200);
+      } else {
+        setIsTourOpen(true);
+      }
+    } else {
+      handleSelectTab('console');
+      setTimeout(() => setIsTourOpen(true), 200);
+    }
+  };
+
+  useEffect(() => {
+    const handleGlobalOpenTour = (e) => {
+      const mode = e.detail?.mode || activeTab;
+      handleOpenTour(mode);
+    };
+    window.addEventListener('cavdax:open-tour', handleGlobalOpenTour);
+    return () => window.removeEventListener('cavdax:open-tour', handleGlobalOpenTour);
+  }, [activeTab]);
+
 
   // Synchronize browser history (popstate / back-forward navigation) and normalize legacy hashes
   useEffect(() => {
@@ -523,10 +547,8 @@ export default function App() {
       if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
         playClick();
-        if (activeTab === 'console') {
+        if (['console', 'dev', 'mcp', 'audit', 'profile'].includes(activeTab)) {
           setIsTourOpen(prev => !prev);
-        } else if (activeTab === 'mcp') {
-          window.dispatchEvent(new CustomEvent('cavdax:toggle-mcp-tour'));
         } else {
           // If on Overview, Demo or Team: navigate to Console and launch the Tour
           handleSelectTab('console');
@@ -1530,11 +1552,6 @@ export default function App() {
             />
           )}
 
-          {/* Guided Tour Overlay — console only, never on landing (§1.6) */}
-          <TourGuide
-            isOpen={isTourOpen}
-            onClose={() => setIsTourOpen(false)}
-          />
         </div>
       )}
 
@@ -1546,20 +1563,25 @@ export default function App() {
         onClose={() => setIsPreferencesOpen(false)}
         isDarkTheme={isDarkTheme}
         onToggleTheme={() => setIsDarkTheme((d) => !d)}
-        onStartTour={() => {
+        onStartTour={(requestedMode) => {
           setIsPreferencesOpen(false);
-          if (activeTab === 'mcp') {
-            window.dispatchEvent(new CustomEvent('cavdax:toggle-mcp-tour'));
-          } else {
-            setActiveTab('console');
-            setIsTourOpen(true);
-          }
+          requestAnimationFrame(() => {
+            handleOpenTour(requestedMode || activeTab);
+          });
         }}
         onResetDemo={handleReset}
         onOpenShortcuts={() => {
           setIsPreferencesOpen(false);
           setIsShortcutsOpen(true);
         }}
+      />
+
+
+      {/* Universal Hoisted Tour Guide Overlay (Console, MCP, Audit, Profile) */}
+      <TourGuide
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        mode={['console', 'dev', 'mcp', 'audit', 'profile'].includes(activeTab) ? activeTab : 'console'}
       />
 
       {/* Universal Keyboard Shortcuts Guide Modal */}

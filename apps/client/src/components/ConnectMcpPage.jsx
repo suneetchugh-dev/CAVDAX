@@ -38,7 +38,6 @@ import {
 
 } from 'lucide-react';
 
-import TourGuide from './TourGuide';
 
 import { playClick } from '../utils/soundFx';
 
@@ -728,7 +727,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
                 playClick();
 
-                setIsTourOpen(prev => !prev);
+                window.dispatchEvent(new CustomEvent('cavdax:open-tour', { detail: { mode: 'mcp' } }));
 
               }}
 
@@ -1944,20 +1943,6 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
         </div>
 
       </section>
-
-
-
-      {/* Dedicated Interactive MCP Tour Guide */}
-
-      <TourGuide
-
-        isOpen={isTourOpen}
-
-        onClose={() => setIsTourOpen(false)}
-
-        mode="mcp"
-
-      />
 
     </div>
 

@@ -234,7 +234,7 @@ export default function AuditPage() {
     <div className="flex flex-col h-full min-h-0 gap-3">
 
       {/* ── Header bar ── */}
-      <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-white/15">
+      <div data-tour="audit-header" className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-white/15">
         <div>
           <div>
             <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-mono">
@@ -287,7 +287,7 @@ export default function AuditPage() {
       </div>
 
       {/* ── Scope & Quick-Filter Toolbar ── */}
-      <div className="flex-shrink-0 flex flex-wrap items-center justify-between gap-2.5 py-2 px-3 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50/70 dark:bg-white/[0.02]">
+      <div data-tour="audit-filter" className="flex-shrink-0 flex flex-wrap items-center justify-between gap-2.5 py-2 px-3 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50/70 dark:bg-white/[0.02]">
         <div className="flex flex-wrap items-center gap-2">
           {/* Repository Dropdown */}
           <div className="flex items-center gap-1.5">
@@ -395,7 +395,7 @@ export default function AuditPage() {
       )}
 
       {/* ── Audit table ── */}
-      <div className="flex-1 min-h-0 overflow-y-auto" data-lenis-prevent>
+      <div data-tour="audit-ledger" className="flex-1 min-h-0 overflow-y-auto" data-lenis-prevent>
         {filteredEntries.length === 0 && !loading ? (
           <EmptyState simulated={simulated} />
         ) : (
