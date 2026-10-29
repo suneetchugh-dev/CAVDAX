@@ -1,7 +1,7 @@
 import { getVapidPublicKey, savePushSubscription, removePushSubscription } from '../webPush.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sendInvalidationEmail } from '../email.js';
+import { sendInvalidationEmail, buildEmailHtml, escapeHtml } from '../email.js';
 import { loadSystemState, saveSystemState } from '../systemState.js';
 
 test('Notification Preferences: loadSystemState returns clean notificationPreferences object', () => {
@@ -99,4 +99,31 @@ test('Web Push: SSRF Protection rejects internal, loopback and cloud metadata en
     assert.equal(res.success, false, `Endpoint '${endpoint}' should be rejected`);
     assert.equal(res.error, 'RESTRICTED_OR_INVALID_ENDPOINT');
   }
+});
+
+test('Email Template & HTML Sanitization: buildEmailHtml escapes all user inputs without ReferenceErrors', () => {
+  const payload = {
+    repo: 'acme/<script>alert(1)</script>',
+    decisionId: 'DEC-102"><img src=x onerror=alert(1)>',
+    decisionTitle: 'TokenAuth & "Special" Title',
+    breakingSourceId: "ADR-002' OR 1=1--",
+    breakingSourceTitle: 'OAuth2 Migration <iframe src="phish">',
+    violationPaths: [['Decision:DEC-102', 'Fact:Stale', 'Source:ADR-002']],
+    hudUrl: 'javascript:alert(1)', // malicious scheme
+    remediationCli: 'npx cavdax mcp -> fix()'
+  };
+
+  const html = buildEmailHtml(payload);
+  assert.ok(typeof html === 'string');
+  assert.ok(html.length > 500);
+
+  // Assert malicious scripts and angle brackets are strictly escaped
+  assert.ok(!html.includes('<script>alert(1)</script>'), 'Script tag must be escaped');
+  assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'), 'Script tag should be escaped HTML entity');
+  assert.ok(!html.includes('"><img src=x onerror=alert(1)>'), 'Image injection must be escaped');
+  assert.ok(!html.includes('<iframe src="phish">'), 'Iframe injection must be escaped');
+
+  // Assert malicious javascript: URL was rejected and defaulted to safe HTTPS origin
+  assert.ok(!html.includes('href="javascript:alert(1)"'), 'javascript: URL scheme must be sanitized');
+  assert.ok(html.includes('href="https://cavdax.sahnirmaan.live"'), 'Fallback safe URL must be present');
 });

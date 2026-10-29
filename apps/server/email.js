@@ -34,7 +34,7 @@ setInterval(() => {
  * Builds the monochromatic developer email template.
  */
 
-function escapeHtml(str) {
+export function escapeHtml(str) {
   if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')
@@ -44,7 +44,7 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function buildEmailHtml({
+export function buildEmailHtml({
   repo,
   decisionId,
   decisionTitle,
@@ -54,12 +54,24 @@ function buildEmailHtml({
   hudUrl,
   remediationCli
 }) {
+  const safeRepo = escapeHtml(repo);
+  const safeDecisionId = escapeHtml(decisionId);
+  const safeDecisionTitle = escapeHtml(decisionTitle);
+  const safeBreakingSourceId = escapeHtml(breakingSourceId);
+  const safeBreakingSourceTitle = escapeHtml(breakingSourceTitle);
+
   const formattedViolationPath = violationPaths && violationPaths.length > 0
     ? (Array.isArray(violationPaths[0]) ? violationPaths[0].join(' ➔ ') : String(violationPaths[0]))
     : `Decision:${decisionId} ➔ Fact:Stale ➔ Source:${breakingSourceId}`;
+  const safeViolationPath = escapeHtml(formattedViolationPath);
 
-  const resolvedHudUrl = hudUrl || 'https://cavdax.sahnirmaan.live';
-  const resolvedCli = remediationCli || `npx cavdax mcp -> revalidate_decision("${breakingSourceId}", "${decisionId}")`;
+  let resolvedHudUrl = 'https://cavdax.sahnirmaan.live';
+  if (typeof hudUrl === 'string' && (hudUrl.startsWith('https://') || hudUrl.startsWith('http://localhost'))) {
+    resolvedHudUrl = hudUrl;
+  }
+
+  const rawCli = remediationCli || `npx cavdax mcp -> revalidate_decision("${breakingSourceId}", "${decisionId}")`;
+  const safeCli = escapeHtml(rawCli);
 
   return `
 <!DOCTYPE html>
@@ -231,7 +243,7 @@ function buildEmailHtml({
       <div class="code-block">${safeCli}</div>
 
       <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 20px;">
-        AI coding agents attempting to write code grounded in <code>${decisionId}</code> are now <strong>hard-rejected</strong> by the CAVDAX Causal Gate until revalidated against <code>${breakingSourceId}</code>.
+        AI coding agents attempting to write code grounded in <code>${safeDecisionId}</code> are now <strong>hard-rejected</strong> by the CAVDAX Causal Gate until revalidated against <code>${safeBreakingSourceId}</code>.
       </p>
 
       <a href="${resolvedHudUrl}" class="cta-button" target="_blank" rel="noopener noreferrer">
@@ -239,7 +251,7 @@ function buildEmailHtml({
       </a>
     </div>
     <div class="footer">
-      This notification was dispatched automatically by CAVDAX Causal GraphBLAS Engine for <strong>${repo}</strong>.<br>
+      This notification was dispatched automatically by CAVDAX Causal GraphBLAS Engine for <strong>${safeRepo}</strong>.<br>
       To modify alert thresholds or unsubscribe, update Notification Preferences in your CAVDAX developer settings.
     </div>
   </div>
