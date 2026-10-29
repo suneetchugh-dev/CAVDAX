@@ -194,9 +194,20 @@ export default function CausalProvenanceRadar() {
       }
     };
 
+    let inViewport = false;
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stopSweep();
+      } else if (inViewport) {
+        startSweep();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     // Pause radar animation when not visible in viewport to preserve CPU/GPU
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+      inViewport = entry.isIntersecting;
+      if (inViewport && !document.hidden) {
         startSweep();
       } else {
         stopSweep();
@@ -206,10 +217,12 @@ export default function CausalProvenanceRadar() {
     if (containerRef.current) {
       observer.observe(containerRef.current);
     } else {
+      inViewport = true;
       startSweep();
     }
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
       stopSweep();
       observer.disconnect();
     };
