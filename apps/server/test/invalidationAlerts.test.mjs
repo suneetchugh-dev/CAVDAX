@@ -1,3 +1,4 @@
+import { getVapidPublicKey, savePushSubscription, removePushSubscription } from '../webPush.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { sendInvalidationEmail } from '../email.js';
@@ -57,4 +58,23 @@ test('sendInvalidationEmail: Alert debouncer suppresses rapid duplicate notifica
   } finally {
     process.env.EMAIL_ENABLED = originalEnabled;
   }
+});
+
+test('Web Push: getVapidPublicKey returns valid base64url string', () => {
+  const pubKey = getVapidPublicKey();
+  assert.ok(typeof pubKey === 'string');
+  assert.ok(pubKey.length > 20);
+});
+
+test('Web Push: savePushSubscription persists device subscription', () => {
+  const mockSub = {
+    endpoint: `https://fcm.googleapis.com/fcm/send/test-${Date.now()}`,
+    keys: { p256dh: 'mock-p256dh-key', auth: 'mock-auth-secret' }
+  };
+  const res = savePushSubscription('test-dev', mockSub);
+  assert.equal(res.success, true);
+  assert.ok(res.count >= 1);
+
+  // Clean up
+  removePushSubscription(mockSub.endpoint);
 });

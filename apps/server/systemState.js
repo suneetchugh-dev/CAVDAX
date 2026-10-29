@@ -48,7 +48,9 @@ export function loadSystemState() {
     devRoster: [],
     apiKeys: [],
     auditEntries: [],
-    notificationPreferences: {}
+    notificationPreferences: {},
+    vapidKeys: null,
+    pushSubscriptions: {}
   };
 }
 

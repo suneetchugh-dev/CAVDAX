@@ -37,6 +37,7 @@ import { CavdaxMcpServer } from '../../core/mcp/server.js';
 import { renderGraphToSvg, computeBlastRadius } from '../../core/graph/renderSvg.js';
 import { loadSystemState, saveSystemState } from './systemState.js';
 import { sendInvalidationEmail } from './email.js';
+import { getVapidPublicKey, savePushSubscription, broadcastWebPushAlert } from './webPush.js';
 import { cascadeInvalidation } from '../../core/graph/queries.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -103,6 +104,36 @@ app.use(express.json({
     req.rawBody = buf;
   }
 }));
+
+
+/**
+ * GET /api/push/vapid-public-key
+ * Returns the VAPID public key for browser PushManager subscription.
+ */
+app.get('/api/push/vapid-public-key', (req, res) => {
+  const publicKey = getVapidPublicKey();
+  res.json({
+    success: Boolean(publicKey),
+    publicKey
+  });
+});
+
+/**
+ * POST /api/push/subscribe
+ * Registers client PushSubscription for offline background desktop alerts.
+ */
+app.post('/api/push/subscribe', (req, res) => {
+  const user = req.session?.user;
+  const login = user?.login || 'default';
+  const { subscription } = req.body || {};
+
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, error: 'MISSING_SUBSCRIPTION' });
+  }
+
+  const result = savePushSubscription(login, subscription);
+  res.json(result);
+});
 
 // ---------------------------------------------------------------------------
 // SESSION MIDDLEWARE & PERSISTENT SESSION RESILIENCE
@@ -3023,6 +3054,14 @@ app.post('/api/alerts/simulate-invalidation', async (req, res) => {
 
   // 3. Dispatch real Resend email alert
   const hudUrl = `${CLIENT_URL || 'https://cavdax.sahnirmaan.live'}/console?highlight=${encodeURIComponent(decisionId)}&blast=true`;
+  // Dispatch Web Push to registered desktop Service Workers
+  broadcastWebPushAlert({
+    title: 'CAVDAX: Divergence Alert',
+    body: `Decision ${decisionId} is invalidated by ${breakingSourceId}!`,
+    decision_id: decisionId,
+    url: hudUrl
+  }).catch((err) => console.warn('[CAVDAX WebPush] Notice:', err.message));
+
   const emailResult = await sendInvalidationEmail({
     to: recipient,
     repo,
