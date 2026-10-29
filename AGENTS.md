@@ -987,3 +987,49 @@ Every AI coding agent must treat the **6 Canonical Context Files** as the persis
 - **Template Variable Binding & Fail-Closed Webhook Invariants**:
   - Every variable referenced in a string template literal (HTML email builders, notification summaries, SVG generators) must be declared and assigned in scope. Never assume early returns in test environments will protect production runtime code.
   - Webhook receivers with configured secrets must fail closed: missing signature headers must reject immediately (`401 MISSING_SIGNATURE`).
+
+## 16. Temporal Dead Zone (TDZ) & Top-Level Module Execution Invariants (Production Bundle Crash Prevention)
+
+- **The Problem & Failure Scenario**:
+  In modern JavaScript/TypeScript (ES2015+), variables declared with `const` and `let` are block/module-scoped and reside in the **Temporal Dead Zone (TDZ)** from the start of the block/module until their definition statement is evaluated.
+  When an AI coding agent creates or edits module-level dictionaries, lookup maps, registries, or routing tables (e.g., `const REGISTRY = { ... }`), placing them **above** their constituent member definitions (e.g., `const SUB_STEPS = [ ... ]`) does not trigger a compile-time error in Vite, Rollup, or TypeScript if types check.
+  However, at runtime, the moment the module script is loaded by the browser or Node runtime, top-level execution attempts to evaluate the object literal, immediately throwing:
+  `Uncaught ReferenceError: Cannot access 'X' before initialization` (or in minified production builds, `Cannot access '<minified_id>' before initialization`, e.g., `Cannot access 'EN' before initialization`). This crashes the entire client bundle on initial render.
+
+- **Mandatory Top-Down Declaration Hierarchy (The Dependency Order Rule)**:
+  - In every JavaScript/TypeScript file, module-level constant arrays, primitive configs, step definitions, and helper handlers MUST be declared **strictly before** any composite dictionary, map, registry, or compound configuration that references them.
+  - **The Eager Evaluation Invariant**: When an object literal (`const MAP = { a: A, b: B }`) is declared at the module root, `A` and `B` are evaluated **immediately** upon module load. If `B` is defined 20 lines lower, the entire application will crash.
+  - **Safe Pattern (Strict Top-Down Ordering)**:
+    ```javascript
+    // 1. Primitive arrays & component steps declared first
+    const CONSOLE_STEPS = [ ... ];
+    const MCP_STEPS = [ ... ];
+    const AUDIT_STEPS = [ ... ];
+
+    // 2. Composite registry declared strictly after all members are initialized
+    const TOUR_REGISTRY = {
+      console: CONSOLE_STEPS,
+      mcp: MCP_STEPS,
+      audit: AUDIT_STEPS,
+    };
+    ```
+
+- **Lazy Getter Guard for Complex or Mutually-Referencing Registries**:
+  - Whenever there is any risk of circular module references, deep nesting, or complex dependencies, encapsulate member access in a **lazy getter function** rather than eager top-level object evaluation:
+    ```javascript
+    // Eager evaluation (TDZ Trap if MCP_STEPS is below):
+    // const REGISTRY = { mcp: MCP_STEPS };
+
+    // Resilient Lazy Resolution (Immune to TDZ execution traps):
+    const getTourSteps = (mode) => {
+      switch (mode) {
+        case 'mcp': return MCP_STEPS;
+        case 'audit': return AUDIT_STEPS;
+        default: return CONSOLE_STEPS;
+      }
+    };
+    ```
+
+- **Post-Build Headless Smoke Test Verification**:
+  - Never claim a build is verified solely on `vite build` or `tsc`. Compilers and bundlers perform tree-shaking and type analysis; they do NOT execute the module top-level runtime graph.
+  - Before committing structural or registry changes to frontend entrypoints, verify the production bundle by running a headless load or evaluating the chunk exports in Node, ensuring zero unhandled TDZ ReferenceErrors.
