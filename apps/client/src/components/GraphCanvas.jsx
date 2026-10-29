@@ -122,15 +122,6 @@ export default function GraphCanvas({
     setIsPanning(false);
   };
 
-  const layoutPositions = {
-    'ADR-001': { x: 100, y: 150 },
-    'ADR-002': { x: 100, y: 310 },
-    'F-Auth-v1': { x: 320, y: 150 },
-    'F-OAuth2': { x: 320, y: 310 },
-    'DEC-102': { x: 540, y: 150 },
-    'DEC-103': { x: 540, y: 310 },
-  };
-
   const rawNodes = graphData?.nodes || [];
   const rawEdges = graphData?.edges || [];
 
@@ -151,54 +142,68 @@ export default function GraphCanvas({
     return true;
   });
 
-  const ACTION_X = 740;
-  const ACTION_Y_MIN = 60;
-  const ACTION_Y_MAX = 400;
-  const allActionNodes = filteredRawNodes.filter(
-    n => n.label === 'AgentAction' || n.id?.startsWith('act-')
-  );
-  const actionCount = allActionNodes.length;
-  const actionSpacing = actionCount <= 1 ? 0 : Math.min(90, (ACTION_Y_MAX - ACTION_Y_MIN) / (actionCount - 1));
-  const actionStartY = actionCount <= 1
-    ? 220
-    : ACTION_Y_MIN + ((ACTION_Y_MAX - ACTION_Y_MIN) - actionSpacing * (actionCount - 1)) / 2;
+  // Dynamic Hierarchical Columnar Layout Engine
+  const LAYER_X = {
+    Source: 95,
+    Fact: 295,
+    Decision: 495,
+    AgentAction: 715
+  };
 
-  let actionCounterMap = 0;
-  const actionIndexMap = new Map();
-  for (const n of filteredRawNodes) {
-    if (n.label === 'AgentAction' || n.id?.startsWith('act-')) {
-      actionIndexMap.set(n.id, actionCounterMap++);
-    }
+  const sources = filteredRawNodes
+    .filter(n => n.label === 'Source')
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+
+  const facts = filteredRawNodes.filter(n => n.label === 'Fact');
+  const decisions = filteredRawNodes.filter(n => n.label === 'Decision');
+  const actions = filteredRawNodes.filter(n => n.label === 'AgentAction' || n.id?.startsWith('act-'));
+
+  const maxColumnItems = Math.max(sources.length, facts.length, decisions.length, actions.length, 1);
+  const canvasHeight = Math.max(440, maxColumnItems * 95 + 40);
+
+  function getColumnYPositions(count, totalHeight) {
+    if (count <= 0) return [];
+    if (count === 1) return [totalHeight / 2];
+    if (count === 2) return [145, 295];
+    if (count === 3) return [95, 220, 345];
+    if (count === 4) return [60, 160, 260, 360];
+    const topPadding = 55;
+    const bottomPadding = 55;
+    const usable = totalHeight - topPadding - bottomPadding;
+    const step = usable / (count - 1);
+    return Array.from({ length: count }, (_, i) => Math.round(topPadding + i * step));
   }
 
-  // Count non-fixed nodes per column to compute dynamic vertical scaling
-  const layerTotals = { Source: 0, Fact: 0, Decision: 0 };
-  for (const n of filteredRawNodes) {
-    if (!layoutPositions[n.id] && n.label !== 'AgentAction' && !n.id?.startsWith('act-')) {
-      const lbl = n.label || 'Decision';
-      layerTotals[lbl] = (layerTotals[lbl] || 0) + 1;
-    }
-  }
+  const sourceYs = getColumnYPositions(sources.length, canvasHeight);
+  const factYs = getColumnYPositions(facts.length, canvasHeight);
+  const decYs = getColumnYPositions(decisions.length, canvasHeight);
 
-  const columnCounters = {};
+  const calculatedPositions = new Map();
+
+  sources.forEach((s, idx) => {
+    calculatedPositions.set(s.id, { x: LAYER_X.Source, y: sourceYs[idx] });
+  });
+
+  facts.forEach((f, idx) => {
+    calculatedPositions.set(f.id, { x: LAYER_X.Fact, y: factYs[idx] });
+  });
+
+  decisions.forEach((d, idx) => {
+    calculatedPositions.set(d.id, { x: LAYER_X.Decision, y: decYs[idx] });
+  });
+
+  // Align AgentAction nodes with their target Decision whenever possible
+  const actionYs = getColumnYPositions(actions.length, canvasHeight);
+  actions.forEach((act, idx) => {
+    const groundedEdge = rawEdges.find(e => (e.source === act.id && e.type === 'GROUNDED_IN') || (e.type === 'ACTION_ON' && e.source === act.id));
+    const targetDecId = groundedEdge?.target || act.decision_id;
+    const targetDecPos = targetDecId ? calculatedPositions.get(targetDecId) : null;
+    const posY = targetDecPos ? targetDecPos.y : actionYs[idx];
+    calculatedPositions.set(act.id, { x: LAYER_X.AgentAction, y: posY });
+  });
 
   const nodes = filteredRawNodes.map((node) => {
-    let pos = layoutPositions[node.id];
-    if (!pos) {
-      if (node.label === 'AgentAction' || node.id?.startsWith('act-')) {
-        const idx = actionIndexMap.get(node.id) ?? 0;
-        pos = { x: ACTION_X, y: actionStartY + idx * actionSpacing };
-      } else {
-        const layerX = { Source: 100, Fact: 320, Decision: 540 }[node.label] ?? 540;
-        const totalInCol = layerTotals[node.label] || 1;
-        const layerIdx = columnCounters[node.label] ?? 0;
-        columnCounters[node.label] = layerIdx + 1;
-        // Dynamically scale vertical spacing so nodes never overflow canvas
-        const colSpacing = totalInCol <= 3 ? 120 : Math.max(55, Math.min(100, 360 / Math.max(1, totalInCol - 1)));
-        const colStartY = totalInCol <= 3 ? 120 : 70;
-        pos = { x: layerX, y: colStartY + layerIdx * colSpacing };
-      }
-    }
+    const pos = calculatedPositions.get(node.id) || { x: LAYER_X[node.label] || 495, y: 220 };
     return { ...node, ...pos };
   });
 
@@ -594,7 +599,7 @@ export default function GraphCanvas({
 
         <svg
           className="w-full h-full"
-          viewBox="0 0 880 440"
+          viewBox={`0 0 880 ${canvasHeight}`}
           style={{
             transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
             transformOrigin: 'center center',
@@ -664,6 +669,41 @@ export default function GraphCanvas({
               strokeColor = isDarkTheme ? '#FFFFFF' : '#0F172A';
               marker = 'url(#arrow-default)';
               dash = '5 3';
+            }
+
+            const isIntraColumn = Math.abs(edge.sourceNode.x - edge.targetNode.x) < 30;
+
+            if (isIntraColumn) {
+              // Smooth bezier curve looping on the left to avoid crossing intermediate nodes
+              const arcOffset = 45;
+              const pathD = `M ${edge.sourceNode.x - 32} ${edge.sourceNode.y} C ${edge.sourceNode.x - arcOffset - 25} ${edge.sourceNode.y}, ${edge.targetNode.x - arcOffset - 25} ${edge.targetNode.y}, ${edge.targetNode.x - 32} ${edge.targetNode.y}`;
+              const midX = edge.sourceNode.x - arcOffset - 12;
+              const midY = (edge.sourceNode.y + edge.targetNode.y) / 2;
+
+              return (
+                <g key={`edge-${idx}`}>
+                  <path
+                    d={pathD}
+                    fill="none"
+                    stroke={strokeColor}
+                    strokeWidth={isBlast ? 2.4 : 1.8}
+                    strokeDasharray={dash}
+                    markerEnd={marker}
+                    className="transition-all duration-300"
+                  />
+                  <text
+                    x={midX}
+                    y={midY}
+                    textAnchor="middle"
+                    fill={isBlast ? '#F43F5E' : (isSupersedes ? '#FB7185' : (isDarkTheme ? '#64748B' : '#94A3B8'))}
+                    fontSize="7"
+                    fontFamily="monospace"
+                    className="select-none pointer-events-none font-semibold"
+                  >
+                    {edge.type}
+                  </text>
+                </g>
+              );
             }
 
             const midX = (edge.sourceNode.x + edge.targetNode.x) / 2;
@@ -815,24 +855,24 @@ export default function GraphCanvas({
           })}
         </svg>
 
-        {/* Clean Monospace Legend */}
-        <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-[#0B0D11]/90 border border-slate-300 dark:border-white/15 rounded-lg p-2.5 sm:p-3 text-[10px] font-mono space-y-1.5 backdrop-blur-md shadow-md dark:shadow-xl pointer-events-none">
-          <div className="text-slate-900 dark:text-white font-bold mb-1">GRAPH TOPOLOGY:</div>
-          <div className="flex items-center gap-2">
+        {/* Clean Monospace Legend - Sleek non-blocking bottom bar */}
+        <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-[#0B0D11]/90 border border-slate-300 dark:border-white/15 rounded-lg px-2.5 py-1.5 text-[9px] font-mono backdrop-blur-md shadow-md dark:shadow-xl pointer-events-none z-10 hidden sm:flex items-center gap-3">
+          <span className="text-slate-900 dark:text-white font-bold">TOPOLOGY:</span>
+          <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded bg-slate-900 dark:bg-white" />
-            <span className="text-slate-700 dark:text-slate-300">:Source (ADR / Git Commit)</span>
+            <span className="text-slate-700 dark:text-slate-300">:Source</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded bg-slate-400" />
-            <span className="text-slate-700 dark:text-slate-300">:Fact (Derived Claim)</span>
+            <span className="text-slate-700 dark:text-slate-300">:Fact</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded bg-slate-900 dark:bg-white border border-slate-400" />
-            <span className="text-slate-700 dark:text-slate-300">:Decision (Architectural Constraint)</span>
+            <span className="text-slate-700 dark:text-slate-300">:Decision</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded bg-emerald-500" />
-            <span className="text-slate-700 dark:text-slate-300">:AgentAction (Enclosed Write)</span>
+            <span className="text-slate-700 dark:text-slate-300">:Action</span>
           </div>
         </div>
       </div>

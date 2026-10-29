@@ -284,6 +284,18 @@ export default function ConnectedRepoWorkspace({
   const validDecisions = decisions.filter(d => d.status === 'VALID');
   const staleDecisions = decisions.filter(d => d.status === 'INVALIDATED_NEEDS_REVALIDATION' || d.status === 'SUPERSEDED');
 
+  const selectedDecision = selectedNode?.label === 'Decision'
+    ? selectedNode
+    : (selectedNode?.label === 'Source' ? decisions.find(d => d.source_adr === selectedNode.id || d.id === selectedNode.id) : null);
+
+  const activeValidDecision = (selectedDecision && selectedDecision.status === 'VALID')
+    ? selectedDecision
+    : (validDecisions[0] || null);
+
+  const activeStaleDecision = (selectedDecision && (selectedDecision.status === 'INVALIDATED_NEEDS_REVALIDATION' || selectedDecision.status === 'SUPERSEDED'))
+    ? selectedDecision
+    : (staleDecisions[0] || null);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col font-mono select-none">
       {/* Repository ribbon */}
@@ -387,9 +399,9 @@ export default function ConnectedRepoWorkspace({
               <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400 font-mono">{scan.count} files</span>
             </div>
 
-            <div className="max-h-40 overflow-y-auto border-b border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-white/5 bg-slate-50/40 dark:bg-transparent">
+            <div data-lenis-prevent className="max-h-48 overflow-y-auto overscroll-contain border-b border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-white/5 bg-slate-50/40 dark:bg-transparent select-text">
               {scan.adrs.map(a => (
-                <div key={a.path} className="px-3 py-2 text-[11px] leading-snug">
+                <div key={a.path} className="px-3 py-2 text-[11px] leading-snug hover:bg-slate-100/60 dark:hover:bg-white/[0.03] transition-colors">
                   <div className="text-slate-900 dark:text-slate-100 font-semibold truncate">{a.id}: {a.title}</div>
                   <div className="text-slate-500 dark:text-slate-400 truncate">{a.path}</div>
                 </div>
@@ -441,14 +453,15 @@ export default function ConnectedRepoWorkspace({
                 <div className="flex flex-col gap-1.5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {/* Primary Valid Decision Probe */}
-                    {validDecisions.length > 0 ? (
+                    {activeValidDecision ? (
                       <button
                         disabled={isVerifyingAction}
-                        onClick={() => testDecision(validDecisions[0].id)}
+                        onClick={() => testDecision(activeValidDecision.id)}
                         className={`${btnBase} border-slate-900 dark:border-white/20 bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-40 shadow-xs cursor-pointer`}
+                        title={`Click to test agent code write grounded in ${activeValidDecision.id}`}
                       >
                         <CheckCircle2 className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
-                        <span className="truncate">Verify: {validDecisions[0].id} (Valid)</span>
+                        <span className="truncate">Verify: {activeValidDecision.id} (Valid)</span>
                       </button>
                     ) : (
                       <div className="p-1.5 rounded-lg border border-dashed border-slate-300 dark:border-white/10 text-[10px] font-mono text-slate-400 text-center">
@@ -457,14 +470,15 @@ export default function ConnectedRepoWorkspace({
                     )}
 
                     {/* Stale/Invalidated Decision Probe */}
-                    {staleDecisions.length > 0 ? (
+                    {activeStaleDecision ? (
                       <button
                         disabled={isVerifyingAction}
-                        onClick={() => testDecision(staleDecisions[0].id)}
+                        onClick={() => testDecision(activeStaleDecision.id)}
                         className={`${btnBase} border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 disabled:opacity-40 cursor-pointer`}
+                        title={`Click to test gate rejection on invalidated decision ${activeStaleDecision.id}`}
                       >
                         <AlertTriangle className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
-                        <span className="truncate">Verify: {staleDecisions[0].id} (Stale)</span>
+                        <span className="truncate">Verify: {activeStaleDecision.id} (Stale)</span>
                       </button>
                     ) : (
                       <button
