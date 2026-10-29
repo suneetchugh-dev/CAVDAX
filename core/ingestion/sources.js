@@ -19,7 +19,6 @@
  * handles every non-ADR source type.
  */
 
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { cascadeInvalidation } from '../graph/queries.js';

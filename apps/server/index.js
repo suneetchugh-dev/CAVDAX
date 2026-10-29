@@ -71,6 +71,7 @@ app.use((req, res, next) => {
     "img-src 'self' data: https: blob:; " +
     "connect-src 'self' https://api.github.com https://lumberjack.razorpay.com https://api.razorpay.com wss: ws:; " +
     "frame-src https://api.razorpay.com; " +
+    "worker-src 'self' blob:; " +
     "object-src 'none'; " +
     "base-uri 'self';"
   );
@@ -123,10 +124,6 @@ app.get('/api/push/vapid-public-key', (req, res) => {
  * Registers client PushSubscription for offline background desktop alerts.
  */
 app.post('/api/push/subscribe', (req, res) => {
-  if (targetEmail && (typeof targetEmail !== 'string' || targetEmail.length > 254 || !targetEmail.includes('@'))) {
-    return res.status(400).json({ success: false, error: 'INVALID_TARGET_EMAIL' });
-  }
-
   const user = req.session?.user;
   const login = user?.login || 'default';
   const { subscription } = req.body || {};
@@ -2984,6 +2981,10 @@ app.post('/api/user/notification-preferences', (req, res) => {
   const login = user?.login || 'default';
   const { emailAlerts, browserAlerts, targetEmail, watchedRepos } = req.body || {};
 
+  if (targetEmail && (typeof targetEmail !== 'string' || targetEmail.length > 254 || !targetEmail.includes('@'))) {
+    return res.status(400).json({ success: false, error: 'INVALID_TARGET_EMAIL' });
+  }
+
   const savedState = loadSystemState();
   if (!savedState.notificationPreferences) {
     savedState.notificationPreferences = {};
@@ -3106,7 +3107,10 @@ app.post('/api/github/webhook', async (req, res) => {
   const signature = req.headers['x-hub-signature-256'];
   const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
 
-  if (webhookSecret && signature) {
+  if (webhookSecret) {
+    if (!signature) {
+      return res.status(401).json({ success: false, error: 'MISSING_SIGNATURE' });
+    }
     const rawBody = req.rawBody || JSON.stringify(req.body);
     const expected = 'sha256=' + createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
     const trusted = Buffer.from(expected, 'utf8');
