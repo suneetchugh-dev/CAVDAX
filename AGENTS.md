@@ -968,3 +968,22 @@ Every AI coding agent must treat the **6 Canonical Context Files** as the persis
 - **Absolute Ban on Pre-Build Service Termination (Cloudflare Error 521 Prevention)**:
   - Never execute `docker rm -f`, `docker kill`, or `docker down` before building container images. Reverse proxies (Caddy, Nginx) must stay alive and listening on ports 80/443 while builds compile in the background.
   - Only perform in-place, sequential container swaps once image builds have succeeded 100%.
+
+## 15. Silent GPU & CPU Resource Leak Prevention (Zero-Ghost-RAF & Background Tab Sleep Protocol)
+
+- **Mandatory `requestAnimationFrame` Handle Retention & Cleanup**:
+  - Every single `requestAnimationFrame(fn)` call MUST store its returned handle (`rafId = requestAnimationFrame(...)` or `animFrameRef.current = requestAnimationFrame(...)`).
+  - In React, any component that initiates a frame loop or recursive tick inside `useEffect` MUST return an explicit cleanup function that invokes `cancelAnimationFrame(rafId)` and resets the handle to `null`.
+  - **Zero-Ghost-RAF Invariant**: An unscoped, unreferenced, or uncancelled `requestAnimationFrame` recursion is a critical blocker. It spawns persistent "ghost loops" that survive component unmounts, route transitions, and development hot-reloads, silently spinning the GPU compositor and main thread indefinitely.
+- **Mandatory Background Tab Sleeping (`visibilitychange` Standard)**:
+  - Any continuous physics loop, canvas rendering engine, particle simulation, SVG path mutation, smooth-scroll interpolator, or radar sweep MUST listen to `document.addEventListener('visibilitychange', ...)`.
+  - When the browser tab is hidden or minimized (`document.hidden === true`), the animation frame loop MUST immediately pause (`cancelAnimationFrame`), entering a deep sleep state.
+  - When the tab returns to the foreground (`document.hidden === false`), re-synchronize elapsed timestamps (`lastTime = performance.now()`) to prevent delta-time explosion jumps, and resume the frame loop only if the element is currently in the viewport.
+  - **Zero-Background-Consumption Guarantee**: Background tabs MUST consume **0% GPU cycles and 0% CPU frame execution**.
+- **Render-on-Demand Physics (The Sleep Physics Invariant)**:
+  - Physics simulations (spring pendulums, pull cords, stippled particles, momentum scrollers) must enforce resting epsilon thresholds.
+  - When displacement and velocity drop below threshold (`Math.hypot(dx, dy) < epsilon && Math.hypot(vx, vy) < epsilon`), snap the physics state to exact equilibrium, execute a final DOM paint, set the animation handle to `null`, and stop scheduling subsequent animation frames.
+  - Never run an infinite 60–144Hz animation loop for a static element at rest.
+- **Template Variable Binding & Fail-Closed Webhook Invariants**:
+  - Every variable referenced in a string template literal (HTML email builders, notification summaries, SVG generators) must be declared and assigned in scope. Never assume early returns in test environments will protect production runtime code.
+  - Webhook receivers with configured secrets must fail closed: missing signature headers must reject immediately (`401 MISSING_SIGNATURE`).
