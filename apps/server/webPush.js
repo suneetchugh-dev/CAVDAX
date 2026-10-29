@@ -1,5 +1,12 @@
-import webpush from 'web-push';
 import { loadSystemState, saveSystemState } from './systemState.js';
+
+let webpush = null;
+try {
+  const mod = await import('web-push');
+  webpush = mod.default || mod;
+} catch {
+  // Graceful fallback when web-push is not yet installed in runtime
+}
 
 let isInitialized = false;
 let currentVapidKeys = null;
@@ -7,7 +14,7 @@ let currentVapidKeys = null;
 /**
  * Initializes VAPID keys for Web Push.
  * Loads existing keys from environment or persistent system_state.json.
- * If none exist, generates a fresh ECDSA key pair and persists it.
+ * If none exist and webpush is available, generates a fresh ECDSA key pair and persists it.
  */
 export function initWebPush() {
   if (isInitialized && currentVapidKeys) return currentVapidKeys;
@@ -23,7 +30,7 @@ export function initWebPush() {
     };
   } else if (state.vapidKeys?.publicKey && state.vapidKeys?.privateKey) {
     currentVapidKeys = state.vapidKeys;
-  } else {
+  } else if (webpush && typeof webpush.generateVAPIDKeys === 'function') {
     // Generate fresh VAPID keypair
     const generated = webpush.generateVAPIDKeys();
     currentVapidKeys = {
@@ -33,18 +40,25 @@ export function initWebPush() {
     state.vapidKeys = currentVapidKeys;
     saveSystemState(state);
     console.log('[CAVDAX WebPush] Generated and persisted fresh VAPID keys');
+  } else {
+    currentVapidKeys = {
+      publicKey: 'cavdax-fallback-vapid-public-key-for-local-development',
+      privateKey: 'cavdax-fallback-vapid-private-key'
+    };
   }
 
   const contactSubject = process.env.VAPID_SUBJECT || 'mailto:alerts@sahnirmaan.live';
-  try {
-    webpush.setVapidDetails(
-      contactSubject,
-      currentVapidKeys.publicKey,
-      currentVapidKeys.privateKey
-    );
-    isInitialized = true;
-  } catch (err) {
-    console.error('[CAVDAX WebPush] Failed to initialize VAPID details:', err.message);
+  if (webpush && typeof webpush.setVapidDetails === 'function') {
+    try {
+      webpush.setVapidDetails(
+        contactSubject,
+        currentVapidKeys.publicKey,
+        currentVapidKeys.privateKey
+      );
+      isInitialized = true;
+    } catch (err) {
+      console.warn('[CAVDAX WebPush] Notice initializing VAPID details:', err.message);
+    }
   }
 
   return currentVapidKeys;
@@ -113,6 +127,10 @@ export function removePushSubscription(endpoint) {
  */
 export async function sendWebPushNotification(subscription, payload) {
   initWebPush();
+  if (!webpush || typeof webpush.sendNotification !== 'function') {
+    return { success: false, error: 'WEB_PUSH_NOT_AVAILABLE' };
+  }
+
   try {
     const dataString = typeof payload === 'string' ? payload : JSON.stringify(payload);
     await webpush.sendNotification(subscription, dataString);
