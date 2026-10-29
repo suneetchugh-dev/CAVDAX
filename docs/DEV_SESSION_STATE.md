@@ -9,6 +9,30 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.43 Latest Session Achievements (October 29, 2026 - Real-Time Architectural Divergence Invalidation Alerts, Resend Dispatcher & HUD Showcase Engine)
+
+- **Out-of-Band Divergence Invalidation Pipeline (`apps/server/email.js`, `apps/server/index.js`)**:
+  - Implemented zero-dependency, developer-grade transactional email dispatcher powered by Resend REST API on domain `sahnirmaan.live`.
+  - Sends monochromatic HTML notifications displaying the exact broken Decision ID, breaking ADR/Commit, causal DAG ASCII breadcrumb, direct HUD deep link with blast radius highlighting, and CLI remediation command.
+  - Built-in 5-minute sliding-window alert debouncer prevents notification storms during multi-commit rebases or rapid automated pushes.
+- **GitHub OAuth Email Extraction & User Preferences (`apps/server/index.js`, `apps/server/systemState.js`)**:
+  - Expanded GitHub OAuth scope to `user:email` and queried `https://api.github.com/user/emails` to automatically capture the developer's primary verified email address.
+  - Added atomic persistence in `data/system_state.json` via `GET /api/user/notification-preferences` and `POST /api/user/notification-preferences`.
+- **Live Invalidation Webhook Listener (`POST /api/github/webhook`)**:
+  - Ingests GitHub `push` and `pull_request` webhooks with HMAC-SHA256 signature verification.
+  - Automatically identifies `breaks: DEC-xxx` syntax in incoming commit messages, triggers real-time SSE broadcast, and dispatches email notifications to subscribed repo contributors.
+- **Interactive Pitch Showcase Trigger (`POST /api/alerts/simulate-invalidation`)**:
+  - 1-click test endpoint allowing judges, evaluators, and engineers to trigger a real divergence invalidation event on demand.
+  - Dispatches a real transactional email to their inbox via Resend while simultaneously triggering live SSE audio/visual feedback in the HUD.
+- **In-HUD Divergence Banner & Audio Chime (`apps/client/src/App.jsx`, `apps/client/src/utils/soundFx.js`)**:
+  - Integrated procedural dual-tone alert synthesizer (`playAlert()`) via Web Audio API.
+  - Added dismissible, high-visibility executive divergence banner in the HUD with direct "Inspect Impact" button that switches to Act 3/blast inspection.
+  - Added "⚡ Simulate Alert" toolbar trigger button directly in the Console HUD for instant demonstration.
+- **Notification Settings in Preferences Modal (`apps/client/src/components/PreferencesModal.jsx`)**:
+  - Added dedicated "Divergence Invalidation Alerts" accordion with master toggle, recipient email input, in-HUD chime toggle, Resend email toggle, and test alert trigger.
+- **Verification Suite (`apps/server/test/invalidationAlerts.test.mjs`)**:
+  - Full automated coverage for preference persistence, recipient validation, and alert debouncing. All 53 monorepo tests pass cleanly; client bundle builds with zero errors.
+
 ## 1.0.42 Latest Session Achievements (October 28, 2026 - Devil's Advocate Forensic Audit Remediation: Fail-Closed Gate, Order-Independent Ingestion & Hardened MCP)
 
 - **Fail-Closed Causal Gate Verification (`core/graph/queries.js`)**:
