@@ -9,6 +9,24 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.45 Latest Session Achievements (October 29, 2026 - Comprehensive Tour Guide Sub-Tours, Hoisted Tour Portal & Rewatch Ergonomics)
+
+- **Comprehensive Sub-Tours for Audit & Profile Surfaces (`apps/client/src/components/TourGuide.jsx`)**:
+  - Authored 3-step `AUDIT_TOUR_STEPS` spotlighting the real-time FalkorDB telemetry stream, multi-repo forensic filters, and the tamper-evident action ledger.
+  - Authored 3-step `PROFILE_TOUR_STEPS` spotlighting architecture tiers, live GraphBLAS consumption gauges, and cryptographic MCP agent API key management.
+  - Refactored tour step resolution to use a dynamic `TOUR_STEP_REGISTRY` mapping `console`, `dev`, `mcp`, `audit`, and `profile`, eliminating binary fallback bugs.
+  - Partitioned tour completion state per mode (`cavdax.tour.completed.<mode>`) alongside backward-compatible global completion flags.
+- **Hoisted Root Tour Architecture (`apps/client/src/App.jsx`, `apps/client/src/components/ConnectMcpPage.jsx`)**:
+  - Hoisted `TourGuide` to the root modal tier of `App.jsx`, removing redundant instances from `ConnectMcpPage.jsx` and eliminating unmounting bugs on route transitions.
+  - Contextualized universal keyboard shortcut `T` so pressing `T` on any view triggers that specific page's guide rather than forcibly redirecting to the Console.
+  - Added global event bus listener (`cavdax:open-tour`) enabling deep-linked and cross-component tour activations.
+- **Interactive Rewatch Tour & Reset Ergonomics (`apps/client/src/components/PreferencesModal.jsx`, `apps/client/src/components/Header.jsx`)**:
+  - Wired dedicated "Interactive Walkthrough & Guided Tours" row in `PreferencesModal.jsx` with "Rewatch Tour" (launching contextual tour for the active view) and "Reset All" (clearing all tour storage keys).
+  - Added unboxed `Compass` icon button to the top navigation toolbar in `Header.jsx` and within the mobile navigation drawer.
+- **Zero CLS & Section 37 Truth-in-Data Validation**:
+  - Ensured all `[data-tour]` anchors target static container shells in `AuditPage.jsx` and `ProfilePage.jsx` preventing async DOM race conditions and layout shifts.
+  - Verified with `npm run build` (10.71s clean build) and all 57 automated tests passing.
+
 ## 1.0.44 Latest Session Achievements (October 29, 2026 - Comprehensive Cloudflare Security Audit, Devil's Advocate Hardening & Out-of-Band Architecture Documentation)
 
 - **Email Template ReferenceError Remediation (`apps/server/email.js`)**:
