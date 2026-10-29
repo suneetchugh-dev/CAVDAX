@@ -78,3 +78,25 @@ test('Web Push: savePushSubscription persists device subscription', () => {
   // Clean up
   removePushSubscription(mockSub.endpoint);
 });
+
+test('Web Push: SSRF Protection rejects internal, loopback and cloud metadata endpoints', () => {
+  const maliciousEndpoints = [
+    'http://169.254.169.254/latest/meta-data/',
+    'https://169.254.169.254/latest/meta-data/',
+    'http://localhost:6379/eval',
+    'https://127.0.0.1:3000/api',
+    'http://10.0.0.5/admin',
+    'https://192.168.1.1/router',
+    'ftp://push.example.com',
+    'not-a-url'
+  ];
+
+  for (const endpoint of maliciousEndpoints) {
+    const res = savePushSubscription('attacker', {
+      endpoint,
+      keys: { p256dh: 'mock', auth: 'mock' }
+    });
+    assert.equal(res.success, false, `Endpoint '${endpoint}' should be rejected`);
+    assert.equal(res.error, 'RESTRICTED_OR_INVALID_ENDPOINT');
+  }
+});

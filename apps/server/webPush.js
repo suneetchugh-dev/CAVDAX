@@ -12,6 +12,46 @@ let isInitialized = false;
 let currentVapidKeys = null;
 
 /**
+ * Validates push subscription endpoint to prevent SSRF (Server-Side Request Forgery).
+ * Enforces HTTPS and rejects loopback, private, and cloud metadata addresses.
+ */
+export function isValidPushEndpoint(endpoint) {
+  if (typeof endpoint !== 'string' || endpoint.length > 2048) return false;
+  try {
+    const parsed = new URL(endpoint);
+    if (parsed.protocol !== 'https:') return false;
+
+    const hostname = parsed.hostname.toLowerCase();
+    // Block loopback, link-local, and cloud metadata
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1' ||
+      hostname === '169.254.169.254' ||
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local')
+    ) {
+      return false;
+    }
+
+    // Block IPv4 private ranges (10.x, 172.16-31.x, 192.168.x)
+    const ipMatch = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipMatch) {
+      const b0 = parseInt(ipMatch[1], 10);
+      const b1 = parseInt(ipMatch[2], 10);
+      if (b0 === 10) return false;
+      if (b0 === 172 && b1 >= 16 && b1 <= 31) return false;
+      if (b0 === 192 && b1 === 168) return false;
+      if (b0 === 0 || b0 === 127) return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Initializes VAPID keys for Web Push.
  * Loads existing keys from environment or persistent system_state.json.
  * If none exist and webpush is available, generates a fresh ECDSA key pair and persists it.
@@ -80,6 +120,10 @@ export function savePushSubscription(login, subscription) {
     return { success: false, error: 'INVALID_SUBSCRIPTION' };
   }
 
+  if (!isValidPushEndpoint(subscription.endpoint)) {
+    return { success: false, error: 'RESTRICTED_OR_INVALID_ENDPOINT' };
+  }
+
   const state = loadSystemState();
   if (!state.pushSubscriptions) state.pushSubscriptions = {};
   if (!Array.isArray(state.pushSubscriptions[login])) {
@@ -126,6 +170,10 @@ export function removePushSubscription(endpoint) {
  * Dispatches a Web Push notification to a single client subscription.
  */
 export async function sendWebPushNotification(subscription, payload) {
+  if (!subscription || !isValidPushEndpoint(subscription.endpoint)) {
+    return { success: false, error: 'INVALID_ENDPOINT' };
+  }
+
   initWebPush();
   if (!webpush || typeof webpush.sendNotification !== 'function') {
     return { success: false, error: 'WEB_PUSH_NOT_AVAILABLE' };
