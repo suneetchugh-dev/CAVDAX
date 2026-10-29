@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Lenis from 'lenis';
-import { Compass, RotateCcw, Cable, GitBranch, ChevronDown, Plus, Check, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Compass, RotateCcw, Cable, GitBranch, ChevronDown, Plus, Check, SlidersHorizontal, Trash2, Zap, AlertTriangle, X } from 'lucide-react';
 import Header from './components/Header.jsx';
 import SplashLoader from './components/SplashLoader.jsx';
 import LandingPage from './components/LandingPage.jsx';
@@ -29,7 +29,7 @@ import ConnectRepoModal from './components/ConnectRepoModal.jsx';
 import ConnectedRepoWorkspace from './components/ConnectedRepoWorkspace.jsx';
 import SEOHead from './components/SEOHead.jsx';
 import PageAscentTransition from './components/PageAscentTransition.jsx';
-import { playClick, playRejectBuzz, playApprovalChime, initGlobalClickSound } from './utils/soundFx.js';
+import { playClick, playRejectBuzz, playApprovalChime, initGlobalClickSound, playAlert } from './utils/soundFx.js';
 
 // Helper function to resolve tab from clean URL path with fallback to hash
 function resolveTabFromUrl() {
@@ -120,6 +120,32 @@ export default function App() {
     }
   });
   const [selectedConnectedRepo, setSelectedConnectedRepo] = useState(null);
+  const [divergenceAlert, setDivergenceAlert] = useState(null);
+  const [isSimulatingAlertGlobal, setIsSimulatingAlertGlobal] = useState(false);
+
+  const handleTriggerSimulateAlert = async () => {
+    playClick();
+    setIsSimulatingAlertGlobal(true);
+    try {
+      const res = await fetch('/api/alerts/simulate-invalidation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      if (data.success) {
+        playAlert();
+        if (data.alert) {
+          setDivergenceAlert({ ...data.alert, recipient: data.recipient });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to dispatch simulated invalidation alert:', err);
+    } finally {
+      setIsSimulatingAlertGlobal(false);
+    }
+  };
 
   const handleConnectRepo = (newRepo) => {
     setConnectedRepos(prev => {

@@ -18,7 +18,8 @@ import {
   Terminal,
   Keyboard as KeyboardIcon
 } from 'lucide-react';
-import { playClick, playLoadingSound, isSoundEnabled, toggleSound } from '../utils/soundFx';
+import { playClick, playLoadingSound, isSoundEnabled, toggleSound, playAlert } from '../utils/soundFx';
+import { Bell, Mail, Zap, CheckCheck } from 'lucide-react';
 
 /**
  * High-Precision ToggleSwitch Component
@@ -108,6 +109,93 @@ export default function PreferencesModal({
 
   // Single-group accordion expansion: 'sounds' | 'motion' | null
   const [expandedGroupId, setExpandedGroupId] = useState(null);
+  
+  // Notification preferences state
+  const [alertsMasterActive, setAlertsMasterActive] = useState(true);
+  const [emailAlertsActive, setEmailAlertsActive] = useState(true);
+  const [browserAlertsActive, setBrowserAlertsActive] = useState(true);
+  const [targetEmail, setTargetEmail] = useState('');
+  const [isSavingPrefs, setIsSavingPrefs] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [isSimulatingAlert, setIsSimulatingAlert] = useState(false);
+  const [simulateStatus, setSimulateStatus] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/user/notification-preferences', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.preferences) {
+            setEmailAlertsActive(data.preferences.emailAlerts !== false);
+            setBrowserAlertsActive(data.preferences.browserAlerts !== false);
+            setAlertsMasterActive(data.preferences.emailAlerts !== false || data.preferences.browserAlerts !== false);
+            if (data.preferences.targetEmail) {
+              setTargetEmail(data.preferences.targetEmail);
+            } else if (data.userEmail) {
+              setTargetEmail(data.userEmail);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
+
+  const handleSaveAlertPreferences = async (e) => {
+    if (e) e.preventDefault();
+    playClick();
+    setIsSavingPrefs(true);
+    setSaveStatus(null);
+    try {
+      const res = await fetch('/api/user/notification-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          emailAlerts: alertsMasterActive && emailAlertsActive,
+          browserAlerts: alertsMasterActive && browserAlertsActive,
+          targetEmail: targetEmail.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveStatus('Preferences saved successfully.');
+        setTimeout(() => setSaveStatus(null), 3000);
+      } else {
+        setSaveStatus('Failed to save preferences.');
+      }
+    } catch {
+      setSaveStatus('Connection error saving preferences.');
+    } finally {
+      setIsSavingPrefs(false);
+    }
+  };
+
+  const handleSimulateAlert = async () => {
+    playClick();
+    setIsSimulatingAlert(true);
+    setSimulateStatus(null);
+    try {
+      const res = await fetch('/api/alerts/simulate-invalidation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          targetEmail: targetEmail.trim() || undefined
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        playAlert();
+        setSimulateStatus(`Dispatched divergence alert to ${data.recipient || 'inbox'}!`);
+      } else {
+        setSimulateStatus('Simulation failed: ' + (data.error || 'Server error'));
+      }
+    } catch {
+      setSimulateStatus('Simulation request failed.');
+    } finally {
+      setIsSimulatingAlert(false);
+    }
+  };
   const [gearRotation, setGearRotation] = useState(0);
 
   useEffect(() => {
@@ -451,6 +539,155 @@ export default function PreferencesModal({
           </div>
 
           
+
+
+          {/* 4. Architectural Divergence Alerts & Notifications */}
+          <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">
+                <Bell size={16} className={`shrink-0 transition-colors ${alertsMasterActive ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`} />
+                <div className="min-w-0">
+                  <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug flex items-center gap-1.5">
+                    <span>Divergence Invalidation Alerts</span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      Resend
+                    </span>
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
+                    {alertsMasterActive
+                      ? (targetEmail ? `Active dispatch to ${targetEmail}` : 'Email & in-HUD breaking alerts active')
+                      : 'All divergence alerts paused'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                <ToggleSwitch 
+                  checked={alertsMasterActive} 
+                  onChange={(val) => {
+                    setAlertsMasterActive(val);
+                    spinGear();
+                    if (val) playClick();
+                  }}
+                  ariaLabel="Toggle divergence invalidation alerts"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleGroup('alerts')}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/10 transition cursor-pointer"
+                  title="Configure notification channels and recipient"
+                >
+                  <ChevronDown 
+                    size={15} 
+                    className="transition-transform duration-300" 
+                    style={{ transform: expandedGroupId === 'alerts' ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Sub-Accordion */}
+            <div 
+              className={`space-y-2.5 border-l-2 border-slate-300 dark:border-white/20 ml-2.5 pl-3.5 overflow-hidden ${
+                !alertsMasterActive ? 'opacity-40 pointer-events-none' : ''
+              }`}
+              style={getAccordionStyle(expandedGroupId === 'alerts', '320px')}
+            >
+              {/* Channel 1: In-HUD Audio/Visual Chimes */}
+              <div className="flex items-center justify-between py-1">
+                <div className="flex items-center gap-2">
+                  <Bell size={13} className={`transition-colors ${browserAlertsActive && alertsMasterActive ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-600 opacity-40'}`} />
+                  <span className="text-[11px] text-slate-700 dark:text-slate-300">In-HUD Audio &amp; Visual Alerts</span>
+                </div>
+                <ToggleSwitch 
+                  checked={browserAlertsActive} 
+                  onChange={(val) => {
+                    setBrowserAlertsActive(val);
+                    spinGear();
+                    if (val) playClick();
+                  }} 
+                  size="sm"
+                  disabled={!alertsMasterActive}
+                  ariaLabel="Toggle in-HUD browser alerts"
+                />
+              </div>
+
+              {/* Channel 2: Asynchronous Email Dispatches via Resend */}
+              <div className="flex items-center justify-between py-1">
+                <div className="flex items-center gap-2">
+                  <Mail size={13} className={`transition-colors ${emailAlertsActive && alertsMasterActive ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-600 opacity-40'}`} />
+                  <span className="text-[11px] text-slate-700 dark:text-slate-300">Resend Email Invalidation Dispatch</span>
+                </div>
+                <ToggleSwitch 
+                  checked={emailAlertsActive} 
+                  onChange={(val) => {
+                    setEmailAlertsActive(val);
+                    spinGear();
+                    if (val) playClick();
+                  }} 
+                  size="sm"
+                  disabled={!alertsMasterActive}
+                  ariaLabel="Toggle email alerts"
+                />
+              </div>
+
+              {/* Recipient Email Address Input */}
+              <div className="pt-1 border-t border-slate-200/60 dark:border-white/10">
+                <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                  Target Recipient Email
+                </label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="email"
+                    value={targetEmail}
+                    onChange={(e) => setTargetEmail(e.target.value)}
+                    placeholder="developer@sahnirmaan.live"
+                    className="flex-1 h-7 px-2.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-black/40 text-slate-900 dark:text-white text-xs font-mono placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveAlertPreferences}
+                    disabled={isSavingPrefs}
+                    className="h-7 px-2.5 rounded-lg border border-slate-300 dark:border-white/20 bg-slate-900 text-white dark:bg-white dark:text-slate-950 text-[10px] font-mono font-bold uppercase tracking-wider hover:opacity-90 transition cursor-pointer disabled:opacity-50 shrink-0"
+                  >
+                    {isSavingPrefs ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+                {saveStatus && (
+                  <p className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-1">
+                    {saveStatus}
+                  </p>
+                )}
+              </div>
+
+              {/* Live Invalidation Simulation Trigger */}
+              <div className="pt-2 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-mono font-semibold text-slate-800 dark:text-slate-200">
+                    Pitch Showcase Trigger
+                  </div>
+                  <div className="text-[9px] text-slate-500 dark:text-slate-400 truncate">
+                    Send real test invalidation email to your inbox
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSimulateAlert}
+                  disabled={isSimulatingAlert}
+                  className="h-7 px-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 transition cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  <Zap size={11} className="text-amber-500" />
+                  <span>{isSimulatingAlert ? 'Sending...' : '⚡ Test Alert'}</span>
+                </button>
+              </div>
+              {simulateStatus && (
+                <p className="text-[10px] font-mono text-amber-600 dark:text-amber-400">
+                  {simulateStatus}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
       </motion.div>
