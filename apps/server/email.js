@@ -33,6 +33,17 @@ setInterval(() => {
 /**
  * Builds the monochromatic developer email template.
  */
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function buildEmailHtml({
   repo,
   decisionId,
@@ -191,21 +202,21 @@ function buildEmailHtml({
     <div class="header">
       <div class="badge">Gate Refusal Alert</div>
       <h1 class="title">Architectural Divergence Detected</h1>
-      <p class="subtitle">An incoming change has superseded an architecture decision in <strong>${repo}</strong>.</p>
+      <p class="subtitle">An incoming change has superseded an architecture decision in <strong>${safeRepo}</strong>.</p>
     </div>
     <div class="body">
       <div class="meta-box">
         <div class="meta-row">
           <span class="meta-label">Repository:</span>
-          <span class="meta-value">${repo}</span>
+          <span class="meta-value">${safeRepo}</span>
         </div>
         <div class="meta-row">
           <span class="meta-label">Broken Decision:</span>
-          <span class="meta-value highlight-red">${decisionId} — ${decisionTitle || 'Untitled Decision'}</span>
+          <span class="meta-value highlight-red">${safeDecisionId} — ${safeDecisionTitle}</span>
         </div>
         <div class="meta-row">
           <span class="meta-label">Superseded By:</span>
-          <span class="meta-value">${breakingSourceId} — ${breakingSourceTitle || 'Superseding ADR'}</span>
+          <span class="meta-value">${safeBreakingSourceId} — ${safeBreakingSourceTitle}</span>
         </div>
         <div class="meta-row">
           <span class="meta-label">Gate Verdict:</span>
@@ -214,10 +225,10 @@ function buildEmailHtml({
       </div>
 
       <div class="section-title">Causal Invalidation Traversal</div>
-      <div class="code-block">${formattedViolationPath}</div>
+      <div class="code-block">${safeViolationPath}</div>
 
       <div class="section-title">Remediation Directive (MCP / CLI)</div>
-      <div class="code-block">${resolvedCli}</div>
+      <div class="code-block">${safeCli}</div>
 
       <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 20px;">
         AI coding agents attempting to write code grounded in <code>${decisionId}</code> are now <strong>hard-rejected</strong> by the CAVDAX Causal Gate until revalidated against <code>${breakingSourceId}</code>.

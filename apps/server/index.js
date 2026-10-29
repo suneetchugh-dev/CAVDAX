@@ -123,6 +123,10 @@ app.get('/api/push/vapid-public-key', (req, res) => {
  * Registers client PushSubscription for offline background desktop alerts.
  */
 app.post('/api/push/subscribe', (req, res) => {
+  if (targetEmail && (typeof targetEmail !== 'string' || targetEmail.length > 254 || !targetEmail.includes('@'))) {
+    return res.status(400).json({ success: false, error: 'INVALID_TARGET_EMAIL' });
+  }
+
   const user = req.session?.user;
   const login = user?.login || 'default';
   const { subscription } = req.body || {};
@@ -3005,7 +3009,16 @@ app.post('/api/user/notification-preferences', (req, res) => {
  * from a teammate, triggering immediate causal invalidation, SSE HUD broadcast, and real
  * Resend email alert dispatch to the user's inbox.
  */
-app.post('/api/alerts/simulate-invalidation', async (req, res) => {
+
+const simulateAlertLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 6, // 6 simulations per 10 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'RATE_LIMIT_EXCEEDED: Maximum 6 simulation alerts per 10 minutes.' }
+});
+
+app.post('/api/alerts/simulate-invalidation', simulateAlertLimiter, async (req, res) => {
   const {
     repo = 'acme-inventory',
     decisionId = 'DEC-102',
