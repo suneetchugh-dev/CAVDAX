@@ -19,7 +19,8 @@ import {
   Keyboard as KeyboardIcon
 } from 'lucide-react';
 import { playClick, playLoadingSound, isSoundEnabled, toggleSound, playAlert } from '../utils/soundFx';
-import { Bell, Mail, Zap, CheckCheck } from 'lucide-react';
+import { Bell, Mail, Zap, CheckCheck, Monitor } from 'lucide-react';
+import { isPushSupported, subscribeToPushNotifications, unsubscribeFromPushNotifications, getCurrentPushSubscription } from '../services/webPush';
 
 /**
  * High-Precision ToggleSwitch Component
@@ -114,6 +115,39 @@ export default function PreferencesModal({
   const [alertsMasterActive, setAlertsMasterActive] = useState(true);
   const [emailAlertsActive, setEmailAlertsActive] = useState(true);
   const [browserAlertsActive, setBrowserAlertsActive] = useState(true);
+  const [desktopPushActive, setDesktopPushActive] = useState(false);
+  const [pushStatusMessage, setPushStatusMessage] = useState(null);
+
+  useEffect(() => {
+    if (isOpen && isPushSupported()) {
+      getCurrentPushSubscription().then(sub => {
+        setDesktopPushActive(Boolean(sub));
+      });
+    }
+  }, [isOpen]);
+
+  const handleToggleDesktopPush = async (val) => {
+    spinGear();
+    playClick();
+    setPushStatusMessage(null);
+    if (val) {
+      setPushStatusMessage('Requesting OS push permissions...');
+      const res = await subscribeToPushNotifications();
+      if (res.success) {
+        setDesktopPushActive(true);
+        setPushStatusMessage('Desktop background push active!');
+        setTimeout(() => setPushStatusMessage(null), 3000);
+      } else {
+        setDesktopPushActive(false);
+        setPushStatusMessage(res.error === 'PERMISSION_DENIED' ? 'Permission denied by OS/browser.' : 'Push setup failed.');
+      }
+    } else {
+      await unsubscribeFromPushNotifications();
+      setDesktopPushActive(false);
+      setPushStatusMessage('Desktop push disabled.');
+      setTimeout(() => setPushStatusMessage(null), 3000);
+    }
+  };
   const [targetEmail, setTargetEmail] = useState('');
   const [isSavingPrefs, setIsSavingPrefs] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
