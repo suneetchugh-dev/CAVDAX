@@ -9,6 +9,30 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.44 Latest Session Achievements (October 29, 2026 - Comprehensive Cloudflare Security Audit, Devil's Advocate Hardening & Out-of-Band Architecture Documentation)
+
+- **Email Template ReferenceError Remediation (`apps/server/email.js`)**:
+  - Bound escaped variables (`safeRepo`, `safeDecisionId`, `safeDecisionTitle`, `safeBreakingSourceId`, `safeBreakingSourceTitle`, `safeViolationPath`, `safeCli`) resolving a runtime `ReferenceError` when `EMAIL_ENABLED=true`.
+  - Enforced strict URL scheme validation on `hudUrl` (`https://` or `http://localhost`), blocking `javascript:` and malicious phishing redirects.
+  - Exported `escapeHtml` and `buildEmailHtml` for automated unit testing.
+- **Web Push Registration Remediation (`apps/server/index.js`)**:
+  - Removed orphaned `targetEmail` check from `POST /api/push/subscribe` that caused `ReferenceError: targetEmail is not defined` upon browser subscription registration.
+  - Moved target email format and length validation into `POST /api/user/notification-preferences`.
+- **GitHub Webhook Fail-Closed Authentication (`apps/server/index.js`)**:
+  - Converted `POST /api/github/webhook` signature verification from open-bypass to fail-closed: if `GITHUB_WEBHOOK_SECRET` is set, missing `x-hub-signature-256` headers reject immediately with `401 MISSING_SIGNATURE`.
+- **Content Security Policy Worker Directive (`apps/server/index.js`)**:
+  - Added `worker-src 'self' blob:;` to the CSP header, preventing Service Worker (`/sw.js`) registration warnings across strict browser engines.
+- **Dead Code Cleanup (`core/ingestion/sources.js`)**:
+  - Removed unused `child_process` import from the non-ADR ingestion module.
+- **README & Architecture Documentation Sync (`README.md`, `docs/ARCHITECTURE.md`)**:
+  - Documented Pillar 5: **Out-of-Band Divergence Radar** (Resend transactional emails + VAPID Web Push).
+  - Updated the End-to-End System Architecture Mermaid flowchart with the notification plane, Web Push worker, and GitHub webhook handler.
+  - Added dedicated section explaining blast-radius bound causal alerting, email provenance, and the interactive hackathon pitch trigger.
+  - Updated monorepo directory tree to document new server and client modules.
+- **Automated Verification Suite (`apps/server/test/invalidationAlerts.test.mjs`)**:
+  - Added comprehensive test for `buildEmailHtml` asserting that all inputs are escaped and runtime execution never throws `ReferenceError`.
+  - 57/57 monorepo tests pass cleanly; client bundle builds in 14.36s.
+
 ## 1.0.43 Latest Session Achievements (October 29, 2026 - Real-Time Architectural Divergence Invalidation Alerts, Resend Dispatcher & HUD Showcase Engine)
 
 - **Out-of-Band Divergence Invalidation Pipeline (`apps/server/email.js`, `apps/server/index.js`)**:
