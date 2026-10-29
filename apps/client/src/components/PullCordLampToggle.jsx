@@ -179,8 +179,22 @@ export default function PullCordLampToggle({
       animFrameRef.current = requestAnimationFrame(loop);
     };
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (animFrameRef.current) {
+          cancelAnimationFrame(animFrameRef.current);
+          animFrameRef.current = null;
+        }
+      } else if (!animFrameRef.current && opacity > 0.01) {
+        lastTime = performance.now();
+        animFrameRef.current = requestAnimationFrame(loop);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     animFrameRef.current = requestAnimationFrame(loop);
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
         animFrameRef.current = null;

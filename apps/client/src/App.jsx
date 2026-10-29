@@ -403,16 +403,38 @@ export default function App() {
       window.addEventListener('touchstart', handleUserGesture, { passive: true });
       window.addEventListener('touchmove', handleUserGesture, { passive: true });
 
+      let rafId = null;
+      let isMounted = true;
+
       function raf(time) {
-        if (document.documentElement.scrollHeight > window.innerHeight + 10) {
+        if (!isMounted) return;
+        if (!document.hidden && document.documentElement.scrollHeight > window.innerHeight + 10) {
           lenis.raf(time);
         }
-        requestAnimationFrame(raf);
+        rafId = requestAnimationFrame(raf);
       }
-      requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
+
+      const handleVisibilityChange = () => {
+        if (document.hidden) {
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+        } else if (isMounted && !rafId) {
+          rafId = requestAnimationFrame(raf);
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
     } catch {}
 
     return () => {
+      isMounted = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
       if (lenis) {
         lenis.destroy();
         window.__lenis = null;

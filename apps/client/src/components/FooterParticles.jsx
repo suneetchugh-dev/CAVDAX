@@ -223,9 +223,22 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
       isSleeping = false;
     };
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+        isSleeping = true;
+      } else if (inViewport) {
+        wakeUp();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     const observer = new IntersectionObserver(([entry]) => {
       inViewport = entry.isIntersecting;
-      if (inViewport) {
+      if (inViewport && !document.hidden) {
         wakeUp();
       } else {
         if (animationFrameId) {
@@ -374,6 +387,7 @@ export default function FooterParticles({ text = 'CAVDAX', onSelectTab, onLaunch
       window.removeEventListener('cavdax:dissolve-particles', handleDissolveEvent);
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('visibilitychange', handleVisibility);
       themeObserver.disconnect();
       observer.disconnect();
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
