@@ -43,6 +43,23 @@ jobs:
             echo "==> Pulling latest changes from origin/main..."
             git fetch origin main
             git reset --hard origin/main
+            echo "==> Synchronizing production environment secrets..."
+            touch .env
+            update_env_var() {
+              local k="$1"
+              local v="$2"
+              if [ -n "$v" ]; then
+                if grep -q "^${k}=" .env 2>/dev/null; then
+                  sed -i "s|^${k}=.*|${k}=${v}|" .env
+                else
+                  echo "${k}=${v}" >> .env
+                fi
+              fi
+            }
+            update_env_var "EMAIL_ENABLED" "${{ secrets.EMAIL_ENABLED || 'true' }}"
+            update_env_var "EMAIL_FROM" "${{ secrets.EMAIL_FROM || 'Sahnirmaan <no-reply@sahnirmaan.live>' }}"
+            update_env_var "RESEND_API_KEY" "${{ secrets.RESEND_API_KEY }}"
+            update_env_var "EMAIL_PROVIDER" "${{ secrets.EMAIL_PROVIDER || 'resend' }}"
             echo "==> Checking swap space for memory stability..."
             SWAP_SIZE=$(free -m | awk '/^Swap:/ {print $2}')
             if [ -z "$SWAP_SIZE" ] || [ "$SWAP_SIZE" -lt 1024 ]; then

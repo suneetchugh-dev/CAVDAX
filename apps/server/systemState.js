@@ -33,7 +33,10 @@ export function loadSystemState() {
         whitelistedIps: Array.isArray(parsed.whitelistedIps) ? parsed.whitelistedIps : [],
         devRoster: Array.isArray(parsed.devRoster) ? parsed.devRoster : [],
         apiKeys: Array.isArray(parsed.apiKeys) ? parsed.apiKeys : [],
-        auditEntries: Array.isArray(parsed.auditEntries) ? parsed.auditEntries : []
+        auditEntries: Array.isArray(parsed.auditEntries) ? parsed.auditEntries : [],
+        notificationPreferences: (typeof parsed.notificationPreferences === 'object' && parsed.notificationPreferences !== null)
+          ? parsed.notificationPreferences
+          : {}
       };
     }
   } catch (err) {
@@ -44,7 +47,10 @@ export function loadSystemState() {
     whitelistedIps: [],
     devRoster: [],
     apiKeys: [],
-    auditEntries: []
+    auditEntries: [],
+    notificationPreferences: {},
+    vapidKeys: null,
+    pushSubscriptions: {}
   };
 }
 
@@ -61,6 +67,9 @@ export function saveSystemState(state) {
       devRoster: Array.isArray(state.devRoster) ? state.devRoster : [],
       apiKeys: Array.isArray(state.apiKeys) ? state.apiKeys : [],
       auditEntries: Array.isArray(state.auditEntries) ? state.auditEntries.slice(0, 500) : [],
+      notificationPreferences: (typeof state.notificationPreferences === 'object' && state.notificationPreferences !== null)
+        ? state.notificationPreferences
+        : {},
       updatedAt: new Date().toISOString()
     }, null, 2);
 

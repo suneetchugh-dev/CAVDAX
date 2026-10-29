@@ -36,6 +36,9 @@ import { scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, Githu
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
 import { renderGraphToSvg, computeBlastRadius } from '../../core/graph/renderSvg.js';
 import { loadSystemState, saveSystemState } from './systemState.js';
+import { sendInvalidationEmail } from './email.js';
+import { getVapidPublicKey, savePushSubscription, broadcastWebPushAlert } from './webPush.js';
+import { cascadeInvalidation } from '../../core/graph/queries.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +47,7 @@ const __dirname = path.dirname(__filename);
 // This means `npm run dev` from repo root and from apps/server/ both work.
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 const REPO_ROOT = path.resolve(__dirname, '../../');
+dotenv.config({ path: path.resolve(REPO_ROOT, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -100,6 +104,36 @@ app.use(express.json({
     req.rawBody = buf;
   }
 }));
+
+
+/**
+ * GET /api/push/vapid-public-key
+ * Returns the VAPID public key for browser PushManager subscription.
+ */
+app.get('/api/push/vapid-public-key', (req, res) => {
+  const publicKey = getVapidPublicKey();
+  res.json({
+    success: Boolean(publicKey),
+    publicKey
+  });
+});
+
+/**
+ * POST /api/push/subscribe
+ * Registers client PushSubscription for offline background desktop alerts.
+ */
+app.post('/api/push/subscribe', (req, res) => {
+  const user = req.session?.user;
+  const login = user?.login || 'default';
+  const { subscription } = req.body || {};
+
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, error: 'MISSING_SUBSCRIPTION' });
+  }
+
+  const result = savePushSubscription(login, subscription);
+  res.json(result);
+});
 
 // ---------------------------------------------------------------------------
 // SESSION MIDDLEWARE & PERSISTENT SESSION RESILIENCE
@@ -1980,7 +2014,7 @@ app.get('/api/auth/github', (req, res) => {
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
     redirect_uri: GITHUB_CALLBACK_URL,
-    scope: 'repo read:user read:org',
+    scope: 'repo read:user read:org user:email',
     state
   });
 
@@ -2037,7 +2071,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
 
     const accessToken = tokenData.access_token;
 
-    // 2. Fetch GitHub user profile
+    // 2. Fetch GitHub user profile & verified email
     const userRes = await fetch('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -2046,6 +2080,28 @@ app.get('/api/auth/github/callback', async (req, res) => {
       }
     });
     const userData = await userRes.json();
+
+    let primaryEmail = userData.email || null;
+    try {
+      const emailsRes = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+      if (emailsRes.ok) {
+        const emailsData = await emailsRes.json();
+        if (Array.isArray(emailsData)) {
+          const primaryObj = emailsData.find(e => e.primary && e.verified) || emailsData.find(e => e.primary) || emailsData[0];
+          if (primaryObj && primaryObj.email) {
+            primaryEmail = primaryObj.email;
+          }
+        }
+      }
+    } catch (emailErr) {
+      console.warn('[CAVDAX OAuth] Note fetching user emails:', emailErr.message);
+    }
 
     const frontendBase = CLIENT_URL || '';
 
@@ -2060,6 +2116,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
       login:      userData.login,
       name:       userData.name || userData.login,
       avatarUrl:  userData.avatar_url,
+      email:      primaryEmail,
       accessToken,
       tier:       req.session?.tier || 'free'
     };
@@ -2884,6 +2941,225 @@ if (fs.existsSync(clientDistPath)) {
 //
 // Must be registered AFTER all route handlers and static file middleware.
 // Express identifies error handlers by their 4-parameter signature (err, req, res, next).
+
+
+// ---------------------------------------------------------------------------
+// ARCHITECTURAL DIVERGENCE NOTIFICATION & WEBHOOK ENGINE
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/user/notification-preferences
+ * Returns the current user's email and notification preferences.
+ */
+app.get('/api/user/notification-preferences', (req, res) => {
+  const user = req.session?.user;
+  const login = user?.login || 'default';
+  const savedState = loadSystemState();
+  const prefs = savedState.notificationPreferences?.[login] || {
+    emailAlerts: true,
+    browserAlerts: true,
+    targetEmail: user?.email || (process.env.EMAIL_FROM ? process.env.EMAIL_FROM.match(/<([^>]+)>/)?.[1] : 'alerts@sahnirmaan.live') || 'alerts@sahnirmaan.live',
+    watchedRepos: []
+  };
+
+  res.json({
+    success: true,
+    preferences: prefs,
+    authenticated: Boolean(user),
+    userEmail: user?.email || null,
+    emailConfigured: Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_ENABLED === 'true')
+  });
+});
+
+/**
+ * POST /api/user/notification-preferences
+ * Updates notification preferences in persistent system state.
+ */
+app.post('/api/user/notification-preferences', (req, res) => {
+  const user = req.session?.user;
+  const login = user?.login || 'default';
+  const { emailAlerts, browserAlerts, targetEmail, watchedRepos } = req.body || {};
+
+  const savedState = loadSystemState();
+  if (!savedState.notificationPreferences) {
+    savedState.notificationPreferences = {};
+  }
+
+  savedState.notificationPreferences[login] = {
+    emailAlerts: typeof emailAlerts === 'boolean' ? emailAlerts : true,
+    browserAlerts: typeof browserAlerts === 'boolean' ? browserAlerts : true,
+    targetEmail: (targetEmail && typeof targetEmail === 'string') ? targetEmail.trim() : (user?.email || 'alerts@sahnirmaan.live'),
+    watchedRepos: Array.isArray(watchedRepos) ? watchedRepos : (savedState.notificationPreferences[login]?.watchedRepos || [])
+  };
+
+  saveSystemState(savedState);
+  res.json({
+    success: true,
+    preferences: savedState.notificationPreferences[login]
+  });
+});
+
+/**
+ * POST /api/alerts/simulate-invalidation
+ * Interactive pitch & live demo trigger: Simulates an incompatible commit or superseding ADR
+ * from a teammate, triggering immediate causal invalidation, SSE HUD broadcast, and real
+ * Resend email alert dispatch to the user's inbox.
+ */
+app.post('/api/alerts/simulate-invalidation', async (req, res) => {
+  const {
+    repo = 'acme-inventory',
+    decisionId = 'DEC-102',
+    decisionTitle = 'Generate Checkout Service with TokenAuth v1',
+    breakingSourceId = 'ADR-002',
+    breakingSourceTitle = 'Mandatory Migration to OAuth2; TokenAuth v1 Decommissioned',
+    targetEmail
+  } = req.body || {};
+
+  const user = req.session?.user;
+  const login = user?.login || 'default';
+  const savedState = loadSystemState();
+  const userPrefs = savedState.notificationPreferences?.[login];
+
+  const recipient = (targetEmail && targetEmail.includes('@'))
+    ? targetEmail.trim()
+    : (userPrefs?.targetEmail || user?.email || 'suneetchugh@gmail.com');
+
+  const violationPaths = [
+    [`Decision:${decisionId}`, 'Fact:F-Auth-v1', `Source:${breakingSourceId} (SUPERSEDED by ${breakingSourceId})`]
+  ];
+
+  // 1. Invalidate decision in FalkorDB if live
+  if (isFalkorConnected && graph) {
+    try {
+      await cascadeInvalidation(graph, breakingSourceId, 'ADR-001').catch(() => {});
+    } catch (e) {
+      console.warn('[CAVDAX Simulation] Live cascade notice:', e.message);
+    }
+  }
+
+  // 2. Broadcast SSE event to all connected HUD viewers with audio trigger flag
+  const alertPayload = {
+    type: 'ARCHITECTURAL_DIVERGENCE_ALERT',
+    timestamp: Date.now(),
+    repo,
+    decision_id: decisionId,
+    decision_title: decisionTitle,
+    breaking_source_id: breakingSourceId,
+    breaking_source_title: breakingSourceTitle,
+    violation_paths: violationPaths,
+    gate_verdict: 'BLOCKED_SUPERSEDED_SOURCE',
+    simulated: true
+  };
+  broadcastEvent('ARCHITECTURAL_DIVERGENCE_ALERT', alertPayload);
+
+  // 3. Dispatch real Resend email alert
+  const hudUrl = `${CLIENT_URL || 'https://cavdax.sahnirmaan.live'}/console?highlight=${encodeURIComponent(decisionId)}&blast=true`;
+  // Dispatch Web Push to registered desktop Service Workers
+  broadcastWebPushAlert({
+    title: 'CAVDAX: Divergence Alert',
+    body: `Decision ${decisionId} is invalidated by ${breakingSourceId}!`,
+    decision_id: decisionId,
+    url: hudUrl
+  }).catch((err) => console.warn('[CAVDAX WebPush] Notice:', err.message));
+
+  const emailResult = await sendInvalidationEmail({
+    to: recipient,
+    repo,
+    decisionId,
+    decisionTitle,
+    breakingSourceId,
+    breakingSourceTitle,
+    violationPaths,
+    hudUrl,
+    remediationCli: `npx cavdax mcp -> revalidate_decision("${breakingSourceId}", "${decisionId}")`,
+    force: true
+  });
+
+  return res.json({
+    success: true,
+    alert: alertPayload,
+    emailSent: emailResult.success,
+    emailResult,
+    recipient
+  });
+});
+
+/**
+ * POST /api/github/webhook
+ * Real GitHub repository webhook receiver for push and pull_request events.
+ */
+app.post('/api/github/webhook', async (req, res) => {
+  const event = req.headers['x-github-event'];
+  const signature = req.headers['x-hub-signature-256'];
+  const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
+
+  if (webhookSecret && signature) {
+    const rawBody = req.rawBody || JSON.stringify(req.body);
+    const expected = 'sha256=' + createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
+    const trusted = Buffer.from(expected, 'utf8');
+    const provided = Buffer.from(signature, 'utf8');
+    if (trusted.length !== provided.length || !timingSafeEqual(trusted, provided)) {
+      return res.status(401).json({ success: false, error: 'INVALID_SIGNATURE' });
+    }
+  }
+
+  if (event === 'ping') {
+    return res.json({ success: true, message: 'PONG' });
+  }
+
+  if (event === 'push') {
+    const { repository, commits = [] } = req.body || {};
+    const repoFullName = repository?.full_name || 'unknown/repo';
+
+    const invalidatedDecisions = [];
+    for (const commit of commits) {
+      const msg = commit.message || '';
+      const breaksMatches = [...msg.matchAll(/breaks[:\s]+(DEC-\d+)/gi)];
+      for (const m of breaksMatches) {
+        invalidatedDecisions.push({
+          decisionId: m[1].toUpperCase(),
+          sourceSha: commit.id?.slice(0, 7) || 'HEAD',
+          author: commit.author?.name || 'teammate',
+          message: msg.split('\n')[0]
+        });
+      }
+    }
+
+    if (invalidatedDecisions.length > 0) {
+      const savedState = loadSystemState();
+      const allPrefs = savedState.notificationPreferences || {};
+      const recipients = new Set();
+      for (const [login, prefs] of Object.entries(allPrefs)) {
+        if (prefs.emailAlerts && prefs.targetEmail) {
+          recipients.add(prefs.targetEmail);
+        }
+      }
+
+      for (const inv of invalidatedDecisions) {
+        broadcastEvent('ARCHITECTURAL_DIVERGENCE_ALERT', {
+          repo: repoFullName,
+          decision_id: inv.decisionId,
+          breaking_commit: inv.sourceSha,
+          breaking_message: inv.message,
+          timestamp: Date.now()
+        });
+
+        for (const recipient of recipients) {
+          await sendInvalidationEmail({
+            to: recipient,
+            repo: repoFullName,
+            decisionId: inv.decisionId,
+            breakingSourceId: `commit-${inv.sourceSha}`,
+            breakingSourceTitle: inv.message,
+            hudUrl: `${CLIENT_URL || 'https://cavdax.sahnirmaan.live'}/console?highlight=${inv.decisionId}`
+          });
+        }
+      }
+    }
+  }
+
+  res.json({ success: true, processed: true });
+});
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
