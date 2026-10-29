@@ -31,10 +31,18 @@ export default function NodeInspector({
     ? Boolean(isFalkorDB)
     : Boolean(node.is_demo === true || (node.id?.startsWith('act-') && !node.repo));
 
-  const filePath = node.target_file || node.adr_path || (node.ref && !node.ref.includes('://') ? node.ref : null);
-  const gitUrl = (repo?.full_name && filePath)
-    ? `https://github.com/${repo.full_name}/blob/${branch}/${filePath.replace(/^\.?\//, '')}`
+  const adrFilePath = node.file || node.adr_path || (node.ref && !node.ref.includes('://') ? node.ref : null) || (node.id?.startsWith('ADR-') ? `docs/adrs/${node.id}.md` : null);
+  const codeFilePath = node.target_file;
+
+  const adrGitUrl = (repo?.full_name && adrFilePath)
+    ? `https://github.com/${repo.full_name}/blob/${branch}/${adrFilePath.replace(/^\.?\//, '')}`
     : null;
+
+  const codeGitUrl = (repo?.full_name && codeFilePath)
+    ? `https://github.com/${repo.full_name}/blob/${branch}/${codeFilePath.replace(/^\.?\//, '')}`
+    : null;
+
+  const primaryGitUrl = (node.label === 'Source' || !codeGitUrl) ? adrGitUrl : codeGitUrl;
 
   return (
     <motion.div
@@ -192,16 +200,29 @@ export default function NodeInspector({
             </button>
           )}
 
-          {gitUrl && (
+          {adrGitUrl && (
             <a
-              href={gitUrl}
+              href={adrGitUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={playClick}
               className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
             >
               <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-              <span>View on GitHub</span>
+              <span>{node.label === 'Decision' ? 'View ADR on GitHub' : 'View on GitHub'}</span>
+            </a>
+          )}
+
+          {node.label === 'Decision' && codeGitUrl && (
+            <a
+              href={codeGitUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={playClick}
+              className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
+              <span>View Code on GitHub</span>
             </a>
           )}
 

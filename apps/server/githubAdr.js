@@ -67,9 +67,9 @@ export function buildGraphFromAdrs(adrs) {
   const decisions = new Map();
 
   for (const adr of adrs) {
-    sources.set(adr.id, { id: adr.id, label: 'Source', title: `${adr.id}: ${adr.title}`, status: 'ACTIVE', file: adr.path });
+    sources.set(adr.id, { id: adr.id, label: 'Source', title: `${adr.id}: ${adr.title}`, status: 'ACTIVE', file: adr.path, adr_path: adr.path });
     if (adr.fact_id && adr.fact_claim) {
-      facts.set(adr.fact_id, { id: adr.fact_id, label: 'Fact', title: adr.fact_claim, status: 'VALID', is_stale: false, from: adr.id });
+      facts.set(adr.fact_id, { id: adr.fact_id, label: 'Fact', title: adr.fact_claim, status: 'VALID', is_stale: false, from: adr.id, file: adr.path, adr_path: adr.path });
       edges.push({ source: adr.fact_id, target: adr.id, type: 'EXTRACTED_FROM' });
     }
   }
@@ -85,6 +85,7 @@ export function buildGraphFromAdrs(adrs) {
         on: adr.fact_id,
         source_adr: adr.id,
         adr_path: adr.path,
+        file: adr.path,
         target_file: derivedTarget
       });
       edges.push({ source: adr.decision_id, target: adr.fact_id, type: 'DEPENDS_ON' });
@@ -209,7 +210,8 @@ async function scanWithTree({ token, owner, repo, fetchImpl = fetch }) {
         fact_id: frontmatter.fact_id || null,
         fact_claim: frontmatter.fact_claim || null,
         decision_id: frontmatter.decision_id || null,
-        decision_title: frontmatter.decision_title || null
+        decision_title: frontmatter.decision_title || null,
+        target_file: frontmatter.target_file || null
       };
     }));
     parsed.push(...results.filter(Boolean));
