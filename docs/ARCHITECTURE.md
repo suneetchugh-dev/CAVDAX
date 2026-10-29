@@ -29,6 +29,8 @@ CAVDAX is architected as a high-performance, low-latency polyglot monorepo engin
 │   - Standalone SVG & Vision OCR Generator (core/graph/renderSvg.js)             │
 │   - Atomic System State & Session Store (apps/server/systemState.js)            │
 │   - Enclosed Tool Handlers: apply_code_change, export_graph_image, check_intent │
+│   - Out-of-Band Divergence Radar: Resend API Dispatcher + VAPID Web Push Broker │
+│   - GitHub Webhook Ingestion Engine: POST /api/github/webhook with HMAC-SHA256   │
 └──────────────────────────────────────┬──────────────────────────────────────────┘
                                        │ FalkorDB Client (Redis Protocol / Parameterized Cypher)
                                        ▼
@@ -48,6 +50,8 @@ CAVDAX is architected as a high-performance, low-latency polyglot monorepo engin
 ```
 
 ### 1.1 Stack Selection Rationale
+- **Out-of-Band Divergence Radar (Resend API + RFC 8292 VAPID Web Push)**: Real-time enclosed gating protects in-flight tool calls, but human engineers operate asynchronously. The divergence radar monitors repository mutations via webhooks and dispatches blast-radius bound alerts via Resend (`no-reply@sahnirmaan.live`) and background Service Worker push (`/sw.js`), eliminating silent architectural decay.
+
 - **Client (React 18 + Vite)**: Instant HMR, minimal bundle footprint (<200kB), hardware-accelerated pure CSS animations for brand assets with zero external heavy canvas dependencies.
 - **MCP Gateway (Node.js Express + MCP Protocol)**: Native compatibility with Claude Code, Cursor, and standard LLM tool-calling conventions. Complete protocol specification and enterprise deployment architecture are detailed in [MCP_SPECIFICATION.md](MCP_SPECIFICATION.md).
 - **Graph Storage (FalkorDB + GraphBLAS)**: Traditional relational databases cannot perform multi-hop recursive dependency traversals under 10ms. Vector databases cannot perform causal graph invalidation. FalkorDB leverages GraphBLAS sparse matrix linear algebra to execute multi-hop Cypher queries in **<2ms**, making pre-execution gating imperceptible to developer workflows.

@@ -31,7 +31,7 @@ Modern autonomous coding agents (Claude Code, Cursor Composer, Windsurf, GitHub 
 
 ---
 
-## 🚀 4 Architectural Pillars: Beyond Vector RAG & Naive Linters
+## 🚀 5 Architectural Pillars: Beyond Vector RAG & Naive Linters
 
 CAVDAX provides production engineering organizations with an impenetrable moat against autonomous agent hallucinations:
 
@@ -41,6 +41,7 @@ CAVDAX provides production engineering organizations with an impenetrable moat a
 | **2** | **Zero-Config Heuristic Parser** | Rigid tools fail unless engineering teams hand-craft strict YAML frontmatter on every document. | Intelligent regex heuristics extract titles, status, and supersessions from **plain unstructured Markdown, RFCs, and Notion exports**. |
 | **3** | **Distributed Decision Locks** | Multiple autonomous agents (e.g., dual Devin or Claude Code instances) edit conflicting decisions concurrently. | `DecisionLockManager` provides **leased concurrency locks** (`acquire_decision_lock`, `release_decision_lock`) to eliminate multi-agent race conditions. |
 | **4** | **Automated CI/CD PR Gate** | Manual CLI tools require local developer execution and are ignored during pull requests. | Automated **GitHub Action (`cavdax-gate.yml`)** scans changed files on PRs, blocks stale code, and outputs rich Markdown summaries to `$GITHUB_STEP_SUMMARY`. |
+| **5** | **Out-of-Band Divergence Radar** | Developers remain unaware when a teammate commits a breaking ADR until an agent fails in production. | **Instant Out-of-Band Alerts** dispatch via **Resend HTML email** and **Service Worker Web Push** bound to decision blast radius. |
 
 ---
 
@@ -130,6 +131,7 @@ graph TB
         NodeInspector["Draggable Node Inspector (Physics Bounds)"]
         WhatIfBanner["What-If Blast Radius Simulation Engine"]
         AIAgents["AI Coding Agents (Claude Code, Cursor, Windsurf, Devin)"]
+        Notifications["Developer Inbox & Web Push Service Worker (/sw.js)"]
         WebHUD --> Canvas
         Canvas --> NodeInspector
         Canvas --> WhatIfBanner
@@ -141,10 +143,17 @@ graph TB
         GitHubScan["GitHub ADR AST Scanner & Stack Detector (apps/server/githubAdr.js)"]
         StateStore["Atomic System State Store (apps/server/systemState.js)"]
         SVGEngine["Standalone SVG & Vision OCR Engine (core/graph/renderSvg.js)"]
+        EmailDispatcher["Transactional Alert Engine (Resend API / sahnirmaan.live)"]
+        WebPushBroker["VAPID Web Push Broker (RFC 8292)"]
+        WebhookReceiver["GitHub Webhook Ingestion (/api/github/webhook)"]
+        
         Server --> MCPGateway
         Server --> GitHubScan
         Server --> StateStore
         Server --> SVGEngine
+        Server --> EmailDispatcher
+        Server --> WebPushBroker
+        WebhookReceiver --> Server
     end
 
     subgraph Causal_Engine["3. FalkorDB GraphBLAS Causal Core"]
@@ -179,6 +188,9 @@ graph TB
     GitHubScan -->|"Draft Starter ADR / Sync PR"| InitBranch
     GitHubScan -->|"Draft Superseded Status PR"| SyncBranch
     MCPGateway -->|"Verified Write on Gate Approval"| ProtectedDisk
+    GitHubRepos -->|"Live Push / PR Webhook"| WebhookReceiver
+    EmailDispatcher -->|"Actionable Causal HTML Email"| Notifications
+    WebPushBroker -->|"Instant Desktop/Mobile Push"| Notifications
 ```
 
 ### 2. Multi-Layer Architecture & FalkorDB GraphBLAS Engine Flowchart
@@ -335,6 +347,50 @@ Captured directly from our live production deployment at [https://cavdax.sahnirm
   <img src="./assets/screenshots/05_developer_profile_quota.png" alt="CAVDAX Developer Profile and Quotas" width="950" />
 </div>
 
+
+---
+
+## 📡 Out-of-Band Divergence Radar & Real-Time Alerts
+
+While CAVDAX's enclosed MCP gate (`apply_code_change`) prevents active coding agents from writing stale code in real-time, production engineering is fundamentally asynchronous. If a security lead or teammate merges `ADR-002` at 10:00 AM deprecating TokenAuth v1, an offline developer's planned implementation decision (`DEC-102`) is instantly superseded.
+
+CAVDAX provides **Dual-Plane Protection**:
+1. **In-Flight Enclosed Gate (MCP)**: Intercepts active coding agents in real-time.
+2. **Out-of-Band Divergence Radar (Email + Web Push + Webhooks)**: Automatically notifies the decision author or team asynchronously the millisecond a superseding ADR is pushed to the repository.
+
+```
+[GitHub Push: ADR-002 Merged] ──► [POST /api/github/webhook]
+                                            │
+                                            ▼
+                      [FalkorDB GraphBLAS Causal Traversal]
+                                            │
+                     ┌──────────────────────┴──────────────────────┐
+                     ▼                                             ▼
+       [Resend Transactional Email]                 [VAPID Service Worker Push]
+       - Monochromatic Console HTML                - Background OS Notification
+       - Actionable Causal Provenance              - Works with tab closed
+       - 1-Click HUD Blast Radius Link             - Offline Developer Alert
+```
+
+### 1. Blast-Radius Bound Causal Notifications
+Unlike noisy CI bots that broadcast spam to an entire team, CAVDAX traverses the FalkorDB causal DAG:
+`(newerSource)-[:SUPERSEDES]->(oldSource)<-[:EXTRACTED_FROM]-(Fact)<-[:DEPENDS_ON]-(d:Decision)`  
+Alerts are dispatched **strictly to the registered owner or CODEOWNER of the affected decision**, completely eliminating alert fatigue.
+
+### 2. Dual Out-of-Band Delivery Channels
+* **Developer-Console Transactional Email (Resend API)**:
+  * Dispatched from `no-reply@sahnirmaan.live` with verified DKIM/SPF domain authentication.
+  * Formatted in an industrial monochromatic developer aesthetic containing the exact broken decision ID, superseding source ID, causal violation path, direct 1-click link to the visual Blast Radius diff in the CAVDAX HUD, and copy-paste remediation CLI directive.
+  * Includes an automated sliding-window alert debouncer (5-minute window) to prevent spam during rapid git commit sequences.
+* **Background Web Push (Service Worker + VAPID)**:
+  * Native browser `PushManager` subscription registered via `/sw.js` and managed by `apps/client/src/services/webPush.js`.
+  * Elliptic-curve cryptography (ECDSA NIST P-256) VAPID key pairs generated and persisted server-side.
+  * Delivers operating system-level desktop notifications even when browser tabs are closed.
+
+### 3. Interactive Pitch & Demo Trigger (`/api/alerts/simulate-invalidation`)
+For live hackathon pitches and judging evaluations:
+* The HUD provides a **"Simulate Incompatible ADR Commit"** action in the Developer Console and Preferences.
+* Instantly triggers FalkorDB causal invalidation, broadcasts SSE to the live DAG canvas, and dispatches an authentic divergence alert to the evaluator's inbox with measured sub-second latency.
 
 ---
 
@@ -634,10 +690,16 @@ npx cavdax check --pr <number>
 CAVDAX/
 ├── apps/
 │   ├── client/                  # React 18 + Vite + Tailwind Porcelain Dark Web HUD
-│   │   ├── src/components/      # AuditPage, DevConsolePage, McpActionPlayground, GraphCanvas, etc.
+│   │   ├── public/sw.js         # Service Worker (Web Push & background divergence alerts)
+│   │   ├── src/components/      # AuditPage, DevConsolePage, McpActionPlayground, PreferencesModal, etc.
+│   │   ├── src/services/        # webPush.js (VAPID PushManager subscription manager)
 │   │   └── Dockerfile           # Client containerization
 │   ├── server/                  # Node.js + Express Backend Gateway
-│   │   ├── index.js             # REST API, SSE broadcaster, MCP SSE transport, ingest-source, dev/tier-check
+│   │   ├── index.js             # REST API, SSE broadcaster, MCP SSE transport, GitHub webhook ingestion
+│   │   ├── email.js             # Resend API transactional divergence alert dispatcher & debouncer
+│   │   ├── webPush.js           # VAPID key manager & Web Push background notification broker
+│   │   ├── systemState.js       # Atomic persistent state & user notification preferences
+│   │   ├── test/                # Unit & security test suite (57 automated tests)
 │   │   └── Dockerfile           # Server containerization
 │   └── mcp-server/              # Standalone NPM package (@cavdax/mcp-server — published)
 │       ├── bin/cavdax.js        # Universal CLI: npx cavdax mcp|ingest|check|doctor
