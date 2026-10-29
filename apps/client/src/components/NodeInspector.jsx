@@ -31,8 +31,11 @@ export default function NodeInspector({
     ? Boolean(isFalkorDB)
     : Boolean(node.is_demo === true || (node.id?.startsWith('act-') && !node.repo));
 
-  const adrFilePath = node.file || node.adr_path || (node.ref && !node.ref.includes('://') ? node.ref : null) || (node.id?.startsWith('ADR-') ? `docs/adrs/${node.id}.md` : null);
-  const codeFilePath = node.target_file;
+  // Dynamic path resolution directly from scanned repository AST
+  const adrFilePath = node.file || node.adr_path || (node.ref && !node.ref.includes('://') ? node.ref : null);
+
+  // Target code file path (distinct from ADR markdown)
+  const codeFilePath = (node.target_file && !node.target_file.endsWith('.md')) ? node.target_file : null;
 
   const adrGitUrl = (repo?.full_name && adrFilePath)
     ? `https://github.com/${repo.full_name}/blob/${branch}/${adrFilePath.replace(/^\.?\//, '')}`
@@ -41,8 +44,6 @@ export default function NodeInspector({
   const codeGitUrl = (repo?.full_name && codeFilePath)
     ? `https://github.com/${repo.full_name}/blob/${branch}/${codeFilePath.replace(/^\.?\//, '')}`
     : null;
-
-  const primaryGitUrl = (node.label === 'Source' || !codeGitUrl) ? adrGitUrl : codeGitUrl;
 
   return (
     <motion.div
@@ -209,11 +210,11 @@ export default function NodeInspector({
               className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
             >
               <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-              <span>{node.label === 'Decision' ? 'View ADR on GitHub' : 'View on GitHub'}</span>
+              <span>{node.label === 'Source' ? 'View ADR on GitHub' : 'View Source ADR on GitHub'}</span>
             </a>
           )}
 
-          {node.label === 'Decision' && codeGitUrl && (
+          {codeGitUrl && (
             <a
               href={codeGitUrl}
               target="_blank"
@@ -222,7 +223,7 @@ export default function NodeInspector({
               className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
             >
               <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-              <span>View Code on GitHub</span>
+              <span>View Target Code on GitHub</span>
             </a>
           )}
 

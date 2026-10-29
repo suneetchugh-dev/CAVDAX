@@ -76,7 +76,7 @@ export function buildGraphFromAdrs(adrs) {
 
   for (const adr of adrs) {
     if (adr.decision_id && adr.fact_id && facts.has(adr.fact_id)) {
-      const derivedTarget = adr.target_file || (adr.path ? adr.path.replace(/^docs\/adrs\//i, 'src/').replace(/\.md$/i, '.js') : 'src/app.js');
+      const derivedTarget = adr.target_file || adr.path || null;
       decisions.set(adr.decision_id, {
         id: adr.decision_id,
         label: 'Decision',

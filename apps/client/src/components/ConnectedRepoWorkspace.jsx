@@ -209,9 +209,7 @@ export default function ConnectedRepoWorkspace({
     }
 
     const adrNode = (scan?.graph?.nodes || []).find(n => n.label === 'Source' && (n.id === target.id || n.id === target.source_adr || n.id === target.from));
-    const targetFile = target.target_file
-      || (target.adr_path ? target.adr_path.replace(/^docs\/adrs\//i, 'src/').replace(/\.md$/i, '.js') : null)
-      || (adrNode?.file ? adrNode.file.replace(/^docs\/adrs\//i, 'src/').replace(/\.md$/i, '.js') : `src/${repo.name || 'app'}.js`);
+    const targetFile = target.target_file || target.file || target.adr_path || adrNode?.file || null;
 
     setIsVerifyingAction(true);
     const clientStart = performance.now();
