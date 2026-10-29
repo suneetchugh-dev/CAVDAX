@@ -30,6 +30,12 @@
   - Added "⚡ Simulate Alert" toolbar trigger button directly in the Console HUD for instant demonstration.
 - **Notification Settings in Preferences Modal (`apps/client/src/components/PreferencesModal.jsx`)**:
   - Added dedicated "Divergence Invalidation Alerts" accordion with master toggle, recipient email input, in-HUD chime toggle, Resend email toggle, and test alert trigger.
+- **True Background Web Push & Service Worker Engine (`apps/server/webPush.js`, `apps/client/public/sw.js`, `apps/client/src/services/webPush.js`)**:
+  - Implemented full RFC 8292 VAPID Web Push protocol using ECDSA key pairs and `web-push` server architecture.
+  - Automatically generates and persists stable VAPID key pairs in `system_state.json` (or loads from environment).
+  - Added registered Service Worker (`sw.js`) handling background push events and notification clicks when the user's browser tab is closed or offline.
+  - Added dedicated toggle in `PreferencesModal.jsx` allowing developers to grant OS notification permissions and register device PushSubscriptions via PushManager.
+  - Server endpoints: `GET /api/push/vapid-public-key`, `POST /api/push/subscribe`, and automated broadcast during divergence events.
 - **Verification Suite (`apps/server/test/invalidationAlerts.test.mjs`)**:
   - Full automated coverage for preference persistence, recipient validation, and alert debouncing. All 53 monorepo tests pass cleanly; client bundle builds with zero errors.
 
