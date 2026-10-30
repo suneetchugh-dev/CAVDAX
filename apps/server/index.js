@@ -32,7 +32,7 @@ import {
   fetchAuditLog
 } from '../../core/graph/queries.js';
 import { ingestAdrFile } from '../../core/ingestion/parser.js';
-import { scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, GithubAdrError } from './githubAdr.js';
+import { scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, listRepoBranches, GithubAdrError } from './githubAdr.js';
 import { CavdaxMcpServer } from '../../core/mcp/server.js';
 import { renderGraphToSvg, computeBlastRadius } from '../../core/graph/renderSvg.js';
 import { loadSystemState, saveSystemState } from './systemState.js';
@@ -2403,6 +2403,29 @@ app.get('/api/github/repos', async (req, res) => {
  * GET /api/github/repos/:owner/:repo/adrs
  * Scans the default branch of a GitHub repository for ADRs and returns them with a causal graph.
  */
+/**
+ * GET /api/github/repos/:owner/:repo/branches
+ * Returns all branches for the repository so users can switch branches in the Knowledge Graph.
+ */
+app.get('/api/github/repos/:owner/:repo/branches', async (req, res) => {
+  const token = req.session?.user?.accessToken;
+  if (!token) {
+    return res.status(401).json({ success: false, code: 'AUTH_REQUIRED', error: 'GitHub authentication required.' });
+  }
+  const { owner, repo } = req.params;
+  try {
+    const branches = await listRepoBranches({ token, owner, repo });
+    res.json({ success: true, branches });
+  } catch (err) {
+    if (err instanceof GithubAdrError) {
+      res.status(err.status).json({ success: false, code: err.code, error: err.message });
+    } else {
+      console.error('[CAVDAX listRepoBranches]', err);
+      res.status(500).json({ success: false, code: 'GITHUB_ERROR', error: 'Could not fetch branches from GitHub.' });
+    }
+  }
+});
+
 app.get('/api/github/repos/:owner/:repo/adrs', async (req, res) => {
   const token = req.session?.user?.accessToken;
   if (!token) {

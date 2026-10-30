@@ -178,10 +178,10 @@ export async function scanRepoAdrs(args) {
   return result;
 }
 
-async function scanWithTree({ token, owner, repo, fetchImpl = fetch }) {
+async function scanWithTree({ token, owner, repo, branch: requestedBranch, fetchImpl = fetch }) {
   assertRepoName(owner, repo);
   const meta = await gh(fetchImpl, token, 'GET', `/repos/${owner}/${repo}`);
-  const branch = meta.default_branch;
+  const branch = requestedBranch || meta.default_branch;
   const tree = await gh(fetchImpl, token, 'GET', `/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
 
   const adrFiles = (tree.tree || [])
@@ -693,4 +693,23 @@ export async function syncSupersededAdrPullRequest({ token, owner, repo, targetI
     base,
     reused: false
   };
+}
+
+
+/**
+ * List branches for a connected GitHub repository.
+ * Returns an array of branch objects with name, commit SHA, and isDefault flag.
+ */
+export async function listRepoBranches({ token, owner, repo, fetchImpl = fetch }) {
+  assertRepoName(owner, repo);
+  const meta = await gh(fetchImpl, token, 'GET', `/repos/${owner}/${repo}`);
+  const defaultBranch = meta.default_branch || 'main';
+  const branches = await gh(fetchImpl, token, 'GET', `/repos/${owner}/${repo}/branches?per_page=100`);
+
+  return (Array.isArray(branches) ? branches : []).map((b) => ({
+    name: b.name,
+    sha: b.commit?.sha,
+    isDefault: b.name === defaultBranch,
+    protected: Boolean(b.protected)
+  }));
 }

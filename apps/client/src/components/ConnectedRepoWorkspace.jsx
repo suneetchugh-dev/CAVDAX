@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   GitBranch, FolderGit2, FileText, RefreshCw, Terminal, GitPullRequest,
-  CheckCircle2, AlertTriangle, ExternalLink, Trash2, Loader2
-} from 'lucide-react';
+  CheckCircle2, AlertTriangle, ExternalLink, Trash2, Loader2, ChevronDown, Check, Search } from 'lucide-react';
 import GraphCanvas from './GraphCanvas';
 import SubsystemErrorBoundary from './SubsystemErrorBoundary';
 import { playClick, playApprovalChime, playRejectBuzz } from '../utils/soundFx';
@@ -58,6 +57,12 @@ export default function ConnectedRepoWorkspace({
   const [expandedAdrId, setExpandedAdrId] = useState(null);
   const [selectedProbeDecisionId, setSelectedProbeDecisionId] = useState(null);
   const [logs, setLogs] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState(repo.default_branch || 'main');
+  const [branches, setBranches] = useState([]);
+  const [isLoadingBranches, setIsLoadingBranches] = useState(false);
+  const [isBranchDropdownOpen, setIsBranchDropdownOpen] = useState(false);
+  const [branchSearch, setBranchSearch] = useState('');
+  const branchDropdownRef = useRef(null);
   const [leftWidthPercent, setLeftWidthPercent] = useState(() => {
     try {
       const saved = localStorage.getItem('cavdax.repo.splitter.width');
@@ -68,6 +73,38 @@ export default function ConnectedRepoWorkspace({
   });
   const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
   const splitContainerRef = useRef(null);
+
+  // Load repository branches for the branch selector
+  useEffect(() => {
+    let isCancelled = false;
+    setIsLoadingBranches(true);
+    fetch(`${apiBase}/branches`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (!isCancelled && data.success && Array.isArray(data.branches)) {
+          setBranches(data.branches);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!isCancelled) setIsLoadingBranches(false);
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [apiBase]);
+
+  // Click-outside listener to close branch dropdown
+  useEffect(() => {
+    if (!isBranchDropdownOpen) return;
+    const handleOutsideClick = (e) => {
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(e.target)) {
+        setIsBranchDropdownOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutsideClick);
+    return () => window.removeEventListener('mousedown', handleOutsideClick);
+  }, [isBranchDropdownOpen]);
 
   const handleSplitterMouseDown = useCallback((e) => {
     e.preventDefault();
@@ -123,25 +160,29 @@ export default function ConnectedRepoWorkspace({
     addLog('GITHUB', message, 'GATE_BLOCK');
   }, [addLog]);
 
-  const runScan = useCallback(async () => {
+  const runScan = useCallback(async (branchOverride) => {
+    const targetBranch = branchOverride || selectedBranch || repoRef.current?.default_branch || 'main';
     setPhase('scanning');
     setError(null);
-    addLog('SCAN', `Reading ADRs from ${repoRef.current.full_name} on its default branch.`);
+    addLog('SCAN', `Reading ADRs from ${repoRef.current.full_name} on branch ${targetBranch}.`);
     try {
-      const res = await fetch(`${apiBase}/adrs?_t=${Date.now()}`, { credentials: 'include' });
+      const res = await fetch(`${apiBase}/adrs?branch=${encodeURIComponent(targetBranch)}&_t=${Date.now()}`, { credentials: 'include' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
         failWith(data, 'Could not read this repository.');
         return;
       }
       setScan(data);
+      if (data.branch && data.branch !== selectedBranch) {
+        setSelectedBranch(data.branch);
+      }
       setPhase('ready');
       addLog('PARSER', `Found ${data.count} ADR file${data.count === 1 ? '' : 's'} on branch ${data.branch}.`, data.count ? 'CASCADE' : 'INFO');
       if (data.count > 0) {
         addLog('GRAPH', `Built ${data.graph.nodes.length} nodes and ${data.graph.edges.length} edges from the ADRs.`);
         playApprovalChime();
       } else {
-        addLog('GITHUB', '0 ADR files detected on default branch. If you recently merged a pull request, GitHub edge caches take ~10-15s to update. Please wait a moment and click Rescan.', 'INFO');
+        addLog('GITHUB', `0 ADR files detected on branch ${data.branch}. If you recently merged a pull request, GitHub edge caches take ~10-15s to update. Please wait a moment and click Rescan.`, 'INFO');
       }
       const current = repoRef.current;
       const hasAdrs = data.count > 0;
@@ -151,15 +192,16 @@ export default function ConnectedRepoWorkspace({
     } catch {
       failWith(null, 'Could not reach the CAVDAX server. Check your connection and try again.');
     }
-  }, [apiBase, addLog, failWith]);
+  }, [apiBase, selectedBranch, addLog, failWith]);
 
   // Scan once per repository. Keyed on full_name so parent state updates never retrigger it.
   useEffect(() => {
+    setSelectedBranch(repo.default_branch || 'main');
     setScan(null);
     setSelectedNode(null);
     setLogs([]);
-    runScan();
-  }, [repo.full_name, runScan]);
+    runScan(repo.default_branch || 'main');
+  }, [repo.full_name, repo.default_branch, runScan]);
 
   const openPullRequest = async () => {
     playClick();
@@ -337,6 +379,26 @@ export default function ConnectedRepoWorkspace({
     ? selectedDecision
     : (staleDecisions[0] || null);
 
+  const handleSelectBranch = (branchName) => {
+    if (!branchName || branchName === selectedBranch) {
+      setIsBranchDropdownOpen(false);
+      return;
+    }
+    playClick();
+    setSelectedBranch(branchName);
+    setIsBranchDropdownOpen(false);
+    setBranchSearch('');
+    runScan(branchName);
+  };
+
+  const allBranchesList = branches.length > 0
+    ? branches
+    : [{ name: selectedBranch, isDefault: true }];
+
+  const filteredBranches = allBranchesList.filter(b =>
+    b.name.toLowerCase().includes(branchSearch.toLowerCase().trim())
+  );
+
   return (
     <div className="flex-1 min-h-0 flex flex-col font-mono select-none">
       {/* Repository ribbon */}
@@ -347,9 +409,81 @@ export default function ConnectedRepoWorkspace({
           </div>
           <div className="min-w-0">
             <span className="text-xs font-bold text-slate-950 dark:text-white truncate block">{repo.full_name}</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans truncate block mt-0.5">
-              Branch: {scan?.branch || repo.default_branch || 'main'}
-            </span>
+            <div className="relative mt-0.5" ref={branchDropdownRef}>
+              <button
+                type="button"
+                onClick={() => { playClick(); setIsBranchDropdownOpen(prev => !prev); }}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-white/15 transition-colors cursor-pointer"
+                title="Switch branch"
+              >
+                <GitBranch className="w-3 h-3 text-slate-500 dark:text-slate-400 shrink-0" />
+                <span className="font-bold truncate max-w-[150px]">{selectedBranch}</span>
+                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-0.5" />
+              </button>
+
+              {isBranchDropdownOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-64 max-w-[90vw] rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0c0e] shadow-xl z-50 overflow-hidden text-left flex flex-col font-sans">
+                  <div className="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-white/[0.02]">
+                    <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-slate-900 dark:text-slate-100 mb-1.5 px-1 font-mono">
+                      <span>Switch branch</span>
+                      {isLoadingBranches && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
+                    </div>
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        value={branchSearch}
+                        onChange={(e) => setBranchSearch(e.target.value)}
+                        placeholder="Filter branches..."
+                        className="w-full pl-7 pr-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/40 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-white/30 font-mono"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className="max-h-56 overflow-y-auto has-scrubbar divide-y divide-slate-100 dark:divide-white/5 py-1">
+                    {filteredBranches.length > 0 ? (
+                      filteredBranches.map(b => {
+                        const isCurrent = b.name === selectedBranch;
+                        return (
+                          <button
+                            key={b.name}
+                            type="button"
+                            onClick={() => handleSelectBranch(b.name)}
+                            className={`w-full px-3 py-1.5 text-xs text-left flex items-center justify-between gap-2 hover:bg-slate-100/80 dark:hover:bg-white/[0.05] transition-colors cursor-pointer ${isCurrent ? 'bg-slate-100 dark:bg-white/10 font-bold' : ''}`}
+                          >
+                            <span className="truncate font-mono text-[11px] text-slate-800 dark:text-slate-200">{b.name}</span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              {b.isDefault && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] uppercase tracking-wider font-mono font-semibold bg-slate-200/80 dark:bg-white/10 text-slate-600 dark:text-slate-300">default</span>
+                              )}
+                              {isCurrent && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                            </div>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="p-3 text-center text-xs text-slate-500 font-mono">
+                        {branchSearch.trim() ? (
+                          <div>
+                            <p className="mb-2">No matching branch found.</p>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectBranch(branchSearch.trim())}
+                              className="px-2 py-1 rounded bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-[11px] text-slate-900 dark:text-white transition-colors cursor-pointer"
+                            >
+                              Scan &quot;{branchSearch.trim()}&quot; anyway
+                            </button>
+                          </div>
+                        ) : (
+                          'No branches available'
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -410,7 +544,7 @@ export default function ConnectedRepoWorkspace({
       {noAdrs && pr && (
         <StateCard icon={<GitPullRequest className="w-6 h-6 text-slate-700 dark:text-slate-300" />}
           title={`Pull request #${pr.number} is waiting for review`}
-          body={<>Review the starter ADR on GitHub and merge it into <strong className="font-mono text-slate-950 dark:text-white">{scan.branch}</strong>. Then rescan and CAVDAX will build the decision graph from it.</>}
+          body={<>Review the starter ADR on GitHub and merge it into <strong className="font-mono text-slate-950 dark:text-white">{scan?.branch || selectedBranch}</strong>. Then rescan and CAVDAX will build the decision graph from it.</>}
           actions={
             <div className="grid grid-cols-2 gap-2">
               <a href={pr.url} target="_blank" rel="noopener noreferrer" className={`${btnPrimary} no-underline`}>
@@ -442,7 +576,7 @@ export default function ConnectedRepoWorkspace({
 
             <div data-lenis-prevent className="max-h-24 overflow-y-auto overscroll-contain border-b border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-white/5 bg-slate-50/40 dark:bg-transparent select-text">
               {scan.adrs.map(a => {
-                const gitAdrUrl = repo?.full_name ? `https://github.com/${repo.full_name}/blob/${scan?.branch || repo.default_branch || 'main'}/${a.path.replace(/^\.?\//, '')}` : null;
+                const gitAdrUrl = repo?.full_name ? `https://github.com/${repo.full_name}/blob/${scan?.branch || selectedBranch || repo.default_branch || 'main'}/${a.path.replace(/^\.?\//, '')}` : null;
                 // Find downstream impacted decisions and code files for this ADR
                 const associatedDecisions = (scan?.graph?.nodes || []).filter(n => n.label === 'Decision' && (n.source_adr === a.id || n.adr_path === a.path));
                 const targetFiles = Array.from(new Set(associatedDecisions.map(d => d.target_file).filter(Boolean)));
