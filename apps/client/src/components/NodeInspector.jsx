@@ -155,15 +155,22 @@ export default function NodeInspector({
 
   return (
     <motion.div
+      ref={inspectorCardRef}
       drag
       dragMomentum={false}
       dragConstraints={containerRef || false}
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
+      style={{
+        width: customSize ? `${customSize.width}px` : undefined,
+        height: customSize ? `${customSize.height}px` : undefined,
+      }}
       className={`absolute ${hasBlastBanner ? 'top-16' : 'top-12'} right-3 sm:right-4 ${
-        isFullscreen ? 'w-76 sm:w-80' : 'w-68 sm:w-72'
-      } max-w-[calc(100%-1.5rem)] max-h-[calc(100%-4rem)] overflow-y-auto bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs select-text`}
+        customSize ? '' : (isFullscreen ? 'w-76 sm:w-80' : 'w-68 sm:w-72')
+      } max-w-[calc(100%-1.5rem)] max-h-[calc(100%-4rem)] overflow-x-auto overflow-y-auto bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs select-text ${
+        isResizing ? 'select-none cursor-nwse-resize' : ''
+      }`}
       data-lenis-prevent
     >
       {/* Header with Draggable Handle */}
@@ -261,17 +268,53 @@ export default function NodeInspector({
               )}
             </div>
             {affectedCodeFiles.length === 1 ? (
-              <span className="text-slate-800 hover:text-black dark:text-slate-200 dark:hover:text-white font-mono truncate block text-[11px]" title={affectedCodeFiles[0]}>
-                {affectedCodeFiles[0]}
-              </span>
+              repo?.full_name ? (
+                <a
+                  href={`https://github.com/${repo.full_name}/blob/${branch}/${affectedCodeFiles[0].replace(/^\.?\//, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={playClick}
+                  className="flex items-center gap-1.5 text-slate-800 hover:text-sky-600 dark:text-slate-200 dark:hover:text-sky-400 font-mono truncate text-[11px] group transition-colors no-underline"
+                  title={`Open ${affectedCodeFiles[0]} on GitHub`}
+                >
+                  <FileCode2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 shrink-0" />
+                  <span className="truncate underline underline-offset-2">{affectedCodeFiles[0]}</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-sky-500 shrink-0 ml-auto opacity-70 group-hover:opacity-100" />
+                </a>
+              ) : (
+                <span className="text-slate-800 hover:text-black dark:text-slate-200 dark:hover:text-white font-mono truncate block text-[11px]" title={affectedCodeFiles[0]}>
+                  {affectedCodeFiles[0]}
+                </span>
+              )
             ) : (
-              <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
-                {affectedCodeFiles.map((file, fIdx) => (
-                  <div key={fIdx} className="flex items-center gap-1.5 text-[10.5px] font-mono text-slate-700 dark:text-slate-300 truncate bg-slate-50 dark:bg-white/[0.03] px-2 py-1 rounded border border-slate-200 dark:border-white/10" title={file}>
-                    <FileCode2 className="w-3 h-3 text-slate-400 shrink-0" />
-                    <span className="truncate">{file}</span>
-                  </div>
-                ))}
+              <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                {affectedCodeFiles.map((file, fIdx) => {
+                  const fileUrl = repo?.full_name
+                    ? `https://github.com/${repo.full_name}/blob/${branch}/${file.replace(/^\.?\//, '')}`
+                    : null;
+                  return fileUrl ? (
+                    <a
+                      key={fIdx}
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={playClick}
+                      className="flex items-center justify-between gap-1.5 text-[10.5px] font-mono text-slate-700 hover:text-sky-600 dark:text-slate-300 dark:hover:text-sky-400 bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/10 px-2 py-1 rounded border border-slate-200 dark:border-white/10 transition-colors no-underline group"
+                      title={`Open ${file} on GitHub`}
+                    >
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <FileCode2 className="w-3 h-3 text-slate-400 group-hover:text-sky-500 shrink-0" />
+                        <span className="truncate">{file}</span>
+                      </div>
+                      <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-sky-500 shrink-0 opacity-70 group-hover:opacity-100" />
+                    </a>
+                  ) : (
+                    <div key={fIdx} className="flex items-center gap-1.5 text-[10.5px] font-mono text-slate-700 dark:text-slate-300 truncate bg-slate-50 dark:bg-white/[0.03] px-2 py-1 rounded border border-slate-200 dark:border-white/10" title={file}>
+                      <FileCode2 className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="truncate">{file}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -463,6 +506,17 @@ export default function NodeInspector({
             {isFalkor ? 'Live Synced' : 'Branch Head (Git)'}
           </span>
         </div>
+      </div>
+
+      {/* Corner Resize Grip */}
+      <div
+        onMouseDown={handleResizeMouseDown}
+        className="absolute bottom-1 right-1 w-4 h-4 cursor-nwse-resize flex items-end justify-end p-0.5 z-40 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+        title="Drag corner to resize inspector"
+      >
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="shrink-0 pointer-events-none">
+          <path d="M7 1L1 7M7 4L4 7M7 7H7.01" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        </svg>
       </div>
     </motion.div>
   );
