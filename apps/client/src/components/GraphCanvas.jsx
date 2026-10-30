@@ -132,12 +132,14 @@ export default function GraphCanvas({
   const filteredRawNodes = rawNodes.filter(node => {
     if (driftFilter === 'GROUNDED') {
       const isStale = node.status === 'SUPERSEDED' || node.status === 'INVALIDATED_NEEDS_REVALIDATION' || node.is_stale;
-      return !isStale;
+      const isBlockedAction = (node.label === 'AgentAction' || node.id?.startsWith('act-')) && (node.status === 'BLOCKED' || node.status === 'BLOCKED_SUPERSEDED_SOURCE');
+      return !isStale && !isBlockedAction;
     }
     if (driftFilter === 'DRIFTED') {
       const isStale = node.status === 'SUPERSEDED' || node.status === 'INVALIDATED_NEEDS_REVALIDATION' || node.is_stale;
+      const isBlockedAction = (node.label === 'AgentAction' || node.id?.startsWith('act-')) && (node.status === 'BLOCKED' || node.status === 'BLOCKED_SUPERSEDED_SOURCE');
       const hasDrift = unsyncedList.some(u => u.targetId === node.id);
-      return isStale || hasDrift || blastNodeIds.has(node.id);
+      return isStale || isBlockedAction || hasDrift || blastNodeIds.has(node.id);
     }
     return true;
   });
