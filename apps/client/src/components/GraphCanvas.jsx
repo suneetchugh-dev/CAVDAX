@@ -672,12 +672,21 @@ export default function GraphCanvas({
             }
 
             const isIntraColumn = Math.abs(edge.sourceNode.x - edge.targetNode.x) < 30;
+            const badgeBg = isDarkTheme ? '#0B0D13' : '#FFFFFF';
+            const badgeBorder = isBlast
+              ? '#F43F5E'
+              : (isSupersedes ? '#FB7185' : (isDarkTheme ? '#334155' : '#CBD5E1'));
+            const labelColor = isBlast
+              ? '#F43F5E'
+              : (isSupersedes ? '#FB7185' : (isDarkTheme ? '#94A3B8' : '#475569'));
+            const badgeW = Math.max(edge.type.length * 5.4 + 12, 44);
+            const badgeH = 14;
 
             if (isIntraColumn) {
               // Smooth bezier curve looping on the left to avoid crossing intermediate nodes
               const arcOffset = 45;
               const pathD = `M ${edge.sourceNode.x - 32} ${edge.sourceNode.y} C ${edge.sourceNode.x - arcOffset - 25} ${edge.sourceNode.y}, ${edge.targetNode.x - arcOffset - 25} ${edge.targetNode.y}, ${edge.targetNode.x - 32} ${edge.targetNode.y}`;
-              const midX = edge.sourceNode.x - arcOffset - 12;
+              const midX = edge.sourceNode.x - arcOffset - 20;
               const midY = (edge.sourceNode.y + edge.targetNode.y) / 2;
 
               return (
@@ -691,14 +700,29 @@ export default function GraphCanvas({
                     markerEnd={marker}
                     className="transition-all duration-300"
                   />
+                  {/* Opaque pill badge shields text from path line overlap / strikethrough */}
+                  <rect
+                    x={midX - badgeW / 2}
+                    y={midY - badgeH / 2}
+                    width={badgeW}
+                    height={badgeH}
+                    rx="3.5"
+                    ry="3.5"
+                    fill={badgeBg}
+                    stroke={badgeBorder}
+                    strokeWidth="1"
+                    className="pointer-events-none"
+                  />
                   <text
                     x={midX}
-                    y={midY}
+                    y={midY + 0.5}
                     textAnchor="middle"
-                    fill={isBlast ? '#F43F5E' : (isSupersedes ? '#FB7185' : (isDarkTheme ? '#64748B' : '#94A3B8'))}
+                    dominantBaseline="central"
+                    fill={labelColor}
                     fontSize="7"
                     fontFamily="monospace"
-                    className="select-none pointer-events-none font-semibold"
+                    fontWeight="700"
+                    className="select-none pointer-events-none tracking-tight"
                   >
                     {edge.type}
                   </text>
@@ -707,7 +731,7 @@ export default function GraphCanvas({
             }
 
             const midX = (edge.sourceNode.x + edge.targetNode.x) / 2;
-            const midY = (edge.sourceNode.y + edge.targetNode.y) / 2 - 8;
+            const midY = (edge.sourceNode.y + edge.targetNode.y) / 2;
 
             return (
               <g key={`edge-${idx}`}>
@@ -722,14 +746,29 @@ export default function GraphCanvas({
                   markerEnd={marker}
                   className="transition-all duration-300"
                 />
+                {/* Opaque pill badge shields text from arrow line overlap / strikethrough */}
+                <rect
+                  x={midX - badgeW / 2}
+                  y={midY - badgeH / 2}
+                  width={badgeW}
+                  height={badgeH}
+                  rx="3.5"
+                  ry="3.5"
+                  fill={badgeBg}
+                  stroke={badgeBorder}
+                  strokeWidth="1"
+                  className="pointer-events-none"
+                />
                 <text
                   x={midX}
-                  y={midY}
+                  y={midY + 0.5}
                   textAnchor="middle"
-                  fill={isBlast ? '#F43F5E' : (isSupersedes ? '#FB7185' : (isDarkTheme ? '#64748B' : '#94A3B8'))}
+                  dominantBaseline="central"
+                  fill={labelColor}
                   fontSize="7.5"
                   fontFamily="monospace"
-                  className="select-none pointer-events-none font-semibold"
+                  fontWeight="700"
+                  className="select-none pointer-events-none tracking-tight"
                 >
                   {edge.type}
                 </text>
@@ -881,6 +920,7 @@ export default function GraphCanvas({
       {selectedNode && (
         <NodeInspector
           node={selectedNode}
+          graphData={graphData}
           onClose={onCloseNode}
           repo={repo}
           branch={branch}
