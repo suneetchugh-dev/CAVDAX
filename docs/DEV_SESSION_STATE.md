@@ -9,6 +9,14 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.51 Latest Session Achievements (October 30, 2026 - Progressive Threshold Combobox for Target Code Files)
+
+- **Threshold-Based Progressive Disclosure for Target Code Files (`apps/client/src/components/NodeInspector.jsx`)**:
+  - **Single File (1 file)**: Preserved immediate 1-click inline link (`FileCode2` + filename + `ExternalLink` glyph) with zero interaction friction.
+  - **Compact List (2 to 3 files)**: Direct native list of clickable rows without requiring an extra dropdown tap.
+  - **Threshold Met (> 3 files)**: Replaces the flat list with an interactive combobox pill (`📁 N Impacted Files ▾`) expanding into a floating, themed dropdown with real-time text search filter (`Filter N files...`) and click-outside dismissal.
+  - Preserves vertical space and eliminates visual bloat when wide architectural decisions touch dozens of repository files.
+
 ## 1.0.50 Latest Session Achievements (October 30, 2026 - Multi-Branch Combobox & NodeInspector Action Streamlining)
 
 - **GitHub-Style Branch Combobox Selector (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
