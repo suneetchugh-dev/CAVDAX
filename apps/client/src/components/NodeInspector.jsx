@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import React, { useState, useMemo, useRef } from 'react';
-import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest, Loader2, ChevronDown, ChevronUp, FileCode2 } from 'lucide-react';
+import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest, Loader2, FileCode2 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 export default function NodeInspector({
@@ -22,7 +22,6 @@ export default function NodeInspector({
 }) {
   if (!node) return null;
 
-  const [isFilesDropdownOpen, setIsFilesDropdownOpen] = useState(false);
   const [customSize, setCustomSize] = useState(null); // { width, height }
   const [isResizing, setIsResizing] = useState(false);
   const inspectorCardRef = useRef(null);
@@ -381,104 +380,6 @@ export default function NodeInspector({
               <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
               <span>{node.label === 'Source' ? 'View ADR on GitHub' : 'View Source ADR on GitHub'}</span>
             </a>
-          )}
-
-          {/* Target / Impacted Code Files on GitHub (Single File Direct Link vs Multi-File Dropdown) */}
-          {affectedCodeFiles.length === 1 && (
-            repo?.full_name ? (
-              <a
-                href={`https://github.com/${repo.full_name}/blob/${branch}/${affectedCodeFiles[0].replace(/^\.?\//, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={playClick}
-                className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
-                title={affectedCodeFiles[0]}
-              >
-                <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-                <span className="truncate">View Target Code on GitHub</span>
-              </a>
-            ) : (
-              <div
-                className="w-full py-1.5 px-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02] text-slate-600 dark:text-slate-400 text-[11px] font-mono flex items-center justify-between gap-1.5"
-                title={affectedCodeFiles[0]}
-              >
-                <div className="flex items-center gap-1.5 truncate">
-                  <FileCode2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                  <span className="truncate">Target: {affectedCodeFiles[0]}</span>
-                </div>
-                <span className="text-[9px] uppercase px-1 rounded bg-slate-200 dark:bg-white/10 text-slate-500 font-bold shrink-0">Demo</span>
-              </div>
-            )
-          )}
-
-          {affectedCodeFiles.length > 1 && (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  playClick();
-                  setIsFilesDropdownOpen(prev => !prev);
-                }}
-                className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-between gap-1.5 cursor-pointer tactile-btn"
-                title="View all files impacted by this architectural decision"
-              >
-                <div className="flex items-center gap-1.5 truncate">
-                  <FileCode2 className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-                  <span>View Impacted Code ({affectedCodeFiles.length} files)</span>
-                </div>
-                {isFilesDropdownOpen ? (
-                  <ChevronUp className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                )}
-              </button>
-
-              {isFilesDropdownOpen && (
-                <div className="mt-1.5 p-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#111318] shadow-xl space-y-1 animate-in fade-in zoom-in-95 font-mono text-xs">
-                  <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
-                    <span>Impacted Repository Files</span>
-                    <span className="font-bold">{affectedCodeFiles.length} total</span>
-                  </div>
-                  <div className="max-h-40 overflow-y-auto space-y-1 pt-1">
-                    {affectedCodeFiles.map((file, fIdx) => {
-                      const fileUrl = repo?.full_name
-                        ? `https://github.com/${repo.full_name}/blob/${branch}/${file.replace(/^\.?\//, '')}`
-                        : null;
-
-                      return fileUrl ? (
-                        <a
-                          key={fIdx}
-                          href={fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={playClick}
-                          className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[10.5px] transition-colors no-underline group"
-                          title={`Open ${file} on GitHub`}
-                        >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <FileCode2 className="w-3 h-3 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0" />
-                            <span className="truncate">{file}</span>
-                          </div>
-                          <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0" />
-                        </a>
-                      ) : (
-                        <div
-                          key={fIdx}
-                          className="flex items-center justify-between gap-2 p-1.5 rounded-lg text-slate-700 dark:text-slate-300 text-[10.5px] bg-slate-50 dark:bg-white/[0.02]"
-                          title={file}
-                        >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <FileCode2 className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span className="truncate">{file}</span>
-                          </div>
-                          <span className="text-[9px] uppercase px-1 rounded bg-slate-200 dark:bg-white/10 text-slate-500 font-bold shrink-0">Demo</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
           )}
 
           {hasDrift && onOpenSyncPr && (
