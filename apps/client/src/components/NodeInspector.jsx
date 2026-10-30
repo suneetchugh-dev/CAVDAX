@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import React, { useState, useMemo, useRef } from 'react';
-import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest, Loader2, FileCode2 } from 'lucide-react';
+import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest, Loader2, FileCode2, ChevronDown, Search } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 export default function NodeInspector({
@@ -24,6 +24,25 @@ export default function NodeInspector({
 
   const [customSize, setCustomSize] = useState(null); // { width, height }
   const [isResizing, setIsResizing] = useState(false);
+  const [isFilesComboboxOpen, setIsFilesComboboxOpen] = useState(false);
+  const [fileFilter, setFileFilter] = useState('');
+  const filesComboboxRef = useRef(null);
+
+  useEffect(() => {
+    setIsFilesComboboxOpen(false);
+    setFileFilter('');
+  }, [node?.id]);
+
+  useEffect(() => {
+    if (!isFilesComboboxOpen) return;
+    const handleOutsideClick = (e) => {
+      if (filesComboboxRef.current && !filesComboboxRef.current.contains(e.target)) {
+        setIsFilesComboboxOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutsideClick);
+    return () => window.removeEventListener('mousedown', handleOutsideClick);
+  }, [isFilesComboboxOpen]);
   const inspectorCardRef = useRef(null);
 
   const handleResizeMouseDown = (e) => {
@@ -285,8 +304,9 @@ export default function NodeInspector({
                   {affectedCodeFiles[0]}
                 </span>
               )
-            ) : (
-              <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+            ) : affectedCodeFiles.length <= 3 ? (
+              /* 2 to 3 files: Direct compact list with zero friction */
+              <div className="space-y-1 max-h-24 overflow-y-auto has-scrubbar pr-1">
                 {affectedCodeFiles.map((file, fIdx) => {
                   const fileUrl = repo?.full_name
                     ? `https://github.com/${repo.full_name}/blob/${branch}/${file.replace(/^\.?\//, '')}`
@@ -314,6 +334,85 @@ export default function NodeInspector({
                     </div>
                   );
                 })}
+              </div>
+            ) : (
+              /* > 3 files: Searchable combobox dropdown to prevent card bloat */
+              <div className="relative" ref={filesComboboxRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playClick();
+                    setIsFilesComboboxOpen(prev => !prev);
+                  }}
+                  className="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-mono text-[11px] transition-colors cursor-pointer"
+                  title="Browse impacted target files"
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <FileCode2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                    <span className="truncate font-semibold">{affectedCodeFiles.length} Impacted Files</span>
+                  </div>
+                  <ChevronDown className={`w-3 h-3 text-slate-400 shrink-0 transition-transform duration-150 ${isFilesComboboxOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isFilesComboboxOpen && (
+                  <div className="absolute left-0 top-full mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111318] shadow-xl z-50 overflow-hidden text-left flex flex-col font-sans">
+                    <div className="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-white/[0.02]">
+                      <div className="relative">
+                        <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={fileFilter}
+                          onChange={(e) => setFileFilter(e.target.value)}
+                          placeholder={`Filter ${affectedCodeFiles.length} files...`}
+                          className="w-full pl-6 pr-2 py-1 text-[11px] rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-black/40 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 font-mono"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto has-scrubbar divide-y divide-slate-100 dark:divide-white/5 p-1">
+                      {filteredFiles.length > 0 ? (
+                        filteredFiles.map((file, fIdx) => {
+                          const fileUrl = repo?.full_name
+                            ? `https://github.com/${repo.full_name}/blob/${branch}/${file.replace(/^\.?\//, '')}`
+                            : null;
+                          return fileUrl ? (
+                            <a
+                              key={fIdx}
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={playClick}
+                              className="flex items-center justify-between gap-1.5 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-white/10 text-[10.5px] font-mono text-slate-800 dark:text-slate-200 transition-colors no-underline group"
+                              title={`Open ${file} on GitHub`}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <FileCode2 className="w-3 h-3 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0" />
+                                <span className="truncate">{file}</span>
+                              </div>
+                              <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0 opacity-70 group-hover:opacity-100" />
+                            </a>
+                          ) : (
+                            <div
+                              key={fIdx}
+                              className="flex items-center justify-between gap-1.5 p-1.5 text-[10.5px] font-mono text-slate-700 dark:text-slate-300"
+                              title={file}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <FileCode2 className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span className="truncate">{file}</span>
+                              </div>
+                              <span className="text-[9px] uppercase px-1 rounded bg-slate-200 dark:bg-white/10 text-slate-500 font-bold shrink-0">Demo</span>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="p-2 text-center text-[10.5px] text-slate-400 font-mono">
+                          No matching files found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
