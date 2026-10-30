@@ -8,7 +8,8 @@ import assert from 'node:assert/strict';
 import { isAdrPath } from '../../../core/ingestion/adrPaths.js';
 import { parseFrontmatter } from '../../../core/ingestion/parser.js';
 import {
-  scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, detectUnsyncedSupersessions, applySupersededStatusToAdr, buildGraphFromAdrs, buildStarterAdr, detectStack, selectStackFiles, assertRepoName, NEW_ADR_PATH
+  scanRepoAdrs, createAdrPullRequest, syncSupersededAdrPullRequest, detectUnsyncedSupersessions, applySupersededStatusToAdr, buildGraphFromAdrs, buildStarterAdr, detectStack, selectStackFiles, assertRepoName, NEW_ADR_PATH,
+  listRepoBranches
 } from '../githubAdr.js';
 
 const json = (body, status = 200) => ({ ok: status < 400, status, json: async () => body, text: async () => JSON.stringify(body) });
@@ -49,6 +50,12 @@ function fakeGithub({ files = {}, openPulls = [], takenBranch = false, extraTree
     if (method === 'GET' && p.startsWith('/repos/o/r/contents/')) {
       const content = files[p.replace('/repos/o/r/contents/', '')];
       return content === undefined ? json({}, 404) : text(content);
+    }
+    if (method === 'GET' && p === '/repos/o/r/branches') {
+      return json([
+        { name: 'main', commit: { sha: 'sha-main' }, protected: true },
+        { name: 'feat/branch-1', commit: { sha: 'sha-feat' }, protected: false }
+      ]);
     }
     if (method === 'GET' && p === '/repos/o/r/pulls') return json(openPulls);
     if (method === 'GET' && p === '/repos/o/r/git/ref/heads/main') return json({ object: { sha: 'abc123' } });
@@ -435,4 +442,26 @@ test('syncSupersededAdrPullRequest refuses when target is not superseded', async
     () => syncSupersededAdrPullRequest({ token: 't', owner: 'o', repo: 'r', targetId: 'ADR-001', supersedingId: 'ADR-002', fetchImpl }),
     (e) => e.code === 'SUPERSEDING_NOT_FOUND' && e.status === 404
   );
+});
+
+test('listRepoBranches returns formatted branches with isDefault indicator', async () => {
+  const { fetchImpl } = fakeGithub();
+  const branches = await listRepoBranches({ token: 't', owner: 'o', repo: 'r', fetchImpl });
+  assert.equal(Array.isArray(branches), true);
+  assert.equal(branches.length, 2);
+  assert.equal(branches[0].name, 'main');
+  assert.equal(branches[0].isDefault, true);
+  assert.equal(branches[1].name, 'feat/branch-1');
+  assert.equal(branches[1].isDefault, false);
+});
+
+test('scanRepoAdrs supports targeting a specific branch ref', async () => {
+  const { fetchImpl, calls } = fakeGithub({
+    files: { 'docs/adrs/ADR-001.md': ADR1 }
+  });
+  const res = await scanRepoAdrs({ token: 't', owner: 'o', repo: 'r', branch: 'feat/branch-1', fetchImpl });
+  assert.equal(res.count, 1);
+  assert.equal(res.branch, 'feat/branch-1');
+  const treeCall = calls.find(c => c.method === 'GET' && c.path.includes('/git/trees/feat/branch-1'));
+  assert.ok(treeCall, 'Should fetch tree for requested branch');
 });
