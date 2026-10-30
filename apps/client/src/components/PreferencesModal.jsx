@@ -584,13 +584,10 @@ export default function PreferencesModal({
                 <div className="min-w-0">
                   <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug flex items-center gap-1.5">
                     <span>Divergence Invalidation Alerts</span>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                      Resend
-                    </span>
                   </div>
                   <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
                     {alertsMasterActive
-                      ? (targetEmail ? `Active dispatch to ${targetEmail}` : 'Email & in-HUD breaking alerts active')
+                      ? (targetEmail ? `Email dispatch configured for ${targetEmail}` : 'In-HUD & email divergence alerts active')
                       : 'All divergence alerts paused'}
                   </div>
                 </div>
@@ -652,7 +649,7 @@ export default function PreferencesModal({
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
                   <Mail size={13} className={`transition-colors ${emailAlertsActive && alertsMasterActive ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-600 opacity-40'}`} />
-                  <span className="text-[11px] text-slate-700 dark:text-slate-300">Resend Email Invalidation Dispatch</span>
+                  <span className="text-[11px] text-slate-700 dark:text-slate-300">Email Invalidation Dispatch</span>
                 </div>
                 <ToggleSwitch 
                   checked={emailAlertsActive} 
@@ -677,7 +674,7 @@ export default function PreferencesModal({
                     type="email"
                     value={targetEmail}
                     onChange={(e) => setTargetEmail(e.target.value)}
-                    placeholder="developer@sahnirmaan.live"
+                    placeholder="developer@example.com"
                     className="flex-1 h-7 px-2.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-black/40 text-slate-900 dark:text-white text-xs font-mono placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 dark:focus:ring-white"
                   />
                   <button
@@ -724,61 +721,6 @@ export default function PreferencesModal({
             </div>
           </div>
 
-          {/* 5. Interactive Walkthrough & Guided Tours */}
-          <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/15 transition-all">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="flex items-center space-x-2.5 sm:space-x-3 flex-1 min-w-0">
-                <Compass size={16} className="text-slate-900 dark:text-white shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-semibold text-slate-950 dark:text-white leading-snug">
-                    Interactive Walkthrough &amp; Guided Tours
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
-                    Replay architectural guides for Console, MCP Gate, Audit Ledger, or Profile
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-shrink-0 self-end sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    playClick();
-                    try {
-                      localStorage.removeItem('cavdax.tour.completed');
-                      localStorage.removeItem('cavdax.tour.completed.console');
-                      localStorage.removeItem('cavdax.tour.completed.dev');
-                      localStorage.removeItem('cavdax.tour.completed.mcp');
-                      localStorage.removeItem('cavdax.tour.completed.audit');
-                      localStorage.removeItem('cavdax.tour.completed.profile');
-                    } catch {}
-                    setTourResetStatus('Reset');
-                    setTimeout(() => setTourResetStatus(null), 2500);
-                  }}
-                  className="h-7 px-2.5 rounded-lg border border-slate-300 dark:border-white/15 bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-white/10 text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 transition cursor-pointer shrink-0"
-                  title="Reset tour history for all views"
-                >
-                  <RotateCcw size={11} />
-                  <span>{tourResetStatus ? 'Reset Clean' : 'Reset All'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    playClick();
-                    if (onStartTour) {
-                      onStartTour();
-                    }
-                  }}
-                  className="h-7 px-2.5 rounded-lg border border-slate-300 dark:border-white/20 bg-slate-900 text-white dark:bg-white dark:text-slate-950 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer hover:opacity-90 shrink-0"
-                  title="Launch the guided tour for the active view"
-                >
-                  <Compass size={12} />
-                  <span>Rewatch Tour</span>
-                </button>
-              </div>
-            </div>
-          </div>
 
         </div>
 
