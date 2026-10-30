@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest, Loader2, FileCode2, ChevronDown, Search } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
