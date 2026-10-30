@@ -1464,20 +1464,6 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Connect New Repository Action */}
-                      <div className="my-1 border-t border-slate-100 dark:border-white/10 pt-1">
-                        <button
-                          onClick={() => {
-                            setIsWorkspaceDropdownOpen(false);
-                            setIsConnectRepoModalOpen(true);
-                            playClick();
-                          }}
-                          className="w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-slate-100 dark:hover:bg-white/5 text-slate-900 dark:text-white transition-all font-semibold cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
-                          <span>Connect GitHub Repository...</span>
-                        </button>
-                      </div>
                     </div>
                   </>
                 )}
