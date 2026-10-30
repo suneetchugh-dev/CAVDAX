@@ -1033,3 +1033,19 @@ Every AI coding agent must treat the **6 Canonical Context Files** as the persis
 - **Post-Build Headless Smoke Test Verification**:
   - Never claim a build is verified solely on `vite build` or `tsc`. Compilers and bundlers perform tree-shaking and type analysis; they do NOT execute the module top-level runtime graph.
   - Before committing structural or registry changes to frontend entrypoints, verify the production bundle by running a headless load or evaluating the chunk exports in Node, ensuring zero unhandled TDZ ReferenceErrors.
+
+
+---
+
+## 17. Mandatory Scratch Script & Ad-Hoc File Self-Destruction Invariant (Zero-Lingering-Scratch Protocol)
+
+- **The Problem & Failure Scenario**:
+  During complex diagnostic tasks, audits, batch data migrations, asset conversions, or repository checks, AI coding agents frequently author ad-hoc scratch scripts (`*.py`, `*.mjs`, `*.js`, `*.sh`, `*.tmp`).
+  When an ad-hoc script runs, errors out, or is cancelled in the background, agents often fail to clean up the temporary file, abandoning lingering utility scripts in the project root or source directories.
+  This clutters the repository, confuses developers and judges, risks committing unreviewed scratch files to git, and creates security and intellectual property hygiene risks.
+
+- **The Strict Self-Destruction Invariant**:
+  - **Single-Turn Lifecycle**: Every scratch/ad-hoc script created for inspection, data extraction, or transformation MUST be deleted within the exact same turn or operation cycle in which it was used.
+  - **The Cancellation / Failure Cleanup Rule**: If a background command or task running a scratch script is killed, timed out, or errors out, the agent's very next tool call MUST be the unconditional removal of that scratch script (`Remove-Item` / `rm`). Never abandon a script file because its task was terminated.
+  - **Scratch Directory Isolation**: If a scratch file or mock artifact must temporarily persist across multi-step turns for debugging, it MUST be stored inside the designated agent scratch path (`<appDataDir>/brain/<conversation-id>/scratch/` or `.tmp/`) and NEVER directly in the repository root or project source folders.
+  - **Pre-Turn Cleanliness Sweep**: Before concluding any turn, declaring work complete, or staging commits to git, the agent MUST verify that no stray `.py`, `.mjs`, `.sh`, or `.tmp` utility files remain loose in the workspace (`Get-ChildItem -Path . -Filter "*.py"`, etc.).

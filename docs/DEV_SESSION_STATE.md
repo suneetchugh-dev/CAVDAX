@@ -9,6 +9,16 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.48 Latest Session Achievements (October 30, 2026 - Section 17 Zero-Lingering-Scratch Invariant & Workspace Cleanliness Protocol)
+
+- **Mandatory Scratch Script Self-Destruction Invariant (`AGENTS.md` Section 17 & Global Prompts Rule 36)**:
+  - Enshrined strict protocol: every ad-hoc scratch script (`*.py`, `*.mjs`, `*.sh`, `*.tmp`) authored for diagnosis, inspection, or batch conversion must self-destruct within the exact same turn.
+  - Implemented the **Cancellation Cleanup Rule**: if a background task or diagnostic script is killed or cancelled via `manage_task`, the agent must immediately execute the unconditional removal of that script from disk.
+  - Mandated scratch directory isolation (`<appDataDir>/brain/<conversation-id>/scratch/`) and pre-completion workspace cleanliness sweeps.
+- **Immediate Workspace Remediation**:
+  - Unconditionally deleted unneeded lingering script `search_repo_artifacts.py` from the repository root.
+  - Verified workspace cleanliness across all project directories.
+
 ## 1.0.47 Latest Session Achievements (October 30, 2026 - Horizontal 16:9 Widescreen Flowchart & Notification Plane Verification)
 
 - **Dual Architecture Flowcharts (Horizontal 16:9 `flowchart LR` & Vertical `graph TB`)**:
