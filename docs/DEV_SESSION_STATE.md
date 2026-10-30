@@ -9,6 +9,14 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.53 Latest Session Achievements (October 31, 2026 - Decoupled Branch Selection from Repo Init Loop)
+
+- **Fixed Branch Selection Auto-Reset Bug (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Root cause: `runScan` depended on `selectedBranch`, recreating its function instance whenever the user picked a new branch. This new instance triggered the repo initialization `useEffect([repo.full_name, repo.default_branch, runScan])`, immediately executing `setSelectedBranch(repo.default_branch || 'main')` and resetting the branch back to `main`.
+  - Stabilized `runScan` identity by accessing `selectedBranchRef.current` instead of closure state.
+  - Decoupled the repo mount effect to only track repository identity changes (`[repo.full_name, repo.default_branch]`), using `runScanRef.current`.
+  - Result: Selecting any branch now persistently retains that branch in the combobox and updates the DAG graph without ever resetting back to `main`.
+
 ## 1.0.52 Latest Session Achievements (October 31, 2026 - ReferenceError useEffect Fix in NodeInspector)
 
 - **Fixed `ReferenceError: useEffect is not defined` in `NodeInspector.jsx`**:
