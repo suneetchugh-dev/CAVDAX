@@ -9,6 +9,19 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.50 Latest Session Achievements (October 30, 2026 - Multi-Branch Combobox & NodeInspector Action Streamlining)
+
+- **GitHub-Style Branch Combobox Selector (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Replaced static `Branch: main` text with an interactive GitHub-style branch selector dropdown.
+  - Implemented `GET /api/github/repos/:owner/:repo/branches` and supported targeted branch scans via `?branch=<ref>`.
+  - Added filterable search input (`Filter branches...`), default branch indicators, click-outside auto-dismissal, and custom branch query fallback.
+  - Added automated unit test coverage in `apps/server/test/githubAdr.test.mjs` (59/59 passing).
+- **NodeInspector Action Streamlining & Redundancy Removal (`apps/client/src/components/NodeInspector.jsx`)**:
+  - Eliminated the redundant duplicate "View Target Code on GitHub" / "View Impacted Code" button and nested dropdown from the bottom action shelf (-100 lines).
+  - Preserved the structured **TARGET CODE FILES** attributes section as the single source of truth with 1-click direct GitHub links for single and multi-file decisions.
+  - Focused the action shelf strictly on operational controls (`Verify Agent Write`, `Simulate Invalidation`, and architectural spec `View Source ADR on GitHub`).
+  - Saved substantial vertical height, preventing unwanted scrollbars when the inspector card is resized smaller.
+
 ## 1.0.49 Latest Session Achievements (October 30, 2026 - Isolated Verify Spinner, Edge Label Badges & Multi-File Impact Dropdown)
 
 - **Isolated Decision Verification & Elimination of Unprofessional Spinning Icons (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
