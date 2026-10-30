@@ -2432,8 +2432,15 @@ app.get('/api/github/repos/:owner/:repo/adrs', async (req, res) => {
     return res.status(401).json({ success: false, code: 'AUTH_REQUIRED', error: 'GitHub authentication required.' });
   }
   const { owner, repo } = req.params;
+  let requestedBranch = undefined;
+  if (typeof req.query.branch === 'string') {
+    const trimmed = req.query.branch.trim();
+    if (trimmed.length > 0 && trimmed.length <= 255 && !/[\x00-\x1f\x7f]/.test(trimmed)) {
+      requestedBranch = trimmed;
+    }
+  }
   try {
-    const result = await scanRepoAdrs({ token, owner, repo });
+    const result = await scanRepoAdrs({ token, owner, repo, branch: requestedBranch });
     const repoFullName = `${owner}/${repo}`;
     const persistedRepoActions = (savedSystemState.auditEntries || []).filter(e => e.repo?.toLowerCase() === repoFullName.toLowerCase());
     if (result?.graph && Array.isArray(result.graph.nodes) && Array.isArray(result.graph.edges)) {
