@@ -337,20 +337,6 @@ export default function Header({
             </button>
           </Tooltip>
 
-          {/* Contextual Interactive Tour Guide Button */}
-          <Tooltip content="Product Tour (T)" position="bottom">
-            <button
-              onClick={() => {
-                playClick();
-                if (onOpenTour) onOpenTour();
-              }}
-              className="hidden md:flex w-8 h-8 rounded-full items-center justify-center cursor-pointer border border-slate-200/80 dark:border-white/20 bg-slate-100/80 dark:bg-white/[0.08] hover:bg-slate-200/80 dark:hover:bg-white/15 text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white transition-all shadow-2xs backdrop-blur-md focus:outline-none group shrink-0"
-              aria-label="Start Interactive Tour"
-            >
-              <Compass className="w-3.5 h-3.5 text-current group-hover:rotate-45 transition-transform duration-300 pointer-events-none" />
-            </button>
-          </Tooltip>
-
           {/* System Preferences Settings Button — Smooth hover rotation & click spin */}
           <Tooltip content="System Preferences" position="bottom">
             <button
@@ -451,18 +437,6 @@ export default function Header({
               {/* Drawer Utility Actions */}
               <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    playClick();
-                    setIsMobileMenuOpen(false);
-                    if (onOpenTour) onOpenTour();
-                  }}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Compass size={13} />
-                  <span>Tour</span>
-                </button>
-
                 <button
                   onClick={() => {
                     handlePreferencesClick();

@@ -11,6 +11,7 @@ export const resetAllTours = () => {
   try {
     localStorage.removeItem('cavdax.tour.completed');
     localStorage.removeItem('cavdax.tour.completed.console');
+    localStorage.removeItem('cavdax.tour.completed.repo');
     localStorage.removeItem('cavdax.tour.completed.dev');
     localStorage.removeItem('cavdax.tour.completed.mcp');
     localStorage.removeItem('cavdax.tour.completed.audit');
