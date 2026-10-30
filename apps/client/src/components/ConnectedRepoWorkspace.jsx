@@ -56,6 +56,47 @@ export default function ConnectedRepoWorkspace({
   const [syncingTarget, setSyncingTarget] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [logs, setLogs] = useState([]);
+  const [leftWidthPercent, setLeftWidthPercent] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cavdax.repo.splitter.width');
+      return saved ? Math.min(65, Math.max(25, parseFloat(saved))) : 41.666;
+    } catch {
+      return 41.666;
+    }
+  });
+  const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
+  const splitContainerRef = useRef(null);
+
+  const handleSplitterMouseDown = useCallback((e) => {
+    e.preventDefault();
+    setIsDraggingSplitter(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isDraggingSplitter) return;
+
+    const handleMouseMove = (e) => {
+      if (!splitContainerRef.current) return;
+      const rect = splitContainerRef.current.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const newPercent = Math.min(65, Math.max(25, (currentX / rect.width) * 100));
+      setLeftWidthPercent(newPercent);
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingSplitter(false);
+      try {
+        localStorage.setItem('cavdax.repo.splitter.width', String(leftWidthPercent));
+      } catch {}
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingSplitter, leftWidthPercent]);
   const logsEndRef = useRef(null);
 
   useEffect(() => {
@@ -297,7 +338,7 @@ export default function ConnectedRepoWorkspace({
   return (
     <div className="flex-1 min-h-0 flex flex-col font-mono select-none">
       {/* Repository ribbon */}
-      <div className="flex-shrink-0 py-2 px-3 sm:px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div data-tour="repo-ribbon" className="flex-shrink-0 py-2 px-3 sm:px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-white/10 border border-slate-300 dark:border-white/15 text-slate-800 dark:text-slate-200 flex items-center justify-center shrink-0">
             <GitBranch className="w-3.5 h-3.5" />
@@ -357,7 +398,7 @@ export default function ConnectedRepoWorkspace({
           body={<>No ADRs found in <strong className="font-mono text-slate-950 dark:text-white">{repo.full_name}</strong>. Initialize will inspect your stack and open a starter ADR-001 pull request without committing directly to <strong className="font-mono">{scan.branch}</strong>.</>}
           actions={
             <button onClick={() => { playClick(); setShowInitConfirmModal(true); }} disabled={isOpeningPr} className={`${btnPrimary} w-full cursor-pointer`}>
-              <GitPullRequest className={`w-4 h-4 ${isOpeningPr ? 'animate-spin' : ''}`} strokeWidth={2} />
+              {isOpeningPr ? <Loader2 className="w-4 h-4 animate-spin shrink-0" strokeWidth={2} /> : <GitPullRequest className="w-4 h-4 shrink-0" strokeWidth={2} />}
               <span>{isOpeningPr ? 'Opening pull request' : 'Open pull request with ADR-001'}</span>
             </button>
           }
@@ -388,9 +429,9 @@ export default function ConnectedRepoWorkspace({
       )}
 
       {hasAdrs && (
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 rounded-2xl overflow-hidden border border-slate-300 dark:border-white/15 shadow-sm">
+        <div ref={splitContainerRef} className={`flex-1 min-h-0 flex flex-col lg:flex-row rounded-2xl overflow-hidden border border-slate-300 dark:border-white/15 shadow-sm ${isDraggingSplitter ? "select-none cursor-col-resize" : ""}`}>
           {/* Left: ADR files and activity — Adaptive theme styling for complete visual harmony */}
-          <div className="lg:col-span-5 h-full overflow-hidden flex flex-col bg-white dark:bg-[#0c0c0e] text-slate-800 dark:text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800">
+          <div data-tour="repo-adrs" style={{ flex: `0 0 ${leftWidthPercent}%` }} className="h-full overflow-hidden flex flex-col bg-white dark:bg-[#0c0c0e] text-slate-800 dark:text-slate-200 border-b lg:border-b-0 border-slate-200 dark:border-slate-800 min-w-[280px] max-w-full lg:max-w-[70%]">
             <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs font-mono bg-slate-50/80 dark:bg-white/[0.02]">
               <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               <span className="font-bold text-slate-950 dark:text-white">ADRs in this repository</span>
@@ -423,7 +464,7 @@ export default function ConnectedRepoWorkspace({
                         disabled={syncingTarget === u.targetId}
                         className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold font-mono text-[11px] hover:bg-amber-300 transition-colors disabled:opacity-50 cursor-pointer self-start shadow-xs"
                       >
-                        <GitPullRequest className={`w-3.5 h-3.5 ${syncingTarget === u.targetId ? 'animate-spin' : ''}`} />
+                        {syncingTarget === u.targetId ? <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" /> : <GitPullRequest className="w-3.5 h-3.5 shrink-0" />}
                         <span>{syncingTarget === u.targetId ? 'Opening PR...' : `Open PR: Mark ${u.targetId} Superseded`}</span>
                       </button>
                     </div>
@@ -433,7 +474,7 @@ export default function ConnectedRepoWorkspace({
             )}
 
             {/* Decision-Aware Intent Verification Panel */}
-            <div className="p-3 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 flex flex-col gap-2">
+            <div data-tour="repo-gate" className="p-3 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono font-bold">
                   Intent Verification Gate
@@ -525,7 +566,20 @@ export default function ConnectedRepoWorkspace({
           </div>
 
           {/* Right: graph built from this repository's ADRs */}
-          <div className="lg:col-span-7 h-full relative overflow-hidden bg-slate-50 dark:bg-slate-950">
+          {/* Draggable Splitter Handle */}
+          <div
+            onMouseDown={handleSplitterMouseDown}
+            className={`hidden lg:flex w-2.5 -mx-1 shrink-0 z-20 cursor-col-resize items-center justify-center transition-colors group ${
+              isDraggingSplitter ? 'bg-sky-500/20 dark:bg-sky-400/20' : 'hover:bg-slate-300/40 dark:hover:bg-white/10'
+            }`}
+            title="Drag to adjust ADR Panel and Graph width"
+          >
+            <div className={`w-1 h-10 rounded-full transition-colors ${
+              isDraggingSplitter ? 'bg-sky-500' : 'bg-slate-300 dark:bg-white/20 group-hover:bg-slate-400 dark:group-hover:bg-white/40'
+            }`} />
+          </div>
+
+          <div data-tour="repo-canvas" style={{ flex: '1 1 0%' }} className="h-full relative overflow-hidden bg-slate-50 dark:bg-slate-950 min-w-[320px]">
             <SubsystemErrorBoundary name="Repository Knowledge Graph Canvas">
               <GraphCanvas
                 title={`Repository Decision Graph · ${repo.full_name || 'Connected Repository'}`}

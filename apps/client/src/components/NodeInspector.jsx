@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest, Loader2, ChevronDown, ChevronUp, FileCode2 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
@@ -23,6 +23,37 @@ export default function NodeInspector({
   if (!node) return null;
 
   const [isFilesDropdownOpen, setIsFilesDropdownOpen] = useState(false);
+  const [customSize, setCustomSize] = useState(null); // { width, height }
+  const [isResizing, setIsResizing] = useState(false);
+  const inspectorCardRef = useRef(null);
+
+  const handleResizeMouseDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const currentRect = inspectorCardRef.current?.getBoundingClientRect();
+    const startW = currentRect ? currentRect.width : (isFullscreen ? 320 : 288);
+    const startH = currentRect ? currentRect.height : 360;
+
+    const onMouseMove = (moveEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+      const newWidth = Math.max(260, Math.min(680, startW + deltaX));
+      const newHeight = Math.max(200, Math.min(window.innerHeight * 0.85, startH + deltaY));
+      setCustomSize({ width: newWidth, height: newHeight });
+    };
+
+    const onMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
   // Discover all target code files associated with this node (directly or through DAG lineage)
   const affectedCodeFiles = useMemo(() => {

@@ -1581,7 +1581,7 @@ export default function App() {
       <TourGuide
         isOpen={isTourOpen}
         onClose={() => setIsTourOpen(false)}
-        mode={['console', 'dev', 'mcp', 'audit', 'profile'].includes(activeTab) ? activeTab : 'console'}
+        mode={activeTab === 'console' ? (activeWorkspace === 'demo' ? 'console' : 'repo') : (['dev', 'mcp', 'audit', 'profile'].includes(activeTab) ? activeTab : 'console')}
       />
 
       {/* Universal Keyboard Shortcuts Guide Modal */}
