@@ -1481,6 +1481,19 @@ export default function App() {
                 <Plus className="w-3.5 h-3.5 text-white dark:text-slate-950 shrink-0" />
                 <span>Connect Repo</span>
               </button>
+              {/* Tour Guide Action */}
+              <button
+                onClick={() => {
+                  playClick();
+                  handleOpenTour(activeWorkspace === "demo" || !selectedConnectedRepo ? "console" : "repo");
+                }}
+                className="h-7 px-2.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-xs font-mono font-medium flex items-center gap-1.5 transition-all cursor-pointer shadow-xs group"
+                title="Start interactive guided tour (Press T)"
+              >
+                <Compass className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
+                <span>Tour</span>
+                <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">[T]</span>
+              </button>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  User, Copy, Check, CheckCircle2, Lock, Terminal,
+  Compass, User, Copy, Check, CheckCircle2, Lock, Terminal,
   SlidersHorizontal, Key, HardDrive, AlertTriangle, RefreshCw, Heart, ExternalLink, LogOut, Github, Eye, EyeOff
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
@@ -789,7 +789,21 @@ export default function ProfilePage({
               Subscription Tiers
             </span>
   
-            {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  window.dispatchEvent(new CustomEvent('cavdax:open-tour', { detail: { mode: 'profile' } }));
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200/80 dark:border-white/15 text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white text-[11px] font-mono transition-colors cursor-pointer group shadow-xs"
+                title="Launch interactive tour for Profile & Quotas (Press T)"
+              >
+                <Compass className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
+                <span>Tour</span>
+              </button>
+
+              {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
             <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/15 text-[10px] font-mono">
               <button
                 type="button"
@@ -813,6 +827,7 @@ export default function ProfilePage({
               >
                 INR (₹)
               </button>
+            </div>
             </div>
           </div>
   
