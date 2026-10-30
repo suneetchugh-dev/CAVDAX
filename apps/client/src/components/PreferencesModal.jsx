@@ -19,7 +19,7 @@ import {
   Keyboard as KeyboardIcon
 } from 'lucide-react';
 import { playClick, playLoadingSound, isSoundEnabled, toggleSound, playAlert } from '../utils/soundFx';
-import { Bell, Mail, Zap, CheckCheck, Monitor, Compass, RotateCcw } from 'lucide-react';
+import { Bell, Mail, Zap, CheckCheck, Monitor, Compass, RotateCcw, Loader2 } from 'lucide-react';
 import { isPushSupported, subscribeToPushNotifications, unsubscribeFromPushNotifications, getCurrentPushSubscription } from '../services/webPush';
 
 /**
@@ -707,14 +707,19 @@ export default function PreferencesModal({
                   type="button"
                   onClick={handleSimulateAlert}
                   disabled={isSimulatingAlert}
-                  className="h-7 px-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 transition cursor-pointer disabled:opacity-50 shrink-0"
+                  className="h-7 px-2.5 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white text-[10px] font-mono font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shrink-0 shadow-xs"
+                  title="Send a sample invalidation alert to your configured email"
                 >
-                  <Zap size={11} className="text-amber-500" />
-                  <span>{isSimulatingAlert ? 'Sending...' : '⚡ Test Alert'}</span>
+                  {isSimulatingAlert ? (
+                    <Loader2 size={11} className="animate-spin text-slate-500 dark:text-slate-400 shrink-0" />
+                  ) : (
+                    <Mail size={11} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                  )}
+                  <span>{isSimulatingAlert ? 'Dispatching...' : 'Dispatch Test Alert'}</span>
                 </button>
               </div>
               {simulateStatus && (
-                <p className="text-[10px] font-mono text-amber-600 dark:text-amber-400">
+                <p className="text-[10px] font-mono text-slate-600 dark:text-slate-400 mt-1">
                   {simulateStatus}
                 </p>
               )}
