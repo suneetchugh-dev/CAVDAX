@@ -121,7 +121,85 @@ CAVDAX models engineering knowledge and agent actions using a formal 4-tier Caus
 ## 📐 System Architecture & Flowchart Diagrams
 
 ### 1. End-to-End System Architecture Flowchart
+
 ![CAVDAX System Architecture Flowchart](./assets/System-Architecture.svg)
+
+*CAVDAX provides two architectural perspectives:*
+* **Variant A (Horizontal `flowchart LR`)**: Recommended for 16:9 widescreen video presentations and fast left-to-right dataflow comprehension.
+* **Variant B (Vertical `graph TB`)**: Deep-dive structural hierarchy detailing node schemas, state persistence, and protocol boundaries.
+
+#### Variant A: Horizontal 16:9 Widescreen Architecture Flowchart (Presentation View)
+*Flows left-to-right from AI Agents & Web HUD, through the Ingestion & MCP Gate, directly into FalkorDB's GraphBLAS Causal Core, and out to Target Codebases & the Out-of-Band Notification Plane:*
+
+```mermaid
+flowchart LR
+    subgraph Client_Plane["1. Developer & Presentation Plane"]
+        direction TB
+        AIAgents["Autonomous AI Coding Agents<br/><i>Claude Code / Cursor / Devin</i>"]
+        WebHUD["Web HUD & Visual Console<br/><i>/overview, /console, /mcp, /audit</i>"]
+        Canvas["Temporal DAG Canvas<br/><i>D3 Hairline Optics</i>"]
+        HUDAlerts["In-HUD Audio & Radar<br/><i>Web Audio Chime (880Hz)</i>"]
+        WebHUD --> Canvas
+        WebHUD --> HUDAlerts
+    end
+
+    subgraph Gateway_Plane["2. Gateway & Ingestion Plane"]
+        direction TB
+        MCPGate["Enclosed MCP Gate<br/><i>core/mcp/server.js</i>"]
+        ServerAPI["Express Server & SSE<br/><i>apps/server/index.js</i>"]
+        GitScanner["GitHub ADR Scanner<br/><i>apps/server/githubAdr.js</i>"]
+        WebhookHandler["GitHub Webhook Listener<br/><i>POST /api/github/webhook</i>"]
+        ServerAPI --> MCPGate
+        ServerAPI --> GitScanner
+        WebhookHandler --> ServerAPI
+    end
+
+    subgraph Causal_Engine["3. FalkorDB GraphBLAS Causal Core (Mathematical Heart)"]
+        direction TB
+        FalkorDB[("FalkorDB 0.4+<br/>Sparse Matrix Engine")]
+        Sources["(:Source {id, title, status})"]
+        Facts["(:Fact {claim, is_stale})"]
+        Decisions["(:Decision {id, status})"]
+        AgentActions["(:AgentAction {target_file})"]
+        
+        FalkorDB --- Sources
+        FalkorDB --- Facts
+        FalkorDB --- Decisions
+        FalkorDB --- AgentActions
+
+        Sources -. "[:SUPERSEDES]" .-> Sources
+        Facts -. "[:EXTRACTED_FROM]" .-> Sources
+        Decisions -. "[:DEPENDS_ON]" .-> Facts
+        AgentActions -. "[:GROUNDED_IN]" .-> Decisions
+    end
+
+    subgraph Target_Ecosystem["4. Target Repo & Notification Plane"]
+        direction TB
+        GitHubRepos["External GitHub Repos<br/><i>Public & Private (OAuth)</i>"]
+        ProtectedDisk["Target Filesystem<br/><i>Sandboxed Safe Mutation</i>"]
+        EmailRadar["Resend Transactional Email<br/><i>sahnirmaan.live</i>"]
+        WebPushBroker["VAPID Web Push Broker<br/><i>RFC 8292 (/sw.js)</i>"]
+        DevInbox["Developer Alerts Inbox<br/><i>Actionable Causal DAG Breadcrumb</i>"]
+        
+        EmailRadar --> DevInbox
+        WebPushBroker --> DevInbox
+    end
+
+    %% Left-to-Right Execution & Invalidation Flows
+    AIAgents ==>|"1. stdio / SSE (check_intent_clearance)"| MCPGate
+    WebHUD <==>|"REST & SSE Live Updates"| ServerAPI
+    MCPGate <==>|"2. Sub-millisecond Cypher (A^T · x)"| FalkorDB
+    MCPGate -->|"3a. 200 OK (Clearance Approved)"| ProtectedDisk
+    MCPGate -.->|"3b. 403 Forbidden (Blocked Invalidation)"| AIAgents
+    
+    GitScanner <==>|"Scan ADR ASTs & Stack"| GitHubRepos
+    GitHubRepos -->|"Git Push Webhook (breaks: DEC-xxx)"| WebhookHandler
+    ServerAPI -->|"Dispatch Transactional Invalidation"| EmailRadar
+    ServerAPI -->|"Dispatch Browser Push Notification"| WebPushBroker
+    ServerAPI -->|"SSE Invalidation Event"| HUDAlerts
+```
+
+#### Variant B: Vertical Structural Architecture Flowchart (Hierarchy View)
 
 ```mermaid
 graph TB
@@ -192,6 +270,13 @@ graph TB
     EmailDispatcher -->|"Actionable Causal HTML Email"| Notifications
     WebPushBroker -->|"Instant Desktop/Mobile Push"| Notifications
 ```
+
+#### 🔔 Notification Plane (Out-of-Band Divergence Radar)
+CAVDAX treats notifications as an essential, enterprise-grade feedback loop that prevents AI agents from executing against stale context even when developers are offline:
+1. **Resend Transactional Email (`apps/server/email.js`)**: Invalids dispatch clean HTML emails via `sahnirmaan.live` with Decision ID, ASCII causal tree, and blast-radius deep links.
+2. **RFC 8292 VAPID Web Push (`apps/server/webPush.js` & `public/sw.js`)**: Hardware OS and browser-level notification badges delivering instant disruption alerts.
+3. **Procedural In-HUD Audio Chimes (`apps/client/src/App.jsx`)**: Synthesizes 880Hz / 440Hz dual-tone Web Audio chimes on invalidation events.
+4. **Live Invalidation Pitch Trigger (`⚡ Simulate Alert`)**: Accessible via top HUD toolbar and Preferences Modal for live demonstrations.
 
 ### 2. Multi-Layer Architecture & FalkorDB GraphBLAS Engine Flowchart
 ![CAVDAX Layer Architecture Flowchart](./assets/System-Architecture2.svg)
