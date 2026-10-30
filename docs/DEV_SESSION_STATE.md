@@ -9,6 +9,22 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.49 Latest Session Achievements (October 30, 2026 - Isolated Verify Spinner, Edge Label Badges & Multi-File Impact Dropdown)
+
+- **Isolated Decision Verification & Elimination of Unprofessional Spinning Icons (`apps/client/src/components/ConnectedRepoWorkspace.jsx`)**:
+  - Diagnosed root cause of the spinning icon on the Stale button: `isVerifyingAction` was a global boolean shared between both Valid and Stale buttons, and the Stale button rotated an asymmetric `<AlertTriangle className="animate-spin" />`!
+  - Replaced shared boolean with targeted `verifyingDecisionId`, strictly locking only the actively probed decision.
+  - Replaced erratic triangle spinning with a dedicated, calm, and professional `<Loader2 className="animate-spin" />` spinner. When probing the Valid decision, the Stale button displays its static icon with zero rotation.
+- **Shielded Edge Labels & Strikethrough Elimination (`apps/client/src/components/GraphCanvas.jsx`)**:
+  - Solved line path strikethrough where bezier arcs and straight edges crossed directly behind labels like `SUPERSEDES`, `[:DEPENDS_ON]`, and `[:EXTRACTED_FROM]`.
+  - Wrapped edge text in SVG opaque pill badge containers (`<rect>` + `<text>`) with subtle rounded borders (`rx="3.5"`) matching canvas surface tokens.
+  - The badge container masks the edge path underneath, guaranteeing 100% legibility and zero strikethrough.
+- **Adaptive Multi-File Impact Code Dropdown in Node Inspector (`apps/client/src/components/NodeInspector.jsx`)**:
+  - Implemented DAG-aware target code resolution discovering direct (`target_file`, `target_files`) and downstream impacted files across connected Decisions and AgentActions.
+  - **Single Impact File**: Preserved the low-friction 1-click CTA (`View Target Code on GitHub`).
+  - **Multiple Impact Files**: Rendered an interactive dropdown pill (`View Impacted Code (N files) ▾`) expanding into a clean, accessible list with direct per-file GitHub links.
+  - Replaced awkward spinning Zap icon with `<Loader2 className="animate-spin" />` on the inspector verification button.
+
 ## 1.0.48 Latest Session Achievements (October 30, 2026 - Section 17 Zero-Lingering-Scratch Invariant & Workspace Cleanliness Protocol)
 
 - **Mandatory Scratch Script Self-Destruction Invariant (`AGENTS.md` Section 17 & Global Prompts Rule 36)**:
