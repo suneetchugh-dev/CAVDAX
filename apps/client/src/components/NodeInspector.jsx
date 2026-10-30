@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import React from 'react';
-import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { X, GripHorizontal, Zap, AlertTriangle, CheckCircle2, Database, Clock, ExternalLink, Activity, GitPullRequest, Loader2, ChevronDown, ChevronUp, FileCode2 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 export default function NodeInspector({
   node,
+  graphData,
   onClose,
   isFalkorDB,
   repo,
@@ -20,6 +21,82 @@ export default function NodeInspector({
   containerRef
 }) {
   if (!node) return null;
+
+  const [isFilesDropdownOpen, setIsFilesDropdownOpen] = useState(false);
+
+  // Discover all target code files associated with this node (directly or through DAG lineage)
+  const affectedCodeFiles = useMemo(() => {
+    if (!node) return [];
+    const filesSet = new Set();
+
+    const addFile = (f) => {
+      if (!f || typeof f !== 'string') return;
+      const parts = f.includes(',') ? f.split(',') : [f];
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (trimmed && !trimmed.endsWith('.md')) {
+          filesSet.add(trimmed);
+        }
+      }
+    };
+
+    // 1. Direct targets on this node
+    if (Array.isArray(node.target_files)) node.target_files.forEach(addFile);
+    if (Array.isArray(node.files)) node.files.forEach(addFile);
+    addFile(node.target_file);
+
+    // 2. Discover related target files in graphData
+    if (graphData && Array.isArray(graphData.nodes) && Array.isArray(graphData.edges)) {
+      // If Source (ADR): gather all target files from downstream Decisions and AgentActions
+      if (node.label === 'Source') {
+        const factIds = new Set(
+          graphData.edges
+            .filter(e => e.type === 'EXTRACTED_FROM' && (e.target === node.id || e.source === node.id))
+            .map(e => (e.target === node.id ? e.source : e.target))
+        );
+        const decisionIds = new Set(
+          graphData.edges
+            .filter(e => e.type === 'DEPENDS_ON' && factIds.has(e.target))
+            .map(e => e.source)
+        );
+
+        graphData.nodes.forEach(n => {
+          if (n.source_adr === node.id || n.from === node.id || decisionIds.has(n.id)) {
+            addFile(n.target_file);
+            if (Array.isArray(n.target_files)) n.target_files.forEach(addFile);
+            decisionIds.add(n.id);
+          }
+        });
+
+        const actionIds = new Set(
+          graphData.edges
+            .filter(e => e.type === 'GROUNDED_IN' && decisionIds.has(e.target))
+            .map(e => e.source)
+        );
+        graphData.nodes.forEach(n => {
+          if (actionIds.has(n.id) || decisionIds.has(n.decision_id)) {
+            addFile(n.target_file);
+          }
+        });
+      }
+
+      // If Decision: gather its target file and any grounded AgentAction files
+      if (node.label === 'Decision') {
+        const actionIds = new Set(
+          graphData.edges
+            .filter(e => e.type === 'GROUNDED_IN' && e.target === node.id)
+            .map(e => e.source)
+        );
+        graphData.nodes.forEach(n => {
+          if (actionIds.has(n.id) || n.decision_id === node.id) {
+            addFile(n.target_file);
+          }
+        });
+      }
+    }
+
+    return Array.from(filesSet);
+  }, [node, graphData]);
 
   const isStale =
     node.status === 'SUPERSEDED' ||
@@ -140,14 +217,32 @@ export default function NodeInspector({
           </div>
         )}
 
-        {node.target_file && (
+        {affectedCodeFiles.length > 0 && (
           <div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">
-              Target Code File
-            </span>
-            <span className="text-slate-800 hover:text-black dark:text-slate-200 dark:hover:text-white font-mono truncate block text-[11px]">
-              {node.target_file}
-            </span>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                {affectedCodeFiles.length > 1 ? `Impacted Code Files (${affectedCodeFiles.length})` : 'Target Code File'}
+              </span>
+              {affectedCodeFiles.length > 1 && (
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold">
+                  Multi-File Impact
+                </span>
+              )}
+            </div>
+            {affectedCodeFiles.length === 1 ? (
+              <span className="text-slate-800 hover:text-black dark:text-slate-200 dark:hover:text-white font-mono truncate block text-[11px]" title={affectedCodeFiles[0]}>
+                {affectedCodeFiles[0]}
+              </span>
+            ) : (
+              <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
+                {affectedCodeFiles.map((file, fIdx) => (
+                  <div key={fIdx} className="flex items-center gap-1.5 text-[10.5px] font-mono text-slate-700 dark:text-slate-300 truncate bg-slate-50 dark:bg-white/[0.03] px-2 py-1 rounded border border-slate-200 dark:border-white/10" title={file}>
+                    <FileCode2 className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span className="truncate">{file}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -180,7 +275,7 @@ export default function NodeInspector({
               disabled={isVerifyingAction}
               className="w-full py-1.5 px-3 rounded-lg border border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer tactile-btn shadow-xs disabled:opacity-50"
             >
-              <Zap className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} />
+              {isVerifyingAction ? <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" strokeWidth={2} /> : <Zap className="w-3.5 h-3.5 shrink-0" />}
               <span>{isVerifyingAction ? 'Verifying Gate...' : `Verify Agent Write on ${node.id}`}</span>
             </button>
           )}
@@ -214,17 +309,102 @@ export default function NodeInspector({
             </a>
           )}
 
-          {codeGitUrl && (
-            <a
-              href={codeGitUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={playClick}
-              className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
-            >
-              <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-              <span>View Target Code on GitHub</span>
-            </a>
+          {/* Target / Impacted Code Files on GitHub (Single File Direct Link vs Multi-File Dropdown) */}
+          {affectedCodeFiles.length === 1 && (
+            repo?.full_name ? (
+              <a
+                href={`https://github.com/${repo.full_name}/blob/${branch}/${affectedCodeFiles[0].replace(/^\.?\//, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={playClick}
+                className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer tactile-btn no-underline"
+                title={affectedCodeFiles[0]}
+              >
+                <ExternalLink className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
+                <span className="truncate">View Target Code on GitHub</span>
+              </a>
+            ) : (
+              <div
+                className="w-full py-1.5 px-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.02] text-slate-600 dark:text-slate-400 text-[11px] font-mono flex items-center justify-between gap-1.5"
+                title={affectedCodeFiles[0]}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <FileCode2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                  <span className="truncate">Target: {affectedCodeFiles[0]}</span>
+                </div>
+                <span className="text-[9px] uppercase px-1 rounded bg-slate-200 dark:bg-white/10 text-slate-500 font-bold shrink-0">Demo</span>
+              </div>
+            )
+          )}
+
+          {affectedCodeFiles.length > 1 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  setIsFilesDropdownOpen(prev => !prev);
+                }}
+                className="w-full py-1.5 px-3 rounded-lg border border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[11px] font-bold font-mono transition-colors flex items-center justify-between gap-1.5 cursor-pointer tactile-btn"
+                title="View all files impacted by this architectural decision"
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <FileCode2 className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
+                  <span>View Impacted Code ({affectedCodeFiles.length} files)</span>
+                </div>
+                {isFilesDropdownOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                )}
+              </button>
+
+              {isFilesDropdownOpen && (
+                <div className="mt-1.5 p-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#111318] shadow-xl space-y-1 animate-in fade-in zoom-in-95 font-mono text-xs">
+                  <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+                    <span>Impacted Repository Files</span>
+                    <span className="font-bold">{affectedCodeFiles.length} total</span>
+                  </div>
+                  <div className="max-h-40 overflow-y-auto space-y-1 pt-1">
+                    {affectedCodeFiles.map((file, fIdx) => {
+                      const fileUrl = repo?.full_name
+                        ? `https://github.com/${repo.full_name}/blob/${branch}/${file.replace(/^\.?\//, '')}`
+                        : null;
+
+                      return fileUrl ? (
+                        <a
+                          key={fIdx}
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={playClick}
+                          className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 text-[10.5px] transition-colors no-underline group"
+                          title={`Open ${file} on GitHub`}
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <FileCode2 className="w-3 h-3 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0" />
+                            <span className="truncate">{file}</span>
+                          </div>
+                          <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white shrink-0" />
+                        </a>
+                      ) : (
+                        <div
+                          key={fIdx}
+                          className="flex items-center justify-between gap-2 p-1.5 rounded-lg text-slate-700 dark:text-slate-300 text-[10.5px] bg-slate-50 dark:bg-white/[0.02]"
+                          title={file}
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <FileCode2 className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span className="truncate">{file}</span>
+                          </div>
+                          <span className="text-[9px] uppercase px-1 rounded bg-slate-200 dark:bg-white/10 text-slate-500 font-bold shrink-0">Demo</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {hasDrift && onOpenSyncPr && (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   GitBranch, FolderGit2, FileText, RefreshCw, Terminal, GitPullRequest,
-  CheckCircle2, AlertTriangle, ExternalLink, Trash2
+  CheckCircle2, AlertTriangle, ExternalLink, Trash2, Loader2
 } from 'lucide-react';
 import GraphCanvas from './GraphCanvas';
 import SubsystemErrorBoundary from './SubsystemErrorBoundary';
@@ -184,7 +184,7 @@ export default function ConnectedRepoWorkspace({
     }
   };
 
-  const [isVerifyingAction, setIsVerifyingAction] = useState(false);
+  const [verifyingDecisionId, setVerifyingDecisionId] = useState(null);
 
   const testDecision = async (targetDecisionIdOrWantValid) => {
     const decisions = (scan?.graph?.nodes || []).filter(n => n.label === 'Decision');
@@ -211,7 +211,7 @@ export default function ConnectedRepoWorkspace({
     const adrNode = (scan?.graph?.nodes || []).find(n => n.label === 'Source' && (n.id === target.id || n.id === target.source_adr || n.id === target.from));
     const targetFile = target.target_file || target.file || target.adr_path || adrNode?.file || null;
 
-    setIsVerifyingAction(true);
+    setVerifyingDecisionId(target.id);
     const clientStart = performance.now();
 
     try {
@@ -270,7 +270,7 @@ export default function ConnectedRepoWorkspace({
       playRejectBuzz();
       addLog('MCP_GATE', `Gate verification error: ${err.message}. (Authentic verification requires active server connection)`, 'GATE_BLOCK');
     } finally {
-      setIsVerifyingAction(false);
+      setVerifyingDecisionId(null);
     }
   };
 
@@ -453,12 +453,16 @@ export default function ConnectedRepoWorkspace({
                     {/* Primary Valid Decision Probe */}
                     {activeValidDecision ? (
                       <button
-                        disabled={isVerifyingAction}
+                        disabled={Boolean(verifyingDecisionId)}
                         onClick={() => testDecision(activeValidDecision.id)}
                         className={`${btnBase} border-slate-900 dark:border-white/20 bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-40 shadow-xs cursor-pointer`}
                         title={`Click to test agent code write grounded in ${activeValidDecision.id}`}
                       >
-                        <CheckCircle2 className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
+                        {verifyingDecisionId === activeValidDecision.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" strokeWidth={2} />
+                        ) : (
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+                        )}
                         <span className="truncate">Verify: {activeValidDecision.id} (Valid)</span>
                       </button>
                     ) : (
@@ -470,12 +474,16 @@ export default function ConnectedRepoWorkspace({
                     {/* Stale/Invalidated Decision Probe */}
                     {activeStaleDecision ? (
                       <button
-                        disabled={isVerifyingAction}
+                        disabled={Boolean(verifyingDecisionId)}
                         onClick={() => testDecision(activeStaleDecision.id)}
                         className={`${btnBase} border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 disabled:opacity-40 cursor-pointer`}
                         title={`Click to test gate rejection on invalidated decision ${activeStaleDecision.id}`}
                       >
-                        <AlertTriangle className={`w-3.5 h-3.5 ${isVerifyingAction ? 'animate-spin' : ''}`} strokeWidth={2} />
+                        {verifyingDecisionId === activeStaleDecision.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0 text-rose-600 dark:text-rose-400" strokeWidth={2} />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+                        )}
                         <span className="truncate">Verify: {activeStaleDecision.id} (Stale)</span>
                       </button>
                     ) : (
@@ -538,7 +546,7 @@ export default function ConnectedRepoWorkspace({
                   }
                 }}
                 onTestDecision={testDecision}
-                isVerifyingAction={isVerifyingAction}
+                isVerifyingAction={Boolean(verifyingDecisionId)}
               />
             </SubsystemErrorBoundary>
           </div>
