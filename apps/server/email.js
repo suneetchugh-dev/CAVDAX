@@ -295,7 +295,7 @@ export async function sendInvalidationEmail({
 
   const apiKey = process.env.RESEND_API_KEY;
   const isEnabled = process.env.EMAIL_ENABLED === 'true';
-  const from = process.env.EMAIL_FROM || 'Sahnirmaan <no-reply@sahnirmaan.live>';
+  const from = process.env.EMAIL_FROM || 'CAVDAX Divergence Alerts <alerts@cavdax.dev>';
 
   if (!isEnabled || !apiKey) {
     console.log(`[CAVDAX Email] Email alerts disabled or missing RESEND_API_KEY (EMAIL_ENABLED=${isEnabled})`);

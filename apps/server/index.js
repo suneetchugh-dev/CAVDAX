@@ -2959,7 +2959,7 @@ app.get('/api/user/notification-preferences', (req, res) => {
   const prefs = savedState.notificationPreferences?.[login] || {
     emailAlerts: true,
     browserAlerts: true,
-    targetEmail: user?.email || (process.env.EMAIL_FROM ? process.env.EMAIL_FROM.match(/<([^>]+)>/)?.[1] : 'alerts@sahnirmaan.live') || 'alerts@sahnirmaan.live',
+    targetEmail: user?.email || '',
     watchedRepos: []
   };
 
@@ -2993,7 +2993,7 @@ app.post('/api/user/notification-preferences', (req, res) => {
   savedState.notificationPreferences[login] = {
     emailAlerts: typeof emailAlerts === 'boolean' ? emailAlerts : true,
     browserAlerts: typeof browserAlerts === 'boolean' ? browserAlerts : true,
-    targetEmail: (targetEmail && typeof targetEmail === 'string') ? targetEmail.trim() : (user?.email || 'alerts@sahnirmaan.live'),
+    targetEmail: (targetEmail && typeof targetEmail === 'string') ? targetEmail.trim() : (user?.email || ''),
     watchedRepos: Array.isArray(watchedRepos) ? watchedRepos : (savedState.notificationPreferences[login]?.watchedRepos || [])
   };
 
