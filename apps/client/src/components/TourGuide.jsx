@@ -39,7 +39,7 @@ const CONSOLE_TOUR_STEPS = [
     description:
       'Real-time visualization of the Knowledge Graph backed by FalkorDB GraphBLAS matrix engine. Active nodes display in crisp white, invalidated nodes in garnet rose.',
     tip: 'Click any node to open the Node Inspector and inspect its raw Cypher properties.',
-    placement: 'right',
+    placement: 'left',
     scrollBlock: 'center',
   },
   {
@@ -66,6 +66,53 @@ const CONSOLE_TOUR_STEPS = [
   },
 ];
 
+
+const REPO_TOUR_STEPS = [
+  {
+    id: 'repo-ribbon',
+    target: '[data-tour="repo-ribbon"]',
+    title: 'Connected Repository Live Ribbon',
+    badge: 'STEP 1 OF 4',
+    description:
+      'Live status ribbon showing branch selection, commit SHA, and real-time synchronization status with GitHub.',
+    tip: 'Switch branches via the dropdown combobox to inspect ADRs on active PRs or staging branches.',
+    placement: 'bottom-center',
+    scrollBlock: 'start',
+  },
+  {
+    id: 'repo-adrs',
+    target: '[data-tour="repo-adrs"]',
+    title: 'Repository Architecture Decisions (ADRs)',
+    badge: 'STEP 2 OF 4',
+    description:
+      'Scanned MADR records parsed directly from docs/adrs/*.md. Displays accepted, proposed, and superseded architectural decisions with blast radius metrics.',
+    tip: 'Click any ADR item to filter its downstream blast radius on the causal canvas.',
+    placement: 'right',
+    scrollBlock: 'center',
+  },
+  {
+    id: 'repo-gate',
+    target: '[data-tour="repo-gate"]',
+    title: 'Model Context Protocol (MCP) Live Gate',
+    badge: 'STEP 3 OF 4',
+    description:
+      'Autonomous agent verification barrier for this repository. Evaluates incoming code change intents against the repository causal graph in < 15ms.',
+    tip: 'Simulate tool executions directly in this pane to preview gate decisions.',
+    placement: 'right',
+    scrollBlock: 'center',
+  },
+  {
+    id: 'repo-canvas',
+    target: '[data-tour="repo-canvas"]',
+    title: 'Tenant Causal Knowledge Graph',
+    badge: 'STEP 4 OF 4',
+    description:
+      'Real-time dependency graph synthesized from this repository. Nodes represent isolated architectural invariants, dependencies, and code targets.',
+    tip: 'Drag nodes or click to inspect Cypher properties and affected code files.',
+    placement: 'left',
+    scrollBlock: 'center',
+  },
+];
 
 const AUDIT_TOUR_STEPS = [
   {
@@ -179,6 +226,7 @@ const MCP_TOUR_STEPS = [
 
 const TOUR_STEP_REGISTRY = {
   console: CONSOLE_TOUR_STEPS,
+  repo: REPO_TOUR_STEPS,
   dev: CONSOLE_TOUR_STEPS,
   mcp: MCP_TOUR_STEPS,
   audit: AUDIT_TOUR_STEPS,
@@ -213,7 +261,7 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
       });
       setCardPos({
         top: window.innerHeight * 0.4,
-        left: Math.max(16, (window.innerWidth - 360) / 2),
+        left: Math.max(16, (window.innerWidth - 350) / 2),
         placement: 'bottom',
       });
       return;
@@ -224,11 +272,12 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
 
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const cardWidth = Math.min(360, vw - 32);
-    const cardHeight = cardRef.current?.offsetHeight || 240;
-    const gap = 18;
+    const cardWidth = Math.min(350, vw - 32);
+    const cardHeight = cardRef.current?.offsetHeight || 260;
+    const gap = 16;
     const padding = 16;
-    const margin = 12; // Spotlight cut-out margin
+    const navbarOffset = 76; // Keep clear of the floating navigation bar
+    const margin = 10; // Spotlight cut-out margin
 
     // Strict Collision Detector: Does candidate [cTop, cLeft] intersect with spotlight [targetRect]?
     const collidesWithSpotlight = (cTop, cLeft) => {
@@ -242,100 +291,93 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
       );
     };
 
-    // 1. Calculate Initial Coordinates based on step's designated unhighlighted quadrant
+    const clampTop = (t) => Math.max(padding + navbarOffset, Math.min(vh - cardHeight - padding, t));
+    const clampLeft = (l) => Math.max(padding, Math.min(vw - cardWidth - padding, l));
+
+    // Calculate the 4 primary unhighlighted gutter slots around the target element
+    // Slot 1: RIGHT of element (opposing column on desktop/laptop)
+    const rightSlot = {
+      name: 'right',
+      top: clampTop(Math.max(rect.top, padding + navbarOffset)),
+      left: rect.right + gap,
+      fits: (vw - rect.right) >= (cardWidth + padding),
+    };
+
+    // Slot 2: LEFT of element (opposing column on desktop/laptop)
+    const leftSlot = {
+      name: 'left',
+      top: clampTop(Math.max(rect.top, padding + navbarOffset)),
+      left: rect.left - gap - cardWidth,
+      fits: rect.left >= (cardWidth + padding),
+    };
+
+    // Slot 3: BELOW element
+    const belowSlot = {
+      name: 'bottom',
+      top: rect.bottom + gap,
+      left: clampLeft(
+        step.placement === 'bottom-right'
+          ? rect.right - cardWidth
+          : step.placement === 'bottom-left'
+          ? rect.left
+          : rect.left + rect.width / 2 - cardWidth / 2
+      ),
+      fits: (vh - rect.bottom) >= (cardHeight + padding),
+    };
+
+    // Slot 4: ABOVE element
+    const aboveSlot = {
+      name: 'top',
+      top: rect.top - gap - cardHeight,
+      left: clampLeft(
+        step.placement === 'top-right'
+          ? rect.right - cardWidth
+          : step.placement === 'top-left'
+          ? rect.left
+          : rect.left + rect.width / 2 - cardWidth / 2
+      ),
+      fits: (rect.top - navbarOffset) >= (cardHeight + padding),
+    };
+
+    // Rank candidates by declared preference
     const pref = step.placement || 'bottom-center';
-    let top = 0;
-    let left = 0;
-    let placement = pref;
+    let candidates = [];
 
-    if (pref === 'bottom-center') {
-      top = rect.bottom + gap;
-      left = rect.left + rect.width / 2 - cardWidth / 2;
-    } else if (pref === 'bottom-right') {
-      top = rect.bottom + gap;
-      left = rect.right - cardWidth;
-    } else if (pref === 'bottom-left') {
-      top = rect.bottom + gap;
-      left = rect.left;
-    } else if (pref === 'top-center') {
-      top = rect.top - gap - cardHeight;
-      left = rect.left + rect.width / 2 - cardWidth / 2;
-    } else if (pref === 'top-right') {
-      top = rect.top - gap - cardHeight;
-      left = rect.right - cardWidth;
-    } else if (pref === 'top-left') {
-      top = rect.top - gap - cardHeight;
-      left = rect.left;
-    } else if (pref === 'right') {
-      // Prioritize right unhighlighted gutter
-      if (vw - rect.right >= cardWidth + padding) {
-        left = rect.right + gap;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top + 10));
-      } else if (rect.left >= cardWidth + padding) {
-        // Fallback to left gutter if right is tight
-        left = rect.left - gap - cardWidth;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top + 10));
-      } else {
-        // Fallback to above/below aligned with right side
-        if (rect.top - gap - cardHeight >= padding + 70) {
-          top = rect.top - gap - cardHeight;
-          left = Math.min(vw - cardWidth - padding, Math.max(padding, rect.right - cardWidth));
-        } else {
-          top = rect.bottom + gap;
-          left = Math.min(vw - cardWidth - padding, Math.max(padding, rect.right - cardWidth));
-        }
-      }
-    } else if (pref === 'left') {
-      if (rect.left >= cardWidth + padding) {
-        left = rect.left - gap - cardWidth;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top + 10));
-      } else if (vw - rect.right >= cardWidth + padding) {
-        left = rect.right + gap;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top + 10));
-      } else {
-        top = rect.bottom + gap;
-        left = Math.max(padding, rect.left);
-      }
+    if (pref.startsWith('right')) {
+      candidates = [rightSlot, leftSlot, belowSlot, aboveSlot];
+    } else if (pref.startsWith('left')) {
+      candidates = [leftSlot, rightSlot, belowSlot, aboveSlot];
+    } else if (pref.startsWith('top')) {
+      candidates = [aboveSlot, belowSlot, rightSlot, leftSlot];
     } else {
-      // Default: bottom center
-      top = rect.bottom + gap;
-      left = rect.left + rect.width / 2 - cardWidth / 2;
-    }
-
-    // 2. Viewport Clamping
-    left = Math.max(padding, Math.min(vw - cardWidth - padding, left));
-
-    // 3. Collision Resolution & Unhighlighted Space Guarantee
-    // If the candidate position collides with the spotlighted area or overflows bottom:
-    if (top + cardHeight > vh - padding || collidesWithSpotlight(top, left)) {
-      if (pref === 'right' && vw - rect.right >= cardWidth + padding) {
-        left = rect.right + gap;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top + 10));
-      } else if (pref === 'left' && rect.left >= cardWidth + padding) {
-        left = rect.left - gap - cardWidth;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top + 10));
-      } else if (rect.top - gap - cardHeight >= padding + 70) {
-        // Try space ABOVE element
-        top = rect.top - gap - cardHeight;
-        placement = 'top';
-      } else if (vw - rect.right >= cardWidth + padding + gap) {
-        left = rect.right + gap;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top));
-        placement = 'right';
-      } else if (rect.left >= cardWidth + padding + gap) {
-        left = rect.left - gap - cardWidth;
-        top = Math.max(padding + 70, Math.min(vh - cardHeight - padding, rect.top));
-        placement = 'left';
+      // Default: below first, but if element is tall (>50% vh), prioritize opposing horizontal columns
+      if (rect.height > vh * 0.45) {
+        // Element takes up the vertical height on laptop -> test horizontal gutters first
+        candidates = rect.left > vw * 0.4
+          ? [leftSlot, rightSlot, belowSlot, aboveSlot]
+          : [rightSlot, leftSlot, belowSlot, aboveSlot];
       } else {
-        top = Math.min(vh - cardHeight - padding, rect.bottom + gap);
+        candidates = [belowSlot, aboveSlot, rightSlot, leftSlot];
       }
     }
 
-    // Final safety clamps
-    top = Math.max(padding, Math.min(vh - cardHeight - padding, top));
-    left = Math.max(padding, Math.min(vw - cardWidth - padding, left));
+    // Pick the first slot that physically fits in viewport and does NOT collide with the spotlight
+    let chosen = candidates.find(c => c.fits && !collidesWithSpotlight(c.top, c.left));
 
-    setCardPos({ top, left, placement });
+    // Fallback: If no slot fits with full clearance, test clamping without collision
+    if (!chosen) {
+      chosen = candidates.find(c => !collidesWithSpotlight(clampTop(c.top), clampLeft(c.left)));
+    }
+
+    // Final safety fallback: pick candidate that minimizes overlap
+    if (!chosen) {
+      chosen = candidates[0];
+    }
+
+    const finalTop = clampTop(chosen.top);
+    const finalLeft = clampLeft(chosen.left);
+
+    setCardPos({ top: finalTop, left: finalLeft, placement: chosen.name });
   }, [step]);
 
   useEffect(() => {
@@ -497,9 +539,11 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
           position: 'fixed',
           top: `${cardPos.top}px`,
           left: `${cardPos.left}px`,
-          width: '360px',
+          width: '350px',
+          maxWidth: 'calc(100vw - 32px)',
+          maxHeight: 'calc(100vh - 90px)',
           zIndex: 99995,
-          transition: 'top 520ms cubic-bezier(0.25, 1, 0.5, 1), left 520ms cubic-bezier(0.25, 1, 0.5, 1)',
+          transition: 'top 400ms cubic-bezier(0.25, 1, 0.5, 1), left 400ms cubic-bezier(0.25, 1, 0.5, 1)',
         }}
         className="bg-[#0B0D11] border border-white/20 rounded-xl p-4 shadow-2xl backdrop-blur-xl pointer-events-auto"
       >
