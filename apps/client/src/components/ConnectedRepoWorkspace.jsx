@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  GitBranch, FolderGit2, FileText, RefreshCw, Terminal, GitPullRequest,
+  Compass, GitBranch, FolderGit2, FileText, RefreshCw, Terminal, GitPullRequest,
   CheckCircle2, AlertTriangle, ExternalLink, Trash2, Loader2, ChevronDown, Check, Search } from 'lucide-react';
 import GraphCanvas from './GraphCanvas';
 import SubsystemErrorBoundary from './SubsystemErrorBoundary';
@@ -496,6 +496,18 @@ export default function ConnectedRepoWorkspace({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              playClick();
+              window.dispatchEvent(new CustomEvent('cavdax:open-tour', { detail: { mode: 'repo' } }));
+            }}
+            className={btnSecondary}
+            title="Launch interactive tour for this connected repository (Press T)"
+          >
+            <Compass className="w-4 h-4 text-slate-700 dark:text-slate-300 group-hover:rotate-45 transition-transform" />
+            <span>Tour</span>
+          </button>
           <button onClick={() => { playClick(); runScan(); }} disabled={phase === 'scanning'} className={btnSecondary}>
             <RefreshCw className={`w-4 h-4 ${phase === 'scanning' ? 'animate-spin' : ''}`} strokeWidth={2} />
             <span>Rescan</span>

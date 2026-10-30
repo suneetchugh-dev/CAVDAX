@@ -22,7 +22,7 @@ import { motion } from 'framer-motion';
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Activity, RefreshCw, FileText, CheckCircle2, Clock, Database } from 'lucide-react';
+import { Activity, RefreshCw, FileText, CheckCircle2, Clock, Database, Compass } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import Combobox from './Combobox';
 
@@ -273,6 +273,20 @@ export default function AuditPage() {
             ]}
             ariaLabel="Audit row limit"
           />
+
+          {/* Tour Guide */}
+          <button
+            type="button"
+            onClick={() => {
+              playClick();
+              window.dispatchEvent(new CustomEvent('cavdax:open-tour', { detail: { mode: 'audit' } }));
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono uppercase tracking-wider border border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer group shadow-xs"
+            title="Launch interactive tour for Audit Log (Press T)"
+          >
+            <Compass className="w-3 h-3 text-slate-600 dark:text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
+            Tour
+          </button>
 
           {/* Refresh */}
           <button
