@@ -168,7 +168,7 @@ export default function NodeInspector({
       }}
       className={`absolute ${hasBlastBanner ? 'top-16' : 'top-12'} right-3 sm:right-4 ${
         customSize ? '' : (isFullscreen ? 'w-76 sm:w-80' : 'w-68 sm:w-72')
-      } max-w-[calc(100%-1.5rem)] max-h-[calc(100%-4rem)] overflow-x-auto overflow-y-auto bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs select-text ${
+      } max-w-[calc(100%-1.5rem)] max-h-[calc(100%-4rem)] overflow-x-auto overflow-y-auto has-scrubbar bg-white/95 dark:bg-[#0B0D11]/95 border border-slate-300 dark:border-white/15 rounded-2xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl z-30 font-mono text-xs select-text ${
         isResizing ? 'select-none cursor-nwse-resize' : ''
       }`}
       data-lenis-prevent
