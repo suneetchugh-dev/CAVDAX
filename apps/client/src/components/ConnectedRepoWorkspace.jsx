@@ -147,6 +147,8 @@ export default function ConnectedRepoWorkspace({
   repoRef.current = repo;
   const onUpdateRepoRef = useRef(onUpdateRepo);
   onUpdateRepoRef.current = onUpdateRepo;
+  const selectedBranchRef = useRef(selectedBranch);
+  selectedBranchRef.current = selectedBranch;
 
   const addLog = useCallback((component, text, type = 'INFO') => {
     setLogs(prev => [...prev, { component, text, type, time: new Date().toLocaleTimeString() }]);
@@ -161,7 +163,7 @@ export default function ConnectedRepoWorkspace({
   }, [addLog]);
 
   const runScan = useCallback(async (branchOverride) => {
-    const targetBranch = branchOverride || selectedBranch || repoRef.current?.default_branch || 'main';
+    const targetBranch = branchOverride || selectedBranchRef.current || repoRef.current?.default_branch || 'main';
     setPhase('scanning');
     setError(null);
     addLog('SCAN', `Reading ADRs from ${repoRef.current.full_name} on branch ${targetBranch}.`);
@@ -173,8 +175,9 @@ export default function ConnectedRepoWorkspace({
         return;
       }
       setScan(data);
-      if (data.branch && data.branch !== selectedBranch) {
+      if (data.branch) {
         setSelectedBranch(data.branch);
+        selectedBranchRef.current = data.branch;
       }
       setPhase('ready');
       addLog('PARSER', `Found ${data.count} ADR file${data.count === 1 ? '' : 's'} on branch ${data.branch}.`, data.count ? 'CASCADE' : 'INFO');
@@ -192,16 +195,21 @@ export default function ConnectedRepoWorkspace({
     } catch {
       failWith(null, 'Could not reach the CAVDAX server. Check your connection and try again.');
     }
-  }, [apiBase, selectedBranch, addLog, failWith]);
+  }, [apiBase, addLog, failWith]);
 
-  // Scan once per repository. Keyed on full_name so parent state updates never retrigger it.
+  const runScanRef = useRef(runScan);
+  runScanRef.current = runScan;
+
+  // Scan once per repository. Keyed on full_name so branch changes never retrigger it.
   useEffect(() => {
-    setSelectedBranch(repo.default_branch || 'main');
+    const initialBranch = repo.default_branch || 'main';
+    setSelectedBranch(initialBranch);
+    selectedBranchRef.current = initialBranch;
     setScan(null);
     setSelectedNode(null);
     setLogs([]);
-    runScan(repo.default_branch || 'main');
-  }, [repo.full_name, repo.default_branch, runScan]);
+    runScanRef.current(initialBranch);
+  }, [repo.full_name, repo.default_branch]);
 
   const openPullRequest = async () => {
     playClick();
