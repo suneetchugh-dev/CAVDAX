@@ -21,34 +21,34 @@ const ACTS = [
   {
     id: 1,
     act: 'Act I',
-    title: 'Vector RAG Failure & FalkorDB Causal Conscience',
+    title: 'Vector RAG Failure & Causal Conscience',
     time: '0:00',
     seconds: 0,
-    desc: 'Why cosine similarity retrieves obsolete architectural context and causes silent cache rot.'
+    desc: 'Why cosine similarity fails and how FalkorDB resolves temporal precedence.'
   },
   {
     id: 2,
     act: 'Act II',
-    title: 'Published MCP Gate & Agent Setup',
+    title: 'Published MCP Gate Daemon',
     time: '1:42',
     seconds: 102,
-    desc: 'npm package @cavdax/mcp-server with stdio & SSE configs for Claude Code, Cursor, and Windsurf.'
+    desc: 'Universal stdio & SSE setup for Claude Code, Cursor, and Windsurf.'
   },
   {
     id: 3,
     act: 'Act III',
-    title: 'Live Terminal Interception & Self-Correction',
+    title: 'Live Interception & Self-Correction',
     time: '3:15',
     seconds: 195,
-    desc: 'Bob AI agent attempts stale Redis write (DEC-302), is blocked by MCP gate, and self-corrects to DynamoDB DAX (DEC-304).'
+    desc: 'Stale Redis write blocked; autonomous self-correction to DynamoDB DAX.'
   },
   {
     id: 4,
     act: 'Act IV',
-    title: 'Live GitHub Workspace & Audit Logs',
+    title: 'Connected GitHub Graph & PR Sync',
     time: '6:08',
     seconds: 368,
-    desc: 'Real repository scanning, GraphBLAS invalidation traversal, 1-click PR sync, and cryptographic audit log.'
+    desc: 'Live repository scan, 1-click drifted ADR PR, and tamper-evident audit log.'
   }
 ];
 
@@ -199,17 +199,12 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
       <div className="max-w-5xl mx-auto w-full relative z-10 flex flex-col items-center">
         {/* Header Cluster */}
         <div id="project-overview" className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-[11px] font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>WeMakeDevs × FalkorDB GraphHacks 2026</span>
-          </div>
-
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-950 dark:text-white mb-3">
             System Demonstration
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed font-sans">
-            Watch the end-to-end CAVDAX architecture in action: from commit ingestion and FalkorDB GraphBLAS invalidation to real-time MCP tool interception and autonomous agent self-correction.
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed font-sans">
+            End-to-end demonstration of FalkorDB causal invalidation, real-time MCP write protection, and autonomous agent self-correction.
           </p>
         </div>
 
@@ -236,13 +231,11 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
 
           {/* Sub-Header Video Metadata Bar */}
           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="font-bold text-slate-900 dark:text-white">1080p 60FPS</span>
-              <span>•</span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 font-bold text-slate-900 dark:text-slate-200">1080p 60FPS</span>
               <span>10m 21s</span>
-              <span>•</span>
-              <span className="text-slate-600 dark:text-slate-300">FalkorDB GraphBLAS Invalidation</span>
+              <span className="text-slate-300 dark:text-white/20">•</span>
+              <span className="text-slate-600 dark:text-slate-400">FalkorDB GraphBLAS Invalidation</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -262,23 +255,25 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
           </div>
 
           {/* 4 Primary Acts Selector Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
             {ACTS.map((actItem, idx) => (
               <button
                 key={actItem.id}
                 onClick={() => seekToSeconds(actItem.seconds, idx)}
-                className={`p-3 rounded-xl text-left transition-all text-xs font-mono border cursor-pointer ${
+                className={`p-4 rounded-xl text-left transition-all text-xs font-mono border cursor-pointer flex flex-col justify-between ${
                   activeAct === idx
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-transparent shadow-lg font-bold ring-1 ring-white/20'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-transparent shadow-md font-bold'
+                    : 'bg-slate-50 hover:bg-slate-100 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">{actItem.act}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 font-bold">{actItem.time}</span>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{actItem.act}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono font-semibold">{actItem.time}</span>
+                  </div>
+                  <div className="font-bold text-[13px] leading-snug mb-1.5">{actItem.title}</div>
                 </div>
-                <div className="font-bold line-clamp-1 mb-1">{actItem.title}</div>
-                <div className="text-[11px] opacity-70 font-sans line-clamp-2 leading-relaxed">{actItem.desc}</div>
+                <div className="text-[11px] opacity-75 font-sans leading-relaxed mt-1">{actItem.desc}</div>
               </button>
             ))}
           </div>
