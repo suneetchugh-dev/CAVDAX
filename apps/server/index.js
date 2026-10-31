@@ -65,12 +65,12 @@ app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; " +
+    "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.youtube.com https://s.ytimg.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com data:; " +
     "img-src 'self' data: https: blob:; " +
     "connect-src 'self' https://api.github.com https://lumberjack.razorpay.com https://api.razorpay.com wss: ws:; " +
-    "frame-src https://api.razorpay.com; " +
+    "frame-src 'self' https://api.razorpay.com https://www.youtube-nocookie.com https://www.youtube.com; " +
     "worker-src 'self' blob:; " +
     "object-src 'none'; " +
     "base-uri 'self';"
