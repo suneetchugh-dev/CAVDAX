@@ -150,25 +150,28 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
       }
     }
 
+    const validSec = Math.max(0, Math.min(622, Number(seconds) || 0));
+
     // Try YouTube Player API first
     if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
       try {
-        playerRef.current.seekTo(seconds, true);
+        playerRef.current.seekTo(validSec, true);
         playerRef.current.playVideo();
         setIsPlaying(true);
         return;
       } catch {}
     }
 
-    // Fallback: postMessage command directly to iframe
+    // Fallback: postMessage command directly to iframe with strict target origin
     if (iframeRef.current && iframeRef.current.contentWindow) {
+      const targetOrigin = 'https://www.youtube-nocookie.com';
       iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: 'command', func: 'seekTo', args: [seconds, true] }),
-        '*'
+        JSON.stringify({ event: 'command', func: 'seekTo', args: [validSec, true] }),
+        targetOrigin
       );
       iframeRef.current.contentWindow.postMessage(
         JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
-        '*'
+        targetOrigin
       );
       setIsPlaying(true);
     }
