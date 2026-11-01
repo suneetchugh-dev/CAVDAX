@@ -325,7 +325,7 @@ const CANONICAL_SEED_SPONSORS = [
     tier_label: 'Core Supporter',
     amount_paise: 84900,
     currency: 'INR',
-    avatar_url: 'https://avatars.githubusercontent.com/u/148385481?v=4',
+    avatar_url: 'https://avatars.githubusercontent.com/u/76564569?v=4',
     created_at: '2026-10-15T10:00:00.000Z',
     highlighted: true,
     is_seed: true
@@ -348,7 +348,7 @@ const CANONICAL_SEED_SPONSORS = [
     name: 'Developer Tooling Circle',
     github_handle: null,
     tier_id: 1,
-    tier_label: 'Coffee Backer',
+    tier_label: 'Cookie Backer',
     amount_paise: 16900,
     currency: 'INR',
     avatar_url: null,
@@ -836,6 +836,9 @@ app.get('/api/system/hackathon-mode', (req, res) => {
 app.post('/api/system/hackathon-mode', requireDevAuth, (req, res) => {
   const { enabled } = req.body || {};
   globalHackathonMode = Boolean(enabled);
+  if (!globalHackathonMode && Array.isArray(savedSystemState.sponsors)) {
+    savedSystemState.sponsors = savedSystemState.sponsors.filter(s => !s.is_evaluation);
+  }
   syncSystemStateToDisk();
   console.log(`[CAVDAX] Global Hackathon Evaluation Mode updated: ${globalHackathonMode ? 'ENABLED (ENTERPRISE UNLOCKED GLOBALLY)' : 'DISABLED'}`);
   broadcastEvent('HACKATHON_MODE_CHANGED', {
@@ -1850,8 +1853,14 @@ app.get('/api/user/quota', async (req, res) => {
   const matchingSponsor = userLogin && Array.isArray(savedSystemState.sponsors)
     ? savedSystemState.sponsors.find(s => s.github_handle === userLogin)
     : null;
-  const isSponsor = Boolean(req.session?.is_sponsor || req.session?.user?.is_sponsor || matchingSponsor);
-  const sponsorTier = req.session?.sponsor_tier || req.session?.user?.sponsor_tier || matchingSponsor?.tier_label || null;
+  let isSponsor = Boolean(req.session?.is_sponsor || req.session?.user?.is_sponsor || matchingSponsor);
+  let sponsorTier = req.session?.sponsor_tier || req.session?.user?.sponsor_tier || matchingSponsor?.tier_label || null;
+  if (!globalHackathonMode && (req.session?.is_evaluation_sponsor || matchingSponsor?.is_evaluation)) {
+    if (!matchingSponsor || matchingSponsor.is_evaluation) {
+      isSponsor = false;
+      sponsorTier = null;
+    }
+  }
 
   let activeNodes = fallbackGraphState.nodes.length;
   let userDecisions = 0;
@@ -2963,7 +2972,7 @@ app.post('/api/billing/verify-payment', (req, res) => {
 
   // Derive sponsor tier details if supporter payment
   let sponsorTierId = 1;
-  let sponsorTierLabel = 'Coffee Backer';
+  let sponsorTierLabel = 'Cookie Backer';
   if (orderAmount >= 84900) {
     sponsorTierId = 3;
     sponsorTierLabel = 'Core Supporter';
@@ -3054,13 +3063,130 @@ app.post('/api/billing/verify-payment', (req, res) => {
   });
 });
 
+function checkEvaluationPassAuthorized(req) {
+  if (globalHackathonMode) return true;
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (API_TOKEN && timingSafeStringEqual(token, API_TOKEN)) return true;
+  const sessionUser = req.session?.user?.login?.toLowerCase().replace(/^@/, '');
+  if (sessionUser && globalDevRoster.includes(sessionUser)) return true;
+  const clientIp = extractClientIp(req).toLowerCase();
+  const socketIp = (req.socket?.remoteAddress || '').replace(/^.*:/, '').toLowerCase();
+  const isDirectLoopback = socketIp === '127.0.0.1' || socketIp === '1' || socketIp === 'localhost' || socketIp === '::1';
+  if (isDirectLoopback && (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === 'localhost') && (process.env.NODE_ENV !== 'production' || process.env.ALLOW_LOCAL_DEV_AUTH === 'true')) return true;
+  return false;
+}
+
+/**
+ * POST /api/billing/activate-evaluation-sponsor
+ * Activates an ephemeral sponsor tier for Hackathon Evaluators / Authorized Devs.
+ */
+app.post('/api/billing/activate-evaluation-sponsor', (req, res) => {
+  if (!checkEvaluationPassAuthorized(req)) {
+    return res.status(403).json({
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Evaluation Sponsor Pass requires Hackathon Evaluation Mode or developer authorization.' }
+    });
+  }
+
+  const { tier_id } = req.body || {};
+  const tierNum = parseInt(tier_id, 10);
+  if (![1, 2, 3].includes(tierNum)) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'INVALID_TIER', message: 'tier_id must be 1 (Coffee), 2 (2 Cups), or 3 (Core).' }
+    });
+  }
+
+  const tierMap = {
+    1: { label: 'Cookie Backer', highlighted: false, paise: 16900 },
+    2: { label: '2 Cups Sponsor', highlighted: false, paise: 33900 },
+    3: { label: 'Core Supporter', highlighted: true, paise: 84900 }
+  };
+  const tierInfo = tierMap[tierNum];
+
+  const user = req.session?.user;
+  const backerId = user?.id ? ('spn_eval_' + user.id) : ('spn_eval_guest_' + Date.now());
+  const backerRecord = {
+    id: backerId,
+    name: user?.name || user?.login || 'Hackathon Evaluator',
+    github_handle: user?.login || 'evaluator-pass',
+    tier_id: tierNum,
+    tier_label: tierInfo.label + ' (Eval Pass)',
+    amount_paise: tierInfo.paise,
+    currency: 'INR',
+    avatar_url: user?.avatar_url || null,
+    created_at: new Date().toISOString(),
+    highlighted: tierInfo.highlighted,
+    is_evaluation: true,
+    is_seed: false
+  };
+
+  if (!Array.isArray(savedSystemState.sponsors)) {
+    savedSystemState.sponsors = [];
+  }
+  // Remove existing evaluation record for this identity/session so no clutter
+  savedSystemState.sponsors = savedSystemState.sponsors.filter(s => s.id !== backerId && (!user?.login || s.github_handle !== user.login || !s.is_evaluation));
+  savedSystemState.sponsors.unshift(backerRecord);
+
+  if (req.session) {
+    req.session.is_sponsor = true;
+    req.session.sponsor_tier = tierInfo.label;
+    req.session.is_evaluation_sponsor = true;
+    if (req.session.user) {
+      req.session.user.is_sponsor = true;
+      req.session.user.sponsor_tier = tierInfo.label;
+      req.session.user.is_evaluation_sponsor = true;
+    }
+  }
+
+  broadcastEvent('SPONSOR_REGISTERED', backerRecord);
+
+  res.json({
+    success: true,
+    is_sponsor: true,
+    sponsor_tier: tierInfo.label,
+    is_evaluation: true,
+    backer: backerRecord
+  });
+});
+
+/**
+ * POST /api/billing/reset-evaluation-sponsor
+ * Resets ephemeral evaluation sponsor pass back to normal visitor state.
+ */
+app.post('/api/billing/reset-evaluation-sponsor', (req, res) => {
+  const user = req.session?.user;
+  const backerId = user?.id ? ('spn_eval_' + user.id) : ('spn_eval_guest_' + Date.now());
+  if (Array.isArray(savedSystemState.sponsors)) {
+    savedSystemState.sponsors = savedSystemState.sponsors.filter(s => {
+      if (s.is_evaluation && (s.id === backerId || (user?.login && s.github_handle === user.login) || !user)) {
+        return false;
+      }
+      return true;
+    });
+  }
+  if (req.session) {
+    req.session.is_sponsor = false;
+    req.session.sponsor_tier = null;
+    req.session.is_evaluation_sponsor = false;
+    if (req.session.user) {
+      req.session.user.is_sponsor = false;
+      req.session.user.sponsor_tier = null;
+      req.session.user.is_evaluation_sponsor = false;
+    }
+  }
+  res.json({ success: true, is_sponsor: false });
+});
+
 /**
  * GET /api/sponsors
  * Returns verified community backers and supporters.
  */
 app.get('/api/sponsors', (req, res) => {
   const persistedSponsors = Array.isArray(savedSystemState.sponsors) ? savedSystemState.sponsors : [];
-  const allSponsors = [...persistedSponsors];
+  const effectivePersisted = globalHackathonMode ? persistedSponsors : persistedSponsors.filter(s => !s.is_evaluation);
+  const allSponsors = [...effectivePersisted];
   for (const seed of CANONICAL_SEED_SPONSORS) {
     if (!allSponsors.some(s => s.id === seed.id || (seed.github_handle && s.github_handle === seed.github_handle))) {
       allSponsors.push(seed);
