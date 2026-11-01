@@ -3187,7 +3187,7 @@ app.post('/api/billing/activate-evaluation-sponsor', (req, res) => {
     name: effectiveUser?.name || effectiveUser?.login || 'Hackathon Evaluator',
     github_handle: effectiveUser?.login || 'evaluator-pass',
     tier_id: tierNum,
-    tier_label: tierInfo.label + ' (Eval Pass)',
+    tier_label: tierInfo.label,
     amount_paise: tierInfo.paise,
     currency: 'INR',
     avatar_url: effectiveUser?.avatar_url || effectiveUser?.avatarUrl || null,
@@ -3212,7 +3212,11 @@ app.post('/api/billing/activate-evaluation-sponsor', (req, res) => {
     savedSystemState.sponsors = [];
   }
   // Remove existing evaluation record for this identity/session so no clutter
-  savedSystemState.sponsors = savedSystemState.sponsors.filter(s => s.id !== backerId && (!user?.login || s.github_handle !== user.login || !s.is_evaluation));
+  savedSystemState.sponsors = savedSystemState.sponsors.filter(s => {
+    if (s.id === backerId) return false;
+    if (effectiveUser?.login && s.github_handle === effectiveUser.login && s.is_evaluation) return false;
+    return true;
+  });
   savedSystemState.sponsors.unshift(backerRecord);
 
   if (req.session) {
