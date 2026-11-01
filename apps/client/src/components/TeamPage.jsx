@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Github, 
   Linkedin, 
@@ -33,11 +34,23 @@ export default function TeamPage({ onLaunchConsole }) {
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape' && lightboxMember) {
+        playClick();
         setLightboxMember(null);
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
+  }, [lightboxMember]);
+
+  // Lock body scroll when lightbox is open to prevent background viewport displacement
+  useEffect(() => {
+    if (lightboxMember) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
   }, [lightboxMember]);
 
   return (
@@ -298,17 +311,20 @@ export default function TeamPage({ onLaunchConsole }) {
         </div>
       </div>
 
-      {/* 5. Interactive 3D Tilt Lightbox Modal from CAVDAX */}
-      {lightboxMember && (
+      {/* 5. Interactive 3D Tilt Lightbox Modal (Hoisted via createPortal to break free from containing block) */}
+      {lightboxMember && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-8 bg-black/80 dark:bg-[#080808]/92 backdrop-blur-md"
-          onClick={() => setLightboxMember(null)}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 bg-black/80 dark:bg-black/92 backdrop-blur-md"
+          onClick={() => {
+            playClick();
+            setLightboxMember(null);
+          }}
           role="dialog"
           aria-modal="true"
           aria-label={`View photo of ${lightboxMember.name}`}
         >
           <div
-            className="relative max-w-sm sm:max-w-md w-full rounded-3xl overflow-hidden bg-white dark:bg-[#151618] border border-slate-900/60 dark:border-amber-400/50 shadow-2xl shadow-slate-900/15 dark:shadow-[0_0_50px_rgba(245,158,11,0.28)] transition-transform duration-300 ease-out"
+            className="relative max-w-sm sm:max-w-md w-full rounded-3xl overflow-hidden bg-white dark:bg-[#121217] border border-slate-200 dark:border-white/15 shadow-2xl shadow-black/40 dark:shadow-[0_0_50px_rgba(255,255,255,0.06)] transition-transform duration-300 ease-out"
             style={{ transform: `perspective(800px) rotateX(${lightboxTilt.y}deg) rotateY(${lightboxTilt.x}deg) scale(1.015)` }}
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
@@ -322,7 +338,10 @@ export default function TeamPage({ onLaunchConsole }) {
             <div className="absolute top-3 right-3 z-10">
               <button
                 type="button"
-                onClick={() => setLightboxMember(null)}
+                onClick={() => {
+                  playClick();
+                  setLightboxMember(null);
+                }}
                 className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer border border-slate-200 dark:border-white/15 shadow-xs"
                 title="Close photo"
                 aria-label="Close photo"
@@ -336,7 +355,7 @@ export default function TeamPage({ onLaunchConsole }) {
               {lightboxMember.isEmblem && (
                 <div 
                   aria-hidden="true" 
-                  className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(217,163,83,0.18),_transparent_70%)] pointer-events-none" 
+                  className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.08),_transparent_70%)] pointer-events-none" 
                 />
               )}
               <ShimmerImage
@@ -359,7 +378,8 @@ export default function TeamPage({ onLaunchConsole }) {
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">{lightboxMember.title}</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

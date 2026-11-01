@@ -26,8 +26,8 @@ const CONSOLE_TOUR_STEPS = [
     title: '4-Act Causal Invalidation Storyline',
     badge: 'STEP 1 OF 4',
     description:
-      'Step through the live narrative demonstration: from initial ADR ingestion (Act 1), through cascading invalidation (Act 2), MCP execution hard rejection (Act 3), to verified revalidation (Act 4).',
-    tip: 'Click any act or press numbers 1-4 to jump directly into that scenario.',
+      'Simulate live ADR ingestion, cascading graph invalidation, and autonomous agent self-correction.',
+    tip: 'Click any act or press 1–4 to jump scenarios.',
     placement: 'bottom-right',
     scrollBlock: 'start',
   },
@@ -37,8 +37,8 @@ const CONSOLE_TOUR_STEPS = [
     title: 'FalkorDB Causal Dependency Graph',
     badge: 'STEP 2 OF 4',
     description:
-      'Real-time visualization of the Knowledge Graph backed by FalkorDB GraphBLAS matrix engine. Active nodes display in crisp white, invalidated nodes in garnet rose.',
-    tip: 'Click any node to open the Node Inspector and inspect its raw Cypher properties.',
+      'Interactive GraphBLAS matrix mapping active ADRs and invalidated dependency cascades in real time.',
+    tip: 'Click any node to inspect Cypher properties.',
     placement: 'left',
     scrollBlock: 'center',
   },
@@ -48,8 +48,8 @@ const CONSOLE_TOUR_STEPS = [
     title: 'Terminal Metrics & Cognitive Mitosis HUD',
     badge: 'STEP 3 OF 4',
     description:
-      'Watch real-time MCP tool invocations, Cypher query logs, and the CavdaxAgentStateIndicator tracking agent cognition (IDLE, REASONING, EXECUTING, VERIFIED, REJECTED).',
-    tip: 'Observe how execution requests with stale dependencies are intercepted before touching the disk.',
+      'Live telemetry tracking Cypher queries, MCP tool calls, and agent cognitive states.',
+    tip: 'Stale executions are intercepted before touching disk.',
     placement: 'left',
     scrollBlock: 'center',
   },
@@ -59,8 +59,8 @@ const CONSOLE_TOUR_STEPS = [
     title: 'Enclosed Model Context Protocol (MCP) Gate',
     badge: 'STEP 4 OF 4',
     description:
-      'Autonomous agent actions are enclosed within this verification gate. If an action depends on stale or revoked knowledge, it is hard-rejected in < 15ms.',
-    tip: 'Compare this to traditional Vector RAG which silently allows stale executions.',
+      'Enclosed MCP barrier hard-rejecting stale or revoked agent write intents in <15ms.',
+    tip: 'Prevents silent cache rot typical of Vector RAG.',
     placement: 'right',
     scrollBlock: 'center',
   },
@@ -74,8 +74,8 @@ const REPO_TOUR_STEPS = [
     title: 'Connected Repository Live Ribbon',
     badge: 'STEP 1 OF 4',
     description:
-      'Live status ribbon showing branch selection, commit SHA, and real-time synchronization status with GitHub.',
-    tip: 'Switch branches via the dropdown combobox to inspect ADRs on active PRs or staging branches.',
+      'Live GitHub sync ribbon tracking active branches, commit SHAs, and repository state.',
+    tip: 'Switch branches to inspect PR-specific architecture states.',
     placement: 'bottom-center',
     scrollBlock: 'start',
   },
@@ -85,8 +85,8 @@ const REPO_TOUR_STEPS = [
     title: 'Repository Architecture Decisions (ADRs)',
     badge: 'STEP 2 OF 4',
     description:
-      'Scanned MADR records parsed directly from docs/adrs/*.md. Displays accepted, proposed, and superseded architectural decisions with blast radius metrics.',
-    tip: 'Click any ADR item to filter its downstream blast radius on the causal canvas.',
+      'Markdown ADRs parsed from docs/adrs with live status and blast radius metrics.',
+    tip: 'Select an ADR to highlight downstream impact.',
     placement: 'right',
     scrollBlock: 'center',
   },
@@ -96,8 +96,8 @@ const REPO_TOUR_STEPS = [
     title: 'Model Context Protocol (MCP) Live Gate',
     badge: 'STEP 3 OF 4',
     description:
-      'Autonomous agent verification barrier for this repository. Evaluates incoming code change intents against the repository causal graph in < 15ms.',
-    tip: 'Simulate tool executions directly in this pane to preview gate decisions.',
+      'Repository verification barrier evaluating agent write intents against live causal dependencies.',
+    tip: 'Simulate tool executions to preview gate decisions.',
     placement: 'right',
     scrollBlock: 'center',
   },
@@ -107,8 +107,8 @@ const REPO_TOUR_STEPS = [
     title: 'Tenant Causal Knowledge Graph',
     badge: 'STEP 4 OF 4',
     description:
-      'Real-time dependency graph synthesized from this repository. Nodes represent isolated architectural invariants, dependencies, and code targets.',
-    tip: 'Drag nodes or click to inspect Cypher properties and affected code files.',
+      'Live causal graph synthesizing architectural invariants, modules, and target source files.',
+    tip: 'Drag or click nodes to inspect graph invariants.',
     placement: 'left',
     scrollBlock: 'center',
   },
@@ -121,8 +121,8 @@ const AUDIT_TOUR_STEPS = [
     title: 'FalkorDB Audit & Verification Stream',
     badge: 'STEP 1 OF 3',
     description:
-      'Real-time verification telemetry recorded directly into FalkorDB. Every agent write attempt is evaluated against the Causal Dependency Graph, displaying total recorded actions and live GraphBLAS lookup latency.',
-    tip: 'Average traversal and gate evaluation completes in sub-15ms via Sparse BLAS matrix multiplication.',
+      'FalkorDB audit stream tracking verified agent actions and sub-15ms GraphBLAS latency.',
+    tip: 'Sub-15ms evaluation powered by Sparse BLAS matrix multiplication.',
     placement: 'bottom-center',
     scrollBlock: 'start',
   },
@@ -132,8 +132,8 @@ const AUDIT_TOUR_STEPS = [
     title: 'Multi-Repo Scope & Forensic Verdict Filters',
     badge: 'STEP 2 OF 3',
     description:
-      'Filter recorded agent actions across connected GitHub repositories or the 4-Act demo sandbox. Slice logs instantly by BLOCKED (stale/revoked ADR dependencies) or APPROVED verdicts.',
-    tip: 'Use the text search box to filter by specific target file path or ADR decision ID.',
+      'Filter verification audit logs across repositories, verdict states, and target files.',
+    tip: 'Filter by BLOCKED to inspect intercepted architectural violations.',
     placement: 'bottom-center',
     scrollBlock: 'start',
   },
@@ -143,8 +143,8 @@ const AUDIT_TOUR_STEPS = [
     title: 'Tamper-Evident Action Audit Ledger',
     badge: 'STEP 3 OF 3',
     description:
-      'Detailed ledger tracking Action ID, Target File, Decision Status, and Execution Timestamp. Blocked writes highlight exact architectural divergence before any filesystem corruption occurs.',
-    tip: 'Compare executed actions with terminal logs to trace deterministic invalidation cascades.',
+      'Immutable ledger detailing action IDs, target files, decision verdicts, and execution timestamps.',
+    tip: 'Blocked writes reveal architectural divergence before disk writes.',
     placement: 'top-center',
     scrollBlock: 'center',
   },
@@ -157,8 +157,8 @@ const PROFILE_TOUR_STEPS = [
     title: 'Architecture Tiers & Quota Allocation',
     badge: 'STEP 1 OF 3',
     description:
-      'Review your active developer tier and entitlement matrix (Free Sandbox, Pro Enclave, or Enterprise Node). Each tier allocates dedicated GraphBLAS traversal capacity and MCP gate concurrency.',
-    tip: 'Sandbox tiers operate on local in-memory FalkorDB instances for zero-friction evaluation.',
+      'Developer tier entitlements allocating dedicated GraphBLAS traversal capacity and MCP gate concurrency.',
+    tip: 'Sandbox tier runs on local in-memory FalkorDB.',
     placement: 'bottom-center',
     scrollBlock: 'start',
   },
@@ -168,8 +168,8 @@ const PROFILE_TOUR_STEPS = [
     title: 'Live GraphBLAS Traversal & Usage Gauges',
     badge: 'STEP 2 OF 3',
     description:
-      'Real-time consumption meters tracking Cypher matrix traversals, decision validations, and storage nodes. Live usage syncs with your developer identity.',
-    tip: 'Traversals scale with ADR graph depth during causal invalidation dependency resolution.',
+      'Real-time gauges tracking Cypher matrix traversals, decision validations, and graph nodes.',
+    tip: 'Traversals scale with ADR dependency graph depth.',
     placement: 'top-center',
     scrollBlock: 'center',
   },
@@ -179,8 +179,8 @@ const PROFILE_TOUR_STEPS = [
     title: 'Cryptographic MCP Agent API Key',
     badge: 'STEP 3 OF 3',
     description:
-      'Manage SHA-256 hashed bearer tokens for authenticating autonomous coding agents (Claude Code, Cursor IDE, Windsurf) through the CAVDAX stdio proxy and HTTP gates.',
-    tip: 'Rotate keys instantly with one click if an agent deployment credential is retired.',
+      'SHA-256 bearer tokens authenticating autonomous coding agents through stdio and HTTP gates.',
+    tip: 'Rotate compromised or retired agent tokens immediately.',
     placement: 'top-center',
     scrollBlock: 'center',
   },
@@ -195,8 +195,8 @@ const MCP_TOUR_STEPS = [
     title: 'Model Context Protocol (MCP) Gateway',
     badge: 'STEP 1 OF 3',
     description:
-      'Enclose autonomous coding agents behind a deterministic Causal Invalidation Gate. All filesystem writes are intercepted in-flight before touching disk.',
-    tip: 'Gate latency is guaranteed < 15ms via FalkorDB GraphBLAS matrix operations.',
+      'Enclose autonomous coding agents to intercept filesystem writes before touching disk.',
+    tip: 'Sub-15ms gate verification via GraphBLAS matrix operations.',
     placement: 'bottom-center',
     scrollBlock: 'start',
   },
@@ -206,8 +206,8 @@ const MCP_TOUR_STEPS = [
     title: 'Drop-In Client Configuration Guides',
     badge: 'STEP 2 OF 3',
     description:
-      'Zero code refactoring needed. Drop the CAVDAX stdio proxy configuration directly into Claude Code CLI, Cursor IDE, Claude Desktop, or Windsurf.',
-    tip: 'Click any client button to instantly view and copy the target config file.',
+      'Drop-in stdio proxy configurations for Claude Code, Cursor IDE, and Windsurf.',
+    tip: 'Copy client configs to integrate within minutes.',
     placement: 'bottom-right',
     scrollBlock: 'start',
   },
@@ -217,8 +217,8 @@ const MCP_TOUR_STEPS = [
     title: '3-Step Enclosed Interception Loop',
     badge: 'STEP 3 OF 3',
     description:
-      '1. In-flight tool capture over stdin -> 2. FalkorDB Cypher provenance BFS traversal -> 3. Deterministic 200 OK commit or 403 Hard Rejection.',
-    tip: 'Eliminates silent cache rot where agents write code against stale/revoked ADRs.',
+      'In-flight tool capture, Cypher provenance traversal, and deterministic commit or rejection.',
+    tip: 'Eliminates silent cache rot across autonomous workflows.',
     placement: 'right',
     scrollBlock: 'center',
   },
@@ -233,10 +233,60 @@ const TOUR_STEP_REGISTRY = {
   profile: PROFILE_TOUR_STEPS,
 };
 
+// Universal smooth scroller that coordinates with Lenis and accounts for sticky navbar
+function scrollToTourTarget(el, onSettled, options = {}) {
+  if (!el) {
+    if (onSettled) onSettled();
+    return () => {};
+  }
+  const navbarHeight = 85;
+  const duration = options.duration !== undefined ? options.duration : 0.58;
+
+  let settled = false;
+  let watchdog = null;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    if (watchdog) clearTimeout(watchdog);
+    if (onSettled) onSettled();
+  };
+
+  watchdog = setTimeout(finish, Math.round(duration * 1000) + 60);
+
+  if (window.__lenis) {
+    window.__lenis.scrollTo(el, {
+      offset: -navbarHeight,
+      duration,
+      immediate: options.immediate || false,
+      lock: false,
+      onComplete: finish,
+    });
+    return () => {
+      settled = true;
+      if (watchdog) clearTimeout(watchdog);
+    };
+  }
+
+  // Native window scroll fallback with exact navbar offset calculation
+  const targetY = Math.max(0, el.getBoundingClientRect().top + window.scrollY - navbarHeight);
+  if (options.immediate) {
+    window.scrollTo(0, targetY);
+    finish();
+  } else {
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+  }
+
+  return () => {
+    settled = true;
+    if (watchdog) clearTimeout(watchdog);
+  };
+}
+
 export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
-  const [cardPos, setCardPos] = useState({ top: 100, left: 100, placement: 'bottom' });
+  const [cardPos, setCardPos] = useState({ top: -9999, left: -9999, placement: 'bottom' });
+  const [isCardVisible, setIsCardVisible] = useState(false);
   const cardRef = useRef(null);
 
   const steps = TOUR_STEP_REGISTRY[mode] || CONSOLE_TOUR_STEPS;
@@ -245,6 +295,9 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
   useEffect(() => {
     if (isOpen) {
       setCurrentStepIndex(0);
+      setIsCardVisible(false);
+    } else {
+      setIsCardVisible(false);
     }
   }, [isOpen, mode]);
 
@@ -382,6 +435,9 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
 
   useEffect(() => {
     if (!isOpen || !step) return;
+    let isCancelled = false;
+    let cancelScroll = () => {};
+    let rafId = null;
 
     const el = document.querySelector(step.target);
     if (el) {
@@ -399,44 +455,72 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
         : (rect.top >= 80 && rect.top <= 140);
 
       if (!isAlreadyComfortablyVisible) {
-        if (rect.top < 80) {
-          // Element is cut off at the top behind navbar -> scroll to start
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else if (rect.bottom > vh - 30 || rect.top > vh * 0.5) {
-          // Element is a bit below or cut off at the bottom -> scroll to center so the whole highlighted box is visible
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        setIsCardVisible(false);
+        cancelScroll = scrollToTourTarget(el, () => {
+          if (isCancelled) return;
+          updatePositions();
+          requestAnimationFrame(() => {
+            if (!isCancelled) {
+              setIsCardVisible(true);
+            }
+          });
+        }, { duration: 0.58 });
+      } else {
+        updatePositions();
+        requestAnimationFrame(() => {
+          if (!isCancelled) {
+            setIsCardVisible(true);
+          }
+        });
       }
+    } else {
+      updatePositions();
+      requestAnimationFrame(() => {
+        if (!isCancelled) {
+          setIsCardVisible(true);
+        }
+      });
     }
 
-    updatePositions();
-
-    // Smooth RAF tracking loop for 520ms to smoothly interpolate while scrollIntoView animates
+    // Keep spotlight mask locked to the element during scroll/resize
     let startTime = performance.now();
-    let rafId;
     const track = (now) => {
+      if (isCancelled) return;
       updatePositions();
-      if (now - startTime < 520) {
+      if (now - startTime < 750) {
         rafId = requestAnimationFrame(track);
       }
     };
     rafId = requestAnimationFrame(track);
 
-    const handleResize = () => updatePositions();
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize, true);
+    const handleSync = () => {
+      if (!isCancelled) updatePositions();
+    };
+    window.addEventListener('resize', handleSync);
+    window.addEventListener('scroll', handleSync, true);
+    if (window.__lenis) {
+      window.__lenis.on('scroll', handleSync);
+    }
 
     return () => {
+      isCancelled = true;
+      cancelScroll();
       if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize, true);
+      window.removeEventListener('resize', handleSync);
+      window.removeEventListener('scroll', handleSync, true);
+      if (window.__lenis) {
+        window.__lenis.off('scroll', handleSync);
+      }
     };
-  }, [isOpen, step, updatePositions]);
+  }, [isOpen, currentStepIndex, step, updatePositions]);
 
   const handleNext = () => {
     playClick();
     if (currentStepIndex < steps.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1);
+      setIsCardVisible(false);
+      setTimeout(() => {
+        setCurrentStepIndex((prev) => prev + 1);
+      }, 100);
     } else {
       handleComplete();
     }
@@ -445,12 +529,16 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
   const handlePrev = () => {
     playClick();
     if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
+      setIsCardVisible(false);
+      setTimeout(() => {
+        setCurrentStepIndex((prev) => prev - 1);
+      }, 100);
     }
   };
 
   const handleComplete = () => {
     playClick();
+    setIsCardVisible(false);
     localStorage.setItem(TOUR_STORAGE_KEY, 'true');
     localStorage.setItem(getTourStorageKey(mode), 'true');
     if (onClose) onClose();
@@ -479,7 +567,7 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[99990] overflow-hidden select-none">
+    <div className="fixed inset-0 z-[99990] overflow-hidden select-none animate-in fade-in duration-300">
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
         <defs>
           <mask id="cavdax-tour-spotlight-mask">
@@ -494,7 +582,7 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
                 ry="12"
                 fill="black"
                 style={{
-                  transition: 'all 520ms cubic-bezier(0.25, 1, 0.5, 1)',
+                  transition: 'all 380ms cubic-bezier(0.25, 1, 0.5, 1)',
                 }}
               />
             )}
@@ -525,28 +613,32 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
             strokeWidth="2"
             strokeDasharray="6 4"
             style={{
-              transition: 'all 520ms cubic-bezier(0.25, 1, 0.5, 1)',
+              transition: 'all 380ms cubic-bezier(0.25, 1, 0.5, 1)',
               filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.4))',
             }}
           />
         )}
       </svg>
 
-      <div
-        ref={cardRef}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'fixed',
-          top: `${cardPos.top}px`,
-          left: `${cardPos.left}px`,
-          width: '350px',
-          maxWidth: 'calc(100vw - 32px)',
-          maxHeight: 'calc(100vh - 90px)',
-          zIndex: 99995,
-          transition: 'top 400ms cubic-bezier(0.25, 1, 0.5, 1), left 400ms cubic-bezier(0.25, 1, 0.5, 1)',
-        }}
-        className="bg-[#0B0D11] border border-white/20 rounded-xl p-4 shadow-2xl backdrop-blur-xl pointer-events-auto"
-      >
+      {targetRect && cardPos && (
+        <div
+          ref={cardRef}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: `${cardPos.top}px`,
+            left: `${cardPos.left}px`,
+            width: '350px',
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'calc(100vh - 90px)',
+            zIndex: 99995,
+            opacity: isCardVisible ? 1 : 0,
+            transform: isCardVisible ? 'scale(1)' : 'scale(0.97)',
+            pointerEvents: isCardVisible ? 'auto' : 'none',
+            transition: 'opacity 150ms ease-out, transform 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          className="bg-[#0B0D11] border border-white/20 rounded-xl p-4 shadow-2xl backdrop-blur-xl"
+        >
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <div className="flex items-center gap-2">
             <span className="flex h-5 items-center px-2 rounded bg-white/10 border border-white/20 text-[10px] font-mono font-bold uppercase tracking-wider text-white">
@@ -594,7 +686,11 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
                 key={idx}
                 onClick={() => {
                   playClick();
-                  setCurrentStepIndex(idx);
+                  if (idx === currentStepIndex) return;
+                  setIsCardVisible(false);
+                  setTimeout(() => {
+                    setCurrentStepIndex(idx);
+                  }, 100);
                 }}
                 className={`h-1.5 rounded-full transition-all cursor-pointer ${
                   idx === currentStepIndex
@@ -645,6 +741,7 @@ export default function TourGuide({ isOpen, onClose, mode = 'console' }) {
           </div>
         </div>
       </div>
+      )}
     </div>,
     document.body
   );
