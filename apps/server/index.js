@@ -650,6 +650,18 @@ async function initDb() {
 }
 
 // Fallback in-memory mock if FalkorDB container is spinning up
+// In-memory Decision Lock Registry with automatic TTL lease management
+const activeDecisionLocks = new Map();
+
+function cleanExpiredDecisionLocks() {
+  const now = Date.now();
+  for (const [decId, lock] of activeDecisionLocks.entries()) {
+    if (lock.expires_at <= now) {
+      activeDecisionLocks.delete(decId);
+    }
+  }
+}
+
 let fallbackGraphState = {
   nodes: [
     { id: 'ADR-001', label: 'Source', title: 'Adopt TokenAuth v1 for Payment Gateway', status: 'ACTIVE', type: 'ADR' },
@@ -1414,24 +1426,78 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
           return res.json(grantResponse);
         }
       } else if (toolName === 'acquire_decision_lock') {
+        cleanExpiredDecisionLocks();
+        const existingLock = activeDecisionLocks.get(args.decision_id);
+        const ttl = Number(args.ttl_ms) || 60000;
+        const now = Date.now();
+
+        if (existingLock && existingLock.expires_at > now && existingLock.agent_id !== args.agent_id) {
+          const conflictResp = {
+            isError: true,
+            acquired: false,
+            simulated: true,
+            gate_verdict: 'BLOCKED_LOCK_HELD_BY_OTHER_AGENT',
+            decision_id: args.decision_id,
+            holder_agent_id: existingLock.agent_id,
+            expires_at: new Date(existingLock.expires_at).toISOString(),
+            remaining_seconds: Math.max(0, Math.ceil((existingLock.expires_at - now) / 1000)),
+            message: `⛔ CONCURRENCY COLLISION: Decision '${args.decision_id}' is locked by agent '${existingLock.agent_id}'. Multi-agent collision prevented.`,
+            instructions_for_agent: `Wait for agent '${existingLock.agent_id}' to release the lease or yield to avoid split-brain git conflicts.`
+          };
+          broadcastEvent('DECISION_LOCK_CONFLICT', conflictResp);
+          return res.status(409).json(conflictResp);
+        }
+
+        const expiresAt = now + ttl;
+        const lockRecord = {
+          agent_id: args.agent_id,
+          decision_id: args.decision_id,
+          expires_at: expiresAt,
+          acquired_at: now
+        };
+        activeDecisionLocks.set(args.decision_id, lockRecord);
+
         const lockResp = {
+          isError: false,
           acquired: true,
           simulated: true,
+          gate_verdict: 'LOCK_ACQUIRED',
           decision_id: args.decision_id,
           agent_id: args.agent_id,
-          expires_at: new Date(Date.now() + (args.ttl_ms || 60000)).toISOString(),
-          message: `✅ LOCK ACQUIRED (SIMULATION): Agent '${args.agent_id}' holds exclusive lease on '${args.decision_id}'.`
+          ttl_ms: ttl,
+          expires_at: new Date(expiresAt).toISOString(),
+          message: `✅ LOCK ACQUIRED: Agent '${args.agent_id}' holds exclusive lease on '${args.decision_id}'.`
         };
         broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: lockResp });
+        broadcastEvent('DECISION_LOCK_CHANGED', {
+          action: 'ACQUIRED',
+          decision_id: args.decision_id,
+          agent_id: args.agent_id,
+          activeLocks: Array.from(activeDecisionLocks.values())
+        });
         return res.json(lockResp);
       } else if (toolName === 'release_decision_lock') {
+        cleanExpiredDecisionLocks();
+        const existingLock = activeDecisionLocks.get(args.decision_id);
+        const wasHeld = Boolean(existingLock);
+        activeDecisionLocks.delete(args.decision_id);
+
         const unlockResp = {
+          isError: false,
           released: true,
           simulated: true,
           decision_id: args.decision_id,
-          message: `LOCK RELEASED (SIMULATION): Decision '${args.decision_id}' is available for other agents.`
+          agent_id: args.agent_id || existingLock?.agent_id || 'unknown',
+          message: wasHeld
+            ? `🔓 LOCK RELEASED: Decision '${args.decision_id}' lease returned to pool. Free for other agents.`
+            : `LOCK RELEASED: Decision '${args.decision_id}' was not held.`
         };
         broadcastEvent('MCP_TOOL_EXECUTED', { toolName, args, result: unlockResp });
+        broadcastEvent('DECISION_LOCK_CHANGED', {
+          action: 'RELEASED',
+          decision_id: args.decision_id,
+          activeLocks: Array.from(activeDecisionLocks.values())
+        });
         return res.json(unlockResp);
       } else if (toolName === 'export_graph_image') {
         const { summary } = (args.node_id && args.highlight_blast_radius)
@@ -1988,6 +2054,14 @@ async function handleMcpJsonRpc(request) {
  * Client connects here first. Server responds with an 'endpoint' event
  * containing the sessionId-scoped URL for subsequent JSON-RPC messages.
  */
+
+// GET /api/mcp/locks — Returns active multi-agent decision leases
+app.get('/api/mcp/locks', (req, res) => {
+  cleanExpiredDecisionLocks();
+  res.json({
+    active_locks: Array.from(activeDecisionLocks.values())
+  });
+});
 app.get('/api/mcp/sse', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
