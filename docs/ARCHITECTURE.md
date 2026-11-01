@@ -285,3 +285,59 @@ The client application provides 9 dedicated routes:
 - `/profile`: Developer quota tracking, plan capability matrix, and active MCP key provisioning.
 - `/support`: Community sponsorship tiers and transparent operational backing breakdown.
 - Zero-Trust Administrative Enclave: Diagnostic console, dev IP roster, and node state inspection.
+
+---
+
+## 8. The Causal Interception Enclave Subsystem Architecture
+
+### 8.1 System Topology & Interception Pipeline
+The **Causal Interception Enclave** (`#enclave-hub-section`) is CAVDAX's core architectural theater, positioned directly between the problem presentation bento grid and the downstream causal execution loop. It acts as the interactive control plane and hardware-grade visualization of the autonomous agent write-interception pipeline.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  CLIENT PWA (React 18 + Lenis + TailWind)                             │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  CausalEnclaveHub.jsx                                           │  │
+│  │  - 3D Isometric Viewport Deck (Perspective: 1400px)             │  │
+│  │  - Solitary Node Elevation Vector Math (-42px Y Lift)            │  │
+│  │  - 4.2s Sequential Concentric Squircle Wavefront Generator       │  │
+│  │  - Precision Fullscreen Centering Guard (|diffCenter| < 80px)   │  │
+│  │  - Proactive Keyboard Docking & Traversal Engine                 │  │
+│  └─────────────────────────────────┬────────────────────────────────┘  │
+└────────────────────────────────────┼───────────────────────────────────┘
+                                     │ SSE / Fetch (POST /api/mcp/call)
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│  CORE API GATEWAY (Node.js Express + MCP Protocol Engine)             │
+│  ┌──────────────────────────────┐  ┌────────────────────────────────┐  │
+│  │ Tool Gate: apply_code_change │  │ Tool Gate: check_intent_clear  │  │
+│  └──────────────┬───────────────┘  └────────────────┬───────────────┘  │
+│                 │                                   │                  │
+│                 ▼                                   ▼                  │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │ FalkorDB GraphBLAS Matrix Semiring (< 2.0ms Sweeps)              │  │
+│  │ - Adjacency Matrix: Extracted_From & Depends_On DAG               │  │
+│  │ - Causal Invalidation: Sparse Matrix Multiply BFS                │  │
+│  │ - Multi-Agent Leases: acquire_decision_lock Concurrency Engine   │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 The 9-Stage Architectural Pipeline
+1. **Stage 00 · Causal Semiring Kernel (`CORE`)**: Central algebraic semiring computing transitive reachability and causal invalidation over the dependency DAG in sub-2ms matrix sweeps.
+2. **Stage 01 · Claude Code MCP Gate (`01`)**: Intercepts tool calls and filesystem write operations in-flight, blocking obsolete code mutations before bytes hit the disk.
+3. **Stage 02 · Cursor IDE Transceiver (`02`)**: Low-latency stdio bridge delivering real-time topological invalidation feedback directly into editor buffers.
+4. **Stage 03 · Git AST Diff Extractor (`03`)**: Optical AST parser extracting structural code deltas from commit graphs and detecting implementation drift from active ADRs.
+5. **Stage 04 · ADR Invariant Store (`04`)**: Immutable single source of truth preserving superseded and active architectural decision lineages.
+6. **Stage 05 · GraphBLAS Matrix Mesh (`05`)**: Sparse matrix algebraic engine executing reachability semirings across arbitrary dependency graphs.
+7. **Stage 06 · CI/CD Gate Harness (`06`)**: Automated pipeline verification harness failing pull requests if code commits rely on deprecated architectural claims.
+8. **Stage 07 · Cryptographic Audit Trail (`07`)**: Tamper-evident execution ledger capturing every agent interception, rule evaluation, and deterministic verdict.
+9. **Stage 08 · Closed-Loop Auto-Repair (`08`)**: Guided remediation pipeline feeding verified ADR invariant constraints back to coding agents for clean self-healing.
+
+### 8.3 Solitary Elevation & 3D Spatial Camera Math
+- **Solitary Elevation Invariant**: To preserve visual clarity and eliminate card displacement, only the actively hovered or selected tile elevates (`elevatedCoord: [X, Y - 42]`). All other 8 slabs remain locked to their resting coordinates (`restCoord`).
+- **Spring Camera Dynamics**: Stage transitions dynamically shift `transform: perspective(1400px) rotateX(...) rotateY(...) scale(...) translate3d(...)` with a smooth `cubic-bezier(0.16, 1, 0.3, 1)` spring curve, moving the viewport from the wide architectural top view (`CORE`) directly into targeted orbital zoom views for each individual subsystem.
+
+### 8.4 Fullscreen Docking & Lenis Virtualizer Handshake
+- **Deterministic Centering**: Viewport locking threshold is calculated as $|\text{sectionCenter} - \text{viewportCenter}| < \min(80, \text{viewportHeight} \times 0.08)$, guaranteeing identical docking precision on $1080\text{p}$ F11 fullscreen and responsive laptop displays.
+- **Internal Docking Exemption**: Internal scroll calls pass `options.isInternalDock = true`, preventing Lenis's global programmatic scroll flag (`window.__isProgrammaticScroll`) from triggering false-positive unlocks.
