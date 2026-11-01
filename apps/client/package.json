@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "node scripts/patch-hairline.js && vite build",
     "preview": "vite preview",
-    "postinstall": "node scripts/patch-hairline.js"
+    "postinstall": "node -e \"const fs=require('fs'); if(fs.existsSync('scripts/patch-hairline.js')) { require('child_process').execSync('node scripts/patch-hairline.js', {stdio:'inherit'}); }\""
   },
   "dependencies": {
     "@lucasmarkes/hairline": "^0.5.1",
