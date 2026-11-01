@@ -267,7 +267,7 @@ export default function LandingPage({
 
   useEffect(() => {
 
-    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'causal-loop-section', 'radar-section', 'faq-section'];
+    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'enclave-hub-section', 'causal-loop-section', 'radar-section', 'faq-section'];
 
     const observer = new IntersectionObserver(
 

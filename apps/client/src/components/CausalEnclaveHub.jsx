@@ -321,25 +321,28 @@ export default function CausalEnclaveHub() {
   // Smooth exit functions (Deterministic Lock-OUT to adjacent landmarks with zero fight)
   const exitDownward = useCallback(() => {
     if (isExitingRef.current) return;
+    const el = containerRef.current;
     isTransitioningRef.current = true;
     isExitingRef.current = true;
     isLockedRef.current = false;
     setIsLocked(false);
 
+    const targetY = el ? el.offsetTop + el.offsetHeight + 10 : (window.scrollY + window.innerHeight * 0.75);
+
     if (window.__lenis) {
       window.__lenis.start();
       window.__lenis.isLocked = false;
-      window.__lenis.scrollTo('#causal-loop-section', {
-        offset: -20,
+      window.__lenis.scrollTo(targetY, {
         duration: 0.85,
         force: true,
+        isInternalDock: true,
         onComplete: () => {
           isExitingRef.current = false;
           isTransitioningRef.current = false;
         }
       });
     } else {
-      document.getElementById('causal-loop-section')?.scrollIntoView({ behavior: 'smooth' });
+      window.scrollTo({ top: targetY, behavior: "smooth" });
     }
 
     setTimeout(() => {
@@ -348,7 +351,7 @@ export default function CausalEnclaveHub() {
     }, 1100);
   }, []);
 
-  const exitUpward = useCallback(() => {
+    const exitUpward = useCallback(() => {
     if (isExitingRef.current) return;
     const el = containerRef.current;
     isTransitioningRef.current = true;
@@ -361,17 +364,17 @@ export default function CausalEnclaveHub() {
     if (window.__lenis) {
       window.__lenis.start();
       window.__lenis.isLocked = false;
-      window.__lenis.scrollTo('#bento-section', {
-        offset: -20,
+      window.__lenis.scrollTo(targetY, {
         duration: 0.85,
         force: true,
+        isInternalDock: true,
         onComplete: () => {
           isExitingRef.current = false;
           isTransitioningRef.current = false;
         }
       });
     } else {
-      document.getElementById('bento-section')?.scrollIntoView({ behavior: 'smooth' }) || window.scrollTo({ top: targetY, behavior: 'smooth' });
+      window.scrollTo({ top: targetY, behavior: "smooth" });
     }
 
     setTimeout(() => {
@@ -380,7 +383,7 @@ export default function CausalEnclaveHub() {
     }, 1100);
   }, []);
 
-  // 1. Precise Viewport Docking: Lock IN when reached
+    // 1. Precise Viewport Docking: Lock IN when reached
   useEffect(() => {
     const handleScrollCheck = () => {
       // Programmatic Navigation Guard: Never hijack or dock when user clicked nav/cue
@@ -421,11 +424,11 @@ export default function CausalEnclaveHub() {
         return;
       }
 
-      // Check if section is centered / docked in viewport with expanded catch window
+      // Precise Fullscreen Docking (F11 & standard): Lock ONLY when section genuinely fills the viewport (>=90%)
       const sectionCenter = rect.top + rect.height / 2;
       const viewportCenter = viewportHeight / 2;
-      const isDocked = (Math.abs(sectionCenter - viewportCenter) < viewportHeight * 0.42) ||
-                       (rect.top <= viewportHeight * 0.42 && rect.bottom >= viewportHeight * 0.58);
+      const diffCenter = Math.abs(sectionCenter - viewportCenter);
+      const isDocked = diffCenter < Math.min(80, viewportHeight * 0.08);
 
       if (!isLockedRef.current && isDocked) {
         isLockedRef.current = true;
@@ -442,8 +445,10 @@ export default function CausalEnclaveHub() {
           window.__lenis.isLocked = true;
           window.__lenis.stop();
           window.__lenis.scrollTo(el, {
-            duration: 0.6,
+            duration: 0.5,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            force: true,
+            isInternalDock: true,
           });
         }
       }
@@ -459,6 +464,8 @@ export default function CausalEnclaveHub() {
       window.removeEventListener('scroll', handleScrollCheck);
       if (window.__lenis) {
         window.__lenis.off('scroll', handleScrollCheck);
+        window.__lenis.start();
+        window.__lenis.isLocked = false;
       }
     };
   }, []);
@@ -588,49 +595,125 @@ export default function CausalEnclaveHub() {
       const el = containerRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight * 0.75 && rect.bottom > window.innerHeight * 0.25;
-      if (!isLockedRef.current && !inView) return;
+      const viewportHeight = window.innerHeight;
+
+      // ── A. PROACTIVE DOCKING VIA KEYBOARD (Arrow Keys / PageUp / PageDown / Space) ──
+      // When approaching from Bento (top) or Causal Loop (bottom), entering the viewport center zone
+      // cleanly docks and locks the section instead of jumping past.
+      if (!isLockedRef.current) {
+        const inDockZone = rect.top <= viewportHeight * 0.35 && rect.bottom >= viewportHeight * 0.65;
+        if (!inDockZone) return; // Allow natural page scroll outside the dock zone
+
+        if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey) || e.key === 'ArrowRight') {
+          e.preventDefault();
+          isLockedRef.current = true;
+          setIsLocked(true);
+          exitAttemptRef.current = false;
+          setStep(0);
+          playClick();
+          if (window.__lenis) {
+            window.__lenis.isLocked = true;
+            window.__lenis.stop();
+            window.__lenis.scrollTo(el, {
+              duration: 0.5,
+              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+              force: true,
+              isInternalDock: true,
+            });
+          }
+          return;
+        } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey) || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          isLockedRef.current = true;
+          setIsLocked(true);
+          exitAttemptRef.current = false;
+          setStep(ENCLAVE_STAGES.length - 1);
+          playClick();
+          if (window.__lenis) {
+            window.__lenis.isLocked = true;
+            window.__lenis.stop();
+            window.__lenis.scrollTo(el, {
+              duration: 0.5,
+              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+              force: true,
+              isInternalDock: true,
+            });
+          }
+          return;
+        }
+        return;
+      }
+
+      // ── B. IN-SECTION KEYBOARD STEPPING & PROGRESSION (When Locked) ──
       const current = activeStepRef.current;
 
-      // Dedicated Horizontal Node Navigation (Left / Right Arrow)
+      // 1. Horizontal Node Traversal (Left / Right Arrow)
       if (e.key === 'ArrowRight') {
-        if (activeStepRef.current < ENCLAVE_STAGES.length - 1) {
+        if (current < ENCLAVE_STAGES.length - 1) {
           e.preventDefault();
+          if (isTransitioningRef.current) return;
+          isTransitioningRef.current = true;
+          exitAttemptRef.current = false;
           playClick();
-          setStep(activeStepRef.current + 1);
+          setStep((prev) => Math.min(ENCLAVE_STAGES.length - 1, prev + 1));
+          setTimeout(() => { isTransitioningRef.current = false; }, 420);
         }
       } else if (e.key === 'ArrowLeft') {
-        if (activeStepRef.current > 0) {
+        if (current > 0) {
           e.preventDefault();
+          if (isTransitioningRef.current) return;
+          isTransitioningRef.current = true;
+          exitAttemptRef.current = false;
           playClick();
-          setStep(activeStepRef.current - 1);
+          setStep((prev) => Math.max(0, prev - 1));
+          setTimeout(() => { isTransitioningRef.current = false; }, 420);
         }
       }
-      // Vertical Keyboard Browsing (ArrowDown, PageDown, Space)
+      // 2. Vertical Stage Browsing & Exit Downward (ArrowDown, PageDown, Space)
       else if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) {
         e.preventDefault();
-        if (activeStepRef.current < ENCLAVE_STAGES.length - 1) {
+        if (isTransitioningRef.current) return;
+
+        if (current < ENCLAVE_STAGES.length - 1) {
+          isTransitioningRef.current = true;
+          exitAttemptRef.current = false;
           playClick();
-          setStep(activeStepRef.current + 1);
+          setStep((prev) => Math.min(ENCLAVE_STAGES.length - 1, prev + 1));
+          setTimeout(() => { isTransitioningRef.current = false; }, 420);
         } else {
-          // Lock OUT downward to Solution Scroller
-          exitDownward();
+          // On Last Node: require secondary impulse to exit downward (prevents accidental blow-through)
+          if (!exitAttemptRef.current) {
+            exitAttemptRef.current = true;
+            setTimeout(() => { exitAttemptRef.current = false; }, 650);
+          } else {
+            exitDownward();
+          }
         }
       }
-      // Vertical Keyboard Browsing (ArrowUp, PageUp, Shift+Space)
+      // 3. Vertical Stage Browsing & Exit Upward (ArrowUp, PageUp, Shift+Space)
       else if (e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey)) {
         e.preventDefault();
-        if (activeStepRef.current > 0) {
+        if (isTransitioningRef.current) return;
+
+        if (current > 0) {
+          isTransitioningRef.current = true;
+          exitAttemptRef.current = false;
           playClick();
-          setStep(activeStepRef.current - 1);
+          setStep((prev) => Math.max(0, prev - 1));
+          setTimeout(() => { isTransitioningRef.current = false; }, 420);
         } else {
-          // Lock OUT upward to Problem section
-          exitUpward();
+          // On First Node: require secondary impulse to exit upward (prevents accidental blow-through)
+          if (!exitAttemptRef.current) {
+            exitAttemptRef.current = true;
+            setTimeout(() => { exitAttemptRef.current = false; }, 650);
+          } else {
+            exitUpward();
+          }
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [exitDownward, exitUpward]);
 
@@ -643,7 +726,7 @@ export default function CausalEnclaveHub() {
     <section
       ref={containerRef}
       id="enclave-hub-section" 
-      tabIndex={0}
+      tabIndex={-1}
       role="region"
       aria-label="Causal Interception Enclave"
       className="relative w-full min-h-[100dvh] py-8 sm:py-12 px-4 sm:px-8 flex flex-col items-center justify-between z-[60] border-none overflow-hidden outline-none focus:outline-none"
