@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coffee, CheckCircle2, Heart, HandHeart, Loader2, ExternalLink, Users, Sparkles, Lock } from 'lucide-react';
+import { Coffee, CheckCircle2, Heart, HandHeart, Loader2, ExternalLink, Users, Lock, LayoutGrid, PieChart, BarChartHorizontal, ShieldCheck } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
 
@@ -9,7 +9,7 @@ import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
  *
  * Design System Compliance (UI_DESIGN_SYSTEM.md):
  * - Zero emojis, zero eyebrow pills, zero bracketed tags
- * - Lucide icons + bespoke monoline SVG glyphs, font-mono telemetry identifiers
+ * - Lucide icons + bespoke monoline SVG glyphs, font-mono diagnostics identifiers
  * - Constant 1px border — opacity lifts on hover, never border-2
  * - Popular card elevated only on xl: (1280px+) to prevent laptop overflow
  * - Fluid wave fill buttons (§11H persistent interaction fills)
@@ -232,7 +232,7 @@ function BackerCard({ backer }) {
                     ? 'border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
                     : isCups
                     ? 'border-amber-400/30 bg-amber-400/10 text-amber-500'
-                    : 'border-amber-800/25 bg-amber-950/10 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                    : 'border-amber-800/25 bg-amber-950/10 dark:bg-amber-900/20 text-amber-700 dark:text-amber-500'
                 }`}
               >
                 {isHighlight ? (
@@ -240,7 +240,7 @@ function BackerCard({ backer }) {
                 ) : isCups ? (
                   <Coffee className="w-4 h-4 text-amber-500" />
                 ) : (
-                  <CookieIcon className="w-4 h-4 text-amber-700 dark:text-amber-300" />
+                  <CookieIcon className="w-4 h-4 text-amber-700 dark:text-amber-500" />
                 )}
               </div>
             )}
@@ -268,7 +268,7 @@ function BackerCard({ backer }) {
                   ? 'border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
                 : isCups
                 ? 'border-amber-400/30 bg-amber-400/10 text-amber-500'
-                : 'border-amber-800/25 bg-amber-950/10 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                : 'border-amber-800/25 bg-amber-950/10 dark:bg-amber-900/20 text-amber-700 dark:text-amber-500'
               }`}
             >
               {isHighlight ? (
@@ -276,7 +276,7 @@ function BackerCard({ backer }) {
               ) : isCups ? (
                 <Coffee className="w-4 h-4 text-amber-500" />
               ) : (
-                <CookieIcon className="w-4 h-4 text-amber-700 dark:text-amber-300" />
+                <CookieIcon className="w-4 h-4 text-amber-700 dark:text-amber-500" />
               )}
             </div>
           )
@@ -289,7 +289,7 @@ function BackerCard({ backer }) {
               ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-700 dark:border-slate-300 shadow-xs'
               : isCups
               ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-xs'
-              : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-700/30'
+              : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-500 border-amber-700/30'
           }`}
         >
           {isHighlight ? (
@@ -354,7 +354,7 @@ function BackerCard({ backer }) {
                 ? 'border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
                 : isCups
                 ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                : 'border-amber-800/25 bg-amber-950/10 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300'
+                : 'border-amber-800/25 bg-amber-950/10 dark:bg-amber-900/20 text-amber-800 dark:text-amber-500'
             }`}
           >
             {isHighlight && <ShinyGemIcon className="w-2.5 h-2.5 shrink-0" />}
@@ -383,6 +383,17 @@ function loadRazorpayScript() {
 
 export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
   const [hoveredTier, setHoveredTier] = useState(null);
+
+  const handleCardPointerMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+  };
+
+  const handleCardPointerLeave = (e) => {
+    e.currentTarget.style.setProperty('--mouse-x', '-999px');
+    e.currentTarget.style.setProperty('--mouse-y', '-999px');
+  };
   const [loadingTier, setLoadingTier] = useState(null);
   const [evalLoadingTier, setEvalLoadingTier] = useState(null);
   const [toast, setToast]             = useState(null); // { ok: bool, text: string }
@@ -551,12 +562,23 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
       return;
     }
 
+    const activeUser = user || getActiveDevSession();
+    const userOverride = activeUser ? {
+      id: activeUser.id,
+      login: activeUser.login,
+      name: activeUser.name || activeUser.login,
+      avatar_url: activeUser.avatarUrl || activeUser.avatar_url || null
+    } : null;
+
     try {
       const res = await fetch('/api/billing/activate-evaluation-sponsor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ tier_id: tier.id })
+        body: JSON.stringify({
+          tier_id: tier.id,
+          user_override: userOverride
+        })
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -717,9 +739,9 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
             Sponsorship Tiers
           </span>
           {hasEvaluationPass && (
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-1 shadow-xs">
-              <Sparkles className="w-2.5 h-2.5 shrink-0" />
-              <span>Evaluation Pass Active</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5 shadow-xs">
+              <ShieldCheck className="w-3 h-3 text-amber-500 shrink-0" />
+              <span>Hackathon Window Active</span>
             </span>
           )}
         </div>
@@ -766,7 +788,9 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
           return (
             <div
               key={tier.id}
-              className={`p-6 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative
+              onPointerMove={handleCardPointerMove}
+              onPointerLeave={handleCardPointerLeave}
+              className={`group/card p-6 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative
                 ${isCurrentEvalTier
                   ? 'border-amber-500 ring-2 ring-amber-400/30 bg-amber-500/[0.04] dark:bg-[#1A150B]/60 shadow-[0_12px_32px_rgba(245,158,11,0.2)] z-10'
                   : isAmber && tier.popular
@@ -777,9 +801,8 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
                 }`}
             >
               {isCurrentEvalTier ? (
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-500 text-slate-950 font-mono font-extrabold text-[9px] uppercase tracking-widest rounded-full z-20 flex items-center gap-1 shadow-xs">
-                  <Sparkles className="w-2.5 h-2.5" />
-                  Active Eval Tier
+                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-mono font-bold text-[9px] uppercase tracking-wider rounded-full z-20 shadow-xs">
+                  Active
                 </div>
               ) : tier.popular && (
                 <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-400 text-slate-950 font-mono font-extrabold text-[9px] uppercase tracking-widest rounded-full z-20">
@@ -787,14 +810,40 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
                 </div>
               )}
 
-              <div>
+              {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix (Linear/Vercel Engineering Pattern) ── */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
+                {/* 1. Fine CAD / Blueprint Dot Grid illuminated in cursor spotlight */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+                  style={{
+                    maskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#64748b_1.2px,transparent_1.2px)] [background-size:14px_14px] opacity-20 dark:opacity-45" />
+                </div>
+
+                {/* 2. Ambient Specular Radial Glow */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-35 dark:group-hover/card:opacity-90 transition-opacity duration-300"
+                  style={{
+                    background: isAmber && tier.popular
+                      ? 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(245,158,11,0.08), transparent 70%)'
+                      : isDiamond
+                      ? 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(148,163,184,0.12), transparent 70%)'
+                      : 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(255,255,255,0.05), transparent 70%)'
+                  }}
+                />
+              </div>
+
+              <div className="relative z-10">
                 {/* 3 Distinct Themed Icon Boxes */}
                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-3 border transition-all duration-300
                   ${isDiamond
                     ? 'backdrop-blur-md bg-slate-100 dark:bg-white/[0.08] border-slate-300 dark:border-white/20 text-slate-900 dark:text-white shadow-xs'
                     : isAmber
                     ? 'bg-amber-400/10 border-amber-400/25 text-amber-600 dark:text-amber-400'
-                    : 'bg-amber-950/10 dark:bg-amber-900/20 border-amber-800/25 text-amber-700 dark:text-amber-300'
+                    : 'bg-amber-950/10 dark:bg-amber-900/20 border-amber-800/25 text-amber-700 dark:text-amber-500'
                   }`}>
                   <TierIcon className="w-3.5 h-3.5" />
                 </div>
@@ -828,56 +877,75 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
                 </ul>
               </div>
 
-              <div>
-                {/* Real Checkout button — fluid wave fill with distinct theme palettes (§11H) */}
+              <div className="relative z-10">
+                {/* Single Unified Action Button (Strict ProfilePage Tier Card Parity) */}
                 <button
-                  onClick={() => handleSponsor(tier)}
+                  type="button"
+                  onClick={() => {
+                    if (isCurrentEvalTier) {
+                      handleEvaluationSponsor(tier);
+                      return;
+                    }
+                    if (hasEvaluationPass) {
+                      handleEvaluationSponsor(tier);
+                      return;
+                    }
+                    handleSponsor(tier);
+                  }}
                   onMouseEnter={() => setHoveredTier(tier.id)}
                   onMouseLeave={() => setHoveredTier(null)}
                   disabled={loadingTier !== null || evalLoadingTier !== null}
-                  className={`relative overflow-hidden w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold cursor-pointer select-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed
-                    ${isDiamond
-                      ? (isHovered && !isLoading ? 'border-slate-950 dark:border-white text-white dark:text-slate-950' : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-slate-950 dark:hover:border-white text-slate-900 dark:text-white')
+                  className={`relative overflow-hidden w-full h-9 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold cursor-pointer select-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isCurrentEvalTier
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-transparent shadow-xs'
+                      : isDiamond
+                      ? (isHovered && !isLoading && !isEvalLoading ? 'border-slate-950 dark:border-white text-white dark:text-slate-950' : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-slate-950 dark:hover:border-white text-slate-900 dark:text-white')
                       : isAmber
-                      ? (isHovered && !isLoading ? 'border-amber-400 text-slate-950' : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-amber-400 text-slate-900 dark:text-white')
-                      : (isHovered && !isLoading ? 'border-amber-700 text-white' : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-amber-700 text-slate-900 dark:text-white')
-                    }`}
+                      ? (isHovered && !isLoading && !isEvalLoading ? 'border-amber-400 text-slate-950' : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-amber-400 text-slate-900 dark:text-white')
+                      : (isHovered && !isLoading && !isEvalLoading ? 'border-amber-700 text-white' : 'bg-transparent border-slate-300 dark:border-white/20 hover:border-amber-700 text-slate-900 dark:text-white')
+                  }`}
                 >
-                  {/* Fluid wave fill layer */}
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      transform:  isHovered && !isLoading ? 'translateY(0%)' : 'translateY(105%)',
-                      opacity:    isHovered && !isLoading ? 1 : 0,
-                      transition: isHovered
-                        ? 'transform 900ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
-                        : 'opacity 250ms ease-out, transform 0s 250ms'
-                    }}
-                    className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
-                  >
-                    <svg viewBox="0 0 320 48" preserveAspectRatio="none"
-                      className={`w-full h-6 shrink-0 fill-current block ${
-                        isDiamond ? 'text-slate-900 dark:text-white' : isAmber ? 'text-amber-400' : 'text-amber-700'
-                      }`}>
-                      <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
-                      <circle cx="80" cy="20" r="4.5" /><circle cx="120" cy="12" r="3.5" /><circle cx="160" cy="15" r="5" /><circle cx="200" cy="13" r="3.5" /><circle cx="240" cy="22" r="4.5" />
-                      <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
-                      <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
-                      <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
-                      <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
-                    </svg>
-                    <div className={`flex-1 w-full ${
-                      isDiamond
-                        ? 'bg-slate-900 dark:bg-white'
-                        : isAmber
-                        ? 'bg-amber-400'
-                        : 'bg-amber-700'
-                    }`} />
-                  </div>
+                  {/* Fluid wave fill layer (active when not in current active tier state) */}
+                  {!isCurrentEvalTier && (
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        transform:  isHovered && !isLoading && !isEvalLoading ? 'translateY(0%)' : 'translateY(105%)',
+                        opacity:    isHovered && !isLoading && !isEvalLoading ? 1 : 0,
+                        transition: isHovered
+                          ? 'transform 900ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity 200ms ease-out'
+                          : 'opacity 250ms ease-out, transform 0s 250ms'
+                      }}
+                      className="absolute left-[-15%] right-[-15%] bottom-0 h-[260%] flex flex-col pointer-events-none z-0"
+                    >
+                      <svg viewBox="0 0 320 48" preserveAspectRatio="none"
+                        className={`w-full h-6 shrink-0 fill-current block ${
+                          isDiamond ? 'text-slate-900 dark:text-white' : isAmber ? 'text-amber-400' : 'text-amber-700'
+                        }`}>
+                        <path d="M 0 24 Q 40 8, 80 20 T 160 15 T 240 22 T 320 12 L 320 48 L 0 48 Z" />
+                        <circle cx="80" cy="20" r="4.5" /><circle cx="120" cy="12" r="3.5" /><circle cx="160" cy="15" r="5" /><circle cx="200" cy="13" r="3.5" /><circle cx="240" cy="22" r="4.5" />
+                        <line x1="80" y1="20" x2="120" y2="12" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                        <line x1="120" y1="12" x2="160" y2="15" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                        <line x1="160" y1="15" x2="200" y2="13" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                        <line x1="200" y1="13" x2="240" y2="22" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.85" />
+                      </svg>
+                      <div className={`flex-1 w-full ${
+                        isDiamond
+                          ? 'bg-slate-900 dark:bg-white'
+                          : isAmber
+                          ? 'bg-amber-400'
+                          : 'bg-amber-700'
+                      }`} />
+                    </div>
+                  )}
 
                   <span className="relative z-10 flex items-center gap-1.5 transition-colors duration-300">
-                    {isLoading ? (
+                    {isLoading || isEvalLoading ? (
                       <><Loader2 className="w-3.5 h-3.5 animate-spin" />Processing...</>
+                    ) : isCurrentEvalTier ? (
+                      <><CheckCircle2 className="w-3.5 h-3.5 shrink-0" />Active Sponsor Tier</>
+                    ) : hasEvaluationPass ? (
+                      <><TierIcon className="w-3 h-3 shrink-0" />Switch to {tier.tierName}</>
                     ) : !user ? (
                       <><Lock className="w-3 h-3 shrink-0" />Sign In to Sponsor</>
                     ) : (
@@ -885,35 +953,6 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
                     )}
                   </span>
                 </button>
-
-                {/* 1-Click Evaluation Pass Switcher (Option A) */}
-                {hasEvaluationPass && (
-                  <button
-                    type="button"
-                    onClick={() => handleEvaluationSponsor(tier)}
-                    disabled={loadingTier !== null || evalLoadingTier !== null}
-                    className={`w-full mt-2 py-1.5 px-2.5 rounded-lg border text-[11px] font-mono font-semibold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
-                      isCurrentEvalTier
-                        ? 'border-amber-500/70 bg-amber-500/20 text-amber-800 dark:text-amber-300 shadow-xs'
-                        : isDiamond
-                        ? 'border-dashed border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/40 bg-slate-100/50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-                        : isAmber
-                        ? 'border-dashed border-amber-400/30 hover:border-amber-400/70 bg-amber-500/[0.03] hover:bg-amber-500/10 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400'
-                        : 'border-dashed border-amber-800/25 hover:border-amber-700/60 bg-amber-950/[0.03] hover:bg-amber-900/10 text-slate-600 dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-300'
-                    }`}
-                  >
-                    {isEvalLoading ? (
-                      <Loader2 className="w-3 h-3 animate-spin text-current shrink-0" />
-                    ) : (
-                      <Sparkles className="w-3 h-3 text-current shrink-0" />
-                    )}
-                    <span>
-                      {isCurrentEvalTier
-                        ? `Active (Eval Pass — Click to Revert)`
-                        : `Test ${tier.tierName} (Eval Pass)`}
-                    </span>
-                  </button>
-                )}
               </div>
             </div>
           );
@@ -953,29 +992,33 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
               />
             )}
             {[
-              { id: 'cards', label: 'Cards' },
-              { id: 'donut', label: 'Donut' },
-              { id: 'strip', label: 'Single Line' },
-            ].map((v) => (
-              <button
-                key={v.id}
-                ref={(el) => { if (el) allocationPill.refs.current[v.id] = el; }}
-                onClick={() => {
-                  playClick();
-                  setAllocationFormat(v.id);
-                  try {
-                    localStorage.setItem('cavdax_allocation_format', v.id);
-                  } catch {}
-                }}
-                className={`relative z-10 whitespace-nowrap shrink-0 px-2.5 sm:px-3 py-1 rounded-md text-[10px] font-mono font-semibold transition-colors duration-150 cursor-pointer ${
-                  allocationFormat === v.id
-                    ? 'text-slate-950 dark:text-white font-bold'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                {v.label}
-              </button>
-            ))}
+              { id: 'cards', label: 'Cards', icon: LayoutGrid },
+              { id: 'donut', label: 'Donut', icon: PieChart },
+              { id: 'strip', label: 'Strip', icon: BarChartHorizontal },
+            ].map((v) => {
+              const Icon = v.icon;
+              return (
+                <button
+                  key={v.id}
+                  ref={(el) => { if (el) allocationPill.refs.current[v.id] = el; }}
+                  onClick={() => {
+                    playClick();
+                    setAllocationFormat(v.id);
+                    try {
+                      localStorage.setItem('cavdax_allocation_format', v.id);
+                    } catch {}
+                  }}
+                  className={`relative z-10 whitespace-nowrap shrink-0 px-2.5 sm:px-3 py-1 rounded-md text-[10px] font-mono font-semibold transition-colors duration-150 flex items-center gap-1.5 cursor-pointer ${
+                    allocationFormat === v.id
+                      ? 'text-slate-950 dark:text-white font-bold'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Icon className="w-3 h-3 shrink-0" />
+                  <span>{v.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1308,28 +1351,32 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
               />
             )}
             {[
-              { id: 'all', label: 'All', count: sponsors.length },
-              { id: 'core', label: 'Core', count: coreCount },
-              { id: 'two_cups', label: '2 Cups', count: cupsCount },
-              { id: 'cookie', label: 'Cookie', count: cookieCount },
-            ].map((f) => (
-              <button
-                key={f.id}
-                ref={(el) => { if (el) filterPill.refs.current[f.id] = el; }}
-                onClick={() => {
-                  playClick();
-                  setSelectedFilter(f.id);
-                }}
-                className={`relative z-10 whitespace-nowrap shrink-0 px-2.5 sm:px-3 py-1 rounded-md text-[10px] font-mono font-semibold transition-colors duration-150 flex items-center gap-1 cursor-pointer ${
-                  selectedFilter === f.id
-                    ? 'text-slate-950 dark:text-white font-bold'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <span>{f.label}</span>
-                <span className="text-[9px] opacity-70">({f.count})</span>
-              </button>
-            ))}
+              { id: 'all', label: 'All', count: sponsors.length, icon: Users },
+              { id: 'core', label: 'Core', count: coreCount, icon: ShinyGemIcon },
+              { id: 'two_cups', label: '2 Cups', count: cupsCount, icon: Coffee },
+              { id: 'cookie', label: 'Cookie', count: cookieCount, icon: CookieIcon },
+            ].map((f) => {
+              const Icon = f.icon;
+              return (
+                <button
+                  key={f.id}
+                  ref={(el) => { if (el) filterPill.refs.current[f.id] = el; }}
+                  onClick={() => {
+                    playClick();
+                    setSelectedFilter(f.id);
+                  }}
+                  className={`relative z-10 whitespace-nowrap shrink-0 px-2.5 sm:px-3 py-1 rounded-md text-[10px] font-mono font-semibold transition-colors duration-150 flex items-center gap-1.5 cursor-pointer ${
+                    selectedFilter === f.id
+                      ? 'text-slate-950 dark:text-white font-bold'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Icon className="w-3 h-3 shrink-0" />
+                  <span>{f.label}</span>
+                  <span className="text-[9px] opacity-70">({f.count})</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1362,7 +1409,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
               }}
               className="mt-1 px-3 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-mono font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
-              <Sparkles className="w-3 h-3" />
+              <Heart className="w-3 h-3 text-amber-500 shrink-0" />
               <span>Become First Supporter</span>
             </button>
           </div>

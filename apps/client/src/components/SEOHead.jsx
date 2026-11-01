@@ -7,7 +7,7 @@ const SEO_MAP = {
     path: '/'
   },
   console: {
-    title: 'CAVDAX | Real-Time Execution Console & GraphBLAS Telemetry',
+    title: 'CAVDAX | Real-Time Execution Console & GraphBLAS Observability',
     description: 'Monitor live causal DAG state, sub-millisecond matrix invalidations, and enclosed MCP tool call verification in real time.',
     path: '/console'
   },

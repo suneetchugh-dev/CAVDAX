@@ -65,6 +65,7 @@ export default function DragScrollController() {
 
       const radarEl = document.getElementById('radar-section');
       const causalEl = document.getElementById('causal-loop-section');
+      const enclaveEl = document.getElementById('enclave-hub-section');
       let inTheater = false;
       if (radarEl) {
         const rect = radarEl.getBoundingClientRect();
@@ -74,6 +75,12 @@ export default function DragScrollController() {
       }
       if (causalEl) {
         const rect = causalEl.getBoundingClientRect();
+        if (rect.top <= winHeight * 0.35 && rect.bottom >= winHeight * 0.15) {
+          inTheater = true;
+        }
+      }
+      if (enclaveEl) {
+        const rect = enclaveEl.getBoundingClientRect();
         if (rect.top <= winHeight * 0.35 && rect.bottom >= winHeight * 0.15) {
           inTheater = true;
         }

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import React, { useState, useRef, useEffect } from 'react';
-import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Database, Scan, Activity, Download, Filter } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Database, Scan, Activity, Download, Layers, CheckCheck, AlertTriangle } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import NodeInspector from './NodeInspector';
 
@@ -466,18 +466,18 @@ export default function GraphCanvas({
         <div className="flex items-center gap-2 shrink-0 font-mono">
           {/* Monochromatic Architectural Drift Filter (Framer Motion Sliding Pillbar) */}
           <div className="relative flex items-center bg-slate-200/60 dark:bg-white/5 border border-slate-300/70 dark:border-white/10 rounded-lg p-0.5 text-[10px] select-none">
-            <Filter className="w-3 h-3 text-slate-400 mx-1 shrink-0" />
             {[
-              { id: 'ALL', label: 'All' },
-              { id: 'GROUNDED', label: 'Grounded' },
-              { id: 'DRIFTED', label: 'Drifted' },
+              { id: 'ALL', label: 'All', icon: Layers },
+              { id: 'GROUNDED', label: 'Grounded', icon: CheckCheck, iconClass: 'text-emerald-500' },
+              { id: 'DRIFTED', label: 'Drifted', icon: AlertTriangle, iconClass: 'text-amber-500' },
             ].map((tab) => {
               const active = driftFilter === tab.id;
+              const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => { playClick(); setDriftFilter(tab.id); }}
-                  className={`relative px-2 py-0.5 rounded-md transition-colors cursor-pointer z-10 ${
+                  className={`relative px-2 py-0.5 rounded-md transition-colors cursor-pointer z-10 flex items-center gap-1.5 ${
                     active
                       ? 'text-slate-950 dark:text-white font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -490,7 +490,8 @@ export default function GraphCanvas({
                       className="absolute inset-0 bg-white dark:bg-white/15 rounded-md shadow-xs border border-slate-300/60 dark:border-white/10 -z-10"
                     />
                   )}
-                  {tab.label}
+                  <Icon className={`w-3 h-3 shrink-0 ${tab.iconClass || 'text-current'}`} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}

@@ -13,7 +13,6 @@ import {
   Activity, 
   MousePointer, 
   Waves, 
-  Sparkles,
   Layers,
   Terminal,
   Keyboard as KeyboardIcon
@@ -559,7 +558,7 @@ export default function PreferencesModal({
               {/* Motion Sub 2: Particle Typography */}
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2">
-                  <Sparkles size={13} className={`transition-colors ${particlesActive && motionActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
+                  <Layers size={13} className={`transition-colors ${particlesActive && motionActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-600 opacity-40"}`} />
                   <span className="text-[11px] text-slate-700 dark:text-slate-300">Pointillism Particles</span>
                 </div>
                 <ToggleSwitch 

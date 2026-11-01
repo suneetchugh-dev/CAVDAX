@@ -48,7 +48,7 @@ const CONSOLE_TOUR_STEPS = [
     title: 'Terminal Metrics & Cognitive Mitosis HUD',
     badge: 'STEP 3 OF 4',
     description:
-      'Live telemetry tracking Cypher queries, MCP tool calls, and agent cognitive states.',
+      'Live diagnostics tracking Cypher queries, MCP tool calls, and agent cognitive states.',
     tip: 'Stale executions are intercepted before touching disk.',
     placement: 'left',
     scrollBlock: 'center',

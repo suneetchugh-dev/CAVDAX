@@ -22,7 +22,7 @@ import { motion } from 'framer-motion';
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Activity, RefreshCw, FileText, CheckCircle2, Clock, Database, Compass } from 'lucide-react';
+import { Activity, RefreshCw, FileText, CheckCircle2, Clock, Database, Compass, ScrollText, OctagonX, CheckCheck } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import Combobox from './Combobox';
 
@@ -274,6 +274,16 @@ export default function AuditPage() {
             ariaLabel="Audit row limit"
           />
 
+          {/* Refresh */}
+          <button
+            onClick={() => { playClick(); fetchAudit(); }}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono uppercase tracking-wider border border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors disabled:opacity-40"
+          >
+            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+
           {/* Tour Guide */}
           <button
             type="button"
@@ -286,16 +296,6 @@ export default function AuditPage() {
           >
             <Compass className="w-3 h-3 text-slate-600 dark:text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
             Tour
-          </button>
-
-          {/* Refresh */}
-          <button
-            onClick={() => { playClick(); fetchAudit(); }}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono uppercase tracking-wider border border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors disabled:opacity-40"
-          >
-            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
           </button>
         </div>
       </div>
@@ -328,16 +328,17 @@ export default function AuditPage() {
           {/* Monochromatic Verdict Sliding Pillbar (Framer Motion) */}
           <div className="relative flex items-center bg-slate-200/60 dark:bg-white/5 border border-slate-300/70 dark:border-white/10 rounded-lg p-0.5 text-[10px] font-mono select-none">
             {[
-              { id: 'ALL', label: 'All Verdicts' },
-              { id: 'BLOCKED', label: 'Blocked Only' },
-              { id: 'APPROVED', label: 'Approved Only' }
+              { id: 'ALL', label: 'All', icon: ScrollText },
+              { id: 'BLOCKED', label: 'Blocked', icon: OctagonX, iconClass: 'text-rose-500' },
+              { id: 'APPROVED', label: 'Approved', icon: CheckCheck, iconClass: 'text-emerald-500' }
             ].map(tab => {
               const active = verdictFilter === tab.id;
+              const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => { playClick(); setVerdictFilter(tab.id); }}
-                  className={`relative px-2.5 py-0.5 rounded-md uppercase tracking-wider transition-colors cursor-pointer z-10 ${
+                  className={`relative px-2.5 py-0.5 rounded-md uppercase tracking-wider transition-colors cursor-pointer z-10 flex items-center gap-1.5 ${
                     active
                       ? 'text-slate-950 dark:text-white font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -350,7 +351,8 @@ export default function AuditPage() {
                       className="absolute inset-0 bg-white dark:bg-white/15 rounded-md shadow-xs border border-slate-300/60 dark:border-white/10 -z-10"
                     />
                   )}
-                  {tab.label}
+                  <Icon className={`w-3 h-3 shrink-0 ${tab.iconClass || 'text-current'}`} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}

@@ -1506,7 +1506,6 @@ export default function App() {
               >
                 <Compass className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
                 <span>Tour</span>
-                <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">[T]</span>
               </button>
             </div>
           </div>

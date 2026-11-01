@@ -97,6 +97,7 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
 
       const radarEl = document.getElementById('radar-section');
       const causalEl = document.getElementById('causal-loop-section');
+      const enclaveEl = document.getElementById('enclave-hub-section');
       if (radarEl && activeTab === 'landing') {
         const rect = radarEl.getBoundingClientRect();
         const inRadar = rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15;
@@ -104,10 +105,21 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
       } else {
         setIsRadarSection(false);
       }
-      if (causalEl && activeTab === 'landing') {
-        const rect = causalEl.getBoundingClientRect();
-        const inCausal = rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15;
-        setIsCausalSection(inCausal);
+      if (activeTab === 'landing') {
+        let inCausalOrEnclave = false;
+        if (causalEl) {
+          const rect = causalEl.getBoundingClientRect();
+          if (rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15) {
+            inCausalOrEnclave = true;
+          }
+        }
+        if (enclaveEl) {
+          const rect = enclaveEl.getBoundingClientRect();
+          if (rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15) {
+            inCausalOrEnclave = true;
+          }
+        }
+        setIsCausalSection(inCausalOrEnclave);
       } else {
         setIsCausalSection(false);
       }
