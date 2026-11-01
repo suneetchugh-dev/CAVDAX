@@ -9,6 +9,21 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
+## 1.0.60 Latest Session Achievements (November 2, 2026 - AI Badge Purge, Direct Tier Switching Fix, Floating Toast Conversion & Typographic Orphan Remediation)
+
+- **AI Badge & Suffix Purge (`ProfilePage.jsx`, `SupportPage.jsx`, `apps/server/index.js`)**:
+  - Removed AI-sounding `VERIFIED SPONSOR • ...` badge from profile page identity header.
+  - Purged `(Eval Pass)` suffix across backend sponsor records, directory cards, and notification toasts.
+- **Hackathon Window Floating Toast Notification (`SupportPage.jsx`)**:
+  - Replaced static inline `Hackathon Window Active` badge with an elegant one-shot fading floating bottom toast, aligning with `ProfilePage.jsx`.
+- **Seamless Direct Tier Switching Fix (`apps/server/index.js`)**:
+  - Diagnosed and resolved unhandled `ReferenceError: user is not defined` in `POST /api/billing/activate-evaluation-sponsor` when filtering existing backer records.
+  - Enabled direct 1-click switching between Cookie, 2 Cups, and Core tiers without requiring an active tier reset.
+- **Active Sponsor Tier Card Border Disambiguation (`SupportPage.jsx`)**:
+  - Disentangled active tier card border styles from the Popular card: Bronze for Cookie, Vibrant Amber for 2 Cups, and Crisp Slate-White for Core.
+- **Typographic Orphan Remediation (`SupportPage.jsx`)**:
+  - Eliminated the orphan "tools." word in the Verified Backers Directory header via `[text-wrap:balance]` and non-breaking space formatting (`MCP&nbsp;tools.`).
+
 ## 1.0.59 Latest Session Achievements (November 2, 2026 - Docker Lifecycle Guard Hardening, Clean Client Surface & Prompt Library Enrichment)
 
 - **Docker Layer Caching & Lifecycle Hook Hardening (`apps/client/Dockerfile`, `apps/client/package.json`)**:
