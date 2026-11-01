@@ -1,13 +1,30 @@
 # CAVDAX: Active Development Session State (`DEV_SESSION_STATE.md`)
 
 > **Repository**: `GraphHacks-Hackathon/Codebase`  
-> **Session Timestamp**: `2026-11-01T13:45:00+05:30`  
+> **Session Timestamp**: `2026-11-01T14:15:00+05:30`  
 > **Active Branch**: `main` (Feature branches: `frontend`, `backend`, `docs`)  
-> **Status**: Monetization Reality Alignment, Verified Backers Directory, Quota Gates & Honest Tier Copy Implemented
+> **Status**: Monetization Hardening, Segmented Backer Filtering, Bounded Scroll Viewport & Dead Link Remediation Complete
 
 ---
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
+
+## 1.0.57 Latest Session Achievements (November 1, 2026 - Security Hardening, Segmented Backer Filtering, Bounded Scroll Viewport & Dead Link Remediation)
+
+- **Dead 404 Link Elimination on Backers Directory (`apps/server/index.js`, `apps/client/src/components/SupportPage.jsx`)**:
+  - Remediated the synthetic handle 404 dead links by marking seed sponsors with `is_seed: true` and setting nonexistent group handles to `null`.
+  - Replaced placeholder lead handle with the project maintainer's authentic, verified GitHub handle (`suneetchugh-dev`).
+  - Gated the `<ExternalLink />` anchor in `SupportPage.jsx` so that external links are strictly rendered only for verified, live GitHub handles, eliminating all broken 404 navigation paths.
+- **Segmented Tier Filter Tabs (`apps/client/src/components/SupportPage.jsx`)**:
+  - Replaced potential accordion clutter with high-performance segmented control pills: `All (N)`, `Core (N)`, `2 Cups (N)`, `Coffee (N)`.
+  - Engineered instant 150ms tactile switching and real-time category counter badges.
+- **Bounded Viewport & Scroll Cue Architecture (`apps/client/src/components/SupportPage.jsx`)**:
+  - Bounded the directory grid container to `max-h-[380px]` with custom slim scrollbar so that large sponsor rosters never balloon the page height or push footer actions off-screen.
+  - Added subtle monospace overflow cue (`Scroll to view all backers (N)`) when backer count exceeds 6 items.
+- **Security & Hardening Protocol (`apps/server/index.js`)**:
+  - Added strict regex sanitization on GitHub handles (`/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/`) preventing URL protocol injection or directory traversal in backer profile URLs.
+  - Added strict allowlisting on avatar CDNs (`https://avatars.githubusercontent.com/`, `https://images.unsplash.com/`) mitigating SSRF and image scheme vulnerabilities.
+  - Truncated display names to 60 characters and secured fallback null handling in seed deduplication (`null !== null`).
 
 ## 1.0.56 Latest Session Achievements (November 1, 2026 - Monetization Reality Alignment, Verified Backers Directory, Quota Gates & Honest Tier Copy)
 
