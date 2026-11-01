@@ -6,10 +6,11 @@ const TAB_SECTIONS = {
     { id: 'brand-intro', label: '01 · Brand Identity' },
     { id: 'hero-section', label: '02 · Causal Engine' },
     { id: 'bento-section', label: '03 · Vector Rot vs Graph' },
-    { id: 'causal-loop-section', label: '04 · Verification Loop' },
-    { id: 'faq-section', label: '05 · Specifications' },
-    { id: 'radar-section', label: '06 · Invalidation Radar' },
-    { id: 'cta-section', label: '07 · Live Verification' },
+    { id: 'enclave-hub-section', label: '04 · Causal Enclave' },
+    { id: 'causal-loop-section', label: '05 · Verification Loop' },
+    { id: 'faq-section', label: '06 · Specifications' },
+    { id: 'radar-section', label: '07 · Invalidation Radar' },
+    { id: 'cta-section', label: '08 · Live Verification' },
   ],
   mcp: [
     { id: 'mcp-header', label: '01 · Protocol Gateway' },
@@ -97,6 +98,7 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
 
       const radarEl = document.getElementById('radar-section');
       const causalEl = document.getElementById('causal-loop-section');
+      const enclaveEl = document.getElementById('enclave-hub-section');
       if (radarEl && activeTab === 'landing') {
         const rect = radarEl.getBoundingClientRect();
         const inRadar = rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15;
@@ -104,10 +106,21 @@ export default function ArchitecturalRailScrubber({ activeTab = 'landing' }) {
       } else {
         setIsRadarSection(false);
       }
-      if (causalEl && activeTab === 'landing') {
-        const rect = causalEl.getBoundingClientRect();
-        const inCausal = rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15;
-        setIsCausalSection(inCausal);
+      if (activeTab === 'landing') {
+        let inCausalOrEnclave = false;
+        if (causalEl) {
+          const rect = causalEl.getBoundingClientRect();
+          if (rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15) {
+            inCausalOrEnclave = true;
+          }
+        }
+        if (enclaveEl) {
+          const rect = enclaveEl.getBoundingClientRect();
+          if (rect.top <= clientHeight * 0.35 && rect.bottom >= clientHeight * 0.15) {
+            inCausalOrEnclave = true;
+          }
+        }
+        setIsCausalSection(inCausalOrEnclave);
       } else {
         setIsCausalSection(false);
       }

@@ -57,6 +57,7 @@ import CausalProvenanceRadar from './CausalProvenanceRadar';
 import CausalSolutionScroller from './CausalSolutionScroller';
 
 import SubsystemErrorBoundary from './SubsystemErrorBoundary';
+import CausalEnclaveHub from './CausalEnclaveHub';
 
 import SpotlightDataRain from './SpotlightDataRain';
 
@@ -266,7 +267,7 @@ export default function LandingPage({
 
   useEffect(() => {
 
-    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'causal-loop-section', 'radar-section', 'faq-section'];
+    const sectionIds = ['brand-intro', 'hero-section', 'bento-section', 'enclave-hub-section', 'causal-loop-section', 'radar-section', 'faq-section'];
 
     const observer = new IntersectionObserver(
 
@@ -1331,7 +1332,10 @@ export default function LandingPage({
 
       </section>
 
-
+      {/* ── 2.5 ARCHITECTURAL ENCLAVE: ISOMETRIC CAUSAL MESH HUB ── */}
+      <SubsystemErrorBoundary name="Causal Enclave Hub">
+        <CausalEnclaveHub onLaunchConsole={onLaunchConsole} />
+      </SubsystemErrorBoundary>
 
             {/* ══════════════════════════════════════════════════════════════════════
 

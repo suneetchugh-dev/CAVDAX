@@ -109,14 +109,24 @@ export default function Header({
       if (activeTab === 'landing') {
         const radarEl = document.getElementById('radar-section');
         const causalEl = document.getElementById('causal-loop-section');
+        const enclaveEl = document.getElementById('enclave-hub-section');
         const faqEl = document.getElementById('faq-section');
         const ctaEl = document.getElementById('cta-section');
         let inTheater = false;
 
-        // 1. Causal Solution Scroller Theater:
+        // 1. Causal Enclave Hub Theater:
+        // Keeps navbar completely hidden while exploring the Causal Interception Enclave.
+        if (enclaveEl) {
+          const eRect = enclaveEl.getBoundingClientRect();
+          if (eRect.top <= 120 && eRect.bottom >= 80) {
+            inTheater = true;
+          }
+        }
+
+        // 2. Causal Solution Scroller Theater:
         // Keeps navbar hidden from entry into #causal-loop-section until #faq-section actually arrives at top of viewport.
         // Guarantees navbar never appears early over Card 4's punchline ("Deterministic causal feedback...").
-        if (causalEl) {
+        if (causalEl && !inTheater) {
           const cRect = causalEl.getBoundingClientRect();
           const fRect = faqEl ? faqEl.getBoundingClientRect() : null;
           if (cRect.top <= 120 && (!fRect || fRect.top > 80)) {

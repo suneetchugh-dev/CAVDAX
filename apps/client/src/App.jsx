@@ -393,7 +393,10 @@ export default function App() {
       // Wrap scrollTo to flag programmatic section navigation (prevents mid-flight scroll hijacking)
       const originalScrollTo = lenis.scrollTo.bind(lenis);
       lenis.scrollTo = (target, options = {}) => {
-        const isCausalDock = target === '#causal-loop-section' || (typeof target === 'object' && target?.id === 'causal-loop-section');
+        const isCausalDock = target === '#causal-loop-section' ||
+                             target === '#enclave-hub-section' ||
+                             (typeof target === 'object' && (target?.id === 'causal-loop-section' || target?.id === 'enclave-hub-section')) ||
+                             Boolean(options?.isInternalDock);
         if (!isCausalDock && !options.immediate) {
           window.__isProgrammaticScroll = true;
           const dur = ((options.duration !== undefined ? options.duration : 1.2) * 1000) + 300;
@@ -1506,7 +1509,6 @@ export default function App() {
               >
                 <Compass className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
                 <span>Tour</span>
-                <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">[T]</span>
               </button>
             </div>
           </div>

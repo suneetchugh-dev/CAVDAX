@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Compass, User, Copy, Check, CheckCircle2, Lock, Terminal,
   SlidersHorizontal, Key, HardDrive, AlertTriangle, RefreshCw, Heart, ExternalLink, LogOut, Github, Eye, EyeOff,
-  ShieldCheck, Award
+  ShieldCheck, Award, Gauge, KeyRound
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
@@ -504,6 +504,17 @@ export default function ProfilePage({
     showToast('Signed out of GitHub session.');
   };
 
+  const handleCardPointerMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+  };
+
+  const handleCardPointerLeave = (e) => {
+    e.currentTarget.style.setProperty('--mouse-x', '-999px');
+    e.currentTarget.style.setProperty('--mouse-y', '-999px');
+  };
+
   const handleCopyApiKey = () => {
     playClick();
     if (!user || !apiKey) {
@@ -881,12 +892,36 @@ export default function ProfilePage({
   
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
             {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
-            <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
-              currentTier === 'free'
-                ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/15'
-                : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-slate-400 dark:hover:border-white/30'
-            }`}>
-              <div className="mb-2.5 flex items-center justify-between">
+            <div
+              onPointerMove={handleCardPointerMove}
+              onPointerLeave={handleCardPointerLeave}
+              className={`group/card relative p-5 sm:p-6 rounded-2xl border transition-all flex flex-col justify-between ${
+                currentTier === 'free'
+                  ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/15'
+                  : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-slate-400 dark:hover:border-white/30'
+              }`}
+            >
+              {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix ── */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+                  style={{
+                    maskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#64748b_1.2px,transparent_1.2px)] [background-size:14px_14px] opacity-20 dark:opacity-45" />
+                </div>
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-35 dark:group-hover/card:opacity-90 transition-opacity duration-300"
+                  style={{
+                    background: 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(255,255,255,0.06), transparent 70%)'
+                  }}
+                />
+              </div>
+
+              <div className="relative z-10">
+                <div className="mb-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   {/* 45-Degree Tilted Community Hackers / Group With Hat & Keyboard SVG */}
                   <svg
@@ -946,6 +981,8 @@ export default function ProfilePage({
                   <span>Standard stdio MCP protocol gate</span>
                 </li>
               </ul>
+              </div>
+              <div className="relative z-10">
               <button
                 onClick={() => handleTierSwitch('free')}
                 disabled={currentTier === 'free'}
@@ -990,19 +1027,44 @@ export default function ProfilePage({
                   {currentTier === 'free' ? 'Current Plan' : (hasEvaluationPass ? (isHackathonMode ? 'Switch to Community' : 'Switch (Dev)') : 'Switch to Community')}
                 </span>
               </button>
+              </div>
             </div>
   
             {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
-            <div className={`p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 relative z-10 shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
-              currentTier === 'pro'
-                ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
-                : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
-            }`}>
+            <div
+              onPointerMove={handleCardPointerMove}
+              onPointerLeave={handleCardPointerLeave}
+              className={`group/card p-5 sm:p-6 xl:p-7 rounded-2xl border transition-all duration-300 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 relative z-10 flex flex-col justify-between shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
+                currentTier === 'pro'
+                  ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
+                  : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
+              }`}
+            >
+              {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix ── */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+                  style={{
+                    maskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#64748b_1.2px,transparent_1.2px)] [background-size:14px_14px] opacity-20 dark:opacity-45" />
+                </div>
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-35 dark:group-hover/card:opacity-90 transition-opacity duration-300"
+                  style={{
+                    background: 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(245,158,11,0.08), transparent 70%)'
+                  }}
+                />
+              </div>
+
               {/* Top Floating Popular Badge */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 font-mono text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1 z-20">
                 <span>POPULAR</span>
               </div>
-              <div className="mb-2.5 flex items-center justify-between">
+              <div className="relative z-10">
+                <div className="mb-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   {/* 45-Degree Tilted Premium Diamond SVG */}
                   <svg
@@ -1061,6 +1123,8 @@ export default function ProfilePage({
                   <span>Write-interception &amp; guided repair</span>
                 </li>
               </ul>
+              </div>
+              <div className="relative z-10">
               <button
                 onClick={() => handleTierSwitch('pro')}
                 disabled={currentTier === 'pro'}
@@ -1116,15 +1180,40 @@ export default function ProfilePage({
                   </span>
                 </span>
               </button>
+              </div>
             </div>
   
             {/* Tier 3: Enterprise Mesh (Solid Deep Obsidian Purple Card Background) */}
-            <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
-              currentTier === 'enterprise'
-                ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
-                : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-purple-400/40'
-            }`}>
-              <div className="mb-2.5 flex items-center justify-between">
+            <div
+              onPointerMove={handleCardPointerMove}
+              onPointerLeave={handleCardPointerLeave}
+              className={`group/card relative p-5 sm:p-6 rounded-2xl border transition-all flex flex-col justify-between ${
+                currentTier === 'enterprise'
+                  ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
+                  : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-purple-400/40'
+              }`}
+            >
+              {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix ── */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+                  style={{
+                    maskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#64748b_1.2px,transparent_1.2px)] [background-size:14px_14px] opacity-20 dark:opacity-45" />
+                </div>
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-35 dark:group-hover/card:opacity-90 transition-opacity duration-300"
+                  style={{
+                    background: 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(168,85,247,0.09), transparent 70%)'
+                  }}
+                />
+              </div>
+
+              <div className="relative z-10">
+                <div className="mb-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   {/* 45-Degree Tilted King Crown SVG */}
                   <svg
@@ -1195,6 +1284,8 @@ export default function ProfilePage({
                   <span>High-availability SLA &amp; team support</span>
                 </li>
               </ul>
+              </div>
+              <div className="relative z-10">
               <button
                 onClick={() => handleTierSwitch('enterprise')}
                 disabled={currentTier === 'enterprise'}
@@ -1248,6 +1339,7 @@ export default function ProfilePage({
                   </span>
                 </span>
               </button>
+              </div>
             </div>
           </div>
         </section>
@@ -1258,9 +1350,12 @@ export default function ProfilePage({
           <div data-tour="profile-quotas" className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Plan Quota &amp; Usage
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Gauge className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Plan Quota &amp; Usage
+                  </span>
+                </div>
                 <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-medium">
                   {decisionsCapacity === -1
                     ? 'Unlimited Capacity (SLA)'
@@ -1306,9 +1401,12 @@ export default function ProfilePage({
           <div data-tour="profile-api-key" className="p-4 sm:p-4.5 lg:p-5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  MCP Agent API Key
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <KeyRound className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    MCP Agent API Key
+                  </span>
+                </div>
                 {user && (
                   <div className="flex items-center text-[10px] font-mono text-slate-500">
                     <button
@@ -1339,9 +1437,9 @@ export default function ProfilePage({
             {!user ? (
               <div className="py-2.5 px-3.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-dashed border-slate-300 dark:border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                   <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 truncate">
-                    Authentication required to generate MCP credentials
+                    Sign in to access your API key
                   </span>
                 </div>
                 <button
@@ -1498,9 +1596,9 @@ export default function ProfilePage({
         </p>
 
         {isSponsor && (
-          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-[10px] font-mono font-semibold text-amber-700 dark:text-amber-400 shadow-xs">
+          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-[10px] font-mono font-medium text-amber-800 dark:text-amber-300 shadow-xs">
             <ShieldCheck className="w-3 h-3 text-amber-500 shrink-0" />
-            <span>VERIFIED SPONSOR • {sponsorTierLabel ? sponsorTierLabel.toUpperCase() : 'COMMUNITY BACKER'}</span>
+            <span>{sponsorTierLabel || 'Sponsor Backer'}</span>
           </div>
         )}
 
@@ -1710,12 +1808,36 @@ export default function ProfilePage({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-4 xl:gap-5 items-stretch">
           {/* Tier 1: Community (Calm, Neutral Surface De-escalation) */}
-          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
-            currentTier === 'free'
-              ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10'
-              : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30'
-          }`}>
-            <div className="mb-2.5 flex items-center justify-between">
+          <div
+            onPointerMove={handleCardPointerMove}
+            onPointerLeave={handleCardPointerLeave}
+            className={`group/card relative p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
+              currentTier === 'free'
+                ? 'bg-slate-50/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10'
+                : 'bg-transparent border-slate-200 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/30'
+            }`}
+          >
+              {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix ── */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+                  style={{
+                    maskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#64748b_1.2px,transparent_1.2px)] [background-size:14px_14px] opacity-20 dark:opacity-45" />
+                </div>
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-35 dark:group-hover/card:opacity-90 transition-opacity duration-300"
+                  style={{
+                    background: 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(255,255,255,0.06), transparent 70%)'
+                  }}
+                />
+              </div>
+
+            <div className="relative z-10">
+              <div className="mb-2.5 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 {/* 45-Degree Tilted Community Hackers / Group With Hat & Keyboard SVG */}
                 <svg
@@ -1775,6 +1897,8 @@ export default function ProfilePage({
                 <span>Standard stdio MCP protocol gate</span>
               </li>
             </ul>
+            </div>
+            <div className="relative z-10">
             <button
               onClick={() => handleTierSwitch('free')}
               disabled={currentTier === 'free'}
@@ -1819,19 +1943,44 @@ export default function ProfilePage({
                 {currentTier === 'free' ? 'Current Plan' : (hasEvaluationPass ? (isHackathonMode ? 'Switch to Community' : 'Switch (Dev)') : 'Switch to Community')}
               </span>
             </button>
+            </div>
           </div>
 
           {/* Tier 2: Pro Autonomous (Gated if unauthenticated, Elevated Featured Card) */}
-          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all duration-300 xl:scale-[1.015] xl:-translate-y-1 xl:hover:-translate-y-2 relative z-10 flex flex-col justify-between shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
-            currentTier === 'pro'
-              ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
-              : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
-          }`}>
+          <div
+            onPointerMove={handleCardPointerMove}
+            onPointerLeave={handleCardPointerLeave}
+            className={`group/card p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all duration-300 xl:scale-[1.015] xl:-translate-y-1 xl:hover:-translate-y-2 relative z-10 flex flex-col justify-between shadow-[0_14px_38px_rgba(245,158,11,0.22)] hover:shadow-[0_24px_54px_rgba(245,158,11,0.30)] dark:shadow-[0_0_36px_rgba(245,158,11,0.18)] dark:hover:shadow-[0_0_50px_rgba(245,158,11,0.26)] ${
+              currentTier === 'pro'
+                ? 'bg-amber-500/[0.04] dark:bg-[#1A150B] border-amber-400 ring-2 ring-amber-400/50'
+                : 'bg-slate-50/60 dark:bg-[#1A150B]/60 border-amber-400/80 ring-1 ring-amber-400/30 hover:border-amber-400'
+            }`}
+          >
+              {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix ── */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+                  style={{
+                    maskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#64748b_1.2px,transparent_1.2px)] [background-size:14px_14px] opacity-20 dark:opacity-45" />
+                </div>
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-35 dark:group-hover/card:opacity-90 transition-opacity duration-300"
+                  style={{
+                    background: 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(245,158,11,0.08), transparent 70%)'
+                  }}
+                />
+              </div>
+
             {/* Top Floating Popular Badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 font-mono text-[9px] font-extrabold uppercase tracking-widest shadow-md flex items-center gap-1 z-20">
               <span>POPULAR</span>
             </div>
-            <div className="mb-2.5 flex items-center justify-between">
+            <div className="relative z-10">
+              <div className="mb-2.5 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 {/* 45-Degree Tilted Premium Diamond SVG */}
                 <svg
@@ -1890,6 +2039,8 @@ export default function ProfilePage({
                 <span>Write-interception &amp; guided repair</span>
               </li>
             </ul>
+            </div>
+            <div className="relative z-10">
             <button
               onClick={() => handleTierSwitch('pro')}
               disabled={currentTier === 'pro'}
@@ -1945,15 +2096,40 @@ export default function ProfilePage({
                 </span>
               </span>
             </button>
+            </div>
           </div>
 
           {/* Tier 3: Enterprise Mesh (Solid Deep Obsidian Purple Card Background) */}
-          <div className={`p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
-            currentTier === 'enterprise'
-              ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
-              : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-purple-400/40'
-          }`}>
-            <div className="mb-2.5 flex items-center justify-between">
+          <div
+            onPointerMove={handleCardPointerMove}
+            onPointerLeave={handleCardPointerLeave}
+            className={`group/card relative p-3.5 sm:p-4 lg:p-4 xl:p-4.5 rounded-xl sm:rounded-2xl border transition-all flex flex-col justify-between ${
+              currentTier === 'enterprise'
+                ? 'bg-[#150a26] dark:bg-[#0f051d] border-purple-700/60 dark:border-purple-600/50 ring-1 ring-purple-500/30 shadow-sm'
+                : 'bg-transparent border-slate-200 dark:border-white/15 hover:border-purple-400/40'
+            }`}
+          >
+              {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix ── */}
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+                  style={{
+                    maskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(190px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), black 0%, transparent 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#64748b_1.2px,transparent_1.2px)] [background-size:14px_14px] opacity-20 dark:opacity-45" />
+                </div>
+                <div
+                  className="absolute inset-0 opacity-0 group-hover/card:opacity-35 dark:group-hover/card:opacity-90 transition-opacity duration-300"
+                  style={{
+                    background: 'radial-gradient(220px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(168,85,247,0.09), transparent 70%)'
+                  }}
+                />
+              </div>
+
+            <div className="relative z-10">
+              <div className="mb-2.5 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 {/* 45-Degree Tilted King Crown SVG */}
                 <svg
@@ -2024,6 +2200,8 @@ export default function ProfilePage({
                 <span>High-availability SLA &amp; team support</span>
               </li>
             </ul>
+            </div>
+            <div className="relative z-10">
             <button
               onClick={() => handleTierSwitch('enterprise')}
               disabled={currentTier === 'enterprise'}
@@ -2077,6 +2255,7 @@ export default function ProfilePage({
                 </span>
               </span>
             </button>
+            </div>
           </div>
         </div>
       </section>
@@ -2087,9 +2266,12 @@ export default function ProfilePage({
         <div data-tour="profile-quotas" className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Plan Quota &amp; Usage
-              </span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Gauge className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Plan Quota &amp; Usage
+                </span>
+              </div>
               <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-medium">
                 {decisionsCapacity === -1
                   ? 'Unlimited Capacity (SLA)'
@@ -2135,9 +2317,12 @@ export default function ProfilePage({
         <div data-tour="profile-api-key" className="p-3 sm:p-3.5 lg:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                MCP Agent API Key
-              </span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <KeyRound className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  MCP Agent API Key
+                </span>
+              </div>
               {user && (
                 <div className="flex items-center text-[10px] font-mono text-slate-500">
                   <button
@@ -2168,9 +2353,9 @@ export default function ProfilePage({
           {!user ? (
             <div className="py-2.5 px-3.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-dashed border-slate-300 dark:border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5 min-w-0">
-                <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                 <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 truncate">
-                  Authentication required to generate MCP credentials
+                  Sign in to access your API key
                 </span>
               </div>
               <button
