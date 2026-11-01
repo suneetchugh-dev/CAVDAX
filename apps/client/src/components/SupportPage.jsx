@@ -87,16 +87,18 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
   const [toast, setToast]             = useState(null); // { ok: bool, text: string }
   const [sponsors, setSponsors]       = useState([]);
   const [loadingSponsors, setLoadingSponsors] = useState(true);
+  const [selectedFilter, setSelectedFilter]   = useState('all'); // 'all' | 'core' | 'two_cups' | 'coffee'
 
   const fetchSponsors = useCallback(async () => {
     try {
       const res = await fetch('/api/sponsors');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.sponsors)) {
         setSponsors(data.sponsors);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[CAVDAX Sponsors] Could not fetch directory:', err.message);
     } finally {
       setLoadingSponsors(false);
     }
@@ -105,6 +107,17 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
   useEffect(() => {
     fetchSponsors();
   }, [fetchSponsors]);
+
+  const filteredSponsors = sponsors.filter((s) => {
+    if (selectedFilter === 'core') return s.tier_id === 3 || s.highlighted;
+    if (selectedFilter === 'two_cups') return s.tier_id === 2;
+    if (selectedFilter === 'coffee') return s.tier_id === 1;
+    return true;
+  });
+
+  const coreCount = sponsors.filter(s => s.tier_id === 3 || s.highlighted).length;
+  const cupsCount = sponsors.filter(s => s.tier_id === 2).length;
+  const coffeeCount = sponsors.filter(s => s.tier_id === 1).length;
 
   const [currency, setCurrency] = useState(() => {
     try {
@@ -439,7 +452,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
 
       {/* ── 4. Verified Backers Wall ── */}
       <section className="mb-10 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-200/60 dark:border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200/60 dark:border-white/10">
           <div className="flex items-center gap-2">
             <Award className="w-4 h-4 text-amber-500 shrink-0" />
             <div>
@@ -451,9 +464,31 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 self-start sm:self-auto px-2 py-0.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.03] text-[10px] font-mono text-slate-500">
-            <Users className="w-3 h-3 text-slate-400" />
-            <span>{sponsors.length} Verified Backers</span>
+
+          {/* Segmented Filter Pills */}
+          <div className="flex items-center gap-1 self-start sm:self-auto p-0.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-white/[0.02]">
+            {[
+              { id: 'all', label: 'All', count: sponsors.length },
+              { id: 'core', label: 'Core', count: coreCount },
+              { id: 'two_cups', label: '2 Cups', count: cupsCount },
+              { id: 'coffee', label: 'Coffee', count: coffeeCount },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => {
+                  playClick();
+                  setSelectedFilter(f.id);
+                }}
+                className={`px-2 py-1 rounded-md text-[10px] font-mono font-semibold transition-all duration-150 flex items-center gap-1 cursor-pointer ${
+                  selectedFilter === f.id
+                    ? 'bg-white dark:bg-white/15 text-slate-950 dark:text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>{f.label}</span>
+                <span className="text-[9px] opacity-70">({f.count})</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -462,78 +497,90 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
             <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
             <span>Loading verified backers...</span>
           </div>
-        ) : sponsors.length === 0 ? (
+        ) : filteredSponsors.length === 0 ? (
           <div className="py-8 text-center text-xs font-mono text-slate-500">
-            No sponsors registered yet. Be the first to back CAVDAX development.
+            No backers in this tier yet. Be the first to back CAVDAX in this category.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {sponsors.map((backer) => {
-              const isHighlight = backer.highlighted || backer.tier_id === 3;
-              return (
-                <div
-                  key={backer.id || backer.order_id || backer.github_handle}
-                  className={`p-3 rounded-xl border transition-all duration-200 flex items-start gap-3 ${
-                    isHighlight
-                      ? 'border-amber-500/40 bg-amber-500/[0.03] dark:bg-[#1A150B]/40 shadow-xs'
-                      : 'border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/[0.01]'
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    {backer.avatar_url ? (
-                      <img
-                        src={backer.avatar_url}
-                        alt={backer.name}
-                        className="w-8 h-8 rounded-full border border-slate-200 dark:border-white/15 object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full border border-slate-300 dark:border-white/20 bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
-                        {(backer.name || backer.github_handle || 'B').charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    {isHighlight && (
-                      <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center text-slate-950 shadow-xs">
-                        <ShieldCheck className="w-2.5 h-2.5" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <span className="text-xs font-semibold text-slate-900 dark:text-white truncate">
-                        {backer.name}
-                      </span>
-                      {backer.github_handle && backer.github_handle !== 'community-backer' && (
-                        <a
-                          href={`https://github.com/${backer.github_handle}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
-                          title={`@${backer.github_handle} on GitHub`}
-                        >
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between gap-1">
-                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+          <div className="relative">
+            <div className="max-h-[380px] overflow-y-auto pr-1 sm:pr-1.5 custom-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {filteredSponsors.map((backer) => {
+                  const isHighlight = backer.highlighted || backer.tier_id === 3;
+                  const canLink = backer.github_handle && backer.github_handle !== 'community-backer' && (!backer.is_seed || backer.github_handle === 'suneetchugh-dev');
+                  return (
+                    <div
+                      key={backer.id || backer.order_id || backer.github_handle || Math.random()}
+                      className={`p-3 rounded-xl border transition-all duration-200 flex items-start gap-3 ${
                         isHighlight
-                          ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                          : 'border-slate-300/80 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400'
-                      }`}>
-                        {backer.tier_label || 'Verified Backer'}
-                      </span>
-                      <span className="text-[9px] font-mono text-slate-400">
-                        {backer.created_at ? new Date(backer.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recent'}
-                      </span>
+                          ? 'border-amber-500/40 bg-amber-500/[0.03] dark:bg-[#1A150B]/40 shadow-xs'
+                          : 'border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/[0.01]'
+                      }`}
+                    >
+                      <div className="relative shrink-0">
+                        {backer.avatar_url ? (
+                          <img
+                            src={backer.avatar_url}
+                            alt={backer.name}
+                            className="w-8 h-8 rounded-full border border-slate-200 dark:border-white/15 object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full border border-slate-300 dark:border-white/20 bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
+                            {(backer.name || backer.github_handle || 'B').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        {isHighlight && (
+                          <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center text-slate-950 shadow-xs">
+                            <ShieldCheck className="w-2.5 h-2.5" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <span className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                            {backer.name}
+                          </span>
+                          {canLink && (
+                            <a
+                              href={`https://github.com/${backer.github_handle}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0 transition-colors"
+                              title={`@${backer.github_handle} on GitHub`}
+                            >
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between gap-1">
+                          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                            isHighlight
+                              ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                              : 'border-slate-300/80 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400'
+                          }`}>
+                            {backer.tier_label || 'Verified Backer'}
+                          </span>
+                          <span className="text-[9px] font-mono text-slate-400">
+                            {backer.created_at ? new Date(backer.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recent'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
+            {filteredSponsors.length > 6 && (
+              <div className="mt-2 text-center">
+                <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">
+                  Scroll to view all backers ({filteredSponsors.length})
+                </span>
+              </div>
+            )}
           </div>
         )}
       </section>
