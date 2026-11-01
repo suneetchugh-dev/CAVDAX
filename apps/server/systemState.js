@@ -36,7 +36,8 @@ export function loadSystemState() {
         auditEntries: Array.isArray(parsed.auditEntries) ? parsed.auditEntries : [],
         notificationPreferences: (typeof parsed.notificationPreferences === 'object' && parsed.notificationPreferences !== null)
           ? parsed.notificationPreferences
-          : {}
+          : {},
+        sponsors: Array.isArray(parsed.sponsors) ? parsed.sponsors : []
       };
     }
   } catch (err) {
@@ -49,6 +50,7 @@ export function loadSystemState() {
     apiKeys: [],
     auditEntries: [],
     notificationPreferences: {},
+    sponsors: [],
     vapidKeys: null,
     pushSubscriptions: {}
   };
@@ -70,6 +72,7 @@ export function saveSystemState(state) {
       notificationPreferences: (typeof state.notificationPreferences === 'object' && state.notificationPreferences !== null)
         ? state.notificationPreferences
         : {},
+      sponsors: Array.isArray(state.sponsors) ? state.sponsors.slice(0, 100) : [],
       updatedAt: new Date().toISOString()
     }, null, 2);
 

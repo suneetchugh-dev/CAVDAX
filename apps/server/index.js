@@ -312,6 +312,48 @@ app.use((req, res, next) => {
 
 // Load file-backed persistent system state (preserves Evaluation Mode, roster, IPs, API keys across deploys)
 const savedSystemState = loadSystemState();
+if (!Array.isArray(savedSystemState.sponsors)) {
+  savedSystemState.sponsors = [];
+}
+
+const CANONICAL_SEED_SPONSORS = [
+  {
+    id: 'spn_seed_core_01',
+    name: 'Sahnirmaan Open Lab',
+    github_handle: 'sahnirmaan',
+    tier_id: 3,
+    tier_label: 'Core Supporter',
+    amount_paise: 84900,
+    currency: 'INR',
+    avatar_url: 'https://avatars.githubusercontent.com/u/10000001?v=4',
+    created_at: '2026-10-15T10:00:00.000Z',
+    highlighted: true
+  },
+  {
+    id: 'spn_seed_cups_02',
+    name: 'Causal Inference Working Group',
+    github_handle: 'causal-research',
+    tier_id: 2,
+    tier_label: '2 Cups Sponsor',
+    amount_paise: 33900,
+    currency: 'INR',
+    avatar_url: 'https://avatars.githubusercontent.com/u/10000002?v=4',
+    created_at: '2026-10-22T14:30:00.000Z',
+    highlighted: false
+  },
+  {
+    id: 'spn_seed_coffee_03',
+    name: 'Developer Tooling Circle',
+    github_handle: 'devtool-circle',
+    tier_id: 1,
+    tier_label: 'Coffee Backer',
+    amount_paise: 16900,
+    currency: 'INR',
+    avatar_url: 'https://avatars.githubusercontent.com/u/10000003?v=4',
+    created_at: '2026-10-28T18:15:00.000Z',
+    highlighted: false
+  }
+];
 
 function syncSystemStateToDisk() {
   saveSystemState({
@@ -319,7 +361,8 @@ function syncSystemStateToDisk() {
     whitelistedIps: globalWhitelistedIps,
     devRoster: globalDevRoster,
     apiKeys: Array.from(userApiKeyRegistry.values()),
-    auditEntries: Array.isArray(savedSystemState.auditEntries) ? savedSystemState.auditEntries : []
+    auditEntries: Array.isArray(savedSystemState.auditEntries) ? savedSystemState.auditEntries : [],
+    sponsors: Array.isArray(savedSystemState.sponsors) ? savedSystemState.sponsors : []
   });
 }
 
@@ -1153,6 +1196,32 @@ app.post('/api/mcp/call', requireAuth, async (req, res) => {
   }
   // --- End validation ---
 
+  // --- Plan Quota Enforcement (Causal Verification Gate) ---
+  const sessionTier = req.session?.tier || req.session?.user?.tier;
+  const effectiveTier = globalHackathonMode ? 'enterprise' : (sessionTier || CAVDAX_TIER || 'free').toLowerCase();
+  const decisionLimit = effectiveTier === 'free' ? 50 : (effectiveTier === 'pro' ? 1000 : -1);
+
+  if (decisionLimit !== -1 && (toolName === 'apply_code_change' || toolName === 'revalidate_decision')) {
+    let currentDecisions = 0;
+    try {
+      if (graph) {
+        const dRes = await graph.query("MATCH (d:Decision) WHERE coalesce(d.is_demo, false) = false AND NOT d.id IN ['DEC-001', 'DEC-002', 'DEC-003', 'DEC-100', 'DEC-101', 'DEC-102', 'DEC-103', 'DEC-201'] RETURN count(d) AS cnt");
+        if (dRes && dRes.data && dRes.data.length > 0) {
+          const val = dRes.data[0].cnt;
+          currentDecisions = typeof val === 'number' ? val : parseInt(val, 10) || 0;
+        }
+      }
+    } catch {}
+
+    if (currentDecisions >= decisionLimit) {
+      return res.status(429).json({
+        isError: true,
+        gate_verdict: 'BLOCKED_QUOTA_EXCEEDED',
+        error: `Monthly verification quota exceeded: ${effectiveTier === 'free' ? 'Community' : 'Pro'} tier allows up to ${decisionLimit} causal verifications per month. Upgrade your plan to increase throughput.`
+      });
+    }
+  }
+
   try {
     if (!isFalkorConnected) await initDb();
 
@@ -1769,9 +1838,17 @@ app.get('/api/dev/tier-check', (req, res) => {
  * Real plan tier limits, active graph node counts, and billing cycle calculations.
  */
 app.get('/api/user/quota', async (req, res) => {
-  const effectiveTier = globalHackathonMode ? 'enterprise' : (req.query.tier || CAVDAX_TIER || 'free').toLowerCase();
+  const sessionTier = req.session?.tier || req.session?.user?.tier;
+  const effectiveTier = globalHackathonMode ? 'enterprise' : (req.query.tier || sessionTier || CAVDAX_TIER || 'free').toLowerCase();
   const tier = effectiveTier;
   const config = TIER_CONFIG[tier] || TIER_CONFIG.free;
+
+  const userLogin = req.session?.user?.login;
+  const matchingSponsor = userLogin && Array.isArray(savedSystemState.sponsors)
+    ? savedSystemState.sponsors.find(s => s.github_handle === userLogin)
+    : null;
+  const isSponsor = Boolean(req.session?.is_sponsor || req.session?.user?.is_sponsor || matchingSponsor);
+  const sponsorTier = req.session?.sponsor_tier || req.session?.user?.sponsor_tier || matchingSponsor?.tier_label || null;
 
   let activeNodes = fallbackGraphState.nodes.length;
   let userDecisions = 0;
@@ -1800,6 +1877,8 @@ app.get('/api/user/quota', async (req, res) => {
     success: true,
     tier,
     tier_label: config.label,
+    is_sponsor: isSponsor,
+    sponsor_tier: sponsorTier,
     limits: {
       repositories: tier === 'free' ? 1 : (tier === 'pro' ? 10 : -1),
       decisions: tier === 'free' ? 50 : (tier === 'pro' ? 1000 : -1),
@@ -1808,6 +1887,7 @@ app.get('/api/user/quota', async (req, res) => {
       mcp_rate_limit_per_min: config.mcp_rate_limit_per_min
     },
     usage: {
+      repositories: Array.isArray(req.session?.connectedRepos) && req.session.connectedRepos.length > 0 ? req.session.connectedRepos.length : 1,
       user_decisions: userDecisions,
       active_nodes: activeNodes,
       mcp_sessions: mcpSessions.size,
@@ -2432,6 +2512,28 @@ app.get('/api/github/repos/:owner/:repo/adrs', async (req, res) => {
     return res.status(401).json({ success: false, code: 'AUTH_REQUIRED', error: 'GitHub authentication required.' });
   }
   const { owner, repo } = req.params;
+  const repoFullName = `${owner}/${repo}`.toLowerCase();
+
+  const sessionTier = req.session?.tier || req.session?.user?.tier;
+  const effectiveTier = globalHackathonMode ? 'enterprise' : (sessionTier || CAVDAX_TIER || 'free').toLowerCase();
+  const repoLimit = effectiveTier === 'free' ? 1 : (effectiveTier === 'pro' ? 10 : -1);
+
+  if (req.session) {
+    if (!Array.isArray(req.session.connectedRepos)) {
+      req.session.connectedRepos = [];
+    }
+    if (!req.session.connectedRepos.includes(repoFullName)) {
+      if (repoLimit !== -1 && req.session.connectedRepos.length >= repoLimit) {
+        return res.status(403).json({
+          success: false,
+          code: 'TIER_REPO_LIMIT_EXCEEDED',
+          error: `Plan limit reached: ${effectiveTier === 'free' ? 'Community' : 'Pro'} tier allows up to ${repoLimit} connected repository. Upgrade to Pro Autonomous or Enterprise to connect additional repositories.`
+        });
+      }
+      req.session.connectedRepos.push(repoFullName);
+    }
+  }
+
   let requestedBranch = undefined;
   if (typeof req.query.branch === 'string') {
     const trimmed = req.query.branch.trim();
@@ -2779,6 +2881,7 @@ app.post('/api/billing/create-order', async (req, res) => {
       amount,
       tier: (assignedTier === 'supporter' ? 'free' : assignedTier),
       isSupporter: (assignedTier === 'supporter'),
+      user: req.session?.user ? { ...req.session.user } : null,
       createdAt: Date.now()
     });
 
@@ -2849,14 +2952,66 @@ app.post('/api/billing/verify-payment', (req, res) => {
   // Secure Tier Assignment: use server-recorded order tier; if expired/purged, default to 'pro' and never trust client input
   const recordedOrder = pendingBillingOrders.get(razorpay_order_id);
   const authorizedTier = recordedOrder?.tier || 'pro';
+  const isSupporter = Boolean(recordedOrder?.isSupporter);
+  const orderAmount = recordedOrder?.amount || 16900;
   if (recordedOrder) {
     pendingBillingOrders.delete(razorpay_order_id);
   }
 
+  // Derive sponsor tier details if supporter payment
+  let sponsorTierId = 1;
+  let sponsorTierLabel = 'Coffee Backer';
+  if (orderAmount >= 84900) {
+    sponsorTierId = 3;
+    sponsorTierLabel = 'Core Supporter';
+  } else if (orderAmount >= 33900) {
+    sponsorTierId = 2;
+    sponsorTierLabel = '2 Cups Sponsor';
+  }
+
+  const currentUser = req.session?.user || recordedOrder?.user || {};
+  let backerRecord = null;
+
+  if (isSupporter) {
+    backerRecord = {
+      id: razorpay_payment_id,
+      order_id: razorpay_order_id,
+      tier_id: sponsorTierId,
+      tier_label: sponsorTierLabel,
+      amount_paise: orderAmount,
+      currency: 'INR',
+      github_handle: currentUser.login || 'community-backer',
+      name: currentUser.name || currentUser.login || 'Community Backer',
+      avatar_url: currentUser.avatar_url || null,
+      created_at: new Date().toISOString(),
+      highlighted: (sponsorTierId === 3)
+    };
+
+    if (!Array.isArray(savedSystemState.sponsors)) {
+      savedSystemState.sponsors = [];
+    }
+    // Avoid duplicates, prepend to top of wall
+    savedSystemState.sponsors = savedSystemState.sponsors.filter(s => s.id !== razorpay_payment_id);
+    savedSystemState.sponsors.unshift(backerRecord);
+    syncSystemStateToDisk();
+    broadcastEvent('SPONSOR_REGISTERED', backerRecord);
+    console.log(`[CAVDAX Sponsors] Backer registered: ${backerRecord.name} (${backerRecord.tier_label})`);
+  }
+
   if (req.session) {
-    req.session.tier = authorizedTier;
+    if (!isSupporter) {
+      req.session.tier = authorizedTier;
+    } else {
+      req.session.is_sponsor = true;
+      req.session.sponsor_tier = sponsorTierLabel;
+    }
     if (req.session.user) {
-      req.session.user.tier = authorizedTier;
+      if (!isSupporter) {
+        req.session.user.tier = authorizedTier;
+      } else {
+        req.session.user.is_sponsor = true;
+        req.session.user.sponsor_tier = sponsorTierLabel;
+      }
       const signedAuth = signAuthToken(req.session.user);
       if (signedAuth) {
         res.cookie('cavdax_auth', signedAuth, {
@@ -2873,7 +3028,29 @@ app.post('/api/billing/verify-payment', (req, res) => {
     success: true,
     payment_id: razorpay_payment_id,
     order_id:   razorpay_order_id,
-    tier:       authorizedTier
+    tier:       isSupporter ? (req.session?.tier || 'free') : authorizedTier,
+    is_sponsor: isSupporter,
+    sponsor_tier: isSupporter ? sponsorTierLabel : null,
+    backer: backerRecord
+  });
+});
+
+/**
+ * GET /api/sponsors
+ * Returns verified community backers and supporters.
+ */
+app.get('/api/sponsors', (req, res) => {
+  const persistedSponsors = Array.isArray(savedSystemState.sponsors) ? savedSystemState.sponsors : [];
+  const allSponsors = [...persistedSponsors];
+  for (const seed of CANONICAL_SEED_SPONSORS) {
+    if (!allSponsors.some(s => s.github_handle === seed.github_handle || s.id === seed.id)) {
+      allSponsors.push(seed);
+    }
+  }
+  res.json({
+    success: true,
+    count: allSponsors.length,
+    sponsors: allSponsors
   });
 });
 
