@@ -321,11 +321,7 @@ function BackerCard({ backer }) {
             <span className="text-xs font-semibold text-slate-900 dark:text-white truncate">
               {backer.name}
             </span>
-            {backer.is_evaluation && (
-              <span className="text-[8px] font-mono px-1 py-0.2 rounded border border-amber-400/40 bg-amber-400/10 text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider shrink-0">
-                Eval Pass
-              </span>
-            )}
+            
           </div>
           {canLink && (
             <a
@@ -434,6 +430,15 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
   useEffect(() => {
     fetchSponsors();
   }, [fetchSponsors]);
+
+  // Floating one-shot Hackathon Window Active toast notification (aligned with ProfilePage.jsx)
+  const hasTriggeredWindowToast = useRef(false);
+  useEffect(() => {
+    if (hasEvaluationPass && !hasTriggeredWindowToast.current) {
+      hasTriggeredWindowToast.current = true;
+      showToast(true, 'Hackathon Evaluation Window Active — In-App Sponsor Testing Unlocked');
+    }
+  }, [hasEvaluationPass]);
 
   // Sync Hackathon Evaluation Mode state & auto-revert when disabled from Dev Panel
   useEffect(() => {
@@ -552,7 +557,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
           localStorage.removeItem('cavdax_sponsor_is_evaluation');
           window.dispatchEvent(new CustomEvent('cavdax:sponsor-registered', { detail: null }));
         } catch {}
-        showToast(true, 'Reset Evaluation Sponsor status back to standard.');
+        showToast(true, 'Reset sponsor status back to standard.');
         fetchSponsors();
       } catch (err) {
         showToast(false, `Could not reset evaluation tier: ${err.message}`);
@@ -596,7 +601,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
         window.dispatchEvent(new CustomEvent('cavdax:sponsor-registered', { detail: data.backer }));
       } catch {}
 
-      showToast(true, `Activated ${tier.tierName} Sponsor (Evaluation Pass)! In-app halo is live.`);
+      showToast(true, `Activated ${tier.tierName} Sponsor! In-app halo is live.`);
       fetchSponsors();
     } catch (err) {
       showToast(false, `Error: ${err.message}`);
@@ -728,7 +733,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
           <Heart className="w-5 h-5 text-rose-500 fill-current shrink-0" />
         </h1>
         <p className="mt-3 text-xs font-sans text-slate-500 dark:text-slate-400">
-          Direct community backing funds open causal benchmarks and maintainer hours.
+          Direct community backing funds open causal benchmarks and maintainer hours.
         </p>
       </section>
 
@@ -738,12 +743,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Sponsorship Tiers
           </span>
-          {hasEvaluationPass && (
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5 shadow-xs">
-              <ShieldCheck className="w-3 h-3 text-amber-500 shrink-0" />
-              <span>Hackathon Window Active</span>
-            </span>
-          )}
+          
         </div>
 
         {/* Monochromatic Subtle Currency Switcher (USD / INR) */}
@@ -792,23 +792,33 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
               onPointerLeave={handleCardPointerLeave}
               className={`group/card p-6 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative
                 ${isCurrentEvalTier
-                  ? 'border-amber-500 ring-2 ring-amber-400/30 bg-amber-500/[0.04] dark:bg-[#1A150B]/60 shadow-[0_12px_32px_rgba(245,158,11,0.2)] z-10'
+                  ? isAmber
+                    ? 'border-amber-400 ring-2 ring-amber-400/50 bg-amber-500/[0.06] dark:bg-[#1A150B]/80 shadow-[0_16px_40px_rgba(245,158,11,0.22)] md:scale-[1.02] md:-translate-y-2 xl:scale-[1.035] xl:-translate-y-2.5 z-10'
+                    : isDiamond
+                    ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/20 dark:ring-white/40 bg-slate-900/[0.04] dark:bg-white/[0.06] shadow-[0_14px_36px_rgba(0,0,0,0.12)] dark:shadow-[0_0_36px_rgba(255,255,255,0.08)] z-10'
+                    : 'border-amber-700/80 dark:border-amber-600/80 ring-2 ring-amber-700/30 bg-amber-950/[0.04] dark:bg-amber-950/20 shadow-[0_12px_32px_rgba(180,83,9,0.14)] z-10'
                   : isAmber && tier.popular
-                  ? 'border-amber-400 dark:border-amber-400/90 ring-1 ring-amber-400/20 bg-slate-50 dark:bg-white/[0.03] md:scale-[1.02] md:-translate-y-2 md:hover:-translate-y-3.5 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 shadow-[0_12px_32px_rgba(245,158,11,0.18)] hover:shadow-[0_20px_48px_rgba(245,158,11,0.26)] dark:shadow-[0_0_28px_rgba(245,158,11,0.14)] dark:hover:shadow-[0_0_46px_rgba(245,158,11,0.24)] z-10'
+                  ? 'border-amber-400/70 dark:border-amber-400/80 ring-1 ring-amber-400/20 bg-slate-50 dark:bg-white/[0.03] md:scale-[1.02] md:-translate-y-2 md:hover:-translate-y-3.5 xl:scale-[1.035] xl:-translate-y-2.5 xl:hover:-translate-y-4 shadow-[0_12px_32px_rgba(245,158,11,0.14)] hover:shadow-[0_20px_48px_rgba(245,158,11,0.22)] dark:shadow-[0_0_28px_rgba(245,158,11,0.12)] dark:hover:shadow-[0_0_46px_rgba(245,158,11,0.20)] z-10'
                   : isDiamond
                   ? 'border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/40 bg-slate-50/60 dark:bg-white/[0.02] shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(255,255,255,0.03)]'
-                  : 'border-slate-200/80 dark:border-white/15 bg-transparent hover:border-amber-800/30 dark:hover:border-amber-700/30'
+                  : 'border-slate-200/80 dark:border-white/15 bg-transparent hover:border-amber-700/30 dark:hover:border-amber-600/30'
                 }`}
             >
-              {isCurrentEvalTier ? (
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-mono font-bold text-[9px] uppercase tracking-wider rounded-full z-20 shadow-xs">
-                  Active
+              {isCurrentEvalTier && tier.popular ? (
+                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-400 text-slate-950 font-mono font-extrabold text-[9px] uppercase tracking-widest rounded-full z-20 shadow-xs flex items-center gap-1">
+                  <CheckCircle2 className="w-2.5 h-2.5" />
+                  <span>ACTIVE</span>
                 </div>
-              ) : tier.popular && (
+              ) : isCurrentEvalTier ? (
+                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-mono font-bold text-[9px] uppercase tracking-wider rounded-full z-20 shadow-xs flex items-center gap-1">
+                  <CheckCircle2 className="w-2.5 h-2.5" />
+                  <span>ACTIVE</span>
+                </div>
+              ) : tier.popular ? (
                 <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-amber-400 text-slate-950 font-mono font-extrabold text-[9px] uppercase tracking-widest rounded-full z-20">
-                  Popular
+                  POPULAR
                 </div>
-              )}
+              ) : null}
 
               {/* ── Substrate Specular Spotlight & Fine Blueprint Matrix (Linear/Vercel Engineering Pattern) ── */}
               <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden z-0" aria-hidden="true">
@@ -971,7 +981,7 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
                 How Backing Is Allocated
               </h2>
               <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400">
-                Transparent ledger distribution for every contribution received.
+                Transparent ledger distribution for every contribution received.
               </p>
             </div>
           </div>
@@ -1329,8 +1339,8 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
               <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                 Verified Backers Directory
               </h2>
-              <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400 mt-0.5">
-                Community patrons funding open causal verification and MCP tools.
+              <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400 mt-0.5 [text-wrap:balance]">
+                Community patrons funding open causal verification and MCP tools.
               </p>
             </div>
           </div>
@@ -1440,13 +1450,13 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
       {toast && (
         <div
           role="status"
-          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-semibold shadow-2xl border pointer-events-none max-w-xs text-center animate-in fade-in slide-in-from-bottom-3
-            ${toast.ok
-              ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 border-slate-800 dark:border-white/20'
-              : 'bg-rose-600 text-white border-rose-500'
-            }`}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-slate-900/95 dark:bg-white/95 text-white dark:text-slate-900 text-xs font-mono font-medium shadow-2xl backdrop-blur-md flex items-center gap-2 border border-white/10 dark:border-slate-900/10 pointer-events-none transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 whitespace-nowrap"
         >
-          {toast.ok && <Heart className="w-3.5 h-3.5 fill-current text-rose-400 shrink-0" />}
+          {toast.ok ? (
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600 shrink-0" />
+          ) : (
+            <Heart className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+          )}
           <span>{toast.text}</span>
         </div>
       )}

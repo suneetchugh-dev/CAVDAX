@@ -664,12 +664,7 @@ export default function ProfilePage({
             {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
           </p>
 
-          {isSponsor && (
-            <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-[10px] font-mono font-semibold text-amber-700 dark:text-amber-400 shadow-xs">
-              <ShieldCheck className="w-3 h-3 text-amber-500 shrink-0" />
-              <span>VERIFIED SPONSOR • {sponsorTierLabel ? sponsorTierLabel.toUpperCase() : 'COMMUNITY BACKER'}</span>
-            </div>
-          )}
+          
   
           {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
           <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
@@ -1595,12 +1590,7 @@ export default function ProfilePage({
           {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
         </p>
 
-        {isSponsor && (
-          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-[10px] font-mono font-medium text-amber-800 dark:text-amber-300 shadow-xs">
-            <ShieldCheck className="w-3 h-3 text-amber-500 shrink-0" />
-            <span>{sponsorTierLabel || 'Sponsor Backer'}</span>
-          </div>
-        )}
+        
 
         {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
         <div className="mt-1.5 sm:mt-2 flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
