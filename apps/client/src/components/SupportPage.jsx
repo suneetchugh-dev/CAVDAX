@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Coffee, CheckCircle2, Heart, HandHeart, Loader2 } from 'lucide-react';
+import { Coffee, CheckCircle2, Heart, HandHeart, Loader2, ShieldCheck, Award, ExternalLink, Users } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 
 /**
@@ -37,7 +37,7 @@ const TIERS = [
     inrSub:   'approx $2 USD',
     paise:    16900,
     desc:     'One coffee to fuel development.',
-    perks:    ['README Backer badge', 'Community role', 'Public backer directory'],
+    perks:    ['Verified Backers Wall listing', 'In-App Backer profile halo', 'Community Discord backer status'],
     amber:    false,
     popular:  false,
   },
@@ -50,7 +50,7 @@ const TIERS = [
     inrSub:   'approx $4 USD',
     paise:    33900,
     desc:     'Powers automated graph fuzzing and regression passes.',
-    perks:    ['Everything in $2 tier', 'Priority issue triage', 'Early MCP plugin access'],
+    perks:    ['Everything in $2 tier', 'Priority issue triage queue', 'Early access MCP tool specs'],
     amber:    true,
     popular:  true,
   },
@@ -63,7 +63,7 @@ const TIERS = [
     inrSub:   'approx $10 USD',
     paise:    84900,
     desc:     'Funds FalkorDB benchmark instances and continuous graph validation.',
-    perks:    ['Backers Wall listing', 'Direct RFC discussion', 'GitHub Sponsor badge'],
+    perks:    ['Highlighted Backers Wall plaque', 'Direct architectural RFC discussion', 'Permanent Verified Sponsor badge'],
     amber:    true,
     popular:  false,
   },
@@ -85,6 +85,26 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
   const [hoveredTier, setHoveredTier] = useState(null);
   const [loadingTier, setLoadingTier] = useState(null);
   const [toast, setToast]             = useState(null); // { ok: bool, text: string }
+  const [sponsors, setSponsors]       = useState([]);
+  const [loadingSponsors, setLoadingSponsors] = useState(true);
+
+  const fetchSponsors = useCallback(async () => {
+    try {
+      const res = await fetch('/api/sponsors');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.sponsors)) {
+        setSponsors(data.sponsors);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingSponsors(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSponsors();
+  }, [fetchSponsors]);
 
   const [currency, setCurrency] = useState(() => {
     try {
@@ -194,7 +214,18 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
             const verifyData = await verifyRes.json();
 
             if (verifyData.success) {
-              showToast(true, 'Payment verified. Thank you for supporting CAVDAX.');
+              showToast(true, 'Payment verified! Welcome to CAVDAX Verified Backers.');
+              if (verifyData.backer) {
+                setSponsors(prev => [verifyData.backer, ...prev.filter(s => s.id !== verifyData.backer.id)]);
+              }
+              fetchSponsors();
+              try {
+                localStorage.setItem('cavdax_is_sponsor', 'true');
+                if (verifyData.sponsor_tier) {
+                  localStorage.setItem('cavdax_sponsor_tier', verifyData.sponsor_tier);
+                }
+                window.dispatchEvent(new CustomEvent('cavdax:sponsor-registered', { detail: verifyData.backer }));
+              } catch {}
             } else {
               showToast(false, 'Signature verification failed. Contact support with your payment ID.');
             }
@@ -404,6 +435,107 @@ export default function SupportPage({ onLaunchConsole, onNavigateHome, user }) {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ── 4. Verified Backers Wall ── */}
+      <section className="mb-10 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/15 bg-slate-900/[0.02] dark:bg-white/[0.02]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-200/60 dark:border-white/10">
+          <div className="flex items-center gap-2">
+            <Award className="w-4 h-4 text-amber-500 shrink-0" />
+            <div>
+              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                Verified Backers Directory
+              </h2>
+              <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400">
+                Community supporters funding continuous graph validation and open-source MCP primitives.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 self-start sm:self-auto px-2 py-0.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-white/[0.03] text-[10px] font-mono text-slate-500">
+            <Users className="w-3 h-3 text-slate-400" />
+            <span>{sponsors.length} Verified Backers</span>
+          </div>
+        </div>
+
+        {loadingSponsors ? (
+          <div className="py-8 flex items-center justify-center gap-2 text-xs font-mono text-slate-500">
+            <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+            <span>Loading verified backers...</span>
+          </div>
+        ) : sponsors.length === 0 ? (
+          <div className="py-8 text-center text-xs font-mono text-slate-500">
+            No sponsors registered yet. Be the first to back CAVDAX development.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {sponsors.map((backer) => {
+              const isHighlight = backer.highlighted || backer.tier_id === 3;
+              return (
+                <div
+                  key={backer.id || backer.order_id || backer.github_handle}
+                  className={`p-3 rounded-xl border transition-all duration-200 flex items-start gap-3 ${
+                    isHighlight
+                      ? 'border-amber-500/40 bg-amber-500/[0.03] dark:bg-[#1A150B]/40 shadow-xs'
+                      : 'border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/[0.01]'
+                  }`}
+                >
+                  <div className="relative shrink-0">
+                    {backer.avatar_url ? (
+                      <img
+                        src={backer.avatar_url}
+                        alt={backer.name}
+                        className="w-8 h-8 rounded-full border border-slate-200 dark:border-white/15 object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full border border-slate-300 dark:border-white/20 bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
+                        {(backer.name || backer.github_handle || 'B').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    {isHighlight && (
+                      <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center text-slate-950 shadow-xs">
+                        <ShieldCheck className="w-2.5 h-2.5" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                      <span className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                        {backer.name}
+                      </span>
+                      {backer.github_handle && backer.github_handle !== 'community-backer' && (
+                        <a
+                          href={`https://github.com/${backer.github_handle}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
+                          title={`@${backer.github_handle} on GitHub`}
+                        >
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                        isHighlight
+                          ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                          : 'border-slate-300/80 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400'
+                      }`}>
+                        {backer.tier_label || 'Verified Backer'}
+                      </span>
+                      <span className="text-[9px] font-mono text-slate-400">
+                        {backer.created_at ? new Date(backer.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recent'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* ── Toast ── */}

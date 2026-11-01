@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Compass, User, Copy, Check, CheckCircle2, Lock, Terminal,
-  SlidersHorizontal, Key, HardDrive, AlertTriangle, RefreshCw, Heart, ExternalLink, LogOut, Github, Eye, EyeOff
+  SlidersHorizontal, Key, HardDrive, AlertTriangle, RefreshCw, Heart, ExternalLink, LogOut, Github, Eye, EyeOff,
+  ShieldCheck, Award
 } from 'lucide-react';
 import { playClick } from '../utils/soundFx';
 import { isUserAuthorized, getActiveDevSession } from '../services/devAuth';
@@ -349,6 +350,38 @@ export default function ProfilePage({
     fetchQuota();
   }, [currentTier]);
 
+  const [isSponsor, setIsSponsor] = useState(() => {
+    try {
+      return localStorage.getItem('cavdax_is_sponsor') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [sponsorTierLabel, setSponsorTierLabel] = useState(() => {
+    try {
+      return localStorage.getItem('cavdax_sponsor_tier') || null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    if (quotaData?.is_sponsor || user?.is_sponsor) {
+      setIsSponsor(true);
+      if (quotaData?.sponsor_tier || user?.sponsor_tier) {
+        setSponsorTierLabel(quotaData?.sponsor_tier || user?.sponsor_tier);
+      }
+    }
+    const handleSponsorRegistered = (e) => {
+      setIsSponsor(true);
+      if (e.detail?.tier_label) {
+        setSponsorTierLabel(e.detail.tier_label);
+      }
+    };
+    window.addEventListener('cavdax:sponsor-registered', handleSponsorRegistered);
+    return () => window.removeEventListener('cavdax:sponsor-registered', handleSponsorRegistered);
+  }, [quotaData, user]);
+
   // Check if current user is an authorized devteam member or has active dev enclave session
   const isAuthorizedDev = Boolean(
     isUserAuthorized(user) || getActiveDevSession()
@@ -611,6 +644,13 @@ export default function ProfilePage({
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
             {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
           </p>
+
+          {isSponsor && (
+            <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-[10px] font-mono font-semibold text-amber-700 dark:text-amber-400 shadow-xs">
+              <ShieldCheck className="w-3 h-3 text-amber-500 shrink-0" />
+              <span>VERIFIED SPONSOR • {sponsorTierLabel ? sponsorTierLabel.toUpperCase() : 'COMMUNITY BACKER'}</span>
+            </div>
+          )}
   
           {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
           <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 flex-wrap">
@@ -1010,7 +1050,7 @@ export default function ProfilePage({
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>Autonomous mutation loops</span>
+                  <span>Agent write-interception &amp; guided repair</span>
                 </li>
               </ul>
               <button
@@ -1125,7 +1165,7 @@ export default function ProfilePage({
               <div className={`text-[10px] font-mono font-medium mb-3 ${
                 currentTier === 'enterprise' ? 'text-purple-200/70' : 'text-purple-500 dark:text-purple-400'
               }`}>
-                Tailored Infrastructure &amp; Dedicated VPC
+                Tailored Infrastructure &amp; Multi-Tenant Keyspace
               </div>
               <ul className={`text-xs font-mono space-y-2 mb-6 ${
                 currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
@@ -1136,15 +1176,15 @@ export default function ProfilePage({
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                  <span>Dedicated causal graph cluster</span>
+                  <span>Isolated tenant graph keyspace</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                  <span>SSO, RBAC &amp; compliance audit trail</span>
+                  <span>GitHub Org OAuth &amp; tamper-evident audit ledger</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                  <span>99.99% SLA &amp; 24/7 priority support</span>
+                  <span>Targeted high-availability architecture &amp; team support</span>
                 </li>
               </ul>
               <button
@@ -1448,6 +1488,13 @@ export default function ProfilePage({
         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
           {user ? `@${user.login} · GitHub Verified` : 'Unauthenticated Sandbox Session'}
         </p>
+
+        {isSponsor && (
+          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-[10px] font-mono font-semibold text-amber-700 dark:text-amber-400 shadow-xs">
+            <ShieldCheck className="w-3 h-3 text-amber-500 shrink-0" />
+            <span>VERIFIED SPONSOR • {sponsorTierLabel ? sponsorTierLabel.toUpperCase() : 'COMMUNITY BACKER'}</span>
+          </div>
+        )}
 
         {/* Centered Actions Row: Support Us & Account State (Sleek, Wave Fill Cohesion) */}
         <div className="mt-1.5 sm:mt-2 flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
@@ -1832,7 +1879,7 @@ export default function ProfilePage({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Autonomous mutation loops</span>
+                <span>Agent write-interception &amp; guided repair</span>
               </li>
             </ul>
             <button
@@ -1947,7 +1994,7 @@ export default function ProfilePage({
             <div className={`text-[10px] font-mono font-medium mb-2 sm:mb-2.5 ${
               currentTier === 'enterprise' ? 'text-purple-200/70' : 'text-purple-500 dark:text-purple-400'
             }`}>
-              Tailored Infrastructure &amp; Dedicated VPC
+              Tailored Infrastructure &amp; Multi-Tenant Keyspace
             </div>
             <ul className={`text-[11px] sm:text-xs font-mono space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 flex-1 ${
               currentTier === 'enterprise' ? 'text-purple-100/90' : 'text-slate-600 dark:text-slate-300'
@@ -1958,15 +2005,15 @@ export default function ProfilePage({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>Dedicated causal graph cluster</span>
+                <span>Isolated tenant graph keyspace</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>SSO, RBAC &amp; compliance audit trail</span>
+                <span>GitHub Org OAuth &amp; tamper-evident audit ledger</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>99.99% SLA &amp; 24/7 priority support</span>
+                <span>Targeted high-availability architecture &amp; team support</span>
               </li>
             </ul>
             <button
