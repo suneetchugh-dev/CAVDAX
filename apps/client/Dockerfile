@@ -3,6 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY apps/client/package*.json ./
+COPY apps/client/scripts/ ./scripts/
 RUN npm install
 
 COPY apps/client ./
