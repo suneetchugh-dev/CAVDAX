@@ -319,39 +319,42 @@ if (!Array.isArray(savedSystemState.sponsors)) {
 const CANONICAL_SEED_SPONSORS = [
   {
     id: 'spn_seed_core_01',
-    name: 'Sahnirmaan Open Lab',
-    github_handle: 'sahnirmaan',
+    name: 'Suneet Chugh',
+    github_handle: 'suneetchugh-dev',
     tier_id: 3,
     tier_label: 'Core Supporter',
     amount_paise: 84900,
     currency: 'INR',
-    avatar_url: 'https://avatars.githubusercontent.com/u/10000001?v=4',
+    avatar_url: 'https://avatars.githubusercontent.com/u/148385481?v=4',
     created_at: '2026-10-15T10:00:00.000Z',
-    highlighted: true
+    highlighted: true,
+    is_seed: true
   },
   {
     id: 'spn_seed_cups_02',
     name: 'Causal Inference Working Group',
-    github_handle: 'causal-research',
+    github_handle: null,
     tier_id: 2,
     tier_label: '2 Cups Sponsor',
     amount_paise: 33900,
     currency: 'INR',
-    avatar_url: 'https://avatars.githubusercontent.com/u/10000002?v=4',
+    avatar_url: null,
     created_at: '2026-10-22T14:30:00.000Z',
-    highlighted: false
+    highlighted: false,
+    is_seed: true
   },
   {
     id: 'spn_seed_coffee_03',
     name: 'Developer Tooling Circle',
-    github_handle: 'devtool-circle',
+    github_handle: null,
     tier_id: 1,
     tier_label: 'Coffee Backer',
     amount_paise: 16900,
     currency: 'INR',
-    avatar_url: 'https://avatars.githubusercontent.com/u/10000003?v=4',
+    avatar_url: null,
     created_at: '2026-10-28T18:15:00.000Z',
-    highlighted: false
+    highlighted: false,
+    is_seed: true
   }
 ];
 
@@ -2973,6 +2976,21 @@ app.post('/api/billing/verify-payment', (req, res) => {
   let backerRecord = null;
 
   if (isSupporter) {
+    const rawLogin = currentUser.login;
+    const sanitizedHandle = (typeof rawLogin === 'string' && /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/.test(rawLogin.trim()))
+      ? rawLogin.trim()
+      : null;
+    const sanitizedName = typeof currentUser.name === 'string' && currentUser.name.trim().length > 0
+      ? currentUser.name.trim().slice(0, 60)
+      : (sanitizedHandle || 'Community Backer');
+    let sanitizedAvatar = null;
+    if (typeof currentUser.avatar_url === 'string') {
+      const cleanUrl = currentUser.avatar_url.trim();
+      if (cleanUrl.startsWith('https://avatars.githubusercontent.com/') || cleanUrl.startsWith('https://images.unsplash.com/')) {
+        sanitizedAvatar = cleanUrl;
+      }
+    }
+
     backerRecord = {
       id: razorpay_payment_id,
       order_id: razorpay_order_id,
@@ -2980,11 +2998,12 @@ app.post('/api/billing/verify-payment', (req, res) => {
       tier_label: sponsorTierLabel,
       amount_paise: orderAmount,
       currency: 'INR',
-      github_handle: currentUser.login || 'community-backer',
-      name: currentUser.name || currentUser.login || 'Community Backer',
-      avatar_url: currentUser.avatar_url || null,
+      github_handle: sanitizedHandle,
+      name: sanitizedName,
+      avatar_url: sanitizedAvatar,
       created_at: new Date().toISOString(),
-      highlighted: (sponsorTierId === 3)
+      highlighted: (sponsorTierId === 3),
+      is_seed: false
     };
 
     if (!Array.isArray(savedSystemState.sponsors)) {
@@ -3043,7 +3062,7 @@ app.get('/api/sponsors', (req, res) => {
   const persistedSponsors = Array.isArray(savedSystemState.sponsors) ? savedSystemState.sponsors : [];
   const allSponsors = [...persistedSponsors];
   for (const seed of CANONICAL_SEED_SPONSORS) {
-    if (!allSponsors.some(s => s.github_handle === seed.github_handle || s.id === seed.id)) {
+    if (!allSponsors.some(s => s.id === seed.id || (seed.github_handle && s.github_handle === seed.github_handle))) {
       allSponsors.push(seed);
     }
   }
