@@ -1,13 +1,35 @@
 # CAVDAX: Active Development Session State (`DEV_SESSION_STATE.md`)
 
 > **Repository**: `GraphHacks-Hackathon/Codebase`  
-> **Session Timestamp**: `2026-10-28T00:50:00+05:30`  
+> **Session Timestamp**: `2026-11-01T13:00:00+05:30`  
 > **Active Branch**: `main` (Feature branches: `frontend`, `backend`, `docs`)  
 > **Status**: Agent & Human Console Capabilities, Blast-Radius Simulator, Vision OCR Badges, SVG Export, and ADR Guardrails Implemented
 
 ---
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
+
+## 1.0.55 Latest Session Achievements (November 1, 2026 - Zero-Shift Tour Guide Engine, Lightbox Portal Hoisting, Monochromatic Email Architecture & Endpoint Hardening)
+
+- **Zero-Shift Tour Guide Engine (`apps/client/src/components/TourGuide.jsx`, `apps/client/src/App.jsx`)**:
+  - Eliminated the card wobbling/shifting bug caused by `transition: top, left` animating DOM height reflow deltas (~310px measured vs 260px fallback) and sub-pixel scroll dampening.
+  - Replaced positional transitions with instantaneous coordinate binding paired with GPU-accelerated opacity & micro-scale crossfade (`opacity 150ms ease-out, transform 150ms cubic-bezier(0.16, 1, 0.3, 1)`).
+  - Engineered Dual-Phase Lifecycle: initial launch from scrolled viewports holds card strictly invisible until Lenis scroll lands; active navigation uses 100ms exit fade -> 150ms bloom.
+  - Calibrated velocity standard: Viewport scroll 0.58s exponential ease, spotlight morph 380ms cubic-bezier.
+  - Applied Content 1+1 Rule across all 5 tour categories: descriptions <= 14 words, tips <= 10 words.
+  - Scoped `T` hotkey to only tour-supported views (`console`, `dev`, `mcp`, `audit`, `profile`), stopping route hijacking on Overview and Walkthrough.
+  - Fixed `ReferenceError: isMounted is not defined` on unmount by scoping effect cleanup variables outside `try/catch`.
+- **Lightbox CSS Containing Block Isolation (`apps/client/src/components/TeamPage.jsx`)**:
+  - Hoisted 3D photo viewer to `document.body` via `createPortal(..., document.body)` to escape the `<PageAscentTransition>` `transform` / `will-change: transform` containing block trap that caused lightboxes to appear displaced down.
+  - Locked body scroll with `document.body.style.overflow = 'hidden'` on open and purged leftover amber styling into pure monochromatic obsidian/white.
+- **Walkthrough CTA Button Normalization (`apps/client/src/components/ProjectVideoPage.jsx`)**:
+  - Equalized heights, paddings, and typography across `Launch Verification Console` and `Connect Real MCP Agent`.
+- **Hardened Agent Rule Directives (`apps/client/src/components/ConnectMcpPage.jsx`)**:
+  - Rewrote `.cursorrules` and `CLAUDE.md` snippets with strict negative directives, verification gates, and zero-stale execution workflows.
+- **Monochromatic Executive HTML Email & Security Hardening (`apps/server/email.js`, `apps/server/index.js`)**:
+  - Engineered bulletproof monochromatic nested table HTML email template (Outlook/Gmail compatible, zero color clashing, pure #0A0A0A & #FFFFFF).
+  - Added RFC 5322 regex validation to `/api/alerts/simulate-invalidation`.
+  - Added 60-second in-memory cooldown per recipient map to prevent harassment and quota exhaustion.
 
 ## 1.0.54 Latest Session Achievements (October 31, 2026 - Official YouTube Demo Video Integration with 4-Act Chapter Rails & Key Moments)
 
