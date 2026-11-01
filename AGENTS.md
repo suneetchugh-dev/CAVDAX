@@ -1049,3 +1049,29 @@ Every AI coding agent must treat the **6 Canonical Context Files** as the persis
   - **The Cancellation / Failure Cleanup Rule**: If a background command or task running a scratch script is killed, timed out, or errors out, the agent's very next tool call MUST be the unconditional removal of that scratch script (`Remove-Item` / `rm`). Never abandon a script file because its task was terminated.
   - **Scratch Directory Isolation**: If a scratch file or mock artifact must temporarily persist across multi-step turns for debugging, it MUST be stored inside the designated agent scratch path (`<appDataDir>/brain/<conversation-id>/scratch/` or `.tmp/`) and NEVER directly in the repository root or project source folders.
   - **Pre-Turn Cleanliness Sweep**: Before concluding any turn, declaring work complete, or staging commits to git, the agent MUST verify that no stray `.py`, `.mjs`, `.sh`, or `.tmp` utility files remain loose in the workspace (`Get-ChildItem -Path . -Filter "*.py"`, etc.).
+
+
+---
+
+## 18. GitHub "Pair Extraordinaire" Git Co-Authorship & Auth Parity Standard
+
+To maintain transparent attribution between human developers and AI pair programmers, and ensure eligibility for the **GitHub Pair Extraordinaire** achievement badge on merged Pull Requests, all agents working in this repository must follow these protocols:
+
+### 18.1 Mandatory `Co-authored-by:` Commit Trailer
+- **The Protocol**: Every git commit authored on a feature branch (`frontend`, `backend`, `docs`) MUST include the co-authorship trailer formatted exactly as follows:
+  ```git
+  Co-authored-by: Suneet Chugh <valorise078gramming@gmail.com>
+  ```
+- **Formatting Invariants**:
+  1. **Empty Line Separation**: There must be an empty line separating the commit body/summary from the `Co-authored-by:` trailer.
+  2. **Exact Casing**: The token `Co-authored-by:` is strictly case-sensitive.
+  3. **Verified Email**: The email address must match a verified email address on the `@suneetchugh-dev` GitHub account (`valorise078gramming@gmail.com`).
+  4. **Multi-Author Support**: If multiple contributors collaborate on a change, list each co-author on its own line:
+     ```git
+     Co-authored-by: Suneet Chugh <valorise078gramming@gmail.com>
+     ```
+
+### 18.2 Sponsor vs. SaaS Auth Parity & Identity Binding Invariant
+- **The Parity Principle**: Never implement guest checkout on financial sponsorship surfaces that promise in-app identity perks (such as Backer Wall avatar listing, profile halos, or Discord roles) without full auth parity with SaaS account tiers.
+- **The Unauthenticated State**: If a user is not signed in (`!user`), the primary CTA must clearly indicate `Sign In to Sponsor` with `<Lock />` affordance, redirecting safely via `/api/auth/github?returnTo=<current_route>`.
+- **Ephemeral Evaluation Segregation**: Hackathon evaluation passes and developer test bypasses must remain separate from public anonymous checkouts, using dedicated ephemeral tags (`is_evaluation: true`) that evaporate on mode disengagement without polluting canonical seed records.
