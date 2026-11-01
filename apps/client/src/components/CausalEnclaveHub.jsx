@@ -318,19 +318,25 @@ export default function CausalEnclaveHub() {
     };
   }, []);
 
-  // Smooth exit functions
+  // Smooth exit functions (Deterministic Lock-OUT to adjacent landmarks with zero fight)
   const exitDownward = useCallback(() => {
+    if (isExitingRef.current) return;
+    isTransitioningRef.current = true;
     isExitingRef.current = true;
     isLockedRef.current = false;
     setIsLocked(false);
 
     if (window.__lenis) {
-      window.__lenis.isLocked = false;
       window.__lenis.start();
+      window.__lenis.isLocked = false;
       window.__lenis.scrollTo('#causal-loop-section', {
         offset: -20,
-        duration: 1.1,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+        duration: 0.85,
+        force: true,
+        onComplete: () => {
+          isExitingRef.current = false;
+          isTransitioningRef.current = false;
+        }
       });
     } else {
       document.getElementById('causal-loop-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -339,35 +345,45 @@ export default function CausalEnclaveHub() {
     setTimeout(() => {
       isExitingRef.current = false;
       isTransitioningRef.current = false;
-    }, 950);
+    }, 1100);
   }, []);
 
   const exitUpward = useCallback(() => {
+    if (isExitingRef.current) return;
+    const el = containerRef.current;
+    isTransitioningRef.current = true;
     isExitingRef.current = true;
     isLockedRef.current = false;
     setIsLocked(false);
 
+    const targetY = el ? Math.max(0, el.offsetTop - window.innerHeight * 0.75) : 0;
+
     if (window.__lenis) {
-      window.__lenis.isLocked = false;
       window.__lenis.start();
-      window.__lenis.scrollTo('#problem-section', {
+      window.__lenis.isLocked = false;
+      window.__lenis.scrollTo('#bento-section', {
         offset: -20,
-        duration: 1.1,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+        duration: 0.85,
+        force: true,
+        onComplete: () => {
+          isExitingRef.current = false;
+          isTransitioningRef.current = false;
+        }
       });
     } else {
-      document.getElementById('problem-section')?.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('bento-section')?.scrollIntoView({ behavior: 'smooth' }) || window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
 
     setTimeout(() => {
       isExitingRef.current = false;
       isTransitioningRef.current = false;
-    }, 950);
+    }, 1100);
   }, []);
 
-  // 1. Viewport Docking: Lock IN when reached
+  // 1. Precise Viewport Docking: Lock IN when reached
   useEffect(() => {
     const handleScrollCheck = () => {
+      // Programmatic Navigation Guard: Never hijack or dock when user clicked nav/cue
       if (typeof window !== 'undefined' && window.__isProgrammaticScroll) {
         if (isLockedRef.current) {
           isLockedRef.current = false;
@@ -391,8 +407,8 @@ export default function CausalEnclaveHub() {
       const rect = el.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
 
-      // Scrolled completely out: release lock
-      if (rect.bottom < -100 || rect.top > viewportHeight + 100) {
+      // Scrolled completely out: release lock cleanly
+      if (rect.bottom < -80 || rect.top > viewportHeight + 80) {
         if (isLockedRef.current) {
           isLockedRef.current = false;
           setIsLocked(false);
@@ -405,7 +421,7 @@ export default function CausalEnclaveHub() {
         return;
       }
 
-      // Docking check: center reaches center of viewport
+      // Check if section is centered / docked in viewport with expanded catch window
       const sectionCenter = rect.top + rect.height / 2;
       const viewportCenter = viewportHeight / 2;
       const isDocked = (Math.abs(sectionCenter - viewportCenter) < viewportHeight * 0.42) ||
@@ -425,27 +441,35 @@ export default function CausalEnclaveHub() {
         if (window.__lenis) {
           window.__lenis.isLocked = true;
           window.__lenis.stop();
+          window.__lenis.scrollTo(el, {
+            duration: 0.6,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          });
         }
-
-        // Center element smoothly in window
-        const targetScroll = currentScrollY + rect.top - (viewportHeight - rect.height) / 2;
-        window.scrollTo({ top: targetScroll, behavior: 'smooth' });
       }
     };
 
     window.addEventListener('scroll', handleScrollCheck, { passive: true });
-    return () => window.removeEventListener('scroll', handleScrollCheck);
+    if (window.__lenis) {
+      window.__lenis.on('scroll', handleScrollCheck);
+    }
+    handleScrollCheck();
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollCheck);
+      if (window.__lenis) {
+        window.__lenis.off('scroll', handleScrollCheck);
+      }
+    };
   }, []);
 
-  // 2. Wheel & Touch Event Hijacking while locked
+  // 2. Guaranteed Step Lock-In & Natural Directional Exit (Wheel, Touchpad, Touch)
   useEffect(() => {
     const handleWheel = (e) => {
-      const el = containerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight * 0.75 && rect.bottom > window.innerHeight * 0.25;
-      if (!isLockedRef.current && !inView) return;
       if (isExitingRef.current) return;
+
+      // CRITICAL FIX: Only hijack and prevent default when the section is ACTUALLY locked!
+      if (!isLockedRef.current) return;
 
       if (e.cancelable) e.preventDefault();
       if (isTransitioningRef.current) return;
@@ -453,7 +477,7 @@ export default function CausalEnclaveHub() {
       const current = activeStepRef.current;
       const delta = e.deltaY;
 
-      if (Math.abs(delta) > 18) {
+      if (Math.abs(delta) > 16) {
         if (delta > 0) {
           // Scrolling Down -> Advance Stage
           if (current < ENCLAVE_STAGES.length - 1) {
@@ -463,7 +487,7 @@ export default function CausalEnclaveHub() {
             setStep((prev) => Math.min(ENCLAVE_STAGES.length - 1, prev + 1));
             setTimeout(() => { isTransitioningRef.current = false; }, 480);
           } else {
-            // On Last Step: Require secondary impulse to exit downward
+            // On Last Step: Require secondary impulse to exit downward (prevents inertia blow-through)
             if (!exitAttemptRef.current) {
               exitAttemptRef.current = true;
               setTimeout(() => { exitAttemptRef.current = false; }, 650);
@@ -480,7 +504,7 @@ export default function CausalEnclaveHub() {
             setStep((prev) => Math.max(0, prev - 1));
             setTimeout(() => { isTransitioningRef.current = false; }, 480);
           } else {
-            // On First Step: Require secondary impulse to exit upward
+            // On First Step: Require secondary impulse to exit upward (prevents inertia blow-through)
             if (!exitAttemptRef.current) {
               exitAttemptRef.current = true;
               setTimeout(() => { exitAttemptRef.current = false; }, 650);
