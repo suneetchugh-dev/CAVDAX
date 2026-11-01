@@ -40,6 +40,7 @@ import {
 
 
 import { playClick } from '../utils/soundFx';
+import ProactiveIntentLockPlayground from './ProactiveIntentLockPlayground';
 
 
 
@@ -1883,6 +1884,11 @@ EXECUTION WORKFLOW:
       </section>
 
 
+
+      {/* 6.5 Interactive Clearance & Multi-Agent Lock Playground */}
+      <section id="mcp-interactive-playground" className="px-6 max-w-5xl mx-auto w-full mb-14">
+        <ProactiveIntentLockPlayground onActionComplete={() => {}} />
+      </section>
 
       {/* 7. metrics row */}
 
