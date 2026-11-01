@@ -73,8 +73,7 @@ export function buildEmailHtml({
   const rawCli = remediationCli || `npx cavdax mcp -> revalidate_decision("${breakingSourceId}", "${decisionId}")`;
   const safeCli = escapeHtml(rawCli);
 
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -84,157 +83,148 @@ export function buildEmailHtml({
     body {
       margin: 0;
       padding: 0;
-      background-color: #06080B;
-      color: #E2E8F0;
+      background-color: #000000;
+      color: #E4E4E7;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    .container {
-      max-width: 620px;
+    table {
+      border-collapse: collapse;
+    }
+    .email-container {
+      max-width: 600px;
       margin: 32px auto;
-      background-color: #0B0E14;
-      border: 1px solid #1E2533;
+      background-color: #0A0A0A;
+      border: 1px solid #27272A;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-    }
-    .header {
-      padding: 24px 28px;
-      border-bottom: 1px solid #1E2533;
-      background: linear-gradient(180deg, #10141D 0%, #0B0E14 100%);
     }
     .badge {
       display: inline-block;
       padding: 4px 10px;
       border-radius: 9999px;
       font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      background-color: rgba(239, 68, 68, 0.12);
-      color: #EF4444;
-      border: 1px solid rgba(239, 68, 68, 0.28);
+      background-color: #18181B;
+      color: #F4F4F5;
+      border: 1px solid #3F3F46;
       margin-bottom: 12px;
     }
     .title {
       margin: 0;
       font-size: 20px;
-      font-weight: 600;
+      font-weight: 700;
       color: #FFFFFF;
       letter-spacing: -0.02em;
     }
     .subtitle {
       margin: 6px 0 0 0;
       font-size: 13px;
-      color: #94A3B8;
-    }
-    .body {
-      padding: 28px;
-    }
-    .meta-box {
-      background-color: #0E121B;
-      border: 1px solid #1A2232;
-      border-radius: 8px;
-      padding: 18px;
-      margin-bottom: 24px;
-    }
-    .meta-row {
-      display: flex;
-      margin-bottom: 10px;
-      font-size: 13px;
+      color: #A1A1AA;
       line-height: 1.5;
     }
-    .meta-row:last-child {
-      margin-bottom: 0;
+    .table-box {
+      width: 100%;
+      background-color: #121217;
+      border: 1px solid #27272A;
+      border-radius: 8px;
+      margin-bottom: 24px;
     }
-    .meta-label {
-      width: 130px;
-      color: #64748B;
-      font-weight: 500;
-      text-transform: uppercase;
+    .table-box td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1C1C22;
+      font-size: 13px;
+      vertical-align: top;
+    }
+    .table-box tr:last-child td {
+      border-bottom: none;
+    }
+    .label-col {
+      width: 140px;
+      color: #71717A;
+      font-weight: 600;
       font-size: 11px;
+      text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .meta-value {
-      flex: 1;
-      color: #F1F5F9;
+    .val-col {
+      color: #F4F4F5;
       font-weight: 500;
     }
-    .highlight-red {
-      color: #F87171;
-      font-weight: 600;
-    }
     .code-block {
-      background-color: #040608;
-      border: 1px solid #1E2533;
+      background-color: #050507;
+      border: 1px solid #27272A;
       border-radius: 6px;
       padding: 14px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12px;
-      color: #38BDF8;
+      color: #E4E4E7;
       overflow-x: auto;
       white-space: pre-wrap;
       word-break: break-all;
-      margin: 16px 0 24px 0;
+      margin: 10px 0 24px 0;
     }
     .section-title {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      color: #94A3B8;
+      color: #71717A;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      margin: 20px 0 8px 0;
+      margin: 20px 0 0 0;
     }
     .cta-button {
       display: inline-block;
       width: 100%;
       text-align: center;
       box-sizing: border-box;
-      padding: 12px 20px;
-      background-color: #D9A353;
-      color: #0B0E14;
-      font-weight: 600;
-      font-size: 14px;
+      padding: 13px 24px;
+      background-color: #FFFFFF;
+      color: #000000;
+      font-weight: 700;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       text-decoration: none;
-      border-radius: 6px;
-      transition: background-color 0.15s ease;
+      border-radius: 8px;
     }
     .footer {
       padding: 20px 28px;
-      border-top: 1px solid #1E2533;
-      background-color: #080A0F;
+      border-top: 1px solid #27272A;
+      background-color: #050507;
       font-size: 11px;
-      color: #475569;
+      color: #52525B;
       line-height: 1.6;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
+  <div class="email-container">
+    <div style="padding: 24px 28px; border-bottom: 1px solid #27272A; background-color: #0C0C0F;">
       <div class="badge">Gate Refusal Alert</div>
       <h1 class="title">Architectural Divergence Detected</h1>
-      <p class="subtitle">An incoming change has superseded an architecture decision in <strong>${safeRepo}</strong>.</p>
+      <p class="subtitle">An incoming change has superseded an architectural invariant in <strong>${safeRepo}</strong>.</p>
     </div>
-    <div class="body">
-      <div class="meta-box">
-        <div class="meta-row">
-          <span class="meta-label">Repository:</span>
-          <span class="meta-value">${safeRepo}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Broken Decision:</span>
-          <span class="meta-value highlight-red">${safeDecisionId} — ${safeDecisionTitle}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Superseded By:</span>
-          <span class="meta-value">${safeBreakingSourceId} — ${safeBreakingSourceTitle}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Gate Verdict:</span>
-          <span class="meta-value highlight-red">BLOCKED_SUPERSEDED_SOURCE</span>
-        </div>
-      </div>
+    <div style="padding: 28px;">
+      <table class="table-box" role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td class="label-col">Repository</td>
+          <td class="val-col">${safeRepo}</td>
+        </tr>
+        <tr>
+          <td class="label-col">Invalidated Decision</td>
+          <td class="val-col" style="color: #FFFFFF; font-weight: 600;">${safeDecisionId} — ${safeDecisionTitle}</td>
+        </tr>
+        <tr>
+          <td class="label-col">Superseded By</td>
+          <td class="val-col">${safeBreakingSourceId} — ${safeBreakingSourceTitle}</td>
+        </tr>
+        <tr>
+          <td class="label-col">Gate Verdict</td>
+          <td class="val-col" style="font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 700; color: #FFFFFF;">BLOCKED_SUPERSEDED_SOURCE</td>
+        </tr>
+      </table>
 
       <div class="section-title">Causal Invalidation Traversal</div>
       <div class="code-block">${safeViolationPath}</div>
@@ -242,8 +232,8 @@ export function buildEmailHtml({
       <div class="section-title">Remediation Directive (MCP / CLI)</div>
       <div class="code-block">${safeCli}</div>
 
-      <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 20px;">
-        AI coding agents attempting to write code grounded in <code>${safeDecisionId}</code> are now <strong>hard-rejected</strong> by the CAVDAX Causal Gate until revalidated against <code>${safeBreakingSourceId}</code>.
+      <p style="font-size: 13px; color: #A1A1AA; line-height: 1.5; margin: 0 0 20px 0;">
+        Autonomous coding agents attempting to write code grounded in <code style="font-family: ui-monospace, SFMono-Regular, monospace; color: #FFFFFF; background-color: #18181B; padding: 2px 6px; border-radius: 4px; border: 1px solid #27272A;">${safeDecisionId}</code> are hard-rejected by the CAVDAX Causal Gate until revalidated against <code style="font-family: ui-monospace, SFMono-Regular, monospace; color: #FFFFFF; background-color: #18181B; padding: 2px 6px; border-radius: 4px; border: 1px solid #27272A;">${safeBreakingSourceId}</code>.
       </p>
 
       <a href="${resolvedHudUrl}" class="cta-button" target="_blank" rel="noopener noreferrer">
@@ -252,12 +242,11 @@ export function buildEmailHtml({
     </div>
     <div class="footer">
       This notification was dispatched automatically by CAVDAX Causal GraphBLAS Engine for <strong>${safeRepo}</strong>.<br>
-      To modify alert thresholds or unsubscribe, update Notification Preferences in your CAVDAX developer settings.
+      To modify alert thresholds, update Notification Preferences in your CAVDAX developer settings.
     </div>
   </div>
 </body>
-</html>
-  `;
+</html>`;
 }
 
 /**
