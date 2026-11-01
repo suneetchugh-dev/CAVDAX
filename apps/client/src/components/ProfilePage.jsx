@@ -408,6 +408,14 @@ export default function ProfilePage({
         try {
           localStorage.setItem('cavdax_tier', 'free');
           window.dispatchEvent(new CustomEvent('cavdax:tier-changed', { detail: { tier: 'free' } }));
+          if (localStorage.getItem('cavdax_sponsor_is_evaluation') === 'true') {
+            localStorage.removeItem('cavdax_is_sponsor');
+            localStorage.removeItem('cavdax_sponsor_tier');
+            localStorage.removeItem('cavdax_evaluation_sponsor_tier');
+            localStorage.removeItem('cavdax_sponsor_is_evaluation');
+            setSponsorTierLabel(null);
+            window.dispatchEvent(new CustomEvent('cavdax:sponsor-registered', { detail: null }));
+          }
         } catch {}
         if (onSelectTier) onSelectTier('free');
       }
@@ -1050,7 +1058,7 @@ export default function ProfilePage({
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>Agent write-interception &amp; guided repair</span>
+                  <span>Write-interception &amp; guided repair</span>
                 </li>
               </ul>
               <button
@@ -1180,11 +1188,11 @@ export default function ProfilePage({
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                  <span>GitHub Org OAuth &amp; tamper-evident audit ledger</span>
+                  <span>Org OAuth &amp; signed audit ledger</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                  <span>Targeted high-availability architecture &amp; team support</span>
+                  <span>High-availability SLA &amp; team support</span>
                 </li>
               </ul>
               <button
@@ -1879,7 +1887,7 @@ export default function ProfilePage({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Agent write-interception &amp; guided repair</span>
+                <span>Write-interception &amp; guided repair</span>
               </li>
             </ul>
             <button
@@ -2009,11 +2017,11 @@ export default function ProfilePage({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>GitHub Org OAuth &amp; tamper-evident audit ledger</span>
+                <span>Org OAuth &amp; signed audit ledger</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                <span>Targeted high-availability architecture &amp; team support</span>
+                <span>High-availability SLA &amp; team support</span>
               </li>
             </ul>
             <button
