@@ -3049,6 +3049,13 @@ const simulateAlertLimiter = rateLimit({
   message: { success: false, error: 'RATE_LIMIT_EXCEEDED: Maximum 6 simulation alerts per 10 minutes.' }
 });
 
+// RFC 5322 compliant email validator
+const RFC5322_EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
+// In-memory recipient cooldown map to prevent harassment and quota exhaustion: recipient -> timestamp
+const simulationRecipientCooldown = new Map();
+const SIMULATION_RECIPIENT_COOLDOWN_MS = 60 * 1000; // 60 seconds per recipient
+
 app.post('/api/alerts/simulate-invalidation', simulateAlertLimiter, async (req, res) => {
   const {
     repo = 'acme-inventory',
@@ -3064,9 +3071,31 @@ app.post('/api/alerts/simulate-invalidation', simulateAlertLimiter, async (req, 
   const savedState = loadSystemState();
   const userPrefs = savedState.notificationPreferences?.[login];
 
-  const recipient = (targetEmail && targetEmail.includes('@'))
-    ? targetEmail.trim()
-    : (userPrefs?.targetEmail || user?.email || 'suneetchugh@gmail.com');
+  // Resolve and validate recipient strictly
+  let recipient = null;
+  if (targetEmail && typeof targetEmail === 'string') {
+    const trimmed = targetEmail.trim().toLowerCase();
+    if (!RFC5322_EMAIL_REGEX.test(trimmed)) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_EMAIL_FORMAT: The provided targetEmail is not a valid email address.'
+      });
+    }
+    recipient = trimmed;
+  } else {
+    recipient = (userPrefs?.targetEmail || user?.email || 'suneetchugh@gmail.com').toLowerCase().trim();
+  }
+
+  // Recipient cooldown enforcement (60 seconds per recipient)
+  const lastDispatched = simulationRecipientCooldown.get(recipient);
+  const now = Date.now();
+  if (lastDispatched && (now - lastDispatched < SIMULATION_RECIPIENT_COOLDOWN_MS)) {
+    const remainingSec = Math.ceil((SIMULATION_RECIPIENT_COOLDOWN_MS - (now - lastDispatched)) / 1000);
+    return res.status(429).json({
+      success: false,
+      error: `RECIPIENT_COOLDOWN_ACTIVE: An alert was recently dispatched to ${recipient}. Please wait ${remainingSec}s before sending another alert to this address.`
+    });
+  }
 
   const violationPaths = [
     [`Decision:${decisionId}`, 'Fact:F-Auth-v1', `Source:${breakingSourceId} (SUPERSEDED by ${breakingSourceId})`]
@@ -3106,6 +3135,7 @@ app.post('/api/alerts/simulate-invalidation', simulateAlertLimiter, async (req, 
     url: hudUrl
   }).catch((err) => console.warn('[CAVDAX WebPush] Notice:', err.message));
 
+  // Dispatch email with recipient cooldown recorded
   const emailResult = await sendInvalidationEmail({
     to: recipient,
     repo,
@@ -3118,6 +3148,10 @@ app.post('/api/alerts/simulate-invalidation', simulateAlertLimiter, async (req, 
     remediationCli: `npx cavdax mcp -> revalidate_decision("${breakingSourceId}", "${decisionId}")`,
     force: true
   });
+
+  if (emailResult.success) {
+    simulationRecipientCooldown.set(recipient, now);
+  }
 
   return res.json({
     success: true,
