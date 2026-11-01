@@ -9,33 +9,37 @@
 
 ## 1. Executive Summary of Complete Theme & Scroller Makeover
 
-## 1.0.58 Latest Session Achievements (November 2, 2026 - Causal Interception Enclave 3D Dynamic Camera Tracking, Vector Domain Glyphs, Keyboard Locks, and Wavefront Sweeps)
+## 1.0.58 Latest Session Achievements (November 2, 2026 - Causal Interception Enclave Theater HUD, Precision Fullscreen F11 Centering, Arc Reactor Wavefront & Unified Keyboard Engine)
 
 - **Dynamic 3D Camera Tracking, Orbit Tilt & Zoom (`apps/client/src/components/CausalEnclaveHub.jsx`)**:
   - Implemented bespoke 3D spatial camera poses (`STAGE_CAMERAS`) for all 9 stages: Stage 0 starts in wide architectural top perspective (`pitch: 30deg`, `ty: 22px`, `scale: 0.94`), while stages 1–8 dynamically pan, yaw, and zoom in (`scale: 1.07`–`1.08`) to center and spotlight each active subsystem tile.
   - Smooth spring camera transitions (`cubic-bezier(0.16, 1, 0.3, 1)`) with `perspective: 1400px` and `transformStyle: preserve-3d`.
-- **Domain-Accurate CAD Vector Iconography (`apps/client/src/components/CausalEnclaveHub.jsx`)**:
-  - Audited and replaced all generic AI clip art with CAD-precision domain symbols:
-    - `01 Claude Code MCP Gate`: Interception gateway with bidirectional causal barriers.
-    - `02 Cursor IDE Transceiver`: IDE code editor canvas with terminal command prompt `>_`.
-    - `03 Git AST Diff Extractor`: Authentic AST divergence branch and merge node graph.
-    - `04 ADR Invariant Store`: Architectural decision record blueprint sheet with rule invariant lines.
-    - `05 GraphBLAS Matrix Mesh`: Sparse adjacency matrix bracket notation with non-zero coordinates `[ · · ]`.
-    - `06 CI/CD Gate Harness`: Automated pipeline verification checkpoint with gate node.
-    - `07 Cryptographic Audit Trail`: Merkle chain integrity links with cryptographic key lock.
-    - `08 Closed-Loop Auto-Repair`: Continuous circular self-healing feedback cycle with direction vectors.
-- **Full Keyboard Navigation & Section Locking Parity (`apps/client/src/components/CausalEnclaveHub.jsx`)**:
-  - Added full arrow key locking matching `CausalSolutionScroller.jsx`:
-    - `ArrowRight` / `ArrowLeft`: Navigate through stages sequentially (`00` to `08`).
-    - `ArrowDown` / `ArrowUp` / `PageDown` / `PageUp` / `Space`: Browse within the enclave and smoothly unlock to adjacent sections (`#causal-loop-section` downward and `#problem-section` upward).
-    - Added input/textarea/select focus guards so form interactions never trigger accidental jumps.
-- **Arc Reactor Mark VI Core Wavefronts & Zero-Blur Elevation (`apps/client/src/components/CausalEnclaveHub.jsx`, `apps/client/scripts/patch-hairline.js`)**:
-  - Replaced raster filters and GPU texture scaling (`scale: 1.12`) with pure vector specular stroke layering (`strokeWidth="3.2"` and `strokeWidth="2.0"`), guaranteeing 100% vector-sharp graphics at any screen DPI.
-  - Added concentric squircle wavefront ripples (`.squircle-pulse-1`, `.squircle-pulse-2`) that expand and fade outward across the deck when CORE is active or hovered.
-  - Patched upstream `@lucasmarkes/hairline` to eliminate `leave: () => setActive(-1)` canvas-leave slab drops, keeping React active state and 3D slab elevation in permanent lockstep.
-- **Production Build & Verification**:
-  - Tested production build (`npm run build`) in `apps/client`, passing cleanly in 22.12s with zero bundle errors.
-  - Verified live in browser across multiple stages via Chrome DevTools MCP.
+- **Solitary Isometric Elevation & Upstream Hairline Guard (`apps/client/src/components/CausalEnclaveHub.jsx`, `apps/client/scripts/patch-hairline.js`, `package.json`)**:
+  - Patched `@lucasmarkes/hairline` to enforce **solitary elevation**: hovering or activating any stage elevates strictly that solitary node along its isometric vector axis (`restCoord` vs `elevatedCoord`), eliminating adjacent slab lift and multi-node displacement.
+  - Bound patch execution directly into the build pipeline: `"build": "node scripts/patch-hairline.js && vite build"`, guaranteeing CI/CD immunity even when `npm ci --ignore-scripts` is invoked.
+- **Domain-Accurate CAD Vector Iconography & Zero-Blur Rendering (`apps/client/src/components/CausalEnclaveHub.jsx`)**:
+  - Eliminated fuzzy GPU scaling and drop-shadow blur artifacts by switching to pure vector SVG path rendering with sub-pixel SVG filters (`feDropShadow dx="0" dy="0" stdDeviation="0.4"`).
+  - Engineered authentic CAD domain symbols for all 8 periphery nodes: `01 Claude Code MCP Gate`, `02 Cursor IDE Transceiver`, `03 Git AST Diff Extractor`, `04 ADR Invariant Store`, `05 GraphBLAS Matrix Mesh`, `06 CI/CD Gate Harness`, `07 Cryptographic Audit Trail`, `08 Closed-Loop Auto-Repair`.
+- **Multi-Tier 1-by-1 Concentric Squircle Wavefront (`apps/client/src/components/CausalEnclaveHub.jsx`)**:
+  - Replaced repetitive flashing with an elegant, slow-pulsed $4.2\text{s}$ sequential wave propagation cycle centered around the Iron Man Arc Reactor Core:
+    - $t = 0.0\text{s} - 0.95\text{s}$: Inner squircle (`SQUIRCLE_INNER`) expands to $1.42\times$ with specular glow.
+    - $t = 0.92\text{s} - 1.90\text{s}$: Mid squircle (`SQUIRCLE_MID`) propagates outward to $1.36\times$.
+    - $t = 1.85\text{s} - 3.45\text{s}$: Outermost squircle (`SQUIRCLE_OUTER`) launches an expansive Expanding WaveFront sweep across the deck to $1.68\times$ with a trailing specular echo to $1.78\times$.
+    - $t = 3.45\text{s} - 4.20\text{s}$: Settling breath before the subsequent impulse cycle.
+- **Precision Fullscreen (F11) Viewport Docking (`apps/client/src/components/CausalEnclaveHub.jsx`)**:
+  - Fixed premature locking in F11 Fullscreen 1080p mode by replacing the loose $42\%$ viewport window with high-precision center alignment: `diffCenter < Math.min(80, viewportHeight * 0.08)`.
+  - Section locks strictly when occupying $\ge 92\%$ of the viewport, eliminating sudden early yanking from both top (scrolling down from Bento) and bottom (scrolling up from Causal Loop).
+- **Unified Proactive Keyboard Navigation & Boundary Buffer (`apps/client/src/components/CausalEnclaveHub.jsx`)**:
+  - Added proactive keyboard docking: entering the view zone ($35\% - 65\%$ viewport) and pressing `ArrowDown`, `PageDown`, `Space`, or `ArrowRight` cleanly locks and docks into `CORE` (Step 0); entering from below and pressing `ArrowUp` docks at Node 08.
+  - Removed focus-trapping `tabIndex={0}` from the root `<section>`, preventing Chromium from swallowing window scroll events.
+  - Integrated $420\text{ms}$ debouncing via `isTransitioningRef.current` to protect against key-repeat spam.
+  - Added double-impulse exit safety buffer (`exitAttemptRef.current`) on boundary nodes (Stage 00 and Stage 08) preventing accidental blow-throughs.
+- **Lenis Global Scroll Coordination (`apps/client/src/App.jsx`, `apps/client/src/components/LandingPage.jsx`)**:
+  - Resolved the circular lock-unlock oscillation by adding `#enclave-hub-section` and `options.isInternalDock` to `isCausalDock` in `App.jsx`, ensuring internal dock alignments are never misclassified as external user navigations.
+  - Registered `enclave-hub-section` in `LandingPage.jsx`'s `IntersectionObserver` and in `ArchitecturalRailScrubber.jsx` on the landing page (`04 · Causal Enclave`).
+- **Dual-Axis Forensic Security & Hardening + Devil's Advocate Verification**:
+  - Conducted full STRIDE threat modeling, XSS/injection scans, and secret leak verification. Clean attestation across all 7 Forensic Attack Vectors.
+  - Production bundle verified with `npm run build` in 30.2s with exit code 0.
 
 ## 1.0.57 Latest Session Achievements (November 1, 2026 - Security Hardening, Segmented Backer Filtering, Bounded Scroll Viewport & Dead Link Remediation)
 

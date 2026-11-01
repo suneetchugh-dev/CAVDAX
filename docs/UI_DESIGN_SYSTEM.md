@@ -2938,3 +2938,51 @@ To prevent CAVDAX from degrading into generic AI-generated template patterns, al
    - Feature dynamic central telemetry readouts (`100% ALLOCATED` by default, updating to slice details on hover) and bi-directional hover linkage between chart arcs and legend rows.
 3. **Continuous Proportional Segmented Line**:
    - Provide a compact single-line stacked strip (height 14px) with hairline segment dividers and micro-metric badges below for high-density dashboard layouts.
+
+---
+
+## 39. The Causal Interception Enclave: 3D Isometric Theater, Solitary Elevation Math & Concentric Wavefront Propagation
+
+The **Causal Interception Enclave** (`#enclave-hub-section`) is the centerpiece architectural theater of CAVDAX, bridging the upstream problem space and the downstream causal execution loop.
+
+### 39.1 Solitary Elevation Geometry & Isometric Coordinate Math
+1. **Single-Node Elevation Rule (Anti-Displacement Invariant)**:
+   - When a node is hovered or activated, **strictly that solitary node elevates** along its 3D isometric vector axis.
+   - All adjacent and neighboring slabs must remain at their ground-plane rest coordinates (`restCoord`), eliminating card displacement and distracting multi-tile lifting.
+2. **Discrete Rest vs. Elevated Coordinates**:
+   - Central Arc Reactor Core: `coord: [200, 182]`, `restCoord: [200, 169.66]`, `elevatedCoord: [200, 169.66]`.
+   - Periphery Nodes (01..08): Elevate vertically along the isometric $Y$-axis by exactly $-42\text{px}$ (e.g. Node 01: `restCoord: [204.98, 112.57]` $\to$ `elevatedCoord: [204.98, 70.50]`).
+3. **Upstream Hairline Patching Contract**:
+   - Standard `@lucasmarkes/hairline` forces all nodes to elevate on canvas hover and drops all tiles on canvas leave (`leave: () => setActive(-1)`).
+   - Our build pipeline patches the library via `scripts/patch-hairline.js` (bound pre-build via `"build": "node scripts/patch-hairline.js && vite build"`), exposing `setActiveTile(idx)` and decoupling pointer canvas departure from React active state.
+
+### 39.2 Dynamic 3D Spatial Camera Tracking
+1. **Perspective Deck Parameters**:
+   - Root theater container: `perspective: 1400px`, `transformStyle: preserve-3d`.
+   - Camera transitions: `transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1)`.
+2. **Stage Poses (`STAGE_CAMERAS`)**:
+   - `Stage 0 (CORE)`: Architectural top perspective (`pitch: 30deg`, `ty: 22px`, `scale: 0.94`, `tx: 0px`).
+   - `Stages 01..08`: Dynamic orbital tilts focusing and zooming into the active tile (`pitch: 24deg - 32deg`, `scale: 1.07 - 1.08`, `tx: -12px to +14px`).
+
+### 39.3 Concentric Squircle Wavefront Propagation
+1. **Sequential 1-by-1 Wave Cycle ($4.2\text{s}$ Total)**:
+   - Rather than flashing repetitively, wave pulses propagate outward sequentially from innermost to outermost:
+     - $t = 0.0\text{s} - 0.95\text{s}$: Inner squircle (`SQUIRCLE_INNER`) scales to $1.42\times$ with specular stroke.
+     - $t = 0.92\text{s} - 1.90\text{s}$: Mid squircle (`SQUIRCLE_MID`) scales to $1.36\times$.
+     - $t = 1.85\text{s} - 3.45\text{s}$: Outermost squircle (`SQUIRCLE_OUTER`) launches an expansive Expanding WaveFront sweep across the deck to $1.68\times$ with specular echo trailing to $1.78\times$.
+     - $t = 3.45\text{s} - 4.20\text{s}$: Rest and settling pause before next cycle.
+
+### 39.4 Precision Fullscreen (F11) Viewport Centering & Docking
+1. **Centering Mathematics Over Percentage Multis**:
+   - For $100\text{dvh}$ sections, thresholding on viewport multiplier percentages (e.g. $42\%$) triggers premature docking when $450\text{px}$ of the previous section is still visible on 1080p monitors.
+   - Centering is calculated strictly as absolute distance from viewport center:
+     $$\text{diffCenter} = \left| \left( \text{rect.top} + \frac{\text{rect.height}}{2} \right) - \frac{\text{viewportHeight}}{2} \right| = |\text{rect.top}|$$
+   - Docking catches strictly when $\text{diffCenter} < \min(80, \text{viewportHeight} \times 0.08)$ (filling $\ge 92\%$ of the screen).
+
+### 39.5 Unified Keyboard Navigation & Exit Handshakes
+1. **Proactive Keyboard Docking**:
+   - Entering the view zone ($35\% \le \text{viewport} \le 65\%$) via `ArrowDown`, `PageDown`, `Space`, or `ArrowRight` locks directly into Stage 0 (`CORE`); entering from below via `ArrowUp` or `PageUp` docks at Stage 08.
+2. **Boundary Protection (Double Impulse)**:
+   - Pressing `ArrowDown` on Stage 08 or `ArrowUp` on Stage 00 requires a secondary key stroke within $650\text{ms}$ to unlock, preventing accidental scroll blow-through.
+3. **Lenis Global Handshake**:
+   - All internal dockings specify `isInternalDock: true` and are exempted from global programmatic scroll interception flags in `App.jsx`, preventing rapid lock-unlock oscillations.
