@@ -113,8 +113,10 @@ const ENCLAVE_STAGES = [
   }
 ];
 
-// Authentic isometric squircle contour matching the physical center slab lid
-const SQUIRCLE_CONTOUR = "M 2.49 7.47 L 1.96 7.69 L 1.35 7.85 L 0.69 7.95 L 0 7.98 L -0.69 7.95 L -1.35 7.85 L -1.96 7.69 L -2.49 7.47 L -14.93 1.24 L -15.37 0.98 L -15.7 0.67 L -15.9 0.34 L -15.97 0 L -15.9 -0.34 L -15.7 -0.67 L -15.37 -0.98 L -14.93 -1.24 L -2.49 -7.47 L -1.96 -7.69 L -1.35 -7.85 L -0.69 -7.95 L 0 -7.98 L 0.69 -7.95 L 1.35 -7.85 L 1.96 -7.69 L 2.49 -7.47 L 14.93 -1.24 L 15.37 -0.98 L 15.7 -0.67 L 15.9 -0.34 L 15.97 0 L 15.9 0.34 L 15.7 0.67 L 15.37 0.98 L 14.93 1.24 Z";
+// Authentic isometric concentric squircle contours matching all 3 physical tiers of the center slab
+const SQUIRCLE_INNER = "M 2.49 7.47 L 1.96 7.69 L 1.35 7.85 L 0.69 7.95 L 0 7.98 L -0.69 7.95 L -1.35 7.85 L -1.96 7.69 L -2.49 7.47 L -14.93 1.24 L -15.37 0.98 L -15.7 0.67 L -15.9 0.34 L -15.97 0 L -15.9 -0.34 L -15.7 -0.67 L -15.37 -0.98 L -14.93 -1.24 L -2.49 -7.47 L -1.96 -7.69 L -1.35 -7.85 L -0.69 -7.95 L 0 -7.98 L 0.69 -7.95 L 1.35 -7.85 L 1.96 -7.69 L 2.49 -7.47 L 14.93 -1.24 L 15.37 -0.98 L 15.7 -0.67 L 15.9 -0.34 L 15.97 0 L 15.9 0.34 L 15.7 0.67 L 15.37 0.98 L 14.93 1.24 Z";
+const SQUIRCLE_MID = "M 6.51 13.64 L 6.07 13.85 L 5.84 13.95 L 5.28 14.14 L 4.65 14.35 L 4.45 14.40 L 3.72 14.55 L 2.94 14.72 L 2.76 14.74 L 1.92 14.83 L 0.00 14.92 L -1.92 14.83 L -2.76 14.74 L -2.94 14.72 L -3.72 14.55 L -4.45 14.40 L -4.65 14.35 L -5.28 14.14 L -5.84 13.95 L -6.07 13.85 L -6.51 13.64 L -30.63 1.57 L -30.91 1.40 L -31.15 1.18 L -31.34 0.92 L -31.49 0.63 L -31.58 0.32 L -31.61 0.00 L -31.58 -0.32 L -31.49 -0.64 L -31.34 -0.93 L -31.15 -1.18 L -30.91 -1.40 L -30.63 -1.57 L -6.51 -13.64 L -6.07 -13.86 L -5.84 -13.95 L -5.28 -14.14 L -4.65 -14.35 L -4.45 -14.40 L -3.72 -14.56 L -2.94 -14.72 L -2.76 -14.74 L -1.92 -14.83 L 0.00 -14.92 L 1.92 -14.83 L 2.76 -14.74 L 2.94 -14.72 L 3.72 -14.56 L 4.45 -14.40 L 4.65 -14.35 L 5.28 -14.14 L 5.84 -13.95 L 6.07 -13.86 L 6.51 -13.64 L 30.63 -1.57 L 30.91 -1.40 L 31.15 -1.18 L 31.34 -0.93 L 31.49 -0.64 L 31.58 -0.32 L 31.61 0.00 L 31.58 0.32 L 31.49 0.63 L 31.34 0.92 L 31.15 1.18 L 30.91 1.40 L 30.63 1.57 Z";
+const SQUIRCLE_OUTER = "M 7.69 16.00 L 7.09 16.30 L 6.86 16.39 L 6.12 16.64 L 5.34 16.90 L 5.14 16.96 L 4.25 17.14 L 3.34 17.33 L 3.16 17.36 L 2.18 17.45 L 0.00 17.56 L -2.18 17.45 L -3.16 17.36 L -3.34 17.33 L -4.25 17.14 L -5.14 16.96 L -5.34 16.90 L -6.12 16.64 L -6.86 16.39 L -7.09 16.30 L -7.69 16.00 L -35.07 2.31 L -35.60 2.04 L -35.87 1.88 L -36.25 1.59 L -36.49 1.41 L -36.74 1.19 L -36.93 0.93 L -37.08 0.64 L -37.17 0.32 L -37.20 0.00 L -37.17 -0.33 L -37.08 -0.64 L -36.93 -0.93 L -36.74 -1.19 L -36.49 -1.41 L -36.25 -1.59 L -35.87 -1.88 L -35.60 -2.04 L -35.07 -2.31 L -7.69 -16.00 L -7.09 -16.30 L -6.86 -16.40 L -6.12 -16.64 L -5.34 -16.90 L -5.14 -16.96 L -4.25 -17.14 L -3.34 -17.33 L -3.16 -17.36 L -2.18 -17.45 L 0.00 -17.56 L 2.18 -17.45 L 3.16 -17.36 L 3.34 -17.33 L 4.25 -17.14 L 5.14 -16.96 L 5.34 -16.90 L 6.12 -16.64 L 6.86 -16.40 L 7.09 -16.30 L 7.69 -16.00 L 35.07 -2.31 L 35.60 -2.04 L 35.87 -1.88 L 36.25 -1.59 L 36.49 -1.41 L 36.74 -1.19 L 36.93 -0.93 L 37.08 -0.64 L 37.17 -0.33 L 37.20 0.00 L 37.17 0.32 L 37.08 0.64 L 36.93 0.93 L 36.74 1.19 L 36.49 1.41 L 36.25 1.59 L 35.87 1.88 L 35.60 2.04 L 35.07 2.31 Z";
 
 // 3D Camera Angles: Cinematic dynamic tracking, orbit tilt, and zoom for each subsystem stage
 const STAGE_CAMERAS = [
@@ -805,59 +807,160 @@ export default function CausalEnclaveHub() {
                 onPointerLeave={() => setIsHoveredCore(false)}
                 className="cursor-pointer pointer-events-auto"
               >
-                {/* Concentric Squircle Causal Wavefront Propagation on Authentic Outline */}
+                {/* Prominent Cascading Ripple Wave Propagation Across ALL Squircles & Outlines */}
                 {(isCoreActive || isHoveredCore) && (
                   <g className="pointer-events-none select-none">
                     <style>{`
-                      @keyframes squircle-wave-1 {
-                        0% { transform: scale(1); opacity: 0.75; }
-                        100% { transform: scale(1.48); opacity: 0; }
+                      @keyframes squircle-ripple-expand {
+                        0% { transform: scale(1); opacity: 0.95; }
+                        55% { opacity: 0.65; }
+                        100% { transform: scale(1.36); opacity: 0; }
                       }
-                      @keyframes squircle-wave-2 {
-                        0% { transform: scale(1); opacity: 0.75; }
-                        100% { transform: scale(1.48); opacity: 0; }
+                      @keyframes squircle-rim-breathe {
+                        0%, 100% { opacity: 0.40; }
+                        50% { opacity: 0.95; }
                       }
-                      .squircle-pulse-1 {
-                        animation: squircle-wave-1 2.4s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
+                      .squircle-wave-inner-1 {
+                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 0s;
                         transform-origin: 0px 0px;
                       }
-                      .squircle-pulse-2 {
-                        animation: squircle-wave-2 2.4s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 1.2s;
+                      .squircle-wave-inner-2 {
+                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 1.3s;
                         transform-origin: 0px 0px;
+                      }
+                      .squircle-wave-mid-1 {
+                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 0.38s;
+                        transform-origin: 0px 0px;
+                      }
+                      .squircle-wave-mid-2 {
+                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 1.68s;
+                        transform-origin: 0px 0px;
+                      }
+                      .squircle-wave-outer-1 {
+                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 0.76s;
+                        transform-origin: 0px 0px;
+                      }
+                      .squircle-wave-outer-2 {
+                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 2.06s;
+                        transform-origin: 0px 0px;
+                      }
+                      .squircle-breath-glow {
+                        animation: squircle-rim-breathe 2.6s ease-in-out infinite;
                       }
                     `}</style>
 
-                    {/* Specular Glow Accent directly highlighting the existing slab squircle rim */}
+                    {/* ── Tier 1: Inner Squircle Rim (Luminous Active Outline & Expanding Waves) ── */}
                     <path
-                      d={SQUIRCLE_CONTOUR}
+                      d={SQUIRCLE_INNER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-950 dark:text-white squircle-breath-glow"
+                    />
+                    <path
+                      d={SQUIRCLE_INNER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3.2"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/20 dark:text-white/30 hidden dark:block squircle-breath-glow"
+                    />
+                    <path
+                      d={SQUIRCLE_INNER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-950/80 dark:text-white/90 squircle-wave-inner-1"
+                    />
+                    <path
+                      d={SQUIRCLE_INNER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-950/80 dark:text-white/90 squircle-wave-inner-2"
+                    />
+
+                    {/* ── Tier 2: Mid Squircle Rim (Intermediate Deck Cascade) ── */}
+                    <path
+                      d={SQUIRCLE_MID}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/80 dark:text-white/80 squircle-breath-glow"
+                    />
+                    <path
+                      d={SQUIRCLE_MID}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.8"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/15 dark:text-white/20 hidden dark:block squircle-breath-glow"
+                    />
+                    <path
+                      d={SQUIRCLE_MID}
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="1.2"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-900/70 dark:text-white/80"
+                      className="text-slate-900/70 dark:text-white/80 squircle-wave-mid-1"
                     />
-
-                    {/* Concentric Wavefront 1 (Exact Isometric Squircle Contour) */}
                     <path
-                      d={SQUIRCLE_CONTOUR}
+                      d={SQUIRCLE_MID}
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="0.9"
+                      strokeWidth="1.2"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-900/40 dark:text-white/50 squircle-pulse-1"
+                      className="text-slate-900/70 dark:text-white/80 squircle-wave-mid-2"
                     />
 
-                    {/* Concentric Wavefront 2 (Exact Isometric Squircle Contour) */}
+                    {/* ── Tier 3: Outer Slab Contour (Perimeter Wave Outpouring to Grid Lines) ── */}
                     <path
-                      d={SQUIRCLE_CONTOUR}
+                      d={SQUIRCLE_OUTER}
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="0.9"
+                      strokeWidth="1.3"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-900/40 dark:text-white/50 squircle-pulse-2"
+                      className="text-slate-800/70 dark:text-white/70 squircle-breath-glow"
+                    />
+                    <path
+                      d={SQUIRCLE_OUTER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.6"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/10 dark:text-white/15 hidden dark:block squircle-breath-glow"
+                    />
+                    <path
+                      d={SQUIRCLE_OUTER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.1"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-800/60 dark:text-white/70 squircle-wave-outer-1"
+                    />
+                    <path
+                      d={SQUIRCLE_OUTER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.1"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-800/60 dark:text-white/70 squircle-wave-outer-2"
                     />
                   </g>
                 )}
