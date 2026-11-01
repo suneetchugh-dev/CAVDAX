@@ -807,49 +807,80 @@ export default function CausalEnclaveHub() {
                 onPointerLeave={() => setIsHoveredCore(false)}
                 className="cursor-pointer pointer-events-auto"
               >
-                {/* Prominent Cascading Ripple Wave Propagation Across ALL Squircles & Outlines */}
+                {/* 1-by-1 Sequential Squircle Wavefront Propagation (Core -> Inner -> Mid -> Outermost Expanding Wavefront) */}
                 {(isCoreActive || isHoveredCore) && (
                   <g className="pointer-events-none select-none">
                     <style>{`
-                      @keyframes squircle-ripple-expand {
-                        0% { transform: scale(1); opacity: 0.95; }
-                        55% { opacity: 0.65; }
+                      /* 4.2s Calm Deliberate Cycle: 1 by 1 Sequential Propagation */
+                      @keyframes wave-inner-step {
+                        0% { transform: scale(1); opacity: 0; }
+                        1% { transform: scale(1); opacity: 0.95; }
+                        23% { transform: scale(1.42); opacity: 0; }
+                        100% { transform: scale(1.42); opacity: 0; }
+                      }
+                      @keyframes wave-mid-step {
+                        0%, 21% { transform: scale(1); opacity: 0; }
+                        22% { transform: scale(1); opacity: 0.95; }
+                        45% { transform: scale(1.36); opacity: 0; }
                         100% { transform: scale(1.36); opacity: 0; }
                       }
-                      @keyframes squircle-rim-breathe {
-                        0%, 100% { opacity: 0.40; }
-                        50% { opacity: 0.95; }
+                      @keyframes wave-outer-step {
+                        0%, 43% { transform: scale(1); opacity: 0; }
+                        44% { transform: scale(1); opacity: 1.0; }
+                        72% { opacity: 0.55; }
+                        82% { transform: scale(1.68); opacity: 0; }
+                        100% { transform: scale(1.68); opacity: 0; }
                       }
-                      .squircle-wave-inner-1 {
-                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 0s;
+                      @keyframes wave-outer-echo {
+                        0%, 50% { transform: scale(1); opacity: 0; }
+                        51% { transform: scale(1); opacity: 0.75; }
+                        78% { opacity: 0.35; }
+                        88% { transform: scale(1.78); opacity: 0; }
+                        100% { transform: scale(1.78); opacity: 0; }
+                      }
+                      @keyframes glow-inner-conduct {
+                        0%, 26%, 100% { opacity: 0.30; }
+                        8% { opacity: 0.95; }
+                      }
+                      @keyframes glow-mid-conduct {
+                        0%, 20%, 48%, 100% { opacity: 0.30; }
+                        32% { opacity: 0.95; }
+                      }
+                      @keyframes glow-outer-conduct {
+                        0%, 42%, 84%, 100% { opacity: 0.30; }
+                        54% { opacity: 0.95; }
+                      }
+
+                      .squircle-step-inner {
+                        animation: wave-inner-step 4.2s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
                         transform-origin: 0px 0px;
                       }
-                      .squircle-wave-inner-2 {
-                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 1.3s;
+                      .squircle-step-mid {
+                        animation: wave-mid-step 4.2s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
                         transform-origin: 0px 0px;
                       }
-                      .squircle-wave-mid-1 {
-                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 0.38s;
+                      .squircle-step-outer {
+                        animation: wave-outer-step 4.2s cubic-bezier(0.18, 0.85, 0.25, 1) infinite;
                         transform-origin: 0px 0px;
                       }
-                      .squircle-wave-mid-2 {
-                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 1.68s;
+                      .squircle-step-outer-echo {
+                        animation: wave-outer-echo 4.2s cubic-bezier(0.18, 0.85, 0.25, 1) infinite;
                         transform-origin: 0px 0px;
                       }
-                      .squircle-wave-outer-1 {
-                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 0.76s;
-                        transform-origin: 0px 0px;
+
+                      .squircle-glow-inner {
+                        animation: glow-inner-conduct 4.2s ease-in-out infinite;
                       }
-                      .squircle-wave-outer-2 {
-                        animation: squircle-ripple-expand 2.6s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 2.06s;
-                        transform-origin: 0px 0px;
+                      .squircle-glow-mid {
+                        animation: glow-mid-conduct 4.2s ease-in-out infinite;
                       }
-                      .squircle-breath-glow {
-                        animation: squircle-rim-breathe 2.6s ease-in-out infinite;
+                      .squircle-glow-outer {
+                        animation: glow-outer-conduct 4.2s ease-in-out infinite;
                       }
                     `}</style>
 
-                    {/* ── Tier 1: Inner Squircle Rim (Luminous Active Outline & Expanding Waves) ── */}
+                    {/* ── Step 1: Smallest Nearest Squircle (Inner Core Rim) ── */}
+                    {/* Outline Accent */}
                     <path
                       d={SQUIRCLE_INNER}
                       fill="none"
@@ -857,17 +888,9 @@ export default function CausalEnclaveHub() {
                       strokeWidth="1.6"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-950 dark:text-white squircle-breath-glow"
+                      className="text-slate-950 dark:text-white squircle-glow-inner"
                     />
-                    <path
-                      d={SQUIRCLE_INNER}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3.2"
-                      vectorEffect="non-scaling-stroke"
-                      shapeRendering="geometricPrecision"
-                      className="text-slate-900/20 dark:text-white/30 hidden dark:block squircle-breath-glow"
-                    />
+                    {/* Outbound Expanding Wave */}
                     <path
                       d={SQUIRCLE_INNER}
                       fill="none"
@@ -875,19 +898,11 @@ export default function CausalEnclaveHub() {
                       strokeWidth="1.4"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-950/80 dark:text-white/90 squircle-wave-inner-1"
-                    />
-                    <path
-                      d={SQUIRCLE_INNER}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      vectorEffect="non-scaling-stroke"
-                      shapeRendering="geometricPrecision"
-                      className="text-slate-950/80 dark:text-white/90 squircle-wave-inner-2"
+                      className="text-slate-950 dark:text-white squircle-step-inner"
                     />
 
-                    {/* ── Tier 2: Mid Squircle Rim (Intermediate Deck Cascade) ── */}
+                    {/* ── Step 2: Middle Squircle (Intermediate Deck Terrace) ── */}
+                    {/* Outline Accent */}
                     <path
                       d={SQUIRCLE_MID}
                       fill="none"
@@ -895,72 +910,59 @@ export default function CausalEnclaveHub() {
                       strokeWidth="1.4"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-900/80 dark:text-white/80 squircle-breath-glow"
+                      className="text-slate-900/90 dark:text-white/90 squircle-glow-mid"
                     />
+                    {/* Outbound Expanding Wave */}
                     <path
                       d={SQUIRCLE_MID}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.8"
-                      vectorEffect="non-scaling-stroke"
-                      shapeRendering="geometricPrecision"
-                      className="text-slate-900/15 dark:text-white/20 hidden dark:block squircle-breath-glow"
-                    />
-                    <path
-                      d={SQUIRCLE_MID}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.2"
-                      vectorEffect="non-scaling-stroke"
-                      shapeRendering="geometricPrecision"
-                      className="text-slate-900/70 dark:text-white/80 squircle-wave-mid-1"
-                    />
-                    <path
-                      d={SQUIRCLE_MID}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.2"
-                      vectorEffect="non-scaling-stroke"
-                      shapeRendering="geometricPrecision"
-                      className="text-slate-900/70 dark:text-white/80 squircle-wave-mid-2"
-                    />
-
-                    {/* ── Tier 3: Outer Slab Contour (Perimeter Wave Outpouring to Grid Lines) ── */}
-                    <path
-                      d={SQUIRCLE_OUTER}
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="1.3"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-800/70 dark:text-white/70 squircle-breath-glow"
+                      className="text-slate-900 dark:text-white squircle-step-mid"
                     />
+
+                    {/* ── Step 3: Outermost Squircle (Wide Expanding WaveFront Propagation) ── */}
+                    {/* Outline Accent */}
                     <path
                       d={SQUIRCLE_OUTER}
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2.6"
+                      strokeWidth="1.5"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-900/10 dark:text-white/15 hidden dark:block squircle-breath-glow"
+                      className="text-slate-950 dark:text-white squircle-glow-outer"
                     />
+                    {/* Grand Primary Expanding Wavefront across the whole Enclave */}
                     <path
                       d={SQUIRCLE_OUTER}
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="1.1"
+                      strokeWidth="1.6"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-800/60 dark:text-white/70 squircle-wave-outer-1"
+                      className="text-slate-950 dark:text-white squircle-step-outer"
                     />
+                    {/* Specular Diffuse Glow on Wavefront */}
                     <path
                       d={SQUIRCLE_OUTER}
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="1.1"
+                      strokeWidth="3.4"
                       vectorEffect="non-scaling-stroke"
                       shapeRendering="geometricPrecision"
-                      className="text-slate-800/60 dark:text-white/70 squircle-wave-outer-2"
+                      className="text-slate-900/20 dark:text-white/35 hidden dark:block squircle-step-outer"
+                    />
+                    {/* Secondary Echo Wavefront */}
+                    <path
+                      d={SQUIRCLE_OUTER}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/80 dark:text-white/80 squircle-step-outer-echo"
                     />
                   </g>
                 )}
