@@ -413,7 +413,7 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
               playClick();
               if (onLaunchConsole) onLaunchConsole();
             }}
-            className="btn-primary inline-flex items-center gap-2 tactile-btn"
+            className="btn-primary inline-flex items-center gap-2 tactile-btn cursor-pointer"
           >
             <SlidersHorizontal size={14} />
             <span>Launch Verification Console</span>
@@ -424,10 +424,10 @@ export default function ProjectVideoPage({ onLaunchConsole, onOpenMcpPage }) {
               playClick();
               if (onOpenMcpPage) onOpenMcpPage();
             }}
-            className="group px-4 py-2 rounded-full text-xs font-mono text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 transition-colors inline-flex items-center gap-2 tactile-btn"
+            className="btn-secondary inline-flex items-center gap-2 tactile-btn group cursor-pointer"
           >
             <span>Connect Real MCP Agent</span>
-            <McpCableConnectionSvg className="text-slate-700 dark:text-slate-300" />
+            <McpCableConnectionSvg className="text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
           </button>
         </div>
       </div>

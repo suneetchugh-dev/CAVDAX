@@ -19,7 +19,7 @@ const SHORTCUT_GROUPS = [
     title: "Actions & Controls",
     items: [
       { key: "D", label: "Toggle Theme", icon: Sun, desc: "Switch between Dark and Light themes" },
-      { key: "T", label: "Tour Guide", icon: Compass, desc: "Start / Resume interactive console walkthrough" },
+      { key: "T", label: "Tour Guide", icon: Compass, desc: "Toggle tour on supported views (Console, MCP, Audit, Profile)" },
       { key: "R", label: "Reset Demo", icon: RotateCcw, desc: "Reset knowledge graph & verification pipeline" },
       { key: ",", label: "Preferences", icon: Settings, desc: "Open audio, metrics & display preferences" },
       { key: "?", label: "Shortcuts Help", icon: KeyboardIcon, desc: "Toggle this keyboard shortcuts panel" },

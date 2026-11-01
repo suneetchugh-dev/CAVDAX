@@ -539,15 +539,29 @@ export default function ConnectMcpPage({ onLaunchConsole, user: propUser, onAuth
 
 
 
-  const agentRulesSnippet = `# CAVDAX Causal Execution Gate Guardrails
+  const agentRulesSnippet = `# CAVDAX Architecture Verification Gate Guardrails
 
-Before modifying repository code, verify architectural alignment with CAVDAX:
+CRITICAL DIRECTIVE:
+You are operating in an architecture-verified repository protected by the CAVDAX MCP Gate.
+NEVER use native file-editing tools (e.g., Edit, Write, bash echo/sed) to modify source files directly.
+All codebase modifications MUST be routed through the CAVDAX MCP verification gate.
 
-1. Pre-flight check: Run \`check_intent_clearance\` with your proposed \`decision_id\` (e.g. DEC-103) before generating code to verify active provenance with zero token waste.
+EXECUTION WORKFLOW:
+1. Discovery & Context:
+   - Call \`query_causal_graph\` or inspect repository ADRs in \`docs/adrs/\` to identify governing architecture decisions (e.g., DEC-103).
 
-2. Enclosed execution: Route file edits through the \`apply_code_change\` MCP tool with the verified \`decision_id\`.
+2. Pre-Flight Intent Clearance:
+   - Call \`check_intent_clearance\` with your proposed \`decision_id\` and \`target_file\` before generating code.
+   - If clearance is APPROVED, proceed to enclosed execution.
 
-3. Fast revalidation: If CAVDAX returns BLOCKED_SUPERSEDED_SOURCE, invoke \`revalidate_decision\` with the fresh ADR before re-checking clearance.`;
+3. Enclosed Execution Gate:
+   - Execute file modifications strictly through the \`apply_code_change\` MCP tool passing \`decision_id\`, \`target_file\`, and \`patch\`.
+
+4. Invalidation & Self-Correction:
+   - If CAVDAX returns BLOCKED_DECISION_INVALIDATED or BLOCKED_SUPERSEDED_SOURCE:
+     a. Do NOT attempt direct filesystem overrides.
+     b. Call \`revalidate_decision\` with the superseding ADR to refresh the dependency graph.
+     c. Refactor your code to align with the active architectural contract before re-requesting clearance.`;
 
 
 
@@ -1346,7 +1360,7 @@ Before modifying repository code, verify architectural alignment with CAVDAX:
 
               {/* Code Pre Container */}
 
-              <pre className="p-4 text-xs font-mono overflow-x-auto leading-relaxed custom-scrollbar selection:bg-amber-500/30">
+              <pre className="p-4 text-xs font-mono overflow-x-auto leading-relaxed custom-scrollbar selection:bg-white/20">
 
                 <code>{renderSyntaxCode(activeConfig.snippet, activeClient)}</code>
 

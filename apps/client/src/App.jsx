@@ -375,7 +375,13 @@ export default function App() {
 
   // Initialize Lenis smooth scroll with Programmatic Navigation Guard
   useEffect(() => {
-    let lenis;
+    let lenis = null;
+    let rafId = null;
+    let isMounted = true;
+    let handleVisibilityChange = null;
+    let handleUserGesture = null;
+    let origWindowScrollTo = null;
+
     try {
       lenis = new Lenis({
         duration: 1.2,
@@ -406,7 +412,7 @@ export default function App() {
       };
 
       // Wrap native window.scrollTo for smooth programmatic calls (e.g. Scroll to Top)
-      const origWindowScrollTo = window.scrollTo.bind(window);
+      origWindowScrollTo = window.scrollTo.bind(window);
       window.scrollTo = (firstArg, ...rest) => {
         if (typeof firstArg === 'object' && firstArg?.behavior === 'smooth') {
           window.__isProgrammaticScroll = true;
@@ -419,16 +425,13 @@ export default function App() {
       };
 
       // User physical manual scroll immediately clears programmatic navigation flag
-      const handleUserGesture = () => {
+      handleUserGesture = () => {
         window.__isProgrammaticScroll = false;
         clearTimeout(window.__progScrollTimer);
       };
       window.addEventListener('wheel', handleUserGesture, { passive: true });
       window.addEventListener('touchstart', handleUserGesture, { passive: true });
       window.addEventListener('touchmove', handleUserGesture, { passive: true });
-
-      let rafId = null;
-      let isMounted = true;
 
       function raf(time) {
         if (!isMounted) return;
@@ -439,7 +442,7 @@ export default function App() {
       }
       rafId = requestAnimationFrame(raf);
 
-      const handleVisibilityChange = () => {
+      handleVisibilityChange = () => {
         if (document.hidden) {
           if (rafId) {
             cancelAnimationFrame(rafId);
@@ -450,11 +453,23 @@ export default function App() {
         }
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
-    } catch {}
+    } catch (err) {
+      console.warn('[Lenis] Init error:', err);
+    }
 
     return () => {
       isMounted = false;
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (handleVisibilityChange) {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      if (handleUserGesture) {
+        window.removeEventListener('wheel', handleUserGesture);
+        window.removeEventListener('touchstart', handleUserGesture);
+        window.removeEventListener('touchmove', handleUserGesture);
+      }
+      if (origWindowScrollTo) {
+        window.scrollTo = origWindowScrollTo;
+      }
       if (rafId) {
         cancelAnimationFrame(rafId);
         rafId = null;
@@ -543,17 +558,16 @@ export default function App() {
         return;
       }
 
-      // 5. Universal Tour Guide shortcut: T (Available for all views)
+      // 5. Contextual Tour Guide shortcut: T (Active ONLY on views that support a tour guide)
       if (e.key === 't' || e.key === 'T') {
+        const tourSupportedTabs = ['console', 'dev', 'mcp', 'audit', 'profile'];
+        if (!tourSupportedTabs.includes(activeTab)) {
+          // On Overview, Walkthrough, Team, Support, etc.: Do NOT route-hijack
+          return;
+        }
         e.preventDefault();
         playClick();
-        if (['console', 'dev', 'mcp', 'audit', 'profile'].includes(activeTab)) {
-          setIsTourOpen(prev => !prev);
-        } else {
-          // If on Overview, Demo or Team: navigate to Console and launch the Tour
-          handleSelectTab('console');
-          setTimeout(() => setIsTourOpen(true), 150);
-        }
+        setIsTourOpen(prev => !prev);
         return;
       }
 
@@ -1577,11 +1591,13 @@ export default function App() {
 
 
       {/* Universal Hoisted Tour Guide Overlay (Console, MCP, Audit, Profile) */}
-      <TourGuide
-        isOpen={isTourOpen}
-        onClose={() => setIsTourOpen(false)}
-        mode={activeTab === 'console' ? (activeWorkspace === 'demo' ? 'console' : 'repo') : (['dev', 'mcp', 'audit', 'profile'].includes(activeTab) ? activeTab : 'console')}
-      />
+      {isTourOpen && (
+        <TourGuide
+          isOpen={isTourOpen}
+          onClose={() => setIsTourOpen(false)}
+          mode={activeTab === 'console' ? (activeWorkspace === 'demo' ? 'console' : 'repo') : (['dev', 'mcp', 'audit', 'profile'].includes(activeTab) ? activeTab : 'console')}
+        />
+      )}
 
       {/* Universal Keyboard Shortcuts Guide Modal */}
       <KeyboardShortcutsModal
