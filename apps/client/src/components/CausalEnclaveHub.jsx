@@ -113,6 +113,9 @@ const ENCLAVE_STAGES = [
   }
 ];
 
+// Authentic isometric squircle contour matching the physical center slab lid
+const SQUIRCLE_CONTOUR = "M 2.49 7.47 L 1.96 7.69 L 1.35 7.85 L 0.69 7.95 L 0 7.98 L -0.69 7.95 L -1.35 7.85 L -1.96 7.69 L -2.49 7.47 L -14.93 1.24 L -15.37 0.98 L -15.7 0.67 L -15.9 0.34 L -15.97 0 L -15.9 -0.34 L -15.7 -0.67 L -15.37 -0.98 L -14.93 -1.24 L -2.49 -7.47 L -1.96 -7.69 L -1.35 -7.85 L -0.69 -7.95 L 0 -7.98 L 0.69 -7.95 L 1.35 -7.85 L 1.96 -7.69 L 2.49 -7.47 L 14.93 -1.24 L 15.37 -0.98 L 15.7 -0.67 L 15.9 -0.34 L 15.97 0 L 15.9 0.34 L 15.7 0.67 L 15.37 0.98 L 14.93 1.24 Z";
+
 // 3D Camera Angles: Cinematic dynamic tracking, orbit tilt, and zoom for each subsystem stage
 const STAGE_CAMERAS = [
   // 0: CORE (Architectural Overview - Front-Face Top Perspective)
@@ -456,7 +459,7 @@ export default function CausalEnclaveHub() {
             exitAttemptRef.current = false;
             playClick();
             setStep((prev) => Math.min(ENCLAVE_STAGES.length - 1, prev + 1));
-            setTimeout(() => { isTransitioningRef.current = false; }, 340);
+            setTimeout(() => { isTransitioningRef.current = false; }, 480);
           } else {
             // On Last Step: Require secondary impulse to exit downward
             if (!exitAttemptRef.current) {
@@ -473,7 +476,7 @@ export default function CausalEnclaveHub() {
             exitAttemptRef.current = false;
             playClick();
             setStep((prev) => Math.max(0, prev - 1));
-            setTimeout(() => { isTransitioningRef.current = false; }, 340);
+            setTimeout(() => { isTransitioningRef.current = false; }, 480);
           } else {
             // On First Step: Require secondary impulse to exit upward
             if (!exitAttemptRef.current) {
@@ -509,7 +512,7 @@ export default function CausalEnclaveHub() {
             isTransitioningRef.current = true;
             playClick();
             setStep((prev) => Math.min(ENCLAVE_STAGES.length - 1, prev + 1));
-            setTimeout(() => { isTransitioningRef.current = false; }, 340);
+            setTimeout(() => { isTransitioningRef.current = false; }, 480);
           } else {
             exitDownward();
           }
@@ -518,7 +521,7 @@ export default function CausalEnclaveHub() {
             isTransitioningRef.current = true;
             playClick();
             setStep((prev) => Math.max(0, prev - 1));
-            setTimeout(() => { isTransitioningRef.current = false; }, 340);
+            setTimeout(() => { isTransitioningRef.current = false; }, 480);
           } else {
             exitUpward();
           }
@@ -679,7 +682,7 @@ export default function CausalEnclaveHub() {
             style={{
               transform: `rotateX(${baseCam.pitch}deg) rotateY(${baseCam.yaw}deg) rotateZ(${baseCam.roll}deg) translate3d(${baseCam.tx}px, ${baseCam.ty}px, ${baseCam.tz}px) scale(${baseCam.scale})`,
               transformStyle: 'preserve-3d',
-              transition: 'transform 0.85s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'transform 1.05s cubic-bezier(0.25, 1, 0.35, 1)',
               '--hl-plate': 'var(--hub-plate, #060709)',
               '--hl-hi': 'var(--hub-hi, #F8FAFC)',
               '--hl-edge': 'var(--hub-edge, #CBD5E1)',
@@ -802,59 +805,67 @@ export default function CausalEnclaveHub() {
                 onPointerLeave={() => setIsHoveredCore(false)}
                 className="cursor-pointer pointer-events-auto"
               >
-                {/* Concentric Squircle Causal Wavefront Propagation (Emits when CORE active or hovered) */}
+                {/* Concentric Squircle Causal Wavefront Propagation on Authentic Outline */}
                 {(isCoreActive || isHoveredCore) && (
                   <g className="pointer-events-none select-none">
                     <style>{`
                       @keyframes squircle-wave-1 {
-                        0% { transform: scale(1); opacity: 0.65; }
-                        100% { transform: scale(1.68); opacity: 0; }
+                        0% { transform: scale(1); opacity: 0.75; }
+                        100% { transform: scale(1.48); opacity: 0; }
                       }
                       @keyframes squircle-wave-2 {
-                        0% { transform: scale(1); opacity: 0.65; }
-                        100% { transform: scale(1.68); opacity: 0; }
+                        0% { transform: scale(1); opacity: 0.75; }
+                        100% { transform: scale(1.48); opacity: 0; }
                       }
                       .squircle-pulse-1 {
-                        animation: squircle-wave-1 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+                        animation: squircle-wave-1 2.4s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
                         transform-origin: 0px 0px;
                       }
                       .squircle-pulse-2 {
-                        animation: squircle-wave-2 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite 1.1s;
+                        animation: squircle-wave-2 2.4s cubic-bezier(0.2, 0.8, 0.25, 1) infinite 1.2s;
                         transform-origin: 0px 0px;
                       }
                     `}</style>
-                    {/* Concentric Wavefront 1 */}
-                    <rect
-                      x="-14"
-                      y="-7.3"
-                      width="28"
-                      height="14.6"
-                      rx="4.5"
+
+                    {/* Specular Glow Accent directly highlighting the existing slab squircle rim */}
+                    <path
+                      d={SQUIRCLE_CONTOUR}
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="0.8"
+                      strokeWidth="1.2"
                       vectorEffect="non-scaling-stroke"
-                      className="text-slate-900/40 dark:text-white/60 squircle-pulse-1"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/70 dark:text-white/80"
                     />
-                    {/* Concentric Wavefront 2 */}
-                    <rect
-                      x="-14"
-                      y="-7.3"
-                      width="28"
-                      height="14.6"
-                      rx="4.5"
+
+                    {/* Concentric Wavefront 1 (Exact Isometric Squircle Contour) */}
+                    <path
+                      d={SQUIRCLE_CONTOUR}
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="0.8"
+                      strokeWidth="0.9"
                       vectorEffect="non-scaling-stroke"
-                      className="text-slate-900/40 dark:text-white/60 squircle-pulse-2"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/40 dark:text-white/50 squircle-pulse-1"
+                    />
+
+                    {/* Concentric Wavefront 2 (Exact Isometric Squircle Contour) */}
+                    <path
+                      d={SQUIRCLE_CONTOUR}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="0.9"
+                      vectorEffect="non-scaling-stroke"
+                      shapeRendering="geometricPrecision"
+                      className="text-slate-900/40 dark:text-white/50 squircle-pulse-2"
                     />
                   </g>
                 )}
+
+                {/* Mark VI Arc Reactor Centerpiece: 100% Vector Direct-Display List (Zero Offscreen Texture Blur) */}
                 <motion.g 
                   animate={{
-                    y: (isCoreActive || isHoveredCore) ? -12 : 0,
-                    opacity: (isCoreActive || isHoveredCore) ? 1 : 0.85
+                    y: (isCoreActive || isHoveredCore) ? -12 : 0
                   }}
                   transition={{
                     type: 'spring',
@@ -863,35 +874,31 @@ export default function CausalEnclaveHub() {
                     mass: 0.6
                   }}
                 >
-                  {/* Subtle Fluid Wave Fill Layer (Rises inside inner triangle when active or hovered) */}
-                  <g clipPath="url(#arc-reactor-inner-clip)">
-                    {/* Inner core specular base layer */}
-                    <motion.path
-                      d="M-4.2 -2.1L4.2 -2.1L0 2.5Z"
-                      className="fill-slate-900/10 dark:fill-white/20"
-                      animate={{
-                        opacity: (isCoreActive || isHoveredCore) ? 1 : 0
-                      }}
-                      transition={{ duration: 0.35 }}
-                    />
-                    <motion.g
-                      animate={{
-                        y: (isCoreActive || isHoveredCore) ? -1.0 : 4.5,
-                        opacity: (isCoreActive || isHoveredCore) ? 0.95 : 0
-                      }}
-                      transition={{
-                        duration: 0.55,
-                        ease: [0.2, 0.9, 0.3, 1]
-                      }}
-                    >
+                  {/* Subtle Fluid Wave Fill Layer (Mounted ONLY when Core active or hovered to eliminate background repaints) */}
+                  {(isCoreActive || isHoveredCore) && (
+                    <g clipPath="url(#arc-reactor-inner-clip)">
+                      {/* Inner core specular base layer */}
                       <path
-                        d="M -10 0 Q -5 -1.5, 0 0 T 10 0 L 10 8 L -10 8 Z"
-                        className="fill-slate-950 dark:fill-white arc-fluid-wave"
+                        d="M-4.2 -2.1L4.2 -2.1L0 2.5Z"
+                        className="fill-slate-900/10 dark:fill-white/20"
                       />
-                    </motion.g>
-                  </g>
+                      <motion.g
+                        initial={{ y: 4.5, opacity: 0 }}
+                        animate={{ y: -1.0, opacity: 0.95 }}
+                        transition={{
+                          duration: 0.55,
+                          ease: [0.2, 0.9, 0.3, 1]
+                        }}
+                      >
+                        <path
+                          d="M -10 0 Q -5 -1.5, 0 0 T 10 0 L 10 8 L -10 8 Z"
+                          className="fill-slate-950 dark:fill-white arc-fluid-wave"
+                        />
+                      </motion.g>
+                    </g>
+                  )}
 
-                  {/* Outer Monochromatic Specular Halo (Layered Vectors - 100% Crisp Zero Raster Blur) */}
+                  {/* Outer Monochromatic Specular Halo (Layered Vectors - 100% Vector Direct Pipeline) */}
                   {(isCoreActive || isHoveredCore) && (
                     <>
                       <path 
@@ -902,6 +909,7 @@ export default function CausalEnclaveHub() {
                         strokeWidth="3.2" 
                         strokeLinejoin="round" 
                         vectorEffect="non-scaling-stroke"
+                        shapeRendering="geometricPrecision"
                       />
                       <path 
                         d="M-7.5 -3.8L7.5 -3.8L0 4.5Z" 
@@ -911,29 +919,33 @@ export default function CausalEnclaveHub() {
                         strokeWidth="2.0" 
                         strokeLinejoin="round" 
                         vectorEffect="non-scaling-stroke"
+                        shapeRendering="geometricPrecision"
                       />
                     </>
                   )}
 
-                  {/* Outer Inverted Equilateral Triangle (Mark VI Arc Reactor Core - Sub-Pixel Precision) */}
+                  {/* Outer Inverted Equilateral Triangle (Mark VI Arc Reactor - Razor-Sharp Direct Geometry) */}
                   <path 
                     d="M-7.5 -3.8L7.5 -3.8L0 4.5Z" 
                     fill="none" 
                     stroke="currentColor" 
-                    className="text-slate-900 dark:text-white" 
+                    className={isCoreActive || isHoveredCore ? "text-slate-950 dark:text-white" : "text-slate-500/80 dark:text-slate-400/80"} 
                     strokeWidth="1.2" 
                     strokeLinejoin="round" 
                     vectorEffect="non-scaling-stroke"
+                    shapeRendering="geometricPrecision"
                   />
+
                   {/* Inner Concentric Bevel Cutout Rim */}
                   <path 
                     d="M-4.2 -2.1L4.2 -2.1L0 2.5Z" 
                     fill="none" 
                     stroke="currentColor" 
-                    className="text-slate-500 dark:text-slate-400" 
+                    className={isCoreActive || isHoveredCore ? "text-slate-600 dark:text-slate-300" : "text-slate-400/60 dark:text-slate-500/60"} 
                     strokeWidth="0.8" 
                     strokeLinejoin="round" 
                     vectorEffect="non-scaling-stroke"
+                    shapeRendering="geometricPrecision"
                   />
                 </motion.g>
               </g>
